@@ -184,7 +184,7 @@ gurobi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
   model$objcon = obj0
   model$A = A
   model$rhs = rhs
-  model$sense = sense
+  model$sense = sense 
   model$modelsense = modelsense
   model$lb = lb
   # Result of the LP or QP, and return result
