@@ -71,12 +71,9 @@ dkqs_cone <- function(df, A_obs, A_tgt, beta_obs, beta_tgt, bs_seed = 1,
 #' @description This function formulates and solves the quadratic programs (5)
 #'    and (6) in Torgovitsky (2019).
 #'
-#' @param A_obs The observed matrix in the quadratic program.
-#' @param A_tgt The "target matrix" in the quadratic program.
-#' @param beta_obs The observed value of the vector beta.
-#' @param beta_tgt The value of t in the null hypothesis.
 #' @param tau The RHS vector fo the linear constraints.
 #' @param problem The sense of the linear constraints.
+#' @inheritParams dkqs_cone
 #'
 #' @returns Returns the solution to the quadratic program.
 #'
@@ -203,17 +200,11 @@ gurobi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
 #'
 #' @param df1 The dataframe of the observed values, i.e. corresponds to the
 #'    case of \eqn{D = 1}.
-#' @param bs_seed The starting value of the seed in the bootstrap.
-#' @param bs_size The size of each bootstrap.
-#' @param bs_num The total number of bootstraps.
 #' @param J The number of distinct nonzero values in vector \eqn{\bm{y}}.
 #' @param s_star The value of s_star in the cone-tightening procedure.
-#' @param A_obs The observed matrix in the quadratic program.
-#' @param A_tgt The "target matrix" in the quadratic program.
-#' @param beta_obs The observed value of the vector beta.
 #' @param beta_bs_bar The tau-tightened recentered bootstrap estimate.
-#' @param beta_tgt The value of t in the null hypothesis.
-#' @param tau The value of tau used in the quadratic program.
+#' @inheritParams dkqs_cone
+#' @inheritParams prog_cone
 #'
 #' @returns Returns the list of test statistics obtained from bootstrap, i.e.
 #'    \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}.
@@ -312,16 +303,7 @@ tau_constraints <- function(length_tau, coeff_tau, coeff_x, ind_x, rhs, sense,
 #' @description This function generates the error messages and stops the program
 #'    if there is any invalid input.
 #'
-#' @param df The dataframe that contains the sample data.
-#' @param A_obs The observed matrix in the linear program.
-#' @param A_tgt The "target matrix" in the linear program.
-#' @param beta_obs The observed value of the vector beta.
-#' @param beta_tgt The value of t in the null hypothesis.
-#' @param bs_seed The starting value of the seed in the bootstrap.
-#' @param bs_size The size of each bootstrap.
-#' @param bs_num The total number of bootstrap.
-#' @param p_sig The number of decimal places in the \eqn{p}-value.
-#' @param tau_input The value of tau chosen by the user.
+#' @inheritParams dkqs_cone
 #'
 #' @export
 dkqs_cone_errormsg <- function(df, A_obs, A_tgt, beta_obs, beta_tgt, bs_seed,
