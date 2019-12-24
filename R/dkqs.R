@@ -17,7 +17,8 @@
 #' @param p_sig The number of decimal places in the \eqn{p}-value.
 #' @param tau_input The value of tau chosen by the user.
 #'
-#' @returns Returns the \eqn{p}-value and the value of tau used.
+#' @returns Returns the \eqn{p}-value, the value of tau used, test statistic
+#'  and the list of bootstrap test statistics. 
 #'
 #' @export
 # library(slam)
@@ -63,7 +64,7 @@ dkqs_cone <- function(df, A_obs, A_tgt, beta_obs, beta_tgt, bs_seed = 1,
 
   cat(paste("The p-value is ", p_val, ".\n", sep = ""))
   cat(paste("The value of tau used is ", tau, ".", sep = ""))
-  invisible(list(p = p_val, tau = tau))
+  invisible(list(p = p_val, tau = tau, T_star = T_star, T_bs = T_bs))
 }
 
 #' Formulating and solving quadratic programs
