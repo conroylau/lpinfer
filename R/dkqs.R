@@ -37,12 +37,10 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   J = length(unique(df[,"Y"])) - 1
   # Compute beta_obs_hat using the function defined by user
   beta_obs_hat = func_obs(df)
-  print(beta_obs_hat)
-  print(sum(beta_obs_hat))
 
   #### Step 3: Choose the value of tau
   tau_return = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, 
-                         "tau")$objval
+                         "tau", N)$objval
   if (tau_input > tau_return){
     tau = tau_return
   } else if (tau_input <= tau_return){
@@ -53,16 +51,20 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   }
 
   #### Step 4: Solve QP (5) in Torgovitsky (2019)
-  full_return = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "T")
+  full_return = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "T", N)
   x_star = full_return$x
+  # Return and stop program if it is infeasible
+  if (is.null(x_star) == TRUE){
+    stop("The problem is infeasible. Choose other values of tau.")
+  }
   s_star = A_obs %*% x_star
   # T_star is the test statistic used
   T_star = full_return$objval
-
+  
   #### Step 5: Compute the bootstrap estimates
   # T_bs is the list of bootstrap test statistics used
-  T_bs = beta_bs(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt,
-                 func_obs, beta_obs_hat, beta_bs_bar, beta_tgt, tau, N)
+  T_bs = beta_bs(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs, 
+                 beta_obs_hat, beta_tgt, tau, N)
   #### Step 6: Compute the p-value
   # decision = 1 refers to rejected, decision = 0 refers to not rejected
   p_val = p_eval(T_bs, T_star, p_sig)
@@ -84,13 +86,13 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
 #' @returns Returns the solution to the quadratic program.
 #'
 #' @export
-prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem){
+prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n){
   #### Step 1: Formulation of the objective function for (5)
   rn = dim(A_tgt)[1]
   cn = dim(A_tgt)[2]
-  obj2 = t(A_obs) %*% A_obs * rn
-  obj1 = -2 * t(A_obs) %*% beta_obs_hat * rn
-  obj0 = t(beta_obs_hat) %*% beta_obs_hat * rn
+  obj2 = t(A_obs) %*% A_obs * n
+  obj1 = -2 * t(A_obs) %*% beta_obs_hat * n
+  obj0 = t(beta_obs_hat) %*% beta_obs_hat * n
 
   #### Step 2: Formulation of constraints
   ones = matrix(rep(1, cn), nrow = 1)
@@ -209,7 +211,6 @@ gurobi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
 #' @param J The number of distinct nonzero values in vector \eqn{\bm{y}}.
 #' @param s_star The value of s_star in the cone-tightening procedure.
 #' @param beat_obs_hat The value of beta_obs_hat using the full data.
-#' @param beta_bs_bar The tau-tightened recentered bootstrap estimate.
 #' @inheritParams dkqs_cone
 #' @inheritParams prog_cone
 #'
@@ -217,8 +218,8 @@ gurobi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
 #'    \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}.
 #'
 #' @export
-beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt,
-                    func_obs, beta_obs_hat, beta_bs_bar, beta_tgt, tau, N){
+beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs, 
+                    beta_obs_hat, beta_tgt, tau, N){
   T_bs = NULL
   # Loop through all indices in the bootstrap
   for (i in 1:bs_num){
@@ -229,12 +230,11 @@ beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt,
     # Re-index the rows
     rownames(df_bs) = 1:nrow(df_bs)
     ####  Step 3: Compute the bootstrap estimates
-    beta_bs_star = NULL
     # Compute the value of beta_bs_star using the function func_obs
     beta_bs_star = func_obs(df_bs)
     ####  Step 4: Compute the bootstrap test statistic
     beta_bs_bar = beta_bs_star - beta_obs_hat + s_star
-    T_bs_i = prog_cone(A_obs, A_tgt, beta_bs_bar, beta_tgt, tau, "T")$objval
+    T_bs_i = prog_cone(A_obs, A_tgt, beta_bs_bar, beta_tgt, tau, "T", N)$objval
     T_bs = c(T_bs, T_bs_i)
   }
   # Return the general solution
