@@ -1,4 +1,4 @@
-#' Compute p-value of the quadratic program
+#' Compute p-value of a quadratic program
 #'
 #' @description This function runs the procedure suggested by Torgovitsky (2019)
 #'    using the cone-tightening procedure proposed by Deb, Kitamura, Quah and
