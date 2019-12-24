@@ -23,9 +23,9 @@ beta_bs(
 \item{df1}{The dataframe of the observed values, i.e. corresponds to the
 case of \eqn{D = 1}.}
 
-\item{bs_seed}{The starting value of the seed in the bootstrap.}
+\item{bs_seed}{The starting value of the seed in bootstrap.}
 
-\item{bs_size}{The size of each bootstrap.}
+\item{bs_size}{The size of each bootstrap sample.}
 
 \item{bs_num}{The total number of bootstraps.}
 
@@ -33,9 +33,9 @@ case of \eqn{D = 1}.}
 
 \item{s_star}{The value of s_star in the cone-tightening procedure.}
 
-\item{A_obs}{The observed matrix in the quadratic program.}
+\item{A_obs}{The observed matrix in the linear program.}
 
-\item{A_tgt}{The "target matrix" in the quadratic program.}
+\item{A_tgt}{The "target matrix" in the linear program.}
 
 \item{beta_obs}{The observed value of the vector beta.}
 
@@ -43,7 +43,7 @@ case of \eqn{D = 1}.}
 
 \item{beta_tgt}{The value of t in the null hypothesis.}
 
-\item{tau}{The value of tau used in the quadratic program.}
+\item{tau}{The RHS vector fo the linear constraints.}
 }
 \value{
 Returns the list of test statistics obtained from bootstrap, i.e.

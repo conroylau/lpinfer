@@ -7,9 +7,9 @@
 prog_cone(A_obs, A_tgt, beta_obs, beta_tgt, tau, problem)
 }
 \arguments{
-\item{A_obs}{The observed matrix in the quadratic program.}
+\item{A_obs}{The observed matrix in the linear program.}
 
-\item{A_tgt}{The "target matrix" in the quadratic program.}
+\item{A_tgt}{The "target matrix" in the linear program.}
 
 \item{beta_obs}{The observed value of the vector beta.}
 

@@ -9,35 +9,38 @@
 #' @param df The dataframe that contains the sample data.
 #' @param A_obs The observed matrix in the linear program.
 #' @param A_tgt The "target matrix" in the linear program.
-#' @param beta_obs The observed value of the vector beta.
+#' @param func_obs The function that generates the required beta_obs.
 #' @param beta_tgt The value of t in the null hypothesis.
 #' @param bs_seed The starting value of the seed in bootstrap.
-#' @param bs_size The size of each bootstrap sample.
 #' @param bs_num The total number of bootstraps.
 #' @param p_sig The number of decimal places in the \eqn{p}-value.
 #' @param tau_input The value of tau chosen by the user.
 #'
-#' @returns Returns the \eqn{p}-value, the value of tau used, test statistic
-#'  and the list of bootstrap test statistics. 
+#' @returns Returns the \eqn{p}-value, the value of tau used \eqn{\tau^\ast}, 
+#'   test statistic \eqn{T_n(\tau_n)} and the list of bootstrap test statistics 
+#'   \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}. 
 #'
 #' @export
 # library(slam)
 # library(gurobi)
 # library(car)
-dkqs_cone <- function(df, A_obs, A_tgt, beta_obs, beta_tgt, bs_seed = 1,
-                      bs_size = 100, bs_num = 100, p_sig = 2, tau_input = .5){
+dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
+                      bs_num = 100, p_sig = 2, tau_input = .5){
 
   #### Step 1: Error checks
-  dkqs_cone_errormsg(df, A_obs, A_tgt, beta_obs, beta_tgt, bs_seed, bs_size,
-                     bs_num, p_sig, tau_input)
+  dkqs_cone_errormsg(df, A_obs, A_tgt, beta_tgt, bs_seed, bs_num, 
+                     p_sig, tau_input)
 
   #### Step 2: Initialization
   # Initialization
   N = dim(df)[1]
   J = length(unique(df[,"Y"])) - 1
+  # Compute beta_obs_hat using the function defined by user
+  beta_obs_hat = func_obs(df)
 
   #### Step 3: Choose the value of tau
-  tau_return = prog_cone(A_obs, A_tgt, beta_obs, beta_tgt, tau, "tau")$objval
+  tau_return = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, 
+                         "tau")$objval
   if (tau_input > tau_return){
     tau = tau_return
   } else if (tau_input <= tau_return){
@@ -48,16 +51,16 @@ dkqs_cone <- function(df, A_obs, A_tgt, beta_obs, beta_tgt, bs_seed = 1,
   }
 
   #### Step 4: Solve QP (5) in Torgovitsky (2019)
-  full_return = prog_cone(A_obs, A_tgt, beta_obs, beta_tgt, tau, "T")
+  full_return = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "T")
   x_star = full_return$x
   s_star = A_obs %*% x_star
+  # T_star is the test statistic used
   T_star = full_return$objval
 
   #### Step 5: Compute the bootstrap estimates
-  # Only choose the data that can be observed, i.e. D = 1
-  df1 = df[df[,"D"] == 1,][,2]
-  T_bs = beta_bs(df1, bs_seed, bs_size, bs_num, J, s_star, A_obs, A_tgt,
-                 beta_obs, beta_bs_bar, beta_tgt, tau)
+  # T_bs is the list of bootstrap test statistics used
+  T_bs = beta_bs(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt,
+                 func_obs, beta_obs_hat, beta_bs_bar, beta_tgt, tau, N)
   #### Step 6: Compute the p-value
   # decision = 1 refers to rejected, decision = 0 refers to not rejected
   p_val = p_eval(T_bs, T_star, p_sig)
@@ -79,13 +82,13 @@ dkqs_cone <- function(df, A_obs, A_tgt, beta_obs, beta_tgt, bs_seed = 1,
 #' @returns Returns the solution to the quadratic program.
 #'
 #' @export
-prog_cone <- function(A_obs, A_tgt, beta_obs, beta_tgt, tau, problem){
+prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem){
   #### Step 1: Formulation of the objective function for (5)
   rn = dim(A_tgt)[1]
   cn = dim(A_tgt)[2]
   obj2 = t(A_obs) %*% A_obs * rn
-  obj1 = -2 * t(A_obs) %*% beta_obs * rn
-  obj0 = t(beta_obs) %*% beta_obs * rn
+  obj1 = -2 * t(A_obs) %*% beta_obs_hat * rn
+  obj0 = t(beta_obs_hat) %*% beta_obs_hat * rn
 
   #### Step 2: Formulation of constraints
   ones = matrix(rep(1, cn), nrow = 1)
@@ -199,10 +202,11 @@ gurobi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
 #'
 #' @description This function computes the test statistics via bootstrapping.
 #'
-#' @param df1 The dataframe of the observed values, i.e. corresponds to the
-#'    case of \eqn{D = 1}.
+#' @require modelr
+#'
 #' @param J The number of distinct nonzero values in vector \eqn{\bm{y}}.
 #' @param s_star The value of s_star in the cone-tightening procedure.
+#' @param beat_obs_hat The value of beta_obs_hat using the full data.
 #' @param beta_bs_bar The tau-tightened recentered bootstrap estimate.
 #' @inheritParams dkqs_cone
 #' @inheritParams prog_cone
@@ -211,25 +215,25 @@ gurobi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
 #'    \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}.
 #'
 #' @export
-beta_bs <- function(df1, bs_seed, bs_size, bs_num, J, s_star, A_obs, A_tgt,
-                    beta_obs, beta_bs_bar, beta_tgt, tau){
+beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt,
+                    func_obs, beta_obs_hat, beta_bs_bar, beta_tgt, tau, N){
   T_bs = NULL
   # Loop through all indices in the bootstrap
   for (i in 1:bs_num){
-    # Step 1: Set the seed
+    #### Step 1: Set the seed
     set.seed(bs_seed + i)
-    # Step 2: Draw the subsample
-    df_bs = sample(df1, bs_size, replace = TRUE)
-    # Step 3: Compute the bootstrap estimates
-    beta_bs = NULL
-    df_bs_n = length(df_bs)
-    for (j in seq(0,1,1/J)){
-      # Compute the sample probability
-      beta_i_count = sum(df_bs == j)/df_bs_n
-      beta_bs = c(beta_bs, beta_i_count)
-    }
-    # Step 4: Compute the bootstrap test statistic
-    beta_bs_bar = beta_bs - beta_obs + s_star
+    ####  Step 2: Draw the subsample
+    # Drop unobserved values, i.e. when D = 0
+    df = df[df[,"D"] == 1,]
+    df_bs = as.data.frame(resample_bootstrap(as.data.frame(df)))
+    # Re-index the rows
+    rownames(df_bs) = 1:nrow(df_bs)
+    ####  Step 3: Compute the bootstrap estimates
+    beta_bs_star = NULL
+    # Compute the value of beta_bs_star using the function func_obs
+    beta_bs_star = func_obs(df_bs)
+    ####  Step 4: Compute the bootstrap test statistic
+    beta_bs_bar = beta_bs_star - beta_obs + s_star
     T_bs_i = prog_cone(A_obs, A_tgt, beta_bs_bar, beta_tgt, tau, "T")$objval
     T_bs = c(T_bs, T_bs_i)
   }
@@ -307,16 +311,9 @@ tau_constraints <- function(length_tau, coeff_tau, coeff_x, ind_x, rhs, sense,
 #' @inheritParams dkqs_cone
 #'
 #' @export
-dkqs_cone_errormsg <- function(df, A_obs, A_tgt, beta_obs, beta_tgt, bs_seed,
-                               bs_size, bs_num, p_sig, tau_input){
+dkqs_cone_errormsg <- function(df, A_obs, A_tgt, beta_tgt, bs_seed, bs_num, 
+                               p_sig, tau_input){
 
-  if (bs_size <= 0 | bs_size %%1 != 0){
-    stop("The size of bootstrap (bs_size) has to be a positive integer.")
-  }
-  if (bs_size > dim(df)[1]){
-    stop("The size of bootstrap (bs_size) cannot be greater than the number
-         of observations.")
-  }
   if (bs_num <= 0 | bs_num %%1 != 0){
     stop("The number of bootstrap (bs_num) has to be a positive integer.")
   }

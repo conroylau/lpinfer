@@ -2,7 +2,7 @@
 % Please edit documentation in R/dkqs.R
 \name{dkqs_cone}
 \alias{dkqs_cone}
-\title{Compute p-value of the quadratic program}
+\title{Compute p-value of a quadratic program}
 \usage{
 dkqs_cone(
   df,
@@ -39,7 +39,8 @@ dkqs_cone(
 \item{tau_input}{The value of tau chosen by the user.}
 }
 \value{
-Returns the \eqn{p}-value and the value of tau used.
+Returns the \eqn{p}-value, the value of tau used, test statistic
+ and the list of bootstrap test statistics.
 }
 \description{
 This function runs the procedure suggested by Torgovitsky (2019)

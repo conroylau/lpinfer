@@ -28,11 +28,11 @@ dkqs_cone_errormsg(
 
 \item{beta_tgt}{The value of t in the null hypothesis.}
 
-\item{bs_seed}{The starting value of the seed in the bootstrap.}
+\item{bs_seed}{The starting value of the seed in bootstrap.}
 
-\item{bs_size}{The size of each bootstrap.}
+\item{bs_size}{The size of each bootstrap sample.}
 
-\item{bs_num}{The total number of bootstrap.}
+\item{bs_num}{The total number of bootstraps.}
 
 \item{p_sig}{The number of decimal places in the \eqn{p}-value.}
 
