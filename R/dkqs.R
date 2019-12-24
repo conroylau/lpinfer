@@ -297,7 +297,7 @@ tau_constraints <- function(length_tau, coeff_tau, coeff_x, ind_x, rhs, sense,
   # Update the lhs, rhs and sense of the constraints
   lp_lhs_tau = rbind(lp_lhs_tau, c(temp))
   lp_rhs_tau = c(lp_rhs_tau, 0)
-  lp_sense_tau = c(lp_sense_tau, "<=")
+  lp_sense_tau = c(lp_sense_tau, sense)
   return(list(lp_lhs_tau = lp_lhs_tau,
               lp_rhs_tau = lp_rhs_tau,
               lp_sense_tau = lp_sense_tau))
@@ -325,4 +325,3 @@ dkqs_cone_errormsg <- function(df, A_obs, A_tgt, beta_tgt, bs_seed, bs_num,
     stop("The value of tau has to be in [0,1].")
   }
 }
-
