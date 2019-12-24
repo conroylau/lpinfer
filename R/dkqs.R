@@ -107,7 +107,7 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n){
   ind_0 = x_fullind[-c(ind_up, ind_down)]
   # Updated lb for certain indices
   rhs_up = (beta_tgt - theta_down$objval) * tau / length(c(ind_0, ind_up))
-  rhs_down = (theta_up$objval - beta_tgt)*tau / length(c(ind_0, ind_down))
+  rhs_down = (theta_up$objval - beta_tgt) * tau / length(c(ind_0, ind_down))
   rhs_0 = (1 - rhs_up * length(ind_up) - rhs_down * length(ind_down)) *
             tau / length(ind_0)
   # LP rhs and sense
