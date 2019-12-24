@@ -37,6 +37,8 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   J = length(unique(df[,"Y"])) - 1
   # Compute beta_obs_hat using the function defined by user
   beta_obs_hat = func_obs(df)
+  print(beta_obs_hat)
+  print(sum(beta_obs_hat))
 
   #### Step 3: Choose the value of tau
   tau_return = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, 
@@ -223,8 +225,6 @@ beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt,
     #### Step 1: Set the seed
     set.seed(bs_seed + i)
     ####  Step 2: Draw the subsample
-    # Drop unobserved values, i.e. when D = 0
-    df = df[df[,"D"] == 1,]
     df_bs = as.data.frame(resample_bootstrap(as.data.frame(df)))
     # Re-index the rows
     rownames(df_bs) = 1:nrow(df_bs)
@@ -233,7 +233,7 @@ beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt,
     # Compute the value of beta_bs_star using the function func_obs
     beta_bs_star = func_obs(df_bs)
     ####  Step 4: Compute the bootstrap test statistic
-    beta_bs_bar = beta_bs_star - beta_obs + s_star
+    beta_bs_bar = beta_bs_star - beta_obs_hat + s_star
     T_bs_i = prog_cone(A_obs, A_tgt, beta_bs_bar, beta_tgt, tau, "T")$objval
     T_bs = c(T_bs, T_bs_i)
   }
