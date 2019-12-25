@@ -5,45 +5,44 @@
 \title{Computes the test statistics via bootstrapping}
 \usage{
 beta_bs(
-  df1,
+  df,
   bs_seed,
-  bs_size,
   bs_num,
   J,
   s_star,
   A_obs,
   A_tgt,
-  beta_obs,
-  beta_bs_bar,
+  func_obs,
+  beta_obs_hat,
   beta_tgt,
-  tau
+  tau,
+  N
 )
 }
 \arguments{
-\item{df1}{The dataframe of the observed values, i.e. corresponds to the
-case of \eqn{D = 1}.}
+\item{df}{The dataframe that contains the sample data.}
 
 \item{bs_seed}{The starting value of the seed in bootstrap.}
-
-\item{bs_size}{The size of each bootstrap sample.}
 
 \item{bs_num}{The total number of bootstraps.}
 
 \item{J}{The number of distinct nonzero values in vector \eqn{\bm{y}}.}
 
-\item{s_star}{The value of s_star in the cone-tightening procedure.}
+\item{s_star}{The value of \eqn{s^\ast} in the cone-tightening procedure.}
 
 \item{A_obs}{The observed matrix in the linear program.}
 
 \item{A_tgt}{The "target matrix" in the linear program.}
 
-\item{beta_obs}{The observed value of the vector beta.}
+\item{func_obs}{The function that generates the required 
+\eqn{\beta_{\mathrm{obs}}}.}
 
-\item{beta_bs_bar}{The tau-tightened recentered bootstrap estimate.}
-
-\item{beta_tgt}{The value of t in the null hypothesis.}
+\item{beta_tgt}{The value of \eqn{t} in the null hypothesis.}
 
 \item{tau}{The RHS vector fo the linear constraints.}
+
+\item{beat_obs_hat}{The value of \eqn{\hat{\beta}_{\mathrm{obs}}} based on
+the function supplied by the user.}
 }
 \value{
 Returns the list of test statistics obtained from bootstrap, i.e.

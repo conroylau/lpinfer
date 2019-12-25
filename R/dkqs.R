@@ -4,13 +4,14 @@
 #'    using the cone-tightening procedure proposed by Deb, Kitamura, Quah and
 #'    Stoye (2018).
 #'
-#' @import slam gurobi car
+#' @import slam gurobi car modelr
 #'
 #' @param df The dataframe that contains the sample data.
 #' @param A_obs The observed matrix in the linear program.
 #' @param A_tgt The "target matrix" in the linear program.
-#' @param func_obs The function that generates the required beta_obs.
-#' @param beta_tgt The value of t in the null hypothesis.
+#' @param func_obs The function that generates the required 
+#'    \eqn{\beta_{\mathrm{obs}}}.
+#' @param beta_tgt The value of \eqn{t} in the null hypothesis.
 #' @param bs_seed The starting value of the seed in bootstrap.
 #' @param bs_num The total number of bootstraps.
 #' @param p_sig The number of decimal places in the \eqn{p}-value.
@@ -28,12 +29,12 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
                       bs_num = 100, p_sig = 2, tau_input = .5){
 
   #### Step 1: Error checks
-  dkqs_cone_errormsg(df, A_obs, A_tgt, beta_tgt, bs_seed, bs_num, 
+  dkqs_cone_errormsg(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, bs_num, 
                      p_sig, tau_input)
 
   #### Step 2: Initialization
   # Initialization
-  N = dim(df)[1]
+  N = nrows(df)
   J = length(unique(df[,"Y"])) - 1
   # Compute beta_obs_hat using the function defined by user
   beta_obs_hat = func_obs(df)
@@ -47,7 +48,7 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
     tau = tau_input
   } else {
     # Error message when the problem is infeasible.
-    stop("The problem is infeasible.")
+    stop("The problem is infeasible. Choose other values of tau.")
   }
 
   #### Step 4: Solve QP (5) in Torgovitsky (2019)
@@ -209,8 +210,9 @@ gurobi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
 #' @require modelr
 #'
 #' @param J The number of distinct nonzero values in vector \eqn{\bm{y}}.
-#' @param s_star The value of s_star in the cone-tightening procedure.
-#' @param beat_obs_hat The value of beta_obs_hat using the full data.
+#' @param s_star The value of \eqn{s^\ast} in the cone-tightening procedure.
+#' @param beat_obs_hat The value of \eqn{\hat{\beta}_{\mathrm{obs}}} based on
+#'    the function supplied by the user.
 #' @inheritParams dkqs_cone
 #' @inheritParams prog_cone
 #'
@@ -311,9 +313,13 @@ tau_constraints <- function(length_tau, coeff_tau, coeff_x, ind_x, rhs, sense,
 #' @inheritParams dkqs_cone
 #'
 #' @export
-dkqs_cone_errormsg <- function(df, A_obs, A_tgt, beta_tgt, bs_seed, bs_num, 
-                               p_sig, tau_input){
-
+dkqs_cone_errormsg <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
+                               bs_num, p_sig, tau_input){
+  
+  if (typeof(func_obs) != "closure"){
+    stop("The input of func_obs has to be a function.")
+  }
+  
   if (bs_num <= 0 | bs_num %%1 != 0){
     stop("The number of bootstrap (bs_num) has to be a positive integer.")
   }

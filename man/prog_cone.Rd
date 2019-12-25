@@ -4,16 +4,14 @@
 \alias{prog_cone}
 \title{Formulating and solving quadratic programs}
 \usage{
-prog_cone(A_obs, A_tgt, beta_obs, beta_tgt, tau, problem)
+prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n)
 }
 \arguments{
 \item{A_obs}{The observed matrix in the linear program.}
 
 \item{A_tgt}{The "target matrix" in the linear program.}
 
-\item{beta_obs}{The observed value of the vector beta.}
-
-\item{beta_tgt}{The value of t in the null hypothesis.}
+\item{beta_tgt}{The value of \eqn{t} in the null hypothesis.}
 
 \item{tau}{The RHS vector fo the linear constraints.}
 

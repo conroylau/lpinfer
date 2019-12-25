@@ -8,10 +8,9 @@ dkqs_cone_errormsg(
   df,
   A_obs,
   A_tgt,
-  beta_obs,
+  func_obs,
   beta_tgt,
   bs_seed,
-  bs_size,
   bs_num,
   p_sig,
   tau_input
@@ -24,13 +23,12 @@ dkqs_cone_errormsg(
 
 \item{A_tgt}{The "target matrix" in the linear program.}
 
-\item{beta_obs}{The observed value of the vector beta.}
+\item{func_obs}{The function that generates the required 
+\eqn{\beta_{\mathrm{obs}}}.}
 
-\item{beta_tgt}{The value of t in the null hypothesis.}
+\item{beta_tgt}{The value of \eqn{t} in the null hypothesis.}
 
 \item{bs_seed}{The starting value of the seed in bootstrap.}
-
-\item{bs_size}{The size of each bootstrap sample.}
 
 \item{bs_num}{The total number of bootstraps.}
 

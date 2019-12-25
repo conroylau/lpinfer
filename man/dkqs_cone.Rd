@@ -8,10 +8,9 @@ dkqs_cone(
   df,
   A_obs,
   A_tgt,
-  beta_obs,
+  func_obs,
   beta_tgt,
   bs_seed = 1,
-  bs_size = 100,
   bs_num = 100,
   p_sig = 2,
   tau_input = 0.5
@@ -24,13 +23,12 @@ dkqs_cone(
 
 \item{A_tgt}{The "target matrix" in the linear program.}
 
-\item{beta_obs}{The observed value of the vector beta.}
+\item{func_obs}{The function that generates the required 
+\eqn{\beta_{\mathrm{obs}}}.}
 
-\item{beta_tgt}{The value of t in the null hypothesis.}
+\item{beta_tgt}{The value of \eqn{t} in the null hypothesis.}
 
 \item{bs_seed}{The starting value of the seed in bootstrap.}
-
-\item{bs_size}{The size of each bootstrap sample.}
 
 \item{bs_num}{The total number of bootstraps.}
 
@@ -39,8 +37,9 @@ dkqs_cone(
 \item{tau_input}{The value of tau chosen by the user.}
 }
 \value{
-Returns the \eqn{p}-value, the value of tau used, test statistic
- and the list of bootstrap test statistics.
+Returns the \eqn{p}-value, the value of tau used \eqn{\tau^\ast}, 
+  test statistic \eqn{T_n(\tau_n)} and the list of bootstrap test statistics 
+  \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}.
 }
 \description{
 This function runs the procedure suggested by Torgovitsky (2019)
