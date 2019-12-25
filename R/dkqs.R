@@ -70,7 +70,7 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   p_val = p_eval(T_bs, T_star, p_sig)
 
   cat(paste("The p-value is ", p_val, ".\n", sep = ""))
-  cat(paste("The value of tau used is ", tau, ".", sep = ""))
+  cat(paste("The value of tau used is ", tau, ".\n", sep = ""))
   invisible(list(p = p_val, tau = tau, T_star = T_star, T_bs = T_bs))
 }
 
