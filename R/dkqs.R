@@ -16,6 +16,10 @@
 #' @param bs_num The total number of bootstraps.
 #' @param p_sig The number of decimal places in the \eqn{p}-value.
 #' @param tau_input The value of tau chosen by the user.
+#' @param lpsolver The name of the linear/quadratic programming package to 
+#'    be used to obtain the solutions to the linear/quadratic programs. This
+#'    function supports \code{'gurobi'}, \code{'cplexapi'} and 
+#'    \code{'lpsolveapi'}.
 #'
 #' @returns Returns the \eqn{p}-value, the value of tau used \eqn{\tau^\ast}, 
 #'   test statistic \eqn{T_n(\tau_n)} and the list of bootstrap test statistics 
@@ -26,22 +30,37 @@
 # library(gurobi)
 # library(car)
 dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
-                      bs_num = 100, p_sig = 2, tau_input = .5){
-
-  #### Step 1: Error checks
-  dkqs_cone_errormsg(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, bs_num, 
-                     p_sig, tau_input)
-
+                      bs_num = 100, p_sig = 2, tau_input = .5, lpsolver = NULL){
+  
+  #### Step 1: Check the dependencies
+  checkupdate = dkqs_cone_check(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
+                                bs_num, p_sig, tau_input, lpsolver)
+  # Update and return the information returned from the function dkqs_cone_check
+  df = checkupdate$df
+  A_obs = checkupdate$A_obs
+  A_tgt = checkupdate$A_tgt
+  lpsolver = checkupdate$lpsolver
+  # Display the lpsolver being used
+  cat(paste("LP solver used: ", lpsolver, ".\n", sep = ""))
+  
   #### Step 2: Initialization
   # Initialization
-  N = nrows(df)
+  N = nrow(df)
   J = length(unique(df[,"Y"])) - 1
   # Compute beta_obs_hat using the function defined by user
-  beta_obs_hat = func_obs(df)
+  beta_obs_hat = checkupdate$beta_obs_hat
+  # Assign the solver used
+  if (lpsolver == "gurobi"){
+    f_solver = gurobi_optim
+  } else if (lpsolver == "cplexapi"){
+    f_solver = cplexapi_optim
+  } else if(lpsolver == "lpsolveapi"){
+    f_solver = lpsolveapi_optim
+  }
 
   #### Step 3: Choose the value of tau
-  tau_return = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, 
-                         "tau", N)$objval
+  tau_return = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "tau", N, 
+                         f_solver)$objval
   if (tau_input > tau_return){
     tau = tau_return
   } else if (tau_input <= tau_return){
@@ -51,8 +70,9 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
     stop("The problem is infeasible. Choose other values of tau.")
   }
 
-  #### Step 4: Solve QP (5) in Torgovitsky (2019)
-  full_return = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "T", N)
+  #### Step 4: Solve QP (4) in Torgovitsky (2019)
+  full_return = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "test", N, 
+                          f_solver)
   x_star = full_return$x
   # Return and stop program if it is infeasible
   if (is.null(x_star) == TRUE){
@@ -65,19 +85,21 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   #### Step 5: Compute the bootstrap estimates
   # T_bs is the list of bootstrap test statistics used
   T_bs = beta_bs(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs, 
-                 beta_obs_hat, beta_tgt, tau, N)
+                 beta_obs_hat, beta_tgt, tau, N, f_solver)
   #### Step 6: Compute the p-value
   # decision = 1 refers to rejected, decision = 0 refers to not rejected
   p_val = p_eval(T_bs, T_star, p_sig)
-
-  cat(paste("The p-value is ", p_val, ".\n", sep = ""))
-  cat(paste("The value of tau used is ", tau, ".\n", sep = ""))
+  tau = round(tau, digits = 5)
+  
+  cat(paste("-----------------------------------", "\n"))
+  cat(paste("p-value: ", p_val, ".\n", sep = ""))
+  cat(paste("Value of tau used in LP: ", tau, ".\n", sep = ""))
   invisible(list(p = p_val, tau = tau, T_star = T_star, T_bs = T_bs))
 }
 
 #' Formulating and solving quadratic programs
 #'
-#' @description This function formulates and solves the quadratic programs (5)
+#' @description This function formulates and solves the quadratic programs (4)
 #'    and (6) in Torgovitsky (2019).
 #'
 #' @param tau The RHS vector fo the linear constraints.
@@ -87,7 +109,8 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
 #' @returns Returns the solution to the quadratic program.
 #'
 #' @export
-prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n){
+prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
+                      f_solver){
   #### Step 1: Formulation of the objective function for (5)
   rn = dim(A_tgt)[1]
   cn = dim(A_tgt)[2]
@@ -99,8 +122,8 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n){
   ones = matrix(rep(1, cn), nrow = 1)
   lb = matrix(rep(0, cn), nrow = 1)
   # Obtain parameters
-  theta_up = gurobi_optim(NULL, A_tgt, NULL, ones, c(1), "=", "max", lb)
-  theta_down = gurobi_optim(NULL, A_tgt, NULL, ones, c(1), "=", "min", lb)
+  theta_up = f_solver(NULL, A_tgt, NULL, ones, c(1), "=", "max", lb)
+  theta_down = f_solver(NULL, A_tgt, NULL, ones, c(1), "=", "min", lb)
   # Obtain required set of indices
   x_fullind = 1:cn
   ind_up = which(A_tgt %in% theta_up$objval)
@@ -116,19 +139,22 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n){
   lp_sense = c("=", "=")
 
   #### Step 3: Solve the QP
-  # If problem == "T", it is used to solve linear program (5)
-  if (problem == "T"){
+  # If problem == "test", this function solves linear program (4)
+  # If problem == "bootstrap", this function solves linear program (5)
+  # If program == "tau", this function solves linear program (6)
+  if (problem == "test"){
+    ans = f_solver(obj2, obj1, obj0, rbind(A_tgt, ones), lp_rhs, lp_sense,
+                       "min", lb)
+  } else if (problem == "bootstrap"){
   # Update lb
     lb_new = lb
     lb_new[ind_up] = rhs_up
     lb_new[ind_down] = rhs_down
     lb_new[ind_0] = rhs_0
     ### Use Gurobi to find the optimum
-    ans = gurobi_optim(obj2, obj1, obj0, rbind(A_tgt, ones), lp_rhs, lp_sense,
+    ans = f_solver(obj2, obj1, obj0, rbind(A_tgt, ones), lp_rhs, lp_sense,
                        "min", lb_new)
-  }
-  # If problem == "tau", it is used to solve linear program (6)
-  else if (problem == "tau"){
+  } else if (problem == "tau"){
     # Update matrix A
     lp_lhs_tau = rbind(A_tgt, ones)
     lp_lhs_tau = cbind(matrix(c(0,0), nrow = 2), lp_lhs_tau)
@@ -161,13 +187,13 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n){
       lp_rhs_tau = new_const$lp_rhs_tau
       lp_sense_tau = new_const$lp_sense_tau
     }
-    ans = gurobi_optim(NULL, c(1,rep(0, cn)), NULL, lp_lhs_tau, lp_rhs_tau,
-                       lp_sense_tau, "max", lb_tau)
+    ans = f_solver(NULL, c(1,rep(0, cn)), NULL, lp_lhs_tau, lp_rhs_tau,
+                  lp_sense_tau, "max", lb_tau)
   }
   return(ans)
 }
 
-#' Gurobi solver for quadratic or linear programs
+#' Gurobi solver for quadratic and linear programs
 #'
 #' @description This function computes the solution to the quadratic or linear
 #'    program using Gurobi.
@@ -202,6 +228,152 @@ gurobi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
   return(gurobi_result)
 }
 
+#' cplexapi solver for quadratic and linear programs
+#'
+#' @description This function computes the solution to the quadratic or linear
+#'    program using the \code{cplexAPI} package.
+#'
+#' @param obj2 The matrix that corresponds to the second-order term in the
+#'    quadratic program.
+#' @param obj1 The vector that corresponds to the first-order term in the
+#'    quadratic or linear program.
+#' @param obj0 The constant term in the quadratic or linear program.
+#' @param A The constraint matrix.
+#' @param rhs The RHS vector fo the linear constraints.
+#' @param sense The sense of the linear constraints.
+#' @param lb The lower lound vector.
+#'
+#' @returns Returns a list of output from \code{cplexAPI}.
+#'
+#' @export
+cplexapi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
+  ### Step 1: Translate the notations that are used for gurobi into those to be 
+  ### used in cplexAPI
+  # Model sense
+  modelsense[modelsense == "min"] == cplexAPI::CPX_MIN
+  modelsense[modelsense == "max"] == cplexAPI::CPX_MAX
+  # Inequality/equality signs
+  sense[sense == "<="] == "L"
+  sense[sense == ">="] == "G"
+  sense[sense == "=="] == "E"
+  # Bounds
+  sense[sense == Inf] == cplexAPI::CPX_INFBOUND
+  sense[sense == -Inf] == - cplexAPI::CPX_INFBOUND
+  
+  ### Step 2: cplexAPI set-up
+  env = cplexAPI::openEnvCPLEX()
+  cplexAPI::setDblParmCPLEX(env, 1016, 1e-06)
+  prob = cplexAPI::initProbCPLEX(env)
+  cplexAPI::chgProbNameCPLEX(env, prob, "sample")
+  
+  ### Step 3: Model set-up
+  model = list()
+  model$Q = obj2
+  model$obj = obj1
+  model$objcon = obj0
+  model$A = A
+  model$rhs = rhs
+  model$sense = sense 
+  model$modelsense = modelsense
+  model$lb = lb
+  
+  ## ~~~~ Note:
+  ## Check the notations of the followings
+  ##
+  ##
+  
+  ### Step 4: Solve LP/QP
+  cplexAPI::copyLpwNamesCPLEX(env = env,
+                              lp = prob,
+                              nCols = ncol(lpobj$A),
+                              nRows = nrow(lpobj$A),
+                              lpdir = lpdir,
+                              objf = lpobj$obj,
+                              rhs = lpobj$rhs,
+                              sense = sense,
+                              matbeg = beg,
+                              matcnt = cnt,
+                              matind = ind,
+                              matval = val,
+                              lb = lb,
+                              ub = ub)
+  cplexAPI::lpoptCPLEX(env, prob)
+  solution = cplexAPI::solutionCPLEX(env, prob)
+  cplexAPI::delProbCPLEX(env, prob)
+  cplexAPI::closeEnvCPLEX(env)
+  if (typeof(solution) == "S4") {
+    if (attr(solution, "class") == "cplexError") {
+      status = 0
+      solution = list()
+      solution$objval = NA
+      solution$x = NA
+    }
+  }  else {
+    if (solution$lpstat == 1){
+      status = 1
+    }
+    if (solution$lpstat != 1){
+      status = 0
+    }
+  }
+  return(list(objval = solution$objval,
+              x = solution$x))
+}
+
+#' lpsolveAPI solver for quadratic and linear programs
+#'
+#' @description This function computes the solution to the quadratic or linear
+#'    program using the \code{lpSolveAPI} package.
+#'
+#' @param obj2 The matrix that corresponds to the second-order term in the
+#'    quadratic program.
+#' @param obj1 The vector that corresponds to the first-order term in the
+#'    quadratic or linear program.
+#' @param obj0 The constant term in the quadratic or linear program.
+#' @param A The constraint matrix.
+#' @param rhs The RHS vector fo the linear constraints.
+#' @param sense The sense of the linear constraints.
+#' @param lb The lower lound vector.
+#'
+#' @returns Returns a list of output from \code{lpSolveAPI}.
+#'
+#' @export
+lpsolveapi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
+  ### Step 1: Translate the notations that are used for gurobi into those to be 
+  ### used in cplexAPI
+  # Model sense
+  modelsense[modelsense == "min"] == cplexAPI::CPX_MIN
+  modelsense[modelsense == "max"] == cplexAPI::CPX_MAX
+  # Inequality/equality signs
+  sense[sense == "<="] == "L"
+  sense[sense == ">="] == "G"
+  sense[sense == "=="] == "E"
+  # Bounds
+  sense[sense == Inf] == cplexAPI::CPX_INFBOUND
+  sense[sense == -Inf] == - cplexAPI::CPX_INFBOUND
+  
+  ### Step 2: cplexAPI set-up
+  env = cplexAPI::openEnvCPLEX()
+  cplexAPI::setDblParmCPLEX(env, 1016, 1e-06)
+  prob = cplexAPI::initProbCPLEX(env)
+  cplexAPI::chgProbNameCPLEX(env, prob, "sample")
+  
+  ### Step 3: Model set-up
+  model = list()
+  model$Q = obj2
+  model$obj = obj1
+  model$objcon = obj0
+  model$A = A
+  model$rhs = rhs
+  model$sense = sense 
+  model$modelsense = modelsense
+  model$lb = lb
+  
+ 
+  return(list(objval = solution$objval,
+              x = solution$x))
+  
+}
 
 #' Computes the test statistics via bootstrapping
 #'
@@ -221,7 +393,7 @@ gurobi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
 #'
 #' @export
 beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs, 
-                    beta_obs_hat, beta_tgt, tau, N){
+                    beta_obs_hat, beta_tgt, tau, N, f_solver){
   T_bs = NULL
   # Loop through all indices in the bootstrap
   for (i in 1:bs_num){
@@ -236,7 +408,8 @@ beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs,
     beta_bs_star = func_obs(df_bs)
     ####  Step 4: Compute the bootstrap test statistic
     beta_bs_bar = beta_bs_star - beta_obs_hat + s_star
-    T_bs_i = prog_cone(A_obs, A_tgt, beta_bs_bar, beta_tgt, tau, "T", N)$objval
+    T_bs_i = prog_cone(A_obs, A_tgt, beta_bs_bar, beta_tgt, tau, "bootstrap", 
+                       N, f_solver)$objval
     T_bs = c(T_bs, T_bs_i)
   }
   # Return the general solution
@@ -305,29 +478,147 @@ tau_constraints <- function(length_tau, coeff_tau, coeff_x, ind_x, rhs, sense,
               lp_sense_tau = lp_sense_tau))
 }
 
-#' Error messages generator
+#' Check the input of the user
 #'
-#' @description This function generates the error messages and stops the program
-#'    if there is any invalid input.
+#' @description This function checks the input of the user. If there is any 
+#'    invalid input, the program will sotp the program and generates 
+#'    appropriate error messages.
 #'
 #' @inheritParams dkqs_cone
 #'
 #' @export
-dkqs_cone_errormsg <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
-                               bs_num, p_sig, tau_input){
-  
-  if (typeof(func_obs) != "closure"){
-    stop("The input of func_obs has to be a function.")
+dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
+                            bs_num, p_sig, tau_input, lpsolver){
+  # Check the dataframe provided by the user
+  if (class(df) %in% c("data.frame", "matrix") == TRUE){
+    df = as.data.frame(df)  
+  } else {
+    stop(gsub("\\s+", " ",
+              "The data povided 'df' must either be a data.frame, data.table, 
+               matrix."), call. = FALSE)    
   }
   
-  if (bs_num <= 0 | bs_num %%1 != 0){
-    stop("The number of bootstrap (bs_num) has to be a positive integer.")
+  # Check the matrices A_obs and A_tgt provided by the user
+  matrix_names = c("A_obs", "A_tgt")
+  matrix_list = list(A_obs, A_tgt)
+  for (i in 1:2){
+    # Check the format of the matrices
+    if (class(matrix_list[[i]]) %in% c("data.frame", "matrix") == FALSE){
+      stop(gsub("\\s+", " ",
+                paste0("The argument '", matrix_names[i], "' must either be a 
+                data.frame, data.table, or matrix.")), call. = FALSE)   
+    } else{
+      # Ensure the variable is in matrix form
+      matrix_list[[i]] = as.matrix(matrix_list[[i]])
+      # Check whether the matrices are numeric
+      if (is.numeric(matrix_list[[i]]) == FALSE){
+        stop(paste0("The argument '", matrix_names[i], "' has to be numeric."),
+             call. = FALSE)
+      } 
+    }
   }
-  if (p_sig <= 0 | p_sig %%1 != 0){
-    stop("The number of decimal places in the p-value (p_sig) has to be a
-         positive integer.")
+  if (dim(A_tgt)[1] != 1){
+    stop("The argument 'A_tgt' has to be a column vector", call. = FALSE)
   }
-  if (tau_input < 0 | tau_input > 1){
-    stop("The value of tau has to be in [0,1].")
+  
+  # Update A_obs and A_tgt to ensure that they are both matrices
+  A_obs = matrix_list[[1]]
+  A_tgt = matrix_list[[2]]
+
+  # Check the function provided by the user
+  if (class(func_obs) != "function"){
+    stop("The input of 'func_obs' has to be a function.", call. = FALSE)
+  } else{
+    beta_obs_hat = func_obs(df)
+    beta_obs_hat = as.matrix(beta_obs_hat)
+    # Check if the output is numeric
+    if (is.numeric(beta_obs_hat[,1]) == FALSE){
+      stop("The output of 'func_obs' has to be numeric.", call. = FALSE)
+    } else{
+      if (dim(beta_obs_hat)[2] != 1){
+        stop("The output of 'func_obs' has to be a column vector", 
+        call. = FALSE)
+      } else if (dim(beta_obs_hat)[1] != dim(A_obs)[1]){
+        stop("The number of rows in the output of 'func_obs' has to be the 
+             same as the number of rows in the argument 'A_obs'.", 
+             call. = FALSE)
+      }
+    }
   }
+  
+  # Check the seed for bootstrap
+  if (!(is.numeric(beta_tgt) == TRUE & length(beta_tgt) == 1)) {
+    stop("The argument 'beta_tgt' must be a scalar.", call. = FALSE)
+  }  
+
+  # Check the seed for bootstrap
+  if (!(is.numeric(bs_seed) == TRUE & length(bs_seed) == 1)) {
+    stop("The seed to be used in the bootstrap ('bs_seed') must be a scalar.", 
+         call. = FALSE)
+  }
+  
+  # Check the number of bootstraps
+  if ((is.numeric(bs_num) == TRUE & length(bs_num) == 1 & bs_num >= 0) 
+      == FALSE){
+    stop("The number of bootstrap ('bs_num') must be a positive integer.",
+         call. = FALSE)
+  }
+  
+  # Check the number of decimal places
+  if ((is.numeric(p_sig) == TRUE & length(p_sig) == 1 & p_sig >= 0 & 
+       p_sig %%1 == 0) == FALSE){
+    stop("The number of decimal places in the p-value ('p_sig') has to be a
+         positive integer.", call. = FALSE)
+  }
+  
+  # Check the value of tau_input
+  if ((is.numeric(tau_input) == TRUE & length(tau_input) == 1 & 
+       tau_input >= 0 & tau_input <= 1) == FALSE){
+    stop("The value of tau ('tau_input') has to be in the interval [0,1].", 
+         call. = FALSE)
+  }
+  
+  # Check if the user is going to use a linear programming solver that is 
+  # supported. If the user does not specify any linear programming solver, the
+  # function will assign a linear programming solver if one of the supported
+  # solvers is installed.
+  if (hasArg(lpsolver) == TRUE){
+    lpsolver = tolower(lpsolver)
+  }
+  # Case 1: If no lpsolver is specified by the user
+  if (is.null(lpsolver) == TRUE){
+    if (requireNamespace("gurobi", quietly = TRUE) == TRUE){
+      lpsolver = "gurobi"
+    } else if (requireNamespace("lpSolveAPI", quietly = TRUE) == TRUE){
+      lpsolver = "lpSolveAPI"
+    } else if (requireNamespace("cplexAPI", quietly = TRUE) == TRUE){
+      lpsolver = "cplexAPI"
+    } else {
+      stop(gsub("\\s+", " ",
+                "Please install one of the following packages required for
+                estimation:
+                gurobi (version 7.5-1 or later);
+                cplexAPI (version 1.3.3 or later);
+                lpSolveAPI (version 5.5.2.0 or later)."),
+           call. = FALSE)
+    }
+  } else{
+  # Case 2: If user specifies a package that is not supported by the function
+    if ((lpsolver %in% c("gurobi", "cplexapi", "lpsolveapi")) == FALSE){
+      stop(gsub("\\s+", " ",
+           paste0("This function is incompatible with linear programming
+                  package '", lpsolver, "'. Please install one of the
+                  following linear programming packages instead:
+                  gurobi (version 7.5-1 or later);
+                  cplexAPI (version 1.3.3 or later);
+                  lpSolveAPI (version 5.5.2.0 or later).")),
+           call. = FALSE)
+    }
+  }
+  
+  return(list(df = df, 
+              A_tgt = A_tgt,
+              A_obs = A_obs,
+              beta_obs_hat = beta_obs_hat,
+              lpsolver = lpsolver))
 }
