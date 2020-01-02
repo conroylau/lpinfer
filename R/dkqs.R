@@ -19,7 +19,7 @@
 #' @param lpsolver The name of the linear/quadratic programming package to 
 #'    be used to obtain the solutions to the linear/quadratic programs. This
 #'    function supports \code{'gurobi'}, \code{'cplexapi'} and 
-#'    \code{'lpsolveapi'}.
+#'    \code{'quadprog'}.
 #'
 #' @returns Returns the \eqn{p}-value, the value of tau used \eqn{\tau^\ast}, 
 #'   test statistic \eqn{T_n(\tau_n)} and the list of bootstrap test statistics 
@@ -54,8 +54,8 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
     f_solver = gurobi_optim
   } else if (lpsolver == "cplexapi"){
     f_solver = cplexapi_optim
-  } else if(lpsolver == "lpsolveapi"){
-    f_solver = lpsolveapi_optim
+  } else if(lpsolver == "quadprog"){
+    f_solver = quadprog_optim
   }
 
   #### Step 3: Choose the value of tau
@@ -122,8 +122,8 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
   ones = matrix(rep(1, cn), nrow = 1)
   lb = matrix(rep(0, cn), nrow = 1)
   # Obtain parameters
-  theta_up = f_solver(NULL, A_tgt, NULL, ones, c(1), "=", "max", lb)
-  theta_down = f_solver(NULL, A_tgt, NULL, ones, c(1), "=", "min", lb)
+  theta_up = gurobi_optim(NULL, A_tgt, NULL, ones, c(1), "=", "max", lb)
+  theta_down = gurobi_optim(NULL, A_tgt, NULL, ones, c(1), "=", "min", lb)
   # Obtain required set of indices
   x_fullind = 1:cn
   ind_up = which(A_tgt %in% theta_up$objval)
@@ -187,7 +187,7 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
       lp_rhs_tau = new_const$lp_rhs_tau
       lp_sense_tau = new_const$lp_sense_tau
     }
-    ans = f_solver(NULL, c(1,rep(0, cn)), NULL, lp_lhs_tau, lp_rhs_tau,
+    ans = gurobi_optim(NULL, c(1,rep(0, cn)), NULL, lp_lhs_tau, lp_rhs_tau,
                   lp_sense_tau, "max", lb_tau)
   }
   return(ans)
@@ -320,10 +320,12 @@ cplexapi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
               x = solution$x))
 }
 
-#' lpsolveAPI solver for quadratic and linear programs
+#' quadprog solver for quadratic and linear programs
 #'
 #' @description This function computes the solution to the quadratic or linear
-#'    program using the \code{lpSolveAPI} package.
+#'    program using the \code{quadprog} package.
+#'    
+#' @require
 #'
 #' @param obj2 The matrix that corresponds to the second-order term in the
 #'    quadratic program.
@@ -335,44 +337,48 @@ cplexapi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
 #' @param sense The sense of the linear constraints.
 #' @param lb The lower lound vector.
 #'
-#' @returns Returns a list of output from \code{lpSolveAPI}.
+#' @returns Returns a list of output from \code{quadprog}.
 #'
 #' @export
-lpsolveapi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
-  ### Step 1: Translate the notations that are used for gurobi into those to be 
-  ### used in cplexAPI
-  # Model sense
-  modelsense[modelsense == "min"] == cplexAPI::CPX_MIN
-  modelsense[modelsense == "max"] == cplexAPI::CPX_MAX
-  # Inequality/equality signs
-  sense[sense == "<="] == "L"
-  sense[sense == ">="] == "G"
-  sense[sense == "=="] == "E"
-  # Bounds
-  sense[sense == Inf] == cplexAPI::CPX_INFBOUND
-  sense[sense == -Inf] == - cplexAPI::CPX_INFBOUND
+quadprog_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
+  ### Step 1: Set the objective function
+  # Set objective function
+  Dmat = 2 * obj2
+  dvec = obj1
+  # Negate the objective function if modelsense == max because the default of
+  # solve.QP is to minimize the objective function
+  if (modelsense == "max"){
+    Dmat = - Dmat
+    dvec = - dvec
+  }
   
-  ### Step 2: cplexAPI set-up
-  env = cplexAPI::openEnvCPLEX()
-  cplexAPI::setDblParmCPLEX(env, 1016, 1e-06)
-  prob = cplexAPI::initProbCPLEX(env)
-  cplexAPI::chgProbNameCPLEX(env, prob, "sample")
-  
-  ### Step 3: Model set-up
-  model = list()
-  model$Q = obj2
-  model$obj = obj1
-  model$objcon = obj0
-  model$A = A
-  model$rhs = rhs
-  model$sense = sense 
-  model$modelsense = modelsense
-  model$lb = lb
-  
- 
-  return(list(objval = solution$objval,
-              x = solution$x))
-  
+  ### Step 2: Set the constraints
+  # Constraints (Set with negative sign because they are in <= form but the 
+  # default is in >= form).
+  Amat = A
+  bvec = rhs
+  # Change the lower bounds to inequality constriants
+  lb_Amat = diag(length(lb))
+  lb_bvec = lb
+  # Update constraint matrices
+  Amat = rbind(Amat, lb_Amat)
+  bvec = c(bvec, lb_bvec)
+  # Number of equality constraints
+  #meq = min(nrow(A), 2)
+  # upper bound
+  uvec = c(rhs, rep(Inf, length(lb_bvec)))
+  # solution = solve.QP(Dmat,dvec,t(Amat),bvec=bvec)
+  settings = osqpSettings(verbose = FALSE, 
+                          max_iter = 1e5, 
+                          eps_abs=1e-8, 
+                          eps_rel = 1e-8)
+  # Solve the quadratic program
+  osqp_solution = solve_osqp(Dmat, dvec, Amat, l=bvec, u=uvec, pars=settings)
+  # Compute the real solution because obj0 was not included in the objective
+  # function
+  osqp_solution_real = osqp_solution$info$obj_val + obj0
+  return(list(objval = osqp_solution_real,
+              x = osqp_solution$x))
 }
 
 #' Computes the test statistics via bootstrapping
@@ -589,8 +595,8 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
   if (is.null(lpsolver) == TRUE){
     if (requireNamespace("gurobi", quietly = TRUE) == TRUE){
       lpsolver = "gurobi"
-    } else if (requireNamespace("lpSolveAPI", quietly = TRUE) == TRUE){
-      lpsolver = "lpSolveAPI"
+    } else if (requireNamespace("quadprog", quietly = TRUE) == TRUE){
+      lpsolver = "quadprog"
     } else if (requireNamespace("cplexAPI", quietly = TRUE) == TRUE){
       lpsolver = "cplexAPI"
     } else {
@@ -599,19 +605,19 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
                 estimation:
                 gurobi (version 7.5-1 or later);
                 cplexAPI (version 1.3.3 or later);
-                lpSolveAPI (version 5.5.2.0 or later)."),
+                quadprog (version 1.5.8 or later)."),
            call. = FALSE)
     }
   } else{
   # Case 2: If user specifies a package that is not supported by the function
-    if ((lpsolver %in% c("gurobi", "cplexapi", "lpsolveapi")) == FALSE){
+    if ((lpsolver %in% c("gurobi", "cplexapi", "quadprog")) == FALSE){
       stop(gsub("\\s+", " ",
            paste0("This function is incompatible with linear programming
                   package '", lpsolver, "'. Please install one of the
                   following linear programming packages instead:
                   gurobi (version 7.5-1 or later);
                   cplexAPI (version 1.3.3 or later);
-                  lpSolveAPI (version 5.5.2.0 or later).")),
+                  quadprog (version 1.5.8 or later).")),
            call. = FALSE)
     }
   }
