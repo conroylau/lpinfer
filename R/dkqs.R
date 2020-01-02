@@ -51,16 +51,19 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   beta_obs_hat = checkupdate$beta_obs_hat
   # Assign the solver used
   if (lpsolver == "gurobi"){
-    f_solver = gurobi_optim
+    f1_solver = gurobi_optim
+    f2_solver = gurobi_optim
   } else if (lpsolver == "cplexapi"){
-    f_solver = cplexapi_optim
+    f1_solver = cplexapi_optim
+    f2_solver = cplexapi_optim
   } else if(lpsolver == "quadprog"){
-    f_solver = quadprog_optim
+    f1_solver = lpprog_optim
+    f2_solver = quadprog_optim
   }
 
   #### Step 3: Choose the value of tau
   tau_return = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "tau", N, 
-                         f_solver)$objval
+                         f1_solver, f2_solver)$objval
   if (tau_input > tau_return){
     tau = tau_return
   } else if (tau_input <= tau_return){
@@ -72,7 +75,7 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
 
   #### Step 4: Solve QP (4) in Torgovitsky (2019)
   full_return = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "test", N, 
-                          f_solver)
+                          f1_solver, f2_solver)
   x_star = full_return$x
   # Return and stop program if it is infeasible
   if (is.null(x_star) == TRUE){
@@ -85,7 +88,7 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   #### Step 5: Compute the bootstrap estimates
   # T_bs is the list of bootstrap test statistics used
   T_bs = beta_bs(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs, 
-                 beta_obs_hat, beta_tgt, tau, N, f_solver)
+                 beta_obs_hat, beta_tgt, tau, N, f1_solver, f2_solver)
   #### Step 6: Compute the p-value
   # decision = 1 refers to rejected, decision = 0 refers to not rejected
   p_val = p_eval(T_bs, T_star, p_sig)
@@ -104,13 +107,15 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
 #'
 #' @param tau The RHS vector fo the linear constraints.
 #' @param problem The sense of the linear constraints.
+#' @param f1_solver Name of the solver that solves linear programs.
+#' @param f2_solver Name of the solver that solves quadratic programs.
 #' @inheritParams dkqs_cone
 #'
 #' @returns Returns the solution to the quadratic program.
 #'
 #' @export
 prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
-                      f_solver){
+                      f1_solver, f2_solver){
   #### Step 1: Formulation of the objective function for (5)
   rn = dim(A_tgt)[1]
   cn = dim(A_tgt)[2]
@@ -122,8 +127,8 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
   ones = matrix(rep(1, cn), nrow = 1)
   lb = matrix(rep(0, cn), nrow = 1)
   # Obtain parameters
-  theta_up = gurobi_optim(NULL, A_tgt, NULL, ones, c(1), "=", "max", lb)
-  theta_down = gurobi_optim(NULL, A_tgt, NULL, ones, c(1), "=", "min", lb)
+  theta_up = f1_solver(NULL, A_tgt, NULL, ones, c(1), "=", "max", lb)
+  theta_down = f1_solver(NULL, A_tgt, NULL, ones, c(1), "=", "min", lb)
   # Obtain required set of indices
   x_fullind = 1:cn
   ind_up = which(A_tgt %in% theta_up$objval)
@@ -143,7 +148,7 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
   # If problem == "bootstrap", this function solves linear program (5)
   # If program == "tau", this function solves linear program (6)
   if (problem == "test"){
-    ans = f_solver(obj2, obj1, obj0, rbind(A_tgt, ones), lp_rhs, lp_sense,
+    ans = f2_solver(obj2, obj1, obj0, rbind(A_tgt, ones), lp_rhs, lp_sense,
                        "min", lb)
   } else if (problem == "bootstrap"){
   # Update lb
@@ -151,8 +156,8 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
     lb_new[ind_up] = rhs_up
     lb_new[ind_down] = rhs_down
     lb_new[ind_0] = rhs_0
-    ### Use Gurobi to find the optimum
-    ans = f_solver(obj2, obj1, obj0, rbind(A_tgt, ones), lp_rhs, lp_sense,
+    ### Use QP solver to find the optimum
+    ans = f2_solver(obj2, obj1, obj0, rbind(A_tgt, ones), lp_rhs, lp_sense,
                        "min", lb_new)
   } else if (problem == "tau"){
     # Update matrix A
@@ -187,7 +192,7 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
       lp_rhs_tau = new_const$lp_rhs_tau
       lp_sense_tau = new_const$lp_sense_tau
     }
-    ans = gurobi_optim(NULL, c(1,rep(0, cn)), NULL, lp_lhs_tau, lp_rhs_tau,
+    ans = f1_solver(NULL, c(1,rep(0, cn)), NULL, lp_lhs_tau, lp_rhs_tau,
                   lp_sense_tau, "max", lb_tau)
   }
   return(ans)
@@ -320,24 +325,61 @@ cplexapi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
               x = solution$x))
 }
 
-#' quadprog solver for quadratic and linear programs
+#' lpSolveAPI solver for linear programs
 #'
 #' @description This function computes the solution to the quadratic or linear
-#'    program using the \code{quadprog} package.
+#'    program using the \code{lpSolveAPI} package.
 #'    
-#' @require
+#' @require lpSolveAPI
 #'
-#' @param obj2 The matrix that corresponds to the second-order term in the
-#'    quadratic program.
-#' @param obj1 The vector that corresponds to the first-order term in the
-#'    quadratic or linear program.
-#' @param obj0 The constant term in the quadratic or linear program.
-#' @param A The constraint matrix.
-#' @param rhs The RHS vector fo the linear constraints.
-#' @param sense The sense of the linear constraints.
-#' @param lb The lower lound vector.
+#' @inheritParams gurobi_optim
 #'
-#' @returns Returns a list of output from \code{quadprog}.
+#' @returns Returns a list of output from \code{lpSolveAPI}.
+#'
+#' @export
+lpprog_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
+  ### Step 1: Update the constraint matrices
+  # Change the lower bounds to inequality constriants
+  lb_Amat = diag(length(lb))
+  lb_bvec = lb
+  # Update constraint matrices
+  A = rbind(A, lb_Amat)
+  rhs = c(rhs, lb_bvec)
+  sense = c(sense, rep(">=", length(lb_bvec)))
+  
+  ### Step 2: Basic set-ups of LP
+  # Constraints numbers
+  lprec = make.lp(nrow = nrow(A), ncol = ncol(A))
+  # Model sense
+  lp.control(lprec, sense=modelsense)
+  # Types of decision variables
+  set.type(lprec, 1:ncol(A), type=c("real"))
+  set.objfn(lprec, obj1)
+  
+  ### Step 3: Define the constraints
+  for (i in 1:nrow(A)){
+    add.constraint(lprec, A[i, ], sense[i], rhs[i])
+    
+  }
+  
+  ### Step 4: Solve and obtain solution of LP
+  solve(lprec)
+  x = get.variables(lprec)
+  objval = get.objective(lprec)
+  return(list(x = x,
+              objval = objval))
+}
+
+#' osqp solver for quadratic programs
+#'
+#' @description This function computes the solution to the quadratic or linear
+#'    program using the \code{osqp} package.
+#'    
+#' @require osqp
+#'
+#' @inheritParams gurobi_optim
+#'
+#' @returns Returns a list of output from \code{osqp}.
 #'
 #' @export
 quadprog_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
@@ -399,7 +441,7 @@ quadprog_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
 #'
 #' @export
 beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs, 
-                    beta_obs_hat, beta_tgt, tau, N, f_solver){
+                    beta_obs_hat, beta_tgt, tau, N, f1_solver, f2_solver){
   T_bs = NULL
   # Loop through all indices in the bootstrap
   for (i in 1:bs_num){
@@ -415,7 +457,7 @@ beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs,
     ####  Step 4: Compute the bootstrap test statistic
     beta_bs_bar = beta_bs_star - beta_obs_hat + s_star
     T_bs_i = prog_cone(A_obs, A_tgt, beta_bs_bar, beta_tgt, tau, "bootstrap", 
-                       N, f_solver)$objval
+                       N, f1_solver, f2_solver)$objval
     T_bs = c(T_bs, T_bs_i)
   }
   # Return the general solution
