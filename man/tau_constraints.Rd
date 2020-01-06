@@ -21,11 +21,11 @@ tau_constraints(
 
 \item{coeff_tau}{The coefficient in front of tau in the constraint.}
 
-\item{coeff_x}{The coefficient in front of x_i in the constraint.}
+\item{coeff_x}{The coefficient in front of \eqn{x_i} in the constraint.}
 
-\item{ind_x}{The index of x_i, i.e. the value of i.}
+\item{ind_x}{The index of \eqn{x_i}, i.e. the value of \eqn{i}.}
 
-\item{rhs}{The RHS coefficient of the new constraint.}
+\item{rhs}{The RHS vector of the new constraint.}
 
 \item{sense}{The equality or inequality symbol to be used in the new
 constraint.}
@@ -37,10 +37,11 @@ constraint.}
 \item{lp_sense_tau}{The sense vector fo the linear constraints to be updated}
 }
 \value{
-Returns the updated matrix of the constraint matrix, RHS vector of
-   of the linear constraints and the sense vector.
+Returns the list of updated constraint matrix, RHS vector of the 
+  linear constraints and the sense vector.
 }
 \description{
-This function computes the value of tau based on Kamat (2018),
-  i.e. linear program (6) of Torgovitsky (2019).
+This function generates the constraints in the linear program
+  for computing the value of tau based on the procedure suggested by Kamat 
+  (2018), i.e. linear program (6) of Torgovitsky (2019).
 }

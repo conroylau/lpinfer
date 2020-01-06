@@ -2,7 +2,7 @@
 % Please edit documentation in R/dkqs.R
 \name{beta_bs}
 \alias{beta_bs}
-\title{Computes the test statistics via bootstrapping}
+\title{Computes the bootstrap test statistics}
 \usage{
 beta_bs(
   df,
@@ -16,7 +16,9 @@ beta_bs(
   beta_obs_hat,
   beta_tgt,
   tau,
-  N
+  n,
+  lp_solver,
+  qp_solver
 )
 }
 \arguments{
@@ -24,30 +26,35 @@ beta_bs(
 
 \item{bs_seed}{The starting value of the seed in bootstrap.}
 
-\item{bs_num}{The total number of bootstraps.}
+\item{bs_num}{The total number of bootstraps \eqn{B}.}
 
 \item{J}{The number of distinct nonzero values in vector \eqn{\bm{y}}.}
 
-\item{s_star}{The value of \eqn{s^\ast} in the cone-tightening procedure.}
-
-\item{A_obs}{The observed matrix in the linear program.}
-
-\item{A_tgt}{The "target matrix" in the linear program.}
+\item{s_star}{The value of 
+\eqn{\hat{s}^\ast \equiv A_{\mathrm{obs}}\hat{\bm{x}}_n^\ast} 
+in the cone-tightening procedure.}
 
 \item{func_obs}{The function that generates the required 
-\eqn{\beta_{\mathrm{obs}}}.}
+\eqn{\hat{\beta}_{\mathrm{obs}}}.}
 
-\item{beta_tgt}{The value of \eqn{t} in the null hypothesis.}
-
-\item{tau}{The RHS vector fo the linear constraints.}
-
-\item{beat_obs_hat}{The value of \eqn{\hat{\beta}_{\mathrm{obs}}} based on
+\item{beta_obs_hat}{The value of \eqn{\hat{\beta}_{\mathrm{obs}}} based on
 the function supplied by the user.}
+
+\item{beta_tgt}{The value of \eqn{\hat{\beta}_{\mathrm{tgt}}} (i.e. the value 
+of \eqn{t} in the missing data problem) in the null hypothesis.}
+
+\item{tau}{The value of tau to be used in the linear program.}
+
+\item{n}{The number of observations in the dataframe.}
+
+\item{lp_solver}{Name of the solver that solves the linear programs.}
+
+\item{qp_solver}{Name of the solver that solves the quadratic programs.}
 }
 \value{
-Returns the list of test statistics obtained from bootstrap, i.e.
+Returns the list of bootstrap test statistics, i.e.
    \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}.
 }
 \description{
-This function computes the test statistics via bootstrapping.
+This function computes the bootstrap test statistics.
 }

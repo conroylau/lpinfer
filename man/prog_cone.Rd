@@ -4,23 +4,52 @@
 \alias{prog_cone}
 \title{Formulating and solving quadratic programs}
 \usage{
-prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n)
+prog_cone(
+  A_obs,
+  A_tgt,
+  beta_obs_hat,
+  beta_tgt,
+  tau,
+  problem,
+  n,
+  lp_solver,
+  qp_solver
+)
 }
 \arguments{
-\item{A_obs}{The observed matrix in the linear program.}
+\item{beta_obs_hat}{The value of \eqn{\hat{\beta}_{\mathrm{obs}}} based on
+the function supplied by the user.}
 
-\item{A_tgt}{The "target matrix" in the linear program.}
+\item{beta_tgt}{The value of \eqn{\hat{\beta}_{\mathrm{tgt}}} (i.e. the value 
+of \eqn{t} in the missing data problem) in the null hypothesis.}
 
-\item{beta_tgt}{The value of \eqn{t} in the null hypothesis.}
+\item{tau}{The value of tau to be used in the linear program.}
 
-\item{tau}{The RHS vector fo the linear constraints.}
+\item{problem}{The problem that the function will be solved.}
 
-\item{problem}{The sense of the linear constraints.}
+\item{n}{The number of observations in the dataframe.}
+
+\item{lp_solver}{Name of the solver that solves the linear programs.}
+
+\item{qp_solver}{Name of the solver that solves the quadratic programs.}
 }
 \value{
 Returns the solution to the quadratic program.
 }
 \description{
-This function formulates and solves the quadratic programs (5)
-   and (6) in Torgovitsky (2019).
+This function formulates the matrices and vectors, and solves 
+   the quadratic programs (4) or linear programs (5) and (6) in Torgovitsky 
+   (2019).
+}
+\details{
+The argument \code{problem} must be one of the followings:
+\itemize{
+  \item{\code{test} --- this computes the quadratic program for the test 
+  statistic, i.e. quadratic program (4) in Torgovitsky (2019)}
+  \item{\code{bootstrap} --- this computes the quadratic program for the 
+  bootstrap test statistics, i.e. quadratic program (5) in 
+  Torgovitsky (2019)}
+  \item{\code{tau} --- this computes the value of tau based on the procedure
+  suggested by Kamat (2018), i.e. linear program (6) in Torgovitsky (2019)}
+}
 }
