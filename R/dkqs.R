@@ -41,7 +41,7 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
                       bs_num = 100, p_sig = 2, tau_input = .5, lpsolver = NULL,
                       qpsolver = NULL){
   
-  #### Step 1: Check the dependencies
+  #### Step 1: Check and update the dependencies
   checkupdate = dkqs_cone_check(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
                                 bs_num, p_sig, tau_input, lpsolver, qpsolver)
   # Update and return the information returned from the function dkqs_cone_check
@@ -53,7 +53,7 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   # (c) Solver for linear or quadratic programs
   lpsolver = checkupdate$lpsolver
   qpsolver = checkupdate$qpsolver
-  # Display the lpsolver being used
+  # Display the lpsolver and qpsolver being used
   cat(paste("Linear programming solver used: ", lpsolver, ".\n", sep = ""))
   cat(paste("Quadratic programming solver used: ", qpsolver, ".\n", sep = ""))
   
@@ -69,7 +69,7 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
     lp_solver = gurobi_optim
   } else if (lpsolver == "cplexapi"){
     lp_solver = cplexapi_optim
-  } else if(lpsolver == "lpsolveapi"){
+  } else if (lpsolver == "lpsolveapi"){
     lp_solver = lpprog_optim
   }
   # Quadratic programming
@@ -77,7 +77,7 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
     qp_solver = gurobi_optim
   } else if (qpsolver == "cplexapi"){
     qp_solver = cplexapi_optim
-  } else if(qpsolver == "osqp"){
+  } else if (qpsolver == "osqp"){
     qp_solver = osqp_optim
   }
 
@@ -383,22 +383,21 @@ lpprog_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
   rhs = c(rhs, lb_bvec)
   sense = c(sense, rep(">=", length(lb_bvec)))
   
-  ### Step 2: Basic set-ups of LP
-  # Constraints numbers
+  ### Step 2: LP formulation
+  # solve object
   lprec = make.lp(nrow = nrow(A), ncol = ncol(A))
   # Model sense
   lp.control(lprec, sense=modelsense)
   # Types of decision variables
   set.type(lprec, 1:ncol(A), type=c("real"))
   set.objfn(lprec, obj1)
-  
-  ### Step 3: Define the constraints
+  #Define the constraints
   for (i in 1:nrow(A)){
     add.constraint(lprec, A[i, ], sense[i], rhs[i])
     
   }
   
-  ### Step 4: Solve and obtain solution of LP
+  ### Step 3: Solve and obtain solution of LP
   solve(lprec)
   x = get.variables(lprec)
   objval = get.objective(lprec)
@@ -427,16 +426,16 @@ osqp_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
   # Set objective function
   # It is multiplied by 2 because of the term 1/2 in the quadratic term in the 
   # osqp package.
-  Dmat = 2 * obj2
-  dvec = obj1
+  Pmat = 2 * obj2
+  qvec = obj1
   # Negate the objective function if modelsense == max because the default of
   # solve.QP is to minimize the objective function
   if (modelsense == "max"){
-    Dmat = - Dmat
-    dvec = - dvec
+    Pmat = - Pmat
+    qvec = - qvec
   }
   
-  ### Step 2: Set the constraints
+  ### Step 2: Formulation of the constraints
   # Constraints (Set with negative sign because they are in <= form but the 
   # default is in >= form).
   Amat = A
@@ -451,18 +450,21 @@ osqp_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
   #meq = min(nrow(A), 2)
   # upper bound
   uvec = c(rhs, rep(Inf, length(lb_bvec)))
+  
+  # Step 3: Solve and obtain solution of the quadratic program
   # solution = solve.QP(Dmat,dvec,t(Amat),bvec=bvec)
   settings = osqpSettings(verbose = FALSE, 
                           max_iter = 1e5, 
                           eps_abs=1e-8, 
                           eps_rel = 1e-8)
-  # Solve the quadratic program
-  osqp_solution = solve_osqp(Dmat, dvec, Amat, l=bvec, u=uvec, pars=settings)
+  osqp_solution = solve_osqp(Pmat, qvec, Amat, l=bvec, u=uvec, pars=settings)
+  #quadprog_2 = solve.QP(Pmat, -qvec, Amat, bvec, meq = 2, factorized=FALSE)
+  #print(quadprog_2)
   # Compute the real solution because obj0 was not included in the objective
   # function
   osqp_solution_real = osqp_solution$info$obj_val + obj0
-  return(list(objval = osqp_solution_real,
-              x = osqp_solution$x))
+  return(list(x = osqp_solution$x,
+              objval = osqp_solution_real))
 }
 
 #' Computes the bootstrap test statistics
@@ -580,7 +582,7 @@ tau_constraints <- function(length_tau, coeff_tau, coeff_x, ind_x, rhs, sense,
 #' @export
 dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
                             bs_num, p_sig, tau_input, lpsolver, qpsolver){
-  # Check the dataframe provided by the user
+  ### Part 1. Check the dataframe
   if (class(df) %in% c("data.frame", "matrix") == TRUE){
     df = as.data.frame(df)  
   } else {
@@ -589,7 +591,7 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
                matrix."), call. = FALSE)    
   }
   
-  # Check the matrices A_obs and A_tgt provided by the user
+  ### Part 2. Check the matrices A_obs and A_tgt
   matrix_names = c("A_obs", "A_tgt")
   matrix_list = list(A_obs, A_tgt)
   for (i in 1:2){
@@ -616,7 +618,7 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
   A_obs = matrix_list[[1]]
   A_tgt = matrix_list[[2]]
 
-  # Check the function provided by the user
+  ### Part 3. Check the function
   if (class(func_obs) != "function"){
     stop("The input of 'func_obs' has to be a function.", call. = FALSE)
   } else{
@@ -637,38 +639,39 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
     }
   }
   
-  # Check the seed for bootstrap
+  ### Part 4. Check beta_tgt
   if (!(is.numeric(beta_tgt) == TRUE & length(beta_tgt) == 1)) {
     stop("The argument 'beta_tgt' must be a scalar.", call. = FALSE)
   }  
 
-  # Check the seed for bootstrap
+  ### Part 5. Check bs_seed
   if (!(is.numeric(bs_seed) == TRUE & length(bs_seed) == 1)) {
     stop("The seed to be used in the bootstrap ('bs_seed') must be a scalar.", 
          call. = FALSE)
   }
   
-  # Check the number of bootstraps
-  if ((is.numeric(bs_num) == TRUE & length(bs_num) == 1 & bs_num >= 0) 
-      == FALSE){
+  ### Part 6. Check bs_num
+  if ((is.numeric(bs_num) == TRUE & length(bs_num) == 1 & bs_num >= 0 &
+       bs_num%%1 == 0) == FALSE){
     stop("The number of bootstrap ('bs_num') must be a positive integer.",
          call. = FALSE)
   }
   
-  # Check the number of decimal places
+  ### Part 7. Check the number of decimal places
   if ((is.numeric(p_sig) == TRUE & length(p_sig) == 1 & p_sig >= 0 & 
-       p_sig %%1 == 0) == FALSE){
+       p_sig%%1 == 0) == FALSE){
     stop("The number of decimal places in the p-value ('p_sig') has to be a
          positive integer.", call. = FALSE)
   }
   
-  # Check the value of tau_input
+  ### Part 8. Check the value of tau_input
   if ((is.numeric(tau_input) == TRUE & length(tau_input) == 1 & 
        tau_input >= 0 & tau_input <= 1) == FALSE){
     stop("The value of tau ('tau_input') has to be in the interval [0,1].", 
          call. = FALSE)
   }
   
+  ### Part 9. Check the name of the solvers
   # Check if the user supplied a name of linear or quadratic programming solver
   # that is supported by the function. If the user does not specify any linear
   # programming solver, the function will assign a linear or quadratic
@@ -764,10 +767,11 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
          call. = FALSE)
   }
 
-  # Step 4 - Update the solver names
+  # Update the solver names
   lpsolver = solvers[[1]]
   qpsolver = solvers[[2]]
   
+  ### Step 10. Return the upated information
   return(list(df = df, 
               A_tgt = A_tgt,
               A_obs = A_obs,
