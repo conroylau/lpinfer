@@ -657,21 +657,21 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
          call. = FALSE)
   }
   
-  ### Part 7. Check the number of decimal places
+  ### Part 7. Check p_sig
   if ((is.numeric(p_sig) == TRUE & length(p_sig) == 1 & p_sig >= 0 & 
        p_sig%%1 == 0) == FALSE){
     stop("The number of decimal places in the p-value ('p_sig') has to be a
          positive integer.", call. = FALSE)
   }
   
-  ### Part 8. Check the value of tau_input
+  ### Part 8. Check tau_input
   if ((is.numeric(tau_input) == TRUE & length(tau_input) == 1 & 
        tau_input >= 0 & tau_input <= 1) == FALSE){
     stop("The value of tau ('tau_input') has to be in the interval [0,1].", 
          call. = FALSE)
   }
   
-  ### Part 9. Check the name of the solvers
+  ### Part 9. Check lpsolve and qpsolve
   # Check if the user supplied a name of linear or quadratic programming solver
   # that is supported by the function. If the user does not specify any linear
   # programming solver, the function will assign a linear or quadratic
@@ -689,7 +689,7 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
     if (hasArg(solvers[[i]]) == TRUE){
       solvers[[i]] = tolower(hasArg(solvers[[i]]))
     }
-    # Case 1: If no lpsolver is specified by the user
+    # Case 1: If no solver name is provided by the user
     if (is.null(solvers[[i]]) == TRUE){
       if (requireNamespace("gurobi", quietly = TRUE) == TRUE){
         solvers[[i]] = "gurobi"
@@ -710,7 +710,7 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
              call. = FALSE)
       }
     } else{
-    # Case 2: If user specifies a package that is not supported by the function
+    # Case 2: If user specifies a package that is not supported
       if ((lpsolver %in% c("gurobi", "cplexapi", "osqp", "lpsolveapi")) 
           == FALSE){
       solver_incomp[i] = TRUE
@@ -773,8 +773,8 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
   
   ### Step 10. Return the upated information
   return(list(df = df, 
-              A_tgt = A_tgt,
               A_obs = A_obs,
+              A_tgt = A_tgt,
               beta_obs_hat = beta_obs_hat,
               lpsolver = lpsolver,
               qpsolver = qpsolver))
