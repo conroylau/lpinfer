@@ -4,12 +4,10 @@
 #'    procedure suggested by Torgovitsky (2019) that incorporates the 
 #'    cone-tightening procedure proposed by Deb, Kitamura, Quah and
 #'    Stoye (2018).
-#'
 #' @import slam gurobi car modelr
 #'
 #' @param df The dataframe that contains the sample data.
-#' @param A_obs The "observed matrix" in the quadratic program 
-#'    \eqn{A_{\mathrm{obs}}.
+#' @param A_obs The "observed matrix" in the quadratic program \eqn{A_{\mathrm{obs}}.
 #' @param A_tgt The "target matrix" in the quadratic program 
 #'    \eqn{A_{\mathrm{tgt}}.
 #' @param func_obs The function that generates the required 
@@ -238,7 +236,7 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
 #' @description This function computes the solution to the quadratic or linear
 #'    program using the `\code{Gurobi}' package.
 #'    
-#' @require gurobi
+#' @import gurobi
 #'
 #' @param obj2 The matrix that corresponds to the second-order term in the
 #'    quadratic program. This input will be set to \code{NULL} if the problem
@@ -362,7 +360,7 @@ cplexapi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
 #' @description This function computes the solution to the linear program
 #'    using the `\code{lpsolveAPI}' package.
 #'    
-#' @require lpSolveAPI
+#' @import lpSolveAPI
 #'
 #' @inheritParams gurobi_optim
 #'
@@ -410,7 +408,7 @@ lpprog_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
 #' @description This function computes the solution to the quadratic program
 #'    using the `\code{osqp}' package.
 #'    
-#' @require osqp
+#' @import osqp
 #'
 #' @inheritParams gurobi_optim
 #'
@@ -471,7 +469,7 @@ osqp_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
 #'
 #' @description This function computes the bootstrap test statistics.
 #'
-#' @require modelr
+#' @import modelr
 #'
 #' @param J The number of distinct nonzero values in vector \eqn{\bm{y}}.
 #' @param s_star The value of 
