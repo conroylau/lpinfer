@@ -94,9 +94,7 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
     # Error message when the problem is infeasible.
     stop("The problem is infeasible. Choose other values of tau.")
   }
-  print("----------")
-  print(tau)
-  print("----------")
+  
   #### Step 4: Solve QP (4) in Torgovitsky (2019)
   full_return = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "test", N, 
                           lp_solver, qp_solver)
@@ -119,6 +117,7 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   tau = round(tau, digits = 5)
   
   cat(paste("-----------------------------------", "\n"))
+  cat(paste("Test statistic: ", round(T_star, digits = 5), ".\n", sep = ""))
   cat(paste("p-value: ", p_val, ".\n", sep = ""))
   cat(paste("Value of tau used in LP: ", tau, ".\n", sep = ""))
   invisible(list(p = p_val, tau = tau, T_star = T_star, T_bs = T_bs))
@@ -288,38 +287,38 @@ gurobi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
 #'
 #' @export
 cplexapi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
-
-  ### Step 4: Solve linear program or quadratic program
+  ### Step 1: Update the notations
+  # Model sense
+  modelsense[modelsense == "min"] = CPX_MIN
+  modelsense[modelsense == "max"] = CPX_MAX
+  # Inequality/equality signs
+  sense[sense == "<="] = "L"
+  sense[sense == ">="] = "G"
+  sense[sense == "=="] = "E"
+  sense[sense == "="] = "E"
+  # Bounds
+  lb[lb == Inf] = CPX_INFBOUND
+  lb[lb == -Inf] = -CPX_INFBOUND
+  ub = rep(CPX_INFBOUND, length(lb))
+  
+  ### Step 2: cplexAPI environment
+  # Model environment
+  env = cplexAPI::openEnvCPLEX()
+  cplexAPI::setDblParmCPLEX(env, 1016, 1e-06)
+  prob = cplexAPI::initProbCPLEX(env)
+  cplexAPI::chgProbNameCPLEX(env, prob, "sample")
+  
+  # Constraint matrices
+  cnt = apply(A, MARGIN = 2, function(x) length(which(x != 0)))
+  beg = rep(0, ncol(A))
+  beg[-1] = cumsum(cnt[-length(cnt)])
+  ind = unlist(apply(A, MARGIN = 2, function(x) which(x != 0) - 1))
+  val = c(A)
+  val = val[val != 0]
+  
+  ### Step 3: Solve the problem
   # A linear program is identified if obj2 == NULL
   if (is.null(obj2) == TRUE){
-    ### Step 1: Translate the notations that are used for gurobi into those to
-    ### be used in cplexAPI
-    # Model sense
-    modelsense[modelsense == "min"] = CPX_MIN
-    modelsense[modelsense == "max"] = CPX_MAX
-    # Inequality/equality signs
-    sense[sense == "<="] = "L"
-    sense[sense == ">="] = "G"
-    sense[sense == "=="] = "E"
-    sense[sense == "="] = "E"
-    # Bounds
-    lb[lb == Inf] = CPX_INFBOUND
-    lb[lb == -Inf] = -CPX_INFBOUND
-    ub = rep(CPX_INFBOUND, length(lb))
-    
-    ### Step 2: cplexAPI set-up
-    env = cplexAPI::openEnvCPLEX()
-    cplexAPI::setDblParmCPLEX(env, 1016, 1e-06)
-    prob = cplexAPI::initProbCPLEX(env)
-    cplexAPI::chgProbNameCPLEX(env, prob, "sample")
-    
-    ### Step 3: Model set-up
-    cnt = apply(A, MARGIN = 2, function(x) length(which(x != 0)))
-    beg = rep(0, ncol(A))
-    beg[-1] = cumsum(cnt[-length(cnt)])
-    ind = unlist(apply(A, MARGIN = 2, function(x) which(x != 0) - 1))
-    val = c(A)
-    val = val[val != 0]
     # Solving linear program
     copyLpwNamesCPLEX(env,
                       prob,
@@ -339,40 +338,63 @@ cplexapi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
     solution = solutionCPLEX(env, prob)
   } else {
     # Solving quadratic program
-    Qmat = 2*obj2
-    cvec = t(obj1)
-    Amat = A
-    bvec = rhs
-    sense = "E"
-    objsense = modelsense
-    lb = lb
-    ub = rep(Inf, length(lb))
-    vtype = "C"
-    soln = Rcplex(cvec = cvec,
-                      Amat = Amat, 
-                      bvec = bvec,
-                      Qmat = Qmat,
-                      lb = lb,
-                      ub = ub,
-                      objsense = objsense,
-                      vtype = vtype,
-                      n = 1)
-    print(soln$obj)
-    print(soln$xopt)
-    #solution = list()
-    solution$objval = soln$obj + obj0
-    solution$x = soln$xopt
-    Rcplex.close()
-    # copyQPsepCPLEX(env,
-    #               prob,
-    #               obj2
-    #               )
-    # qpoptCPLEX(env, prob)
-    # solution = solutionCPLEX(env, prob)
-    # print(solution)
+    stop("This version can only solve linear programs by CPLEX at the moment. 
+         Please use another solver for quadratic progarms.")
   }
   return(list(objval = solution$objval,
               x = solution$x))
+}
+
+#' Rcplex solver for linear programs
+#'
+#' @description This function computes the solution to the linear or quadratic
+#'    program using the `\code{Rcplex}' package.
+#'    
+#' @import Rcplex
+#'
+#' @inheritParams gurobi_optim
+#'
+#' @returns Returns the optimal objective value and the corresponding argument
+#'   to the linear or quadratic program.
+#'
+#' @export
+rcplex_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
+  ### Step 1: Update vectors and sense
+  # Update sense
+  sense[sense == ">="] = "G"
+  sense[sense == "<="] = "L"
+  sense[sense == "="]  = "E"
+  # Define upper bound
+  ub = rep(Inf, length(lb))
+  # Define Q matrix
+  # - Keep Qmat as NULL for linear program
+  # - Multiply obj2 by 2 for Q for quadratic program to offset the 1/2 factor
+  if (is.null(obj2) == TRUE){
+    Qmat = obj2
+  } else {
+    Qmat = 2*obj2
+  }
+  
+  ### Step 2: Solve model
+  solution = Rcplex(cvec = t(obj1),
+                    Amat = A, 
+                    bvec = rhs,
+                    Qmat = Qmat,
+                    lb = lb,
+                    sense = sense,
+                    ub = ub,
+                    objsense = modelsense,
+                    vtype = "C",
+                    n = 1)
+  
+  ### Step 3: Update and return result
+  if (is.null(obj0) == FALSE){
+    objval = solution$obj + obj0
+  } else {
+    objval = solution$obj
+  }
+  return(list(objval = objval,
+              x = solution$xopt))  
 }
 
 #' lpSolveAPI solver for linear programs
@@ -435,8 +457,13 @@ lpprog_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
 #' @returns Returns the optimal objective value and the corresponding argument
 #'   to the linear program.
 #'   
-#' @details The package `\code{osqp}' cannot be used to solve linear programs. 
-#'   Hence, the argument \code{obj2} cannot be \code{NULL}.
+#' @details 
+#' \itemize{
+#'   \item{The package `\code{osqp}' cannot be used to solve linear programs. 
+#'   Hence, the argument \code{obj2} cannot be \code{NULL}.}
+#'   \item{The matrix \eqn{\bm{P}} that corresponds to the second-order term
+#'   has to be positive semi-definite.}
+#'  }
 #'
 #' @export
 osqp_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
@@ -548,7 +575,7 @@ p_eval <- function(T_bs, T_star, p_sig){
     }
     alpha = alpha + 10^(-p_sig)
   }
-  p_val = round(alpha - 10^(-p_sig), digits = p_sig)
+  p_val = 1 - round(alpha - 10^(-p_sig), digits = p_sig)
   return(p_val)
 }
 
@@ -575,8 +602,6 @@ p_eval <- function(T_bs, T_star, p_sig){
 #' @export
 tau_constraints <- function(length_tau, coeff_tau, coeff_x, ind_x, rhs, sense,
                             lp_lhs_tau, lp_rhs_tau, lp_sense_tau){
-  print("* * * * *")
-  print(coeff_tau)
   temp = rep(0, length_tau)
   temp[1] = coeff_tau
   temp[ind_x] = coeff_x
