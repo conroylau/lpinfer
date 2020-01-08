@@ -6,24 +6,6 @@
 \usage{
 cplexapi_optim(obj2, obj1, obj0, A, rhs, sense, modelsense, lb)
 }
-\arguments{
-\item{obj2}{The matrix that corresponds to the second-order term in the
-quadratic program. This input will be set to \code{NULL} if the problem
-considered is a linear program.}
-
-\item{obj1}{The vector that corresponds to the first-order term in the
-quadratic or linear program.}
-
-\item{obj0}{The constant term in the quadratic or linear program.}
-
-\item{A}{The constraint matrix.}
-
-\item{rhs}{The RHS vector for the linear constraints.}
-
-\item{sense}{The sense of the linear constraints.}
-
-\item{lb}{The lower lound vector.}
-}
 \value{
 Returns the optimal objective value and the corresponding argument
   to the quadratic or linear program.
