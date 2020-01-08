@@ -69,6 +69,8 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
     lp_solver = cplexapi_optim
   } else if (lpsolver == "lpsolveapi"){
     lp_solver = lpprog_optim
+  } else if (lpsolver == "rcplex"){
+    lp_solver = rcplex_optim
   }
   # Quadratic programming
   if (qpsolver == "gurobi"){
@@ -77,6 +79,8 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
     qp_solver = cplexapi_optim
   } else if (qpsolver == "osqp"){
     qp_solver = osqp_optim
+  } else if (qpsolver == "rcplex"){
+    qp_solver = rcplex_optim
   }
 
   #### Step 3: Choose the value of tau
@@ -90,7 +94,6 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
     # Error message when the problem is infeasible.
     stop("The problem is infeasible. Choose other values of tau.")
   }
-
   #### Step 4: Solve QP (4) in Torgovitsky (2019)
   full_return = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "test", N, 
                           lp_solver, qp_solver)
@@ -282,37 +285,38 @@ gurobi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
 #'
 #' @export
 cplexapi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
-  ### Step 1: Translate the notations that are used for gurobi into those to
-  ### be used in cplexAPI
-  # Model sense
-  modelsense[modelsense == "min"] = CPX_MIN
-  modelsense[modelsense == "max"] = CPX_MAX
-  # Inequality/equality signs
-  sense[sense == "<="] = "L"
-  sense[sense == ">="] = "G"
-  sense[sense == "=="] = "E"
-  sense[sense == "="] = "E"
-  # Bounds
-  lb[lb == Inf] = CPX_INFBOUND
-  ub = rep(CPX_INFBOUND, length(lb))
-  
-  ### Step 2: cplexAPI set-up
-  env = cplexAPI::openEnvCPLEX()
-  cplexAPI::setDblParmCPLEX(env, 1016, 1e-06)
-  prob = cplexAPI::initProbCPLEX(env)
-  cplexAPI::chgProbNameCPLEX(env, prob, "sample")
-  
-  ### Step 3: Model set-up
-  cnt = apply(A, MARGIN = 2, function(x) length(which(x != 0)))
-  beg = rep(0, ncol(A))
-  beg[-1] = cumsum(cnt[-length(cnt)])
-  ind = unlist(apply(A, MARGIN = 2, function(x) which(x != 0) - 1))
-  val = c(A)
-  val = val[val != 0]
 
   ### Step 4: Solve linear program or quadratic program
   # A linear program is identified if obj2 == NULL
   if (is.null(obj2) == TRUE){
+    ### Step 1: Translate the notations that are used for gurobi into those to
+    ### be used in cplexAPI
+    # Model sense
+    modelsense[modelsense == "min"] = CPX_MIN
+    modelsense[modelsense == "max"] = CPX_MAX
+    # Inequality/equality signs
+    sense[sense == "<="] = "L"
+    sense[sense == ">="] = "G"
+    sense[sense == "=="] = "E"
+    sense[sense == "="] = "E"
+    # Bounds
+    lb[lb == Inf] = CPX_INFBOUND
+    lb[lb == -Inf] = -CPX_INFBOUND
+    ub = rep(CPX_INFBOUND, length(lb))
+    
+    ### Step 2: cplexAPI set-up
+    env = cplexAPI::openEnvCPLEX()
+    cplexAPI::setDblParmCPLEX(env, 1016, 1e-06)
+    prob = cplexAPI::initProbCPLEX(env)
+    cplexAPI::chgProbNameCPLEX(env, prob, "sample")
+    
+    ### Step 3: Model set-up
+    cnt = apply(A, MARGIN = 2, function(x) length(which(x != 0)))
+    beg = rep(0, ncol(A))
+    beg[-1] = cumsum(cnt[-length(cnt)])
+    ind = unlist(apply(A, MARGIN = 2, function(x) which(x != 0) - 1))
+    val = c(A)
+    val = val[val != 0]
     # Solving linear program
     copyLpwNamesCPLEX(env,
                       prob,
@@ -332,8 +336,35 @@ cplexapi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
     solution = solutionCPLEX(env, prob)
   } else {
     # Solving quadratic program
-    qpoptCPLEX(env, prob)
-    solution = solutionCPLEX(env, prob)
+    Qmat = 2*obj2
+    cvec = t(obj1)
+    Amat = A
+    bvec = rhs
+    sense = "E"
+    objsense = modelsense
+    lb = lb
+    ub = rep(Inf, length(lb))
+    vtype = "C"
+    soln = Rcplex(cvec = cvec,
+                      Amat = Amat, 
+                      bvec = bvec,
+                      Qmat = Qmat,
+                      lb = lb,
+                      ub = ub,
+                      objsense = objsense,
+                      vtype = vtype,
+                      n = 1)
+    #solution = list()
+    solution$objval = soln$obj + obj0
+    solution$x = soln$xopt
+    Rcplex.close()
+    # copyQPsepCPLEX(env,
+    #               prob,
+    #               obj2
+    #               )
+    # qpoptCPLEX(env, prob)
+    # solution = solutionCPLEX(env, prob)
+    # print(solution)
   }
   return(list(objval = solution$objval,
               x = solution$x))
@@ -663,11 +694,13 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
   cplexapi_msg = "cplexAPI (version 1.3.3 or later)"
   osqp_msg = "osqp (version 0.6.0.3 or later)"
   lpsolveapi_msg = "lpSolveAPI (version 5.5.2.0 or later)"
+  rcplex_msg = "Rcplex (version 0.3-3 or later)"
   # In the for-loop, i = 1 refers to the linear program and i = 2 refers to the 
   # quadratic program
   for (i in 1:2){
-    if (hasArg(solvers[[i]]) == TRUE){
-      solvers[[i]] = tolower(hasArg(solvers[[i]]))
+    # Change all to lower caps
+    if (is.null(solvers[[i]]) == FALSE){
+      solvers[[i]] = tolower(solvers[[i]])
     }
     # Case 1: If no solver name is provided by the user
     if (is.null(solvers[[i]]) == TRUE){
@@ -678,6 +711,8 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
         solvers[[i]] = "lpsolveapi"
       } else if (requireNamespace("osqp", quietly = TRUE) == TRUE & i == 2){
         solvers[[i]] = "osqp"
+      } else if (requireNamespace("Rcplex", quietly = TRUE) == TRUE){
+        solvers[[i]] = "rcplex"
       } else if (requireNamespace("cplexAPI", quietly = TRUE) == TRUE){
         solvers[[i]] = "cplexapi"
       } else {
@@ -686,12 +721,14 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
                          for estimation: ",
                          gurobi_msg, "; ",
                          cplexapi_msg, "; ",
+                         rcplex_msg, "; ",
                          osqp_msg, " AND ", lpsolveapi_msg, ".")),
              call. = FALSE)
       }
     } else{
     # Case 2: If user specifies a package that is not supported
-      if ((lpsolver %in% c("gurobi", "cplexapi", "osqp", "lpsolveapi")) 
+      if ((solvers[[i]] %in% c("gurobi", "cplexapi", "osqp", "lpsolveapi", 
+                           "rcplex")) 
           == FALSE){
       solver_incomp[i] = TRUE
       }
@@ -705,11 +742,11 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
   if (sum(solver_incomp) != 0){
     if (solver_incomp[1] == TRUE){
       lp_solver_incomp = paste0("linear programming solver package '", 
-                                solvers[1], "' ") 
+                                solvers[1], "'") 
     }
     if (solver_incomp[2] == TRUE){
       qp_solver_incomp = paste0("quadratic programming solver package '", 
-                                solvers[2], "' ") 
+                                solvers[2], "'") 
     }
     if (sum(solver_incomp) == 2){
       connector_incomp = " and "
@@ -720,6 +757,7 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
                     ". Please install one of the following packages instead: ",
                     gurobi_msg, "; ",
                     cplexapi_msg, "; ",
+                    rcplex_msg, "; ",
                     osqp_msg[solver_incomp[1]], connector_incomp, 
                     lpsolveapi_msg[solver_incomp[2]], ".")),
          call. = FALSE)
@@ -733,6 +771,7 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
                      Please use one of the following packges instead: ",
                      gurobi_msg, "; ",
                      cplexapi_msg, "; ",
+                     rcplex_msg, "; ",
                      lpsolveapi_msg, ".")),
          call. = FALSE)
   }
@@ -743,6 +782,7 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
                      instead: ",
                      gurobi_msg, "; ",
                      cplexapi_msg, "; ",
+                     rcplex_msg, "; ",
                      osqp_msg, ".")),
          call. = FALSE)
   }
