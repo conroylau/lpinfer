@@ -7,7 +7,8 @@
 #' @import slam gurobi car modelr
 #'
 #' @param df The dataframe that contains the sample data.
-#' @param A_obs The "observed matrix" in the quadratic program \eqn{A_{\mathrm{obs}}.
+#' @param A_obs The "observed matrix" in the quadratic program 
+#'    \eqn{A_{\mathrm{obs}}.
 #' @param A_tgt The "target matrix" in the quadratic program 
 #'    \eqn{A_{\mathrm{tgt}}.
 #' @param func_obs The function that generates the required 
@@ -31,7 +32,6 @@
 #'   test statistic \eqn{T_n(\tau_n)}, the list of bootstrap test statistics 
 #'   \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}} and the list of tau-tightened
 #'   re-centered bootstrap estimators \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}.
-#'   
 #'
 #' @export
 dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,

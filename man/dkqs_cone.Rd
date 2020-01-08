@@ -47,8 +47,9 @@ programming solvers supported by this module are `\code{cplexAPI}',
 }
 \value{
 Returns the \eqn{p}-value, the value of tau used \eqn{\tau^\ast}, 
-  test statistic \eqn{T_n(\tau_n)} and the list of bootstrap test statistics 
-  \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}.
+  test statistic \eqn{T_n(\tau_n)}, the list of bootstrap test statistics 
+  \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}} and the list of tau-tightened
+  re-centered bootstrap estimators \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}.
 }
 \description{
 This module conducts inference in quadratic programs using the 
