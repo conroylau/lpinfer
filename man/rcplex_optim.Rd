@@ -2,7 +2,7 @@
 % Please edit documentation in R/dkqs.R
 \name{rcplex_optim}
 \alias{rcplex_optim}
-\title{Rcplex solver for linear programs}
+\title{Rcplex solver for quadratic and linear programs}
 \usage{
 rcplex_optim(obj2, obj1, obj0, A, rhs, sense, modelsense, lb)
 }
