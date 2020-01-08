@@ -830,7 +830,7 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
          call. = FALSE)
   }
 
-  # Update the solver names
+  # Update the solver names (in small caps)
   lpsolver = solvers[[1]]
   qpsolver = solvers[[2]]
   
