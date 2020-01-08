@@ -34,9 +34,6 @@
 #'   
 #'
 #' @export
-# library(slam)
-# library(gurobi)
-# library(car)
 dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
                       bs_num = 100, p_sig = 2, tau_input = .5, lpsolver = NULL,
                       qpsolver = NULL){
