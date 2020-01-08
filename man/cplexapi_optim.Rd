@@ -11,6 +11,6 @@ Returns the optimal objective value and the corresponding argument
   to the quadratic or linear program.
 }
 \description{
-This function computes the solution to the quadratic or linear
-   program using the `\code{cplexAPI}' package.
+This function computes the solution to the quadratic and linear
+   programs using the `\code{cplexAPI}' package.
 }

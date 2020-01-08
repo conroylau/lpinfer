@@ -29,6 +29,6 @@ Returns the optimal objective value and the corresponding argument
   to the linear or quadratic program.
 }
 \description{
-This function computes the solution to the linear or quadratic
-   program using the `\code{Rcplex}' package.
+This function computes the solution to the linear and quadratic
+   programs using the `\code{Rcplex}' package.
 }

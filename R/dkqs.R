@@ -277,8 +277,8 @@ gurobi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
 
 #' cplexAPI solver for quadratic and linear programs
 #'
-#' @description This function computes the solution to the quadratic or linear
-#'    program using the `\code{cplexAPI}' package.
+#' @description This function computes the solution to the quadratic and linear
+#'    programs using the `\code{cplexAPI}' package.
 #'    
 #' @inheritParams cplexAPI
 #'
@@ -347,8 +347,8 @@ cplexapi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
 
 #' Rcplex solver for linear programs
 #'
-#' @description This function computes the solution to the linear or quadratic
-#'    program using the `\code{Rcplex}' package.
+#' @description This function computes the solution to the linear and quadratic
+#'    programs using the `\code{Rcplex}' package.
 #'    
 #' @import Rcplex
 #'
