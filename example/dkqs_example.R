@@ -80,25 +80,26 @@ A_obs_twom = matrix(c(rep(0,J1), yp, rep(0,J1), rep(1, J1)), nrow = 2,
                 byrow = TRUE)
 
 ### Part 5: Run the dkqs_cone module to compute p-values
-# Define the value of beta_tgt
+# Define the value of beta_tgt and significant figures needed
 beta_tgt = .365
+p_sig = 4
 # Example 1 - Using full information approach, gurobi for LP and QP
-full_g_g = dkqs_cone(df, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 100, 4, 
-                     tau, "gurobi", "gurobi")
+full_g_g = dkqs_cone(df, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 100, 
+                     p_sig, tau, "gurobi", "gurobi")
 
 # Example 2 - Using full information approach, gurobi for LP and osqp for QP
-full_g_o = dkqs_cone(df, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 100, 4, 
-                     tau, "gurobi", "osqp")
+full_g_o = dkqs_cone(df, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 100,
+                     p_sig, tau, "gurobi", "osqp")
 
 # Example 3 - Using two moments approach, Rcplex for LP and QP
-twom_r_r = dkqs_cone(df, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100, 4, 
-                     tau, "Rcplex", "Rcplex")
+twom_r_r = dkqs_cone(df, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100, 
+                     p_sig, tau, "Rcplex", "Rcplex")
 
 # Example 4 - Using two moments approach, lpSolveAPI for LP and Rcplex for QP
-twom_l_r = dkqs_cone(df, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100, 4, 
-                     tau, "lpsolveapi", "Rcplex")
+twom_l_r = dkqs_cone(df, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100,
+                     p_sig, tau, "lpsolveapi", "Rcplex")
 
 # Example 5 - Using two moments approach, cplexAPI for LP and Rcplex for QP
-twom_c_r = dkqs_cone(df, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100, 4, 
-                     tau, "cplexapi", "Rcplex")
+twom_c_r = dkqs_cone(df, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100,
+                     p_sig, tau, "cplexapi", "Rcplex")
 
