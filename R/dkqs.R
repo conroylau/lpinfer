@@ -28,8 +28,10 @@
 #'    `\code{gurobi}' and `\code{osqp}'.
 #'    
 #' @returns Returns the \eqn{p}-value, the value of tau used \eqn{\tau^\ast}, 
-#'   test statistic \eqn{T_n(\tau_n)} and the list of bootstrap test statistics 
-#'   \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}. 
+#'   test statistic \eqn{T_n(\tau_n)}, the list of bootstrap test statistics 
+#'   \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}} and the list of tau-tightened
+#'   re-centered bootstrap estimators \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}.
+#'   
 #'
 #' @export
 # library(slam)
@@ -98,19 +100,23 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   #### Step 4: Solve QP (4) in Torgovitsky (2019)
   full_return = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "test", N, 
                           lp_solver, qp_solver)
-  x_star = full_return$x
-  # Return and stop program if it is infeasible
-  if (is.null(x_star) == TRUE){
-    stop("The problem is infeasible. Choose other values of tau.")
-  }
-  s_star = A_obs %*% x_star
   # T_star is the test statistic used
   T_star = full_return$objval
+  # Return and stop program if it is infeasible
+  if (is.null(T_star) == TRUE){
+    stop("The problem is infeasible. Choose other values of tau.")
+  }
+  # Compute s_star
+  x_star = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "bootstrap", N, 
+                          lp_solver, qp_solver)$x  
+  s_star = A_obs %*% x_star
   
   #### Step 5: Compute the bootstrap estimates
   # T_bs is the list of bootstrap test statistics used
-  T_bs = beta_bs(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs, 
+  T_bs_return = beta_bs(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs, 
                  beta_obs_hat, beta_tgt, tau, N, lp_solver, qp_solver)
+  T_bs = T_bs_return$T_bs
+  beta_bs_bar = T_bs_return$beta_bs_bar_set
   #### Step 6: Compute the p-value
   # decision = 1 refers to rejected, decision = 0 refers to not rejected
   p_val = p_eval(T_bs, T_star, p_sig)
@@ -120,7 +126,11 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   cat(paste("Test statistic: ", round(T_star, digits = 5), ".\n", sep = ""))
   cat(paste("p-value: ", p_val, ".\n", sep = ""))
   cat(paste("Value of tau used in LP: ", tau, ".\n", sep = ""))
-  invisible(list(p = p_val, tau = tau, T_star = T_star, T_bs = T_bs))
+  invisible(list(p = p_val, 
+                 tau = tau, 
+                 T_star = T_star, 
+                 T_bs = T_bs,
+                 beta_bs_bar = beta_bs_bar))
 }
 
 #' Formulating and solving quadratic programs
@@ -530,12 +540,14 @@ osqp_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
 beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs, 
                     beta_obs_hat, beta_tgt, tau, n, lp_solver, qp_solver){
   T_bs = NULL
+  beta_bs_bar_set = NULL
   # Loop through all indices in the bootstrap
   for (i in 1:bs_num){
     #### Step 1: Set the seed
     set.seed(bs_seed + i)
     ####  Step 2: Draw the subsample
-    df_bs = as.data.frame(resample_bootstrap(as.data.frame(df)))
+    #df_bs = as.data.frame(resample_bootstrap(as.data.frame(df)))
+    df_bs = as.data.frame(sample_n(df, N, replace = TRUE))
     # Re-index the rows
     rownames(df_bs) = 1:nrow(df_bs)
     ####  Step 3: Compute the bootstrap estimates
@@ -546,9 +558,11 @@ beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs,
     T_bs_i = prog_cone(A_obs, A_tgt, beta_bs_bar, beta_tgt, tau, "bootstrap", 
                        n, lp_solver, qp_solver)$objval
     T_bs = c(T_bs, T_bs_i)
+    beta_bs_bar_set = cbind(beta_bs_bar_set, beta_bs_bar)
   }
-  # Return the general solution
-  return(T_bs)
+  # Return the bootstrap test statistic
+  return(list(T_bs = T_bs,
+              beta_bs_bar_set = beta_bs_bar_set))
 }
 
 #' Auxiliary function to calculate the p-value
@@ -575,7 +589,7 @@ p_eval <- function(T_bs, T_star, p_sig){
     }
     alpha = alpha + 10^(-p_sig)
   }
-  p_val = 1 - round(alpha - 10^(-p_sig), digits = p_sig)
+  p_val = round(alpha - 10^(-p_sig), digits = p_sig)
   return(p_val)
 }
 
