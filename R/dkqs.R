@@ -275,7 +275,7 @@ gurobi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
 #' @description This function computes the solution to the quadratic or linear
 #'    program using the `\code{cplexAPI}' package.
 #'    
-#' @inheritParams gurobi_optim
+#' @inheritParams cplexAPI
 #'
 #' @returns Returns the optimal objective value and the corresponding argument
 #'   to the quadratic or linear program.
@@ -285,15 +285,16 @@ cplexapi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
   ### Step 1: Translate the notations that are used for gurobi into those to
   ### be used in cplexAPI
   # Model sense
-  modelsense[modelsense == "min"] == cplexAPI::CPX_MIN
-  modelsense[modelsense == "max"] == cplexAPI::CPX_MAX
+  modelsense[modelsense == "min"] = CPX_MIN
+  modelsense[modelsense == "max"] = CPX_MAX
   # Inequality/equality signs
-  sense[sense == "<="] == "L"
-  sense[sense == ">="] == "G"
-  sense[sense == "=="] == "E"
+  sense[sense == "<="] = "L"
+  sense[sense == ">="] = "G"
+  sense[sense == "=="] = "E"
+  sense[sense == "="] = "E"
   # Bounds
-  sense[sense == Inf] == cplexAPI::CPX_INFBOUND
-  sense[sense == -Inf] == - cplexAPI::CPX_INFBOUND
+  lb[lb == Inf] = CPX_INFBOUND
+  ub = rep(CPX_INFBOUND, length(lb))
   
   ### Step 2: cplexAPI set-up
   env = cplexAPI::openEnvCPLEX()
@@ -302,54 +303,37 @@ cplexapi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
   cplexAPI::chgProbNameCPLEX(env, prob, "sample")
   
   ### Step 3: Model set-up
-  model = list()
-  model$Q = obj2
-  model$obj = obj1
-  model$objcon = obj0
-  model$A = A
-  model$rhs = rhs
-  model$sense = sense 
-  model$modelsense = modelsense
-  model$lb = lb
-  
-  ## ~~~~ Note:
-  ## Check the notations of the followings
-  ##
-  ##
-  
-  ### Step 4: Solve LP/QP
-  cplexAPI::copyLpwNamesCPLEX(env = env,
-                              lp = prob,
-                              nCols = ncol(lpobj$A),
-                              nRows = nrow(lpobj$A),
-                              lpdir = lpdir,
-                              objf = lpobj$obj,
-                              rhs = lpobj$rhs,
-                              sense = sense,
-                              matbeg = beg,
-                              matcnt = cnt,
-                              matind = ind,
-                              matval = val,
-                              lb = lb,
-                              ub = ub)
-  cplexAPI::lpoptCPLEX(env, prob)
-  solution = cplexAPI::solutionCPLEX(env, prob)
-  cplexAPI::delProbCPLEX(env, prob)
-  cplexAPI::closeEnvCPLEX(env)
-  if (typeof(solution) == "S4") {
-    if (attr(solution, "class") == "cplexError") {
-      status = 0
-      solution = list()
-      solution$objval = NA
-      solution$x = NA
-    }
-  }  else {
-    if (solution$lpstat == 1){
-      status = 1
-    }
-    if (solution$lpstat != 1){
-      status = 0
-    }
+  cnt = apply(A, MARGIN = 2, function(x) length(which(x != 0)))
+  beg = rep(0, ncol(A))
+  beg[-1] = cumsum(cnt[-length(cnt)])
+  ind = unlist(apply(A, MARGIN = 2, function(x) which(x != 0) - 1))
+  val = c(A)
+  val = val[val != 0]
+
+  ### Step 4: Solve linear program or quadratic program
+  # A linear program is identified if obj2 == NULL
+  if (is.null(obj2) == TRUE){
+    # Solving linear program
+    copyLpwNamesCPLEX(env,
+                      prob,
+                      ncol(A),
+                      nrow(A),
+                      modelsense,
+                      obj1,
+                      rhs,
+                      sense,
+                      beg,
+                      cnt,
+                      ind,
+                      val,
+                      lb,
+                      ub)
+    lpoptCPLEX(env, prob)
+    solution = solutionCPLEX(env, prob)
+  } else {
+    # Solving quadratic program
+    qpoptCPLEX(env, prob)
+    solution = solutionCPLEX(env, prob)
   }
   return(list(objval = solution$objval,
               x = solution$x))
@@ -456,8 +440,6 @@ osqp_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
                           eps_abs=1e-8, 
                           eps_rel = 1e-8)
   osqp_solution = solve_osqp(Pmat, qvec, Amat, l=bvec, u=uvec, pars=settings)
-  #quadprog_2 = solve.QP(Pmat, -qvec, Amat, bvec, meq = 2, factorized=FALSE)
-  #print(quadprog_2)
   # Compute the real solution because obj0 was not included in the objective
   # function
   osqp_solution_real = osqp_solution$info$obj_val + obj0
