@@ -8,11 +8,13 @@
 ##  full-information and two moments approach, and different linear and 
 ##  quadratic programming solvers in R. Currently, the solvers supported are
 ##  as follows:
+##
 ##    - gurobi (LP & QP)
 ##    - cplexAPI (LP, QP in progress)
 ##    - Rcplex (LP & QP)
 ##    - lpSolveAPI (LP)
 ##    - osqp (QP)
+##    - limsolve (LP & QP)
 ##
 ################################################################################
 
@@ -22,10 +24,11 @@ library(gurobi)
 library(e1071)
 library(lpSolveAPI)
 library(cplexAPI)
-library(quadprog)
 library(osqp)
 library(Rcplex)
 library(ddpcr)
+library(Momocs)
+library(limSolve)
 
 ### Part 2: Data preparation
 # Read data
@@ -102,4 +105,9 @@ twom_l_r = dkqs_cone(df, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100,
 # Example 5 - Using two moments approach, cplexAPI for LP and Rcplex for QP
 twom_c_r = dkqs_cone(df, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100,
                      p_sig, tau, "cplexapi", "Rcplex")
+
+# Example 7 - Using two moments approach, limsolve for LP and QP
+twom_r_r = dkqs_cone(df, A_obs_twom, A_tgt, func_two_moment, .365, 1, 50000, 
+                     p_sig, tau, "limsolve", "limsolve")
+
 
