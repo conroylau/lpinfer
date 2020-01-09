@@ -4,7 +4,19 @@
 \alias{osqp_optim}
 \title{osqp solver for quadratic programs}
 \usage{
-osqp_optim(obj2, obj1, obj0, A, rhs, sense, modelsense, lb)
+osqp_optim(
+  obj2,
+  obj1,
+  obj0,
+  A,
+  rhs,
+  sense,
+  modelsense,
+  lb,
+  A_obs,
+  beta_hat_obs,
+  n
+)
 }
 \arguments{
 \item{obj2}{The matrix that corresponds to the second-order term in the
@@ -22,11 +34,16 @@ quadratic or linear program.}
 
 \item{sense}{The sense of the linear constraints.}
 
+\item{modelsense}{The indicator of whether the model is to max or min an
+objective function.}
+
 \item{lb}{The lower lound vector.}
+
+\item{n}{The number of observations in the dataframe.}
 }
 \value{
 Returns the optimal objective value and the corresponding argument
-  to the linear program.
+  to the quadratic program.
 }
 \description{
 This function computes the solution to the quadratic program
@@ -34,8 +51,6 @@ This function computes the solution to the quadratic program
 }
 \details{
 \itemize{
-  \item{The package `\code{osqp}' cannot be used to solve linear programs. 
-  Hence, the argument \code{obj2} cannot be \code{NULL}.}
   \item{The matrix \eqn{\bm{P}} that corresponds to the second-order term
   has to be positive semi-definite.}
  }

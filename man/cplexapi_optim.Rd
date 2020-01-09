@@ -4,7 +4,22 @@
 \alias{cplexapi_optim}
 \title{cplexAPI solver for quadratic and linear programs}
 \usage{
-cplexapi_optim(obj2, obj1, obj0, A, rhs, sense, modelsense, lb)
+cplexapi_optim(
+  obj2,
+  obj1,
+  obj0,
+  A,
+  rhs,
+  sense,
+  modelsense,
+  lb,
+  A_obs,
+  beta_hat_obs,
+  n
+)
+}
+\arguments{
+\item{n}{The number of observations in the dataframe.}
 }
 \value{
 Returns the optimal objective value and the corresponding argument

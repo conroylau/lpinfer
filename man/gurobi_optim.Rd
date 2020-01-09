@@ -4,7 +4,19 @@
 \alias{gurobi_optim}
 \title{Gurobi solver for quadratic and linear programs}
 \usage{
-gurobi_optim(obj2, obj1, obj0, A, rhs, sense, modelsense, lb)
+gurobi_optim(
+  obj2,
+  obj1,
+  obj0,
+  A,
+  rhs,
+  sense,
+  modelsense,
+  lb,
+  A_obs,
+  beta_hat_obs,
+  n
+)
 }
 \arguments{
 \item{obj2}{The matrix that corresponds to the second-order term in the
@@ -22,7 +34,12 @@ quadratic or linear program.}
 
 \item{sense}{The sense of the linear constraints.}
 
+\item{modelsense}{The indicator of whether the model is to max or min an
+objective function.}
+
 \item{lb}{The lower lound vector.}
+
+\item{n}{The number of observations in the dataframe.}
 }
 \value{
 Returns the optimal objective value and the corresponding argument
