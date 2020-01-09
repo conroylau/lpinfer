@@ -69,8 +69,6 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
     lp_solver = cplexapi_optim
   } else if (lpsolver == "lpsolveapi"){
     lp_solver = lpprog_optim
-  } else if (lpsolver == "osqp"){
-    lp_solver = osqp_optim
   } else if (lpsolver == "rcplex"){
     lp_solver = rcplex_optim
   } else if (lpsolver == "limsolve"){
@@ -183,7 +181,7 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
                          beta_obs_hat, n)
   theta_up = lp_solver(NULL, A_tgt, 0, ones, c(1), "=", "max", lb, A_obs, 
                        beta_obs_hat, n)
-  # Round the figures
+  # Round the figures - only needed when lp_solver = osqp
   # theta_down$objval = round(theta_down$objval, digits = 6)
   # theta_up$objval = round(theta_up$objval, digits = 7)
     
@@ -591,7 +589,7 @@ osqp_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
 #' @export
 limsolve_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
                            A_obs, beta_hat_obs, n){
-  ### Step 1: Update matrices
+  ### Step 1: Update lower bounds
   # Change the lower bounds to inequality constriants
   lb_Amat = diag(length(lb))
   lb_bvec = lb
@@ -599,6 +597,8 @@ limsolve_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
   A = rbind(A, lb_Amat)
   rhs = c(rhs, lb_bvec)
   sense = c(sense, rep(">=", length(lb_bvec)))
+  
+  ### Step 2: Update constraints
   # Objective function
   if (modelsense == "max"){
     fcost = - obj1 
@@ -617,30 +617,38 @@ limsolve_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
   # Combine G and h matrices
   Gmat = rbind(Gmat1, Gmat2)
   Hvec = as.matrix(c(c(Hvec1), c(Hvec2)), ncol = 1, byrow = TRUE)
-  # Linear solver - if obj2 is a zero matrix (i.e. number of zeros equals the 
-  # total number of elements) or NULL
+  
+  ###  Step 3 - Solve the model
+  # Linear solver is used if obj2 is a zero matrix (i.e. number of zeros equals 
+  # the total number of elements) or NULL
   if (is.null(obj2) == TRUE | sum(obj2 == 0) == length(obj2)){
     ### Linear program solver
-    # Solve linear models 
     solution = linp(E = Emat, F = Fvec, G = Gmat, H = Hvec, Cost = fcost)
-    x = solution$X
+    # Obtain objective function, and add back the constant term, negate the 
+    # solution if it is a max problem
     if (modelsense == "max"){
       objval = -solution$solutionNorm + obj0      
     } else if (modelsense == "min"){
       objval = solution$solutionNorm + obj0      
     }
   } else {
-    ### Quadratic program solver
-    Amat = A_obs * sqrt(n)
-    Bvec = beta_hat_obs * sqrt(n)
-    solution = lsei(A = Amat, B = Bvec, E = Emat, F = Fvec, G = Gmat, H = Hvec)
-    x = solution$X
-    objval = solution$solutionNorm
+    if (modelsense == "min"){
+      ### Quadratic program solver
+      # Formulate the two matrices
+      Amat = A_obs * sqrt(n)
+      Bvec = beta_hat_obs * sqrt(n)
+      solution = lsei(A = Amat, B = Bvec, E = Emat, F = Fvec, G = Gmat, H = Hvec)
+      # Obtain objective function
+      objval = solution$solutionNorm
+    } else if (modelsense == "max"){
+      stop("This package cannot be used to solve max problems.")
+    }
   }
+  # Optimal the optimal value of x
+  x = solution$X
   return(list(x = x,
               objval = objval))
 }
-
 
 #' Computes the bootstrap test statistics
 #'
@@ -875,7 +883,7 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
     if (is.null(solvers[[i]]) == TRUE){
       if (requireNamespace("gurobi", quietly = TRUE) == TRUE){
         solvers[[i]] = "gurobi"
-      } else if (requireNamespace("lpsolveAPI", quietly = TRUE) == TRUE & 
+      } else if (requireNamespace("lpSolveAPI", quietly = TRUE) == TRUE & 
                  i == 1){
         solvers[[i]] = "lpsolveapi"
       } else if (requireNamespace("osqp", quietly = TRUE) == TRUE & i == 2){
@@ -940,7 +948,8 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
   # a quadratic (resp linear) programming solver.
   if (solvers[[1]] == "osqp"){
     stop(gsub("\\s+", " ",
-              paste0("The package 'osqp' cannot be used to solve linear programs
+              paste0("The package 'osqp' is not supported to run the linear
+                     programs in the problems considered in this module.
                      Please use one of the following packges instead: ",
                      gurobi_msg, "; ",
                      cplexapi_msg, "; ",
@@ -951,9 +960,9 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
   }
   if (solvers[[2]] == "lpsolveapi"){
     stop(gsub("\\s+", " ",
-              paste0("The package 'lpsolveAPI' cannot be used to solve 
-                     quadratic programs. Please use one of the following packges 
-                     instead: ",
+              paste0("The package 'lpSolveAPI' cannot be used to solve 
+                     quadratic programs. Please use one of the following 
+                     packages instead: ",
                      gurobi_msg, "; ",
                      cplexapi_msg, "; ",
                      rcplex_msg, "; ",
