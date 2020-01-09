@@ -4,7 +4,8 @@
 #'    procedure suggested by Torgovitsky (2019) that incorporates the 
 #'    cone-tightening procedure proposed by Deb, Kitamura, Quah and
 #'    Stoye (2018).
-#' @import slam gurobi car modelr
+#' @import slam car modelr gurobi e1071 lpSolveAPI cplexAPI osqp Rcplex ddpcr
+#'    Momocs limSolve
 #'
 #' @param df The dataframe that contains the sample data.
 #' @param A_obs The "observed matrix" in the quadratic program 
@@ -72,6 +73,8 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
     lp_solver = osqp_optim
   } else if (lpsolver == "rcplex"){
     lp_solver = rcplex_optim
+  } else if (lpsolver == "limsolve"){
+    lp_solver = limsolve_optim
   }
   # Quadratic programming
   if (qpsolver == "gurobi"){
@@ -82,6 +85,8 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
     qp_solver = osqp_optim
   } else if (qpsolver == "rcplex"){
     qp_solver = rcplex_optim
+  } else if (qpsolver == "limsolve"){
+    qp_solver = limsolve_optim
   }
 
   #### Step 3: Choose the value of tau
@@ -96,7 +101,7 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
     stop("The problem is infeasible. Choose other values of tau.")
   }
   
-  #### Step 4: Solve QP (4) in Torgovitsky (2019)
+  #### Step 4: Compute T_n and x_star
   full_return = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "test", N, 
                           lp_solver, qp_solver)
   # T_star is the test statistic used
@@ -106,7 +111,7 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
     stop("The problem is infeasible. Choose other values of tau.")
   }
   # Compute s_star
-  x_star = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "bootstrap", N, 
+  x_star = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "cone", N, 
                           lp_solver, qp_solver)$x  
   s_star = A_obs %*% x_star
   
@@ -174,11 +179,13 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
   ones = matrix(rep(1, cn), nrow = 1)
   lb = matrix(rep(0, cn), nrow = 1)
   # Obtain parameters
-  theta_down = lp_solver(NULL, A_tgt, 0, ones, c(1), "=", "min", lb)
-  theta_up = lp_solver(NULL, A_tgt, 0, ones, c(1), "=", "max", lb)
-  # print(theta_down$objval)
-  theta_down$objval = round(theta_down$objval, digits = 6)
-  theta_up$objval = round(theta_up$objval, digits = 7)
+  theta_down = lp_solver(NULL, A_tgt, 0, ones, c(1), "=", "min", lb, A_obs, 
+                         beta_obs_hat, n)
+  theta_up = lp_solver(NULL, A_tgt, 0, ones, c(1), "=", "max", lb, A_obs, 
+                       beta_obs_hat, n)
+  # Round the figures
+  # theta_down$objval = round(theta_down$objval, digits = 6)
+  # theta_up$objval = round(theta_up$objval, digits = 7)
     
   # Obtain required set of indices
   x_fullind = 1:cn
@@ -196,12 +203,12 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
 
   #### Step 3: Solve the QP
   # If problem == "test", this function solves linear program (4)
-  # If problem == "bootstrap", this function solves linear program (5)
+  # If problem == "cone", this function solves linear program (5)
   # If program == "tau", this function solves linear program (6)
   if (problem == "test"){
     ans = qp_solver(obj2, obj1, obj0, rbind(A_tgt, ones), lp_rhs, lp_sense,
-                       "min", lb)
-  } else if (problem == "bootstrap"){
+                       "min", lb, A_obs, beta_obs_hat, n)
+  } else if (problem == "cone"){
   # Update lb
     lb_new = lb
     lb_new[ind_up] = rhs_up
@@ -209,7 +216,7 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
     lb_new[ind_0] = rhs_0
     ### Use QP solver to find the optimum
     ans = qp_solver(obj2, obj1, obj0, rbind(A_tgt, ones), lp_rhs, lp_sense,
-                       "min", lb_new)
+                       "min", lb_new, A_obs, beta_obs_hat, n)
   } else if (problem == "tau"){
     # Update matrix A
     lp_lhs_tau = rbind(A_tgt, ones)
@@ -226,7 +233,6 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
       lp_lhs_tau = new_const$lp_lhs_tau
       lp_rhs_tau = new_const$lp_rhs_tau
       lp_sense_tau = new_const$lp_sense_tau
-      # print(lp_sense_tau)
     }
     # Inequality constraints for ind_down
     for (i in 1:length(ind_down)){
@@ -235,7 +241,6 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
       lp_lhs_tau = new_const$lp_lhs_tau
       lp_rhs_tau = new_const$lp_rhs_tau
       lp_sense_tau = new_const$lp_sense_tau
-      # print(lp_sense_tau)
     }
     # Inequality constraints for ind_0
     for (i in 1:length(ind_0)){
@@ -244,10 +249,9 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
       lp_lhs_tau = new_const$lp_lhs_tau
       lp_rhs_tau = new_const$lp_rhs_tau
       lp_sense_tau = new_const$lp_sense_tau
-      # print(lp_sense_tau)
     }
     ans = lp_solver(NULL, c(1, rep(0, cn)), 0, lp_lhs_tau, lp_rhs_tau,
-                  lp_sense_tau, "max", lb_tau)
+                  lp_sense_tau, "max", lb_tau, A_obs, beta_obs_hat, n)
   }
   return(ans)
 }
@@ -267,14 +271,19 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
 #' @param obj0 The constant term in the quadratic or linear program.
 #' @param A The constraint matrix.
 #' @param rhs The RHS vector for the linear constraints.
+#' @param modelsense The indicator of whether the model is to max or min an
+#'    objective function.
 #' @param sense The sense of the linear constraints.
 #' @param lb The lower lound vector.
+#' @inheritParams dkqs_cone
+#' @inheritParams prog_cone
 #'
 #' @returns Returns the optimal objective value and the corresponding argument
 #'   to the quadratic or linear program.
 #'
 #' @export
-gurobi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
+gurobi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
+                         A_obs, beta_hat_obs, n){
   # Gurobi set-up
   model = list()
   model$Q = obj2
@@ -297,12 +306,15 @@ gurobi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
 #'    programs using the `\code{cplexAPI}' package.
 #'    
 #' @inheritParams cplexAPI
+#' @inheritParams dkqs_cone
+#' @inheritParams prog_cone
 #'
 #' @returns Returns the optimal objective value and the corresponding argument
 #'   to the quadratic or linear program.
 #'
 #' @export
-cplexapi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
+cplexapi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
+                           A_obs, beta_hat_obs, n){
   ### Step 1: Update the notations
   # Model sense
   modelsense[modelsense == "min"] = CPX_MIN
@@ -369,12 +381,15 @@ cplexapi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
 #' @import Rcplex
 #'
 #' @inheritParams gurobi_optim
+#' @inheritParams dkqs_cone
+#' @inheritParams prog_cone
 #'
 #' @returns Returns the optimal objective value and the corresponding argument
 #'   to the linear or quadratic program.
 #'
 #' @export
-rcplex_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
+rcplex_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
+                         A_obs, beta_hat_obs, n){
   ### Step 1: Update vectors and sense
   # Update sense
   sense[sense == ">="] = "G"
@@ -421,6 +436,8 @@ rcplex_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
 #' @import lpSolveAPI
 #'
 #' @inheritParams gurobi_optim
+#' @inheritParams dkqs_cone
+#' @inheritParams prog_cone
 #'
 #' @returns Returns the optimal objective value and the corresponding argument
 #'   to the linear program.
@@ -429,7 +446,8 @@ rcplex_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
 #'   programs. Hence, the argument \code{obj2} is not used in the function.
 #'
 #' @export
-lpprog_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
+lpprog_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
+                         A_obs, beta_hat_obs, n){
   ### Step 1: Update the constraint matrices
   # Change the lower bounds to inequality constriants
   lb_Amat = diag(length(lb))
@@ -466,23 +484,24 @@ lpprog_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
 #' @description This function computes the solution to the quadratic program
 #'    using the `\code{osqp}' package.
 #'    
-#' @import osqp Matrix
+#' @import osqp
 #'
 #' @inheritParams gurobi_optim
+#' @inheritParams dkqs_cone
+#' @inheritParams prog_cone
 #'
 #' @returns Returns the optimal objective value and the corresponding argument
-#'   to the linear program.
+#'   to the quadratic program.
 #'   
 #' @details 
 #' \itemize{
-#'   \item{The package `\code{osqp}' cannot be used to solve linear programs. 
-#'   Hence, the argument \code{obj2} cannot be \code{NULL}.}
 #'   \item{The matrix \eqn{\bm{P}} that corresponds to the second-order term
 #'   has to be positive semi-definite.}
 #'  }
 #'
 #' @export
-osqp_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
+osqp_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
+                       A_obs, beta_hat_obs, n){
   ### Step 1: Set the objective function
   # Set objective function
   # It is multiplied by 2 because of the term 1/2 in the quadratic term in the 
@@ -555,6 +574,74 @@ osqp_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb){
               objval = objval))
 }
 
+#' limSolve function for linear and quadratic programs
+#' 
+#' @description This function computes the solution to linear and quadratic 
+#'    programs using the `\code{limSolve}' package.
+#' 
+#' @import limSolve
+#'
+#' @inheritParams gurobi_optim
+#' @inheritParams dkqs_cone
+#' @inheritParams prog_cone
+#'
+#' @returns Returns the optimal objective value and the corresponding argument
+#'   to the quadratic or linear program.
+#'   
+#' @export
+limsolve_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
+                           A_obs, beta_hat_obs, n){
+  ### Step 1: Update matrices
+  # Change the lower bounds to inequality constriants
+  lb_Amat = diag(length(lb))
+  lb_bvec = lb
+  # Update constraint matrices
+  A = rbind(A, lb_Amat)
+  rhs = c(rhs, lb_bvec)
+  sense = c(sense, rep(">=", length(lb_bvec)))
+  # Objective function
+  if (modelsense == "max"){
+    fcost = - obj1 
+  } else if (modelsense == "min"){
+    fcost = obj1
+  }
+  # Equality constraints
+  Emat = A[sense == "=",]
+  Fvec = rhs[sense == "="]
+  # Inequality constraint >=
+  Gmat1 = A[sense == ">=",]
+  Hvec1 = rhs[sense == ">="]   
+  # Inequality constraint <= 
+  Gmat2 = -A[sense == "<=",]
+  Hvec2 = -rhs[sense == "<="]
+  # Combine G and h matrices
+  Gmat = rbind(Gmat1, Gmat2)
+  Hvec = as.matrix(c(c(Hvec1), c(Hvec2)), ncol = 1, byrow = TRUE)
+  # Linear solver - if obj2 is a zero matrix (i.e. number of zeros equals the 
+  # total number of elements) or NULL
+  if (is.null(obj2) == TRUE | sum(obj2 == 0) == length(obj2)){
+    ### Linear program solver
+    # Solve linear models 
+    solution = linp(E = Emat, F = Fvec, G = Gmat, H = Hvec, Cost = fcost)
+    x = solution$X
+    if (modelsense == "max"){
+      objval = -solution$solutionNorm + obj0      
+    } else if (modelsense == "min"){
+      objval = solution$solutionNorm + obj0      
+    }
+  } else {
+    ### Quadratic program solver
+    Amat = A_obs * sqrt(n)
+    Bvec = beta_hat_obs * sqrt(n)
+    solution = lsei(A = Amat, B = Bvec, E = Emat, F = Fvec, G = Gmat, H = Hvec)
+    x = solution$X
+    objval = solution$solutionNorm
+  }
+  return(list(x = x,
+              objval = objval))
+}
+
+
 #' Computes the bootstrap test statistics
 #'
 #' @description This function computes the bootstrap test statistics.
@@ -590,7 +677,7 @@ beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs,
     beta_bs_star = func_obs(df_bs)
     ####  Step 4: Compute the bootstrap test statistic
     beta_bs_bar = beta_bs_star - beta_obs_hat + s_star
-    T_bs_i = prog_cone(A_obs, A_tgt, beta_bs_bar, beta_tgt, tau, "bootstrap", 
+    T_bs_i = prog_cone(A_obs, A_tgt, beta_bs_bar, beta_tgt, tau, "cone", 
                        n, lp_solver, qp_solver)$objval
     T_bs = c(T_bs, T_bs_i)
     beta_bs_bar_set = cbind(beta_bs_bar_set, beta_bs_bar)
@@ -776,6 +863,7 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
   osqp_msg = "osqp (version 0.6.0.3 or later)"
   lpsolveapi_msg = "lpSolveAPI (version 5.5.2.0 or later)"
   rcplex_msg = "Rcplex (version 0.3-3 or later)"
+  limsolve_msg = "limSolve (version 1.5.6 or later)"
   # In the for-loop, i = 1 refers to the linear program and i = 2 refers to the 
   # quadratic program
   for (i in 1:2){
@@ -787,11 +875,13 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
     if (is.null(solvers[[i]]) == TRUE){
       if (requireNamespace("gurobi", quietly = TRUE) == TRUE){
         solvers[[i]] = "gurobi"
-      } else if (requireNamespace("lpsolveapi", quietly = TRUE) == TRUE & 
+      } else if (requireNamespace("lpsolveAPI", quietly = TRUE) == TRUE & 
                  i == 1){
         solvers[[i]] = "lpsolveapi"
-      } else if (requireNamespace("osqp", quietly = TRUE) == TRUE){
+      } else if (requireNamespace("osqp", quietly = TRUE) == TRUE & i == 2){
         solvers[[i]] = "osqp"
+      } else if (requireNamespace("limSolve", quietly = TRUE) == TRUE){
+        solvers[[i]] = "limSolve"
       } else if (requireNamespace("Rcplex", quietly = TRUE) == TRUE){
         solvers[[i]] = "rcplex"
       } else if (requireNamespace("cplexAPI", quietly = TRUE) == TRUE){
@@ -803,13 +893,14 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
                          gurobi_msg, "; ",
                          cplexapi_msg, "; ",
                          rcplex_msg, "; ",
+                         limsolve_msg, "; ",
                          osqp_msg, " AND ", lpsolveapi_msg, ".")),
              call. = FALSE)
       }
     } else{
     # Case 2: If user specifies a package that is not supported
       if ((solvers[[i]] %in% c("gurobi", "cplexapi", "osqp", "lpsolveapi", 
-                           "rcplex")) 
+                           "rcplex", "limsolve")) 
           == FALSE){
       solver_incomp[i] = TRUE
       }
@@ -839,23 +930,25 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
                     gurobi_msg, "; ",
                     cplexapi_msg, "; ",
                     rcplex_msg, "; ",
+                    limsolve_msg, "; ",
                     osqp_msg[solver_incomp[1]], connector_incomp, 
                     lpsolveapi_msg[solver_incomp[2]], ".")),
          call. = FALSE)
   }
   
-  # Case 3 - If user specified a linear (resp. quadratic) programming solver for 
+  # Case 3 - If user specified a linear (resp. quadratic) programming solver for
   # a quadratic (resp linear) programming solver.
-  # if (solvers[[1]] == "osqp"){
-  #   stop(gsub("\\s+", " ",
-  #             paste0("The package 'osqp' cannot be used to solve linear programs
-  #                    Please use one of the following packges instead: ",
-  #                    gurobi_msg, "; ",
-  #                    cplexapi_msg, "; ",
-  #                    rcplex_msg, "; ",
-  #                    lpsolveapi_msg, ".")),
-  #        call. = FALSE)
-  # }
+  if (solvers[[1]] == "osqp"){
+    stop(gsub("\\s+", " ",
+              paste0("The package 'osqp' cannot be used to solve linear programs
+                     Please use one of the following packges instead: ",
+                     gurobi_msg, "; ",
+                     cplexapi_msg, "; ",
+                     rcplex_msg, "; ",
+                     limsolve_msg, "; ",
+                     lpsolveapi_msg, ".")),
+         call. = FALSE)
+  }
   if (solvers[[2]] == "lpsolveapi"){
     stop(gsub("\\s+", " ",
               paste0("The package 'lpsolveAPI' cannot be used to solve 
@@ -864,6 +957,7 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
                      gurobi_msg, "; ",
                      cplexapi_msg, "; ",
                      rcplex_msg, "; ",
+                     limsolve_msg, "; ",
                      osqp_msg, ".")),
          call. = FALSE)
   }
