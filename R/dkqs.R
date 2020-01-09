@@ -20,14 +20,10 @@
 #' @param bs_num The total number of bootstraps \eqn{B}.
 #' @param p_sig The number of decimal places in the \eqn{p}-value.
 #' @param tau_input The value of tau chosen by the user.
-#' @param lpsolver The name of the linear programming solver package to 
-#'    be used to obtain the solutions to the linear programs. The linear 
-#'    programming solvers supported by this module are `\code{cplexAPI}', 
-#'    `\code{gurobi}' and `\code{lpsolveAPI}'.
-#' @param qpsolver The name of the quadratic programming solver package to 
-#'    be used to obtain the solutions to the quadratic programs. The quadratic 
-#'    programming solvers supported by this module are `\code{cplexAPI}', 
-#'    `\code{gurobi}' and `\code{osqp}'.
+#' @param solver The name of the linear and quadratic programming solver that 
+#'    are used to obtain the solution to linear and quadratic programs. 
+#'    The solvers supported by this module are `\code{cplexAPI}', 
+#'    `\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.
 #'    
 #' @returns Returns the \eqn{p}-value, the value of tau used \eqn{\tau^\ast}, 
 #'   test statistic \eqn{T_n(\tau_n)}, the list of bootstrap test statistics 
@@ -36,60 +32,43 @@
 #'
 #' @export
 dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
-                      bs_num = 100, p_sig = 2, tau_input = .5, lpsolver = NULL,
-                      qpsolver = NULL){
+                      bs_num = 100, p_sig = 2, tau_input = .5, solver = NULL){
   
   #### Step 1: Check and update the dependencies
   checkupdate = dkqs_cone_check(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
-                                bs_num, p_sig, tau_input, lpsolver, qpsolver)
+                                bs_num, p_sig, tau_input, solver)
   # Update and return the information returned from the function dkqs_cone_check
   # (a) Dataframe
   df = checkupdate$df
-  # (b) Matrices for linear or quadratic programs
+  # (b) Matrices for linear and quadratic programs
   A_obs = checkupdate$A_obs
   A_tgt = checkupdate$A_tgt
-  # (c) Solver for linear or quadratic programs
-  lpsolver = checkupdate$lpsolver
-  qpsolver = checkupdate$qpsolver
-  # Display the lpsolver and qpsolver being used
-  cat(paste("Linear programming solver used: ", lpsolver, ".\n", sep = ""))
-  cat(paste("Quadratic programming solver used: ", qpsolver, ".\n", sep = ""))
+  # (c) Solver for linear and quadratic programss
+  solver = checkupdate$solver
+  # Display the solver used
+  cat(paste("Linear and quadratic programming solver used: ", solver, ".\n", 
+            sep = ""))
   
   #### Step 2: Initialization
   # Initialization
-  N = nrow(df)
+  n = nrow(df)
   J = length(unique(df[,"Y"])) - 1
   # Compute beta_obs_hat using the function defined by user
   beta_obs_hat = checkupdate$beta_obs_hat
-  ### Assign the solver used
-  # Linear programming
-  if (lpsolver == "gurobi"){
-    lp_solver = gurobi_optim
-  } else if (lpsolver == "cplexapi"){
-    lp_solver = cplexapi_optim
-  } else if (lpsolver == "lpsolveapi"){
-    lp_solver = lpprog_optim
-  } else if (lpsolver == "rcplex"){
-    lp_solver = rcplex_optim
-  } else if (lpsolver == "limsolve"){
-    lp_solver = limsolve_optim
-  }
-  # Quadratic programming
-  if (qpsolver == "gurobi"){
-    qp_solver = gurobi_optim
-  } else if (qpsolver == "cplexapi"){
-    qp_solver = cplexapi_optim
-  } else if (qpsolver == "osqp"){
-    qp_solver = osqp_optim
-  } else if (qpsolver == "rcplex"){
-    qp_solver = rcplex_optim
-  } else if (qpsolver == "limsolve"){
-    qp_solver = limsolve_optim
+  ### Assign the solver to be used
+  if (solver == "gurobi"){
+    solver = gurobi_optim
+  } else if (solver == "cplexapi"){
+    solver = cplexapi_optim
+  } else if (solver == "rcplex"){
+    solver = rcplex_optim
+  } else if (solver == "limsolve"){
+    solver = limsolve_optim
   }
 
   #### Step 3: Choose the value of tau
-  tau_return = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "tau", N,
-                         lp_solver, qp_solver)
+  tau_return = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "tau", n,
+                         solver)
   if (tau_input > tau_return$objval){
     tau = tau_return$objval
   } else if (tau_input <= tau_return$objval){
@@ -100,37 +79,36 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   }
   
   #### Step 4: Compute T_n and x_star
-  full_return = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "test", N, 
-                          lp_solver, qp_solver)
-  # T_star is the test statistic used
-  T_star = full_return$objval
+  # Compute T_n
+  T_n = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "test", n, 
+                          solver)$objval
   # Return and stop program if it is infeasible
-  if (is.null(T_star) == TRUE){
+  if (is.null(T_n) == TRUE){
     stop("The problem is infeasible. Choose other values of tau.")
   }
   # Compute s_star
-  x_star = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "cone", N, 
-                          lp_solver, qp_solver)$x  
+  x_star = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "cone", n, 
+                     solver)$x  
   s_star = A_obs %*% x_star
   
   #### Step 5: Compute the bootstrap estimates
   # T_bs is the list of bootstrap test statistics used
   T_bs_return = beta_bs(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs, 
-                 beta_obs_hat, beta_tgt, tau, N, lp_solver, qp_solver)
+                 beta_obs_hat, beta_tgt, tau, n, solver)
   T_bs = T_bs_return$T_bs
   beta_bs_bar = T_bs_return$beta_bs_bar_set
   #### Step 6: Compute the p-value
   # decision = 1 refers to rejected, decision = 0 refers to not rejected
-  p_val = p_eval(T_bs, T_star, p_sig)
+  p_val = p_eval(T_bs, T_n, p_sig)
   
   cat(paste("-----------------------------------", "\n"))
-  cat(paste("Test statistic: ", round(T_star, digits = 5), ".\n", sep = ""))
+  cat(paste("Test statistic: ", round(T_n, digits = 5), ".\n", sep = ""))
   cat(paste("p-value: ", p_val, ".\n", sep = ""))
-  cat(paste("Value of tau used in LP: ", round(tau, digits = 5), ".\n", 
+  cat(paste("Value of tau used: ", round(tau, digits = 5), ".\n", 
             sep = ""))
   invisible(list(p = p_val, 
                  tau = tau, 
-                 T_star = T_star, 
+                 T_n = T_n, 
                  T_bs = T_bs,
                  beta_bs_bar = beta_bs_bar))
 }
@@ -143,8 +121,8 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
 #'
 #' @param tau The value of tau to be used in the linear program.
 #' @param problem The problem that the function will be solved.
-#' @param lp_solver Name of the solver that solves the linear programs.
-#' @param qp_solver Name of the solver that solves the quadratic programs.
+#' @param solver Name of the solver that solves the linear and quadratic 
+#'    programs.
 #' @param beta_obs_hat The value of \eqn{\hat{\beta}_{\mathrm{obs}}} based on
 #'    the function supplied by the user.
 #' @param n The number of observations in the dataframe.
@@ -165,7 +143,7 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
 #'
 #' @export
 prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
-                      lp_solver, qp_solver){
+                      solver){
   #### Step 1: Formulation of the objective function for (5)
   rn = dim(A_tgt)[1]
   cn = dim(A_tgt)[2]
@@ -177,13 +155,10 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
   ones = matrix(rep(1, cn), nrow = 1)
   lb = matrix(rep(0, cn), nrow = 1)
   # Obtain parameters
-  theta_down = lp_solver(NULL, A_tgt, 0, ones, c(1), "=", "min", lb, A_obs, 
+  theta_down = solver(NULL, A_tgt, 0, ones, c(1), "=", "min", lb, A_obs, 
                          beta_obs_hat, n)
-  theta_up = lp_solver(NULL, A_tgt, 0, ones, c(1), "=", "max", lb, A_obs, 
+  theta_up = solver(NULL, A_tgt, 0, ones, c(1), "=", "max", lb, A_obs, 
                        beta_obs_hat, n)
-  # Round the figures - only needed when lp_solver = osqp
-  # theta_down$objval = round(theta_down$objval, digits = 6)
-  # theta_up$objval = round(theta_up$objval, digits = 7)
     
   # Obtain required set of indices
   x_fullind = 1:cn
@@ -204,7 +179,7 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
   # If problem == "cone", this function solves linear program (5)
   # If program == "tau", this function solves linear program (6)
   if (problem == "test"){
-    ans = qp_solver(obj2, obj1, obj0, rbind(A_tgt, ones), lp_rhs, lp_sense,
+    ans = solver(obj2, obj1, obj0, rbind(A_tgt, ones), lp_rhs, lp_sense,
                        "min", lb, A_obs, beta_obs_hat, n)
   } else if (problem == "cone"){
   # Update lb
@@ -212,8 +187,8 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
     lb_new[ind_up] = rhs_up
     lb_new[ind_down] = rhs_down
     lb_new[ind_0] = rhs_0
-    ### Use QP solver to find the optimum
-    ans = qp_solver(obj2, obj1, obj0, rbind(A_tgt, ones), lp_rhs, lp_sense,
+    ### Find solution using the solver
+    ans = solver(obj2, obj1, obj0, rbind(A_tgt, ones), lp_rhs, lp_sense,
                        "min", lb_new, A_obs, beta_obs_hat, n)
   } else if (problem == "tau"){
     # Update matrix A
@@ -248,13 +223,13 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
       lp_rhs_tau = new_const$lp_rhs_tau
       lp_sense_tau = new_const$lp_sense_tau
     }
-    ans = lp_solver(NULL, c(1, rep(0, cn)), 0, lp_lhs_tau, lp_rhs_tau,
-                  lp_sense_tau, "max", lb_tau, A_obs, beta_obs_hat, n)
+    ans = solver(NULL, c(1, rep(0, cn)), 0, lp_lhs_tau, lp_rhs_tau,
+                 lp_sense_tau, "max", lb_tau, A_obs, beta_obs_hat, n)
   }
   return(ans)
 }
 
-#' Gurobi solver for quadratic and linear programs
+#' LP and QP solver by Gurobi
 #'
 #' @description This function computes the solution to the quadratic or linear
 #'    program using the `\code{Gurobi}' package.
@@ -298,7 +273,7 @@ gurobi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
   return(gurobi_result)
 }
 
-#' cplexAPI solver for quadratic and linear programs
+#' LP and QP solver by cplexAPI
 #'
 #' @description This function computes the solution to the quadratic and linear
 #'    programs using the `\code{cplexAPI}' package.
@@ -371,7 +346,7 @@ cplexapi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
               x = solution$x))
 }
 
-#' Rcplex solver for quadratic and linear programs 
+#' LP and QP solver by Rcplex
 #'
 #' @description This function computes the solution to the linear and quadratic
 #'    programs using the `\code{Rcplex}' package.
@@ -572,7 +547,7 @@ osqp_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
               objval = objval))
 }
 
-#' limSolve function for linear and quadratic programs
+#' #' LP and QP solver by limSolve
 #' 
 #' @description This function computes the solution to linear and quadratic 
 #'    programs using the `\code{limSolve}' package.
@@ -668,7 +643,7 @@ limsolve_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
 #'
 #' @export
 beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs, 
-                    beta_obs_hat, beta_tgt, tau, n, lp_solver, qp_solver){
+                    beta_obs_hat, beta_tgt, tau, n, solver){
   T_bs = NULL
   beta_bs_bar_set = NULL
   # Loop through all indices in the bootstrap
@@ -677,7 +652,7 @@ beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs,
     set.seed(bs_seed + i)
     ####  Step 2: Draw the subsample
     #df_bs = as.data.frame(resample_bootstrap(as.data.frame(df)))
-    df_bs = as.data.frame(sample_n(df, N, replace = TRUE))
+    df_bs = as.data.frame(sample_n(df, n, replace = TRUE))
     # Re-index the rows
     rownames(df_bs) = 1:nrow(df_bs)
     ####  Step 3: Compute the bootstrap estimates
@@ -685,8 +660,8 @@ beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs,
     beta_bs_star = func_obs(df_bs)
     ####  Step 4: Compute the bootstrap test statistic
     beta_bs_bar = beta_bs_star - beta_obs_hat + s_star
-    T_bs_i = prog_cone(A_obs, A_tgt, beta_bs_bar, beta_tgt, tau, "cone", 
-                       n, lp_solver, qp_solver)$objval
+    T_bs_i = prog_cone(A_obs, A_tgt, beta_bs_bar, beta_tgt, tau, "cone", n, 
+                       solver)$objval
     T_bs = c(T_bs, T_bs_i)
     beta_bs_bar_set = cbind(beta_bs_bar_set, beta_bs_bar)
   }
@@ -697,24 +672,24 @@ beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs,
 
 #' Auxiliary function to calculate the p-value
 #'
-#' @description This function computes the \eqn{p}-value of the test based on the
-#'    bootstrap estimates.
+#' @description This function computes the \eqn{p}-value of the test based on
+#'    the bootstrap estimates.
 #'
 #' @param T_bs The test statistics obtained from bootstrap.
-#' @param T_star The test statistics obtained from quadratic program (5).
+#' @param T_n The test statistics obtained from quadratic program (5).
 #' @param p_sig The number of decimal places in the \eqn{p}-value.
 #'
 #' @returns Returns the \eqn{p}-value.
 #'
 #' @export
-p_eval <- function(T_bs, T_star, p_sig){
+p_eval <- function(T_bs, T_n, p_sig){
   # Initialization
   p_val = NULL
   decision = 1 # decision = 1: rejected, decision = 0: not rejected
   alpha = 0
   while (decision != 0 & alpha <= 1){
     T_quan = as.numeric(quantile(T_bs, probs=c(1 - alpha)))
-    if (T_star >= T_quan){
+    if (T_n >= T_quan){
       decision = 0
     }
     alpha = alpha + 10^(-p_sig)
@@ -768,7 +743,7 @@ tau_constraints <- function(length_tau, coeff_tau, coeff_x, ind_x, rhs, sense,
 #'
 #' @export
 dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
-                            bs_num, p_sig, tau_input, lpsolver, qpsolver){
+                            bs_num, p_sig, tau_input, solver){
   ### Part 1. Check the dataframe
   if (class(df) %in% c("data.frame", "matrix") == TRUE){
     df = as.data.frame(df)  
@@ -863,123 +838,63 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
   # that is supported by the function. If the user does not specify any linear
   # programming solver, the function will assign a linear or quadratic
   # programming solver that is supported. 
-  solvers = list(lpsolver, qpsolver)
-  solver_incomp = c(FALSE, FALSE)
-  # Package installation message generator
+  
+  # Intialize variable
+  solver_incomp = FALSE
+  # Package recommendation messages
   gurobi_msg = "gurobi (version 8.1-1 or later)"
   cplexapi_msg = "cplexAPI (version 1.3.3 or later)"
-  osqp_msg = "osqp (version 0.6.0.3 or later)"
-  lpsolveapi_msg = "lpSolveAPI (version 5.5.2.0 or later)"
   rcplex_msg = "Rcplex (version 0.3-3 or later)"
   limsolve_msg = "limSolve (version 1.5.6 or later)"
-  # In the for-loop, i = 1 refers to the linear program and i = 2 refers to the 
-  # quadratic program
-  for (i in 1:2){
-    # Change all to lower caps
-    if (is.null(solvers[[i]]) == FALSE){
-      solvers[[i]] = tolower(solvers[[i]])
-    }
-    # Case 1: If no solver name is provided by the user
-    if (is.null(solvers[[i]]) == TRUE){
-      if (requireNamespace("gurobi", quietly = TRUE) == TRUE){
-        solvers[[i]] = "gurobi"
-      } else if (requireNamespace("lpSolveAPI", quietly = TRUE) == TRUE & 
-                 i == 1){
-        solvers[[i]] = "lpsolveapi"
-      } else if (requireNamespace("osqp", quietly = TRUE) == TRUE & i == 2){
-        solvers[[i]] = "osqp"
-      } else if (requireNamespace("limSolve", quietly = TRUE) == TRUE){
-        solvers[[i]] = "limSolve"
-      } else if (requireNamespace("Rcplex", quietly = TRUE) == TRUE){
-        solvers[[i]] = "rcplex"
-      } else if (requireNamespace("cplexAPI", quietly = TRUE) == TRUE){
-        solvers[[i]] = "cplexapi"
-      } else {
-        stop(gsub("\\s+", " ",
-                  paste0("Please install one of the following packages required
-                         for estimation: ",
-                         gurobi_msg, "; ",
-                         cplexapi_msg, "; ",
-                         rcplex_msg, "; ",
-                         limsolve_msg, "; ",
-                         osqp_msg, " AND ", lpsolveapi_msg, ".")),
-             call. = FALSE)
-      }
-    } else{
-    # Case 2: If user specifies a package that is not supported
-      if ((solvers[[i]] %in% c("gurobi", "cplexapi", "osqp", "lpsolveapi", 
-                           "rcplex", "limsolve")) 
-          == FALSE){
-      solver_incomp[i] = TRUE
-      }
-    }
-  }
-  # Display error message if user entered a linear or quadratic program solver 
-  # that is not supported by the function
-  lp_solver_incomp = NULL
-  qp_solver_incomp = NULL
-  connector_incomp = NULL
-  if (sum(solver_incomp) != 0){
-    if (solver_incomp[1] == TRUE){
-      lp_solver_incomp = paste0("linear programming solver package '", 
-                                solvers[1], "'") 
-    }
-    if (solver_incomp[2] == TRUE){
-      qp_solver_incomp = paste0("quadratic programming solver package '", 
-                                solvers[2], "'") 
-    }
-    if (sum(solver_incomp) == 2){
-      connector_incomp = " and "
-    }
-    stop(gsub("\\s+", " ",
-              paste0("This function is incompatible with ", lp_solver_incomp, 
-                    connector_incomp, qp_solver_incomp,
-                    ". Please install one of the following packages instead: ",
-                    gurobi_msg, "; ",
-                    cplexapi_msg, "; ",
-                    rcplex_msg, "; ",
-                    limsolve_msg, "; ",
-                    osqp_msg[solver_incomp[1]], connector_incomp, 
-                    lpsolveapi_msg[solver_incomp[2]], ".")),
-         call. = FALSE)
-  }
   
-  # Case 3 - If user specified a linear (resp. quadratic) programming solver for
-  # a quadratic (resp linear) programming solver.
-  if (solvers[[1]] == "osqp"){
-    stop(gsub("\\s+", " ",
-              paste0("The package 'osqp' is not supported to run the linear
-                     programs in the problems considered in this module.
-                     Please use one of the following packges instead: ",
-                     gurobi_msg, "; ",
-                     cplexapi_msg, "; ",
-                     rcplex_msg, "; ",
-                     limsolve_msg, "; ",
-                     lpsolveapi_msg, ".")),
-         call. = FALSE)
+  # Case 1: If no solver name is provided by the user
+  if (is.null(solver) == TRUE){
+    if (requireNamespace("gurobi", quietly = TRUE) == TRUE){
+      solver = "gurobi"
+    } else if (requireNamespace("limSolve", quietly = TRUE) == TRUE){
+      solver = "limsolve"
+    } else if (requireNamespace("Rcplex", quietly = TRUE) == TRUE){
+      solver = "rcplex"
+    } else if (requireNamespace("cplexAPI", quietly = TRUE) == TRUE){
+      solver = "cplexapi"
+    } else {
+      stop(gsub("\\s+", " ",
+                paste0("Please install one of the following packages to solve 
+                       the linear and quadratic programs: ",
+                       gurobi_msg, "; ",
+                       cplexapi_msg, "; ",
+                       rcplex_msg, "; ",
+                       limsolve_msg, ".")),
+           call. = FALSE)
+    }
+    # Display message to indicate that no solver is suggested by the user so
+    # the module chooses one for the user
+    cat(paste("No linear and quadratic programming solver is suggested by the
+              user. The solver '", solver, "' is automatically selected", 
+              ".\n", sep = ""))
+  } else{
+    # Change solver name to lower cases
+    solver = tolower(solver)
+  # Case 2: If user specifies a package that is not supported, display error
+  # message and suggest appropriate solvers
+    if ((solver %in% c("gurobi", "cplexapi", "rcplex", "limsolve"))
+        == FALSE){
+      stop(gsub("\\s+", " ",
+                paste0("This function is incompatible with ", solver, 
+                       ". Please install one of the following packages to solve 
+                       the linear and quadratic programs: ",
+                       gurobi_msg, "; ",
+                       cplexapi_msg, "; ",
+                       rcplex_msg, "; ",
+                       limsolve_msg, ".")),
+           call. = FALSE)
+    }
   }
-  if (solvers[[2]] == "lpsolveapi"){
-    stop(gsub("\\s+", " ",
-              paste0("The package 'lpSolveAPI' cannot be used to solve 
-                     quadratic programs. Please use one of the following 
-                     packages instead: ",
-                     gurobi_msg, "; ",
-                     cplexapi_msg, "; ",
-                     rcplex_msg, "; ",
-                     limsolve_msg, "; ",
-                     osqp_msg, ".")),
-         call. = FALSE)
-  }
-
-  # Update the solver names (in small caps)
-  lpsolver = solvers[[1]]
-  qpsolver = solvers[[2]]
   
   ### Step 10. Return the upated information
   return(list(df = df, 
               A_obs = A_obs,
               A_tgt = A_tgt,
               beta_obs_hat = beta_obs_hat,
-              lpsolver = lpsolver,
-              qpsolver = qpsolver))
+              solver = solver))
 }
