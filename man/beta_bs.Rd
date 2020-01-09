@@ -17,8 +17,7 @@ beta_bs(
   beta_tgt,
   tau,
   n,
-  lp_solver,
-  qp_solver
+  solver
 )
 }
 \arguments{
@@ -47,13 +46,17 @@ of \eqn{t} in the missing data problem) in the null hypothesis.}
 
 \item{n}{The number of observations in the dataframe.}
 
-\item{lp_solver}{Name of the solver that solves the linear programs.}
-
-\item{qp_solver}{Name of the solver that solves the quadratic programs.}
+\item{solver}{The name of the linear and quadratic programming solver that 
+are used to obtain the solution to linear and quadratic programs. 
+The solvers supported by this module are `\code{cplexAPI}', 
+`\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
 }
 \value{
-Returns the list of bootstrap test statistics, i.e.
-   \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}.
+Returns the list of estimates from bootstrap:
+  \item{T_bs}{A list of bootstrap test statistics 
+     \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}.}
+ \item{beta_bs_bar_set}{A list of \eqn{\tau_n}-tightened recentered 
+    bootstrap estimates \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}}
 }
 \description{
 This function computes the bootstrap test statistics.

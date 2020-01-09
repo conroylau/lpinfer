@@ -14,8 +14,8 @@
 #'    \eqn{A_{\mathrm{tgt}}.
 #' @param func_obs The function that generates the required 
 #'    \eqn{\hat{\beta}_{\mathrm{obs}}}.
-#' @param beta_tgt The value of \eqn{\hat{\beta}_{\mathrm{tgt}}} (i.e. the value 
-#'    of \eqn{t} in the missing data problem) in the null hypothesis.
+#' @param beta_tgt The value of \eqn{\hat{\beta}_{\mathrm{tgt}}} (i.e. the 
+#'    value of \eqn{t} in the missing data problem) in the null hypothesis.
 #' @param bs_seed The starting value of the seed in bootstrap.
 #' @param bs_num The total number of bootstraps \eqn{B}.
 #' @param p_sig The number of decimal places in the \eqn{p}-value.
@@ -25,11 +25,16 @@
 #'    The solvers supported by this module are `\code{cplexAPI}', 
 #'    `\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.
 #'    
-#' @returns Returns the \eqn{p}-value, the value of tau used \eqn{\tau^\ast}, 
-#'   test statistic \eqn{T_n(\tau_n)}, the list of bootstrap test statistics 
-#'   \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}} and the list of tau-tightened
-#'   re-centered bootstrap estimators \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}.
-#'
+#' @return Returns a list of output calculated from the function:
+#'   \item{p_val}{\eqn{p}-value.}
+#'   \item{tau}{The value of tau used \eqn{\tau^\ast} in the linear and 
+#'      quadratic programs.}
+#'   \item{T_n}{Test statistic \eqn{T_n}.}
+#'   \item{T_bs}{The list of bootstrap test statistics 
+#'      \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}.}
+#'   \item{beta_bs_bar}{The list of \eqn{\tau}-tightened re-centered bootstrap 
+#'      estimators \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}.}
+#' @ 
 #' @export
 dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
                       bs_num = 100, p_sig = 2, tau_input = .5, solver = NULL){
@@ -37,7 +42,7 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   #### Step 1: Check and update the dependencies
   checkupdate = dkqs_cone_check(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
                                 bs_num, p_sig, tau_input, solver)
-  # Update and return the information returned from the function dkqs_cone_check
+  # Update and return the quantities returned from the function dkqs_cone_check
   # (a) Dataframe
   df = checkupdate$df
   # (b) Matrices for linear and quadratic programs
@@ -106,7 +111,7 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   cat(paste("p-value: ", p_val, ".\n", sep = ""))
   cat(paste("Value of tau used: ", round(tau, digits = 5), ".\n", 
             sep = ""))
-  invisible(list(p = p_val, 
+  invisible(list(p_val = p_val, 
                  tau = tau, 
                  T_n = T_n, 
                  T_bs = T_bs,
@@ -128,7 +133,9 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
 #' @param n The number of observations in the dataframe.
 #' @inheritParams dkqs_cone
 #'
-#' @returns Returns the solution to the quadratic program.
+#' @return Returns the optimal point and optimal value.
+#'  \item{x}{Optimal point calculated from the optimizer.}
+#'  \item{objval}{Optimal value calculated from the optimizer.}
 #' 
 #' @details The argument \code{problem} must be one of the followings:
 #' \itemize{
@@ -251,8 +258,9 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
 #' @inheritParams dkqs_cone
 #' @inheritParams prog_cone
 #'
-#' @returns Returns the optimal objective value and the corresponding argument
-#'   to the quadratic or linear program.
+#' @return Returns the optimal point and optimal value.
+#'  \item{x}{Optimal point calculated from the optimizer.}
+#'  \item{objval}{Optimal value calculated from the optimizer.}
 #'
 #' @export
 gurobi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
@@ -282,8 +290,9 @@ gurobi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
 #' @inheritParams dkqs_cone
 #' @inheritParams prog_cone
 #'
-#' @returns Returns the optimal objective value and the corresponding argument
-#'   to the quadratic or linear program.
+#' @return Returns the optimal point and optimal value.
+#'  \item{x}{Optimal point calculated from the optimizer.}
+#'  \item{objval}{Optimal value calculated from the optimizer.}
 #'
 #' @export
 cplexapi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
@@ -357,8 +366,9 @@ cplexapi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
 #' @inheritParams dkqs_cone
 #' @inheritParams prog_cone
 #'
-#' @returns Returns the optimal objective value and the corresponding argument
-#'   to the linear or quadratic program.
+#' @return Returns the optimal point and optimal value.
+#'  \item{x}{Optimal point calculated from the optimizer.}
+#'  \item{objval}{Optimal value calculated from the optimizer.}
 #'
 #' @export
 rcplex_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
@@ -401,152 +411,6 @@ rcplex_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
               x = solution$xopt))  
 }
 
-#' lpSolveAPI solver for linear programs
-#'
-#' @description This function computes the solution to the linear program
-#'    using the `\code{lpsolveAPI}' package.
-#'    
-#' @import lpSolveAPI
-#'
-#' @inheritParams gurobi_optim
-#' @inheritParams dkqs_cone
-#' @inheritParams prog_cone
-#'
-#' @returns Returns the optimal objective value and the corresponding argument
-#'   to the linear program.
-#'   
-#' @details The package `\code{lpSolveAPI}' cannot be used to solve quadratic 
-#'   programs. Hence, the argument \code{obj2} is not used in the function.
-#'
-#' @export
-lpprog_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
-                         A_obs, beta_hat_obs, n){
-  ### Step 1: Update the constraint matrices
-  # Change the lower bounds to inequality constriants
-  lb_Amat = diag(length(lb))
-  lb_bvec = lb
-  # Update constraint matrices
-  A = rbind(A, lb_Amat)
-  rhs = c(rhs, lb_bvec)
-  sense = c(sense, rep(">=", length(lb_bvec)))
-  
-  ### Step 2: LP formulation
-  # solve object
-  lprec = make.lp(nrow = nrow(A), ncol = ncol(A))
-  # Model sense
-  lp.control(lprec, sense=modelsense)
-  # Types of decision variables
-  set.type(lprec, 1:ncol(A), type=c("real"))
-  set.objfn(lprec, obj1)
-  #Define the constraints
-  for (i in 1:nrow(A)){
-    add.constraint(lprec, A[i, ], sense[i], rhs[i])
-    
-  }
-  
-  ### Step 3: Solve and obtain solution of LP
-  solve(lprec)
-  x = get.variables(lprec)
-  objval = get.objective(lprec)
-  return(list(x = x,
-              objval = objval))
-}
-
-#' osqp solver for quadratic programs
-#'
-#' @description This function computes the solution to the quadratic program
-#'    using the `\code{osqp}' package.
-#'    
-#' @import osqp
-#'
-#' @inheritParams gurobi_optim
-#' @inheritParams dkqs_cone
-#' @inheritParams prog_cone
-#'
-#' @returns Returns the optimal objective value and the corresponding argument
-#'   to the quadratic program.
-#'   
-#' @details 
-#' \itemize{
-#'   \item{The matrix \eqn{\bm{P}} that corresponds to the second-order term
-#'   has to be positive semi-definite.}
-#'  }
-#'
-#' @export
-osqp_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
-                       A_obs, beta_hat_obs, n){
-  ### Step 1: Set the objective function
-  # Set objective function
-  # It is multiplied by 2 because of the term 1/2 in the quadratic term in the 
-  # osqp package.
-  if (modelsense == "min"){
-    if (is.null(obj2) == TRUE){
-      Pmat = matrix(rep(0, length(obj1)^2), nrow = length(obj1))
-    } else {
-      Pmat = 2 * obj2
-    }
-    qvec = obj1
-    
-    ### Step 2: Formulation of the constraints
-    # Constraints (Set with negative sign because they are in <= form but the 
-    # default is in >= form).
-    Amat = A
-    bvec = rhs
-    # Change the lower bounds to inequality constriants
-    lb_Amat = diag(length(lb))
-    lb_bvec = lb
-    # Update constraint matrices
-    Amat = rbind(Amat, lb_Amat)
-    bvec = c(bvec, lb_bvec)
-    # Number of equality constraints
-    #meq = min(nrow(A), 2)
-    # upper bound
-    uvec = c(rhs, rep(Inf, length(lb_bvec)))
-  }
-  else if (modelsense == "max"){
-    if (is.null(obj2) == TRUE){
-      Pmat = matrix(rep(0, length(obj1)^2), nrow = length(obj1))
-    } else {
-      Pmat = 2 * obj2
-    }
-    # Introduce slack variables if necessary on the "<=" constraints
-    senselength = length(sense)
-    for (i in 1:senselength){
-      Atemp = A
-      A = cbind(A, diag(senselength))
-      obj1 = c(obj1, rep(0, senselength))
-      lb = c(lb, rep(0, senselength))
-    }
-    # update matrices
-    Amat = t(A)
-    lb = as.matrix(lb, ncol = 1, byrow = TRUE)
-    if (dim(lb)[1] == 1){
-      lb = t(lb)
-    }
-    rhs = as.matrix(rhs, ncol = 1, byrow = TRUE)
-    qvec = rhs - t(Amat)%*%(lb)
-    Pmat = matrix(rep(0, length(qvec)^2), nrow = length(qvec))
-    bvec = obj1
-    uvec = rep(Inf, length(bvec))
-  }
-  
-  # Step 3: Solve and obtain solution of the quadratic program
-  settings = osqpSettings(verbose = FALSE, 
-                          max_iter = 1e5, 
-                          eps_abs=1e-8, 
-                          eps_rel = 1e-8)
-  model = osqp(Pmat, qvec, Amat, l=bvec, u=uvec, pars=settings)
-  osqp_solution = model$Solve()
-  x = osqp_solution$x
-  objval = osqp_solution$info$obj_val
-  
-  x = as.matrix(x)
-  objval = as.numeric(objval)
-  objval = objval + obj0
-  return(list(x = x,
-              objval = objval))
-}
-
 #' #' LP and QP solver by limSolve
 #' 
 #' @description This function computes the solution to linear and quadratic 
@@ -558,8 +422,9 @@ osqp_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
 #' @inheritParams dkqs_cone
 #' @inheritParams prog_cone
 #'
-#' @returns Returns the optimal objective value and the corresponding argument
-#'   to the quadratic or linear program.
+#' @return Returns the optimal point and optimal value.
+#'  \item{x}{Optimal point calculated from the optimizer.}
+#'  \item{objval}{Optimal value calculated from the optimizer.}
 #'   
 #' @export
 limsolve_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
@@ -612,7 +477,8 @@ limsolve_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
       # Formulate the two matrices
       Amat = A_obs * sqrt(n)
       Bvec = beta_hat_obs * sqrt(n)
-      solution = lsei(A = Amat, B = Bvec, E = Emat, F = Fvec, G = Gmat, H = Hvec)
+      solution = lsei(A = Amat, B = Bvec, E = Emat, F = Fvec, G = Gmat, 
+                      H = Hvec)
       # Obtain objective function
       objval = solution$solutionNorm
     } else if (modelsense == "max"){
@@ -638,8 +504,11 @@ limsolve_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
 #' @inheritParams dkqs_cone
 #' @inheritParams prog_cone
 #'
-#' @returns Returns the list of bootstrap test statistics, i.e.
-#'    \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}.
+#' @return Returns the list of estimates from bootstrap:
+#'   \item{T_bs}{A list of bootstrap test statistics 
+#'      \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}.}
+#'  \item{beta_bs_bar_set}{A list of \eqn{\tau_n}-tightened recentered 
+#'     bootstrap estimates \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}}
 #'
 #' @export
 beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs, 
@@ -679,7 +548,9 @@ beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs,
 #' @param T_n The test statistics obtained from quadratic program (5).
 #' @param p_sig The number of decimal places in the \eqn{p}-value.
 #'
-#' @returns Returns the \eqn{p}-value.
+#' @return Returns the \eqn{p}-value:
+#'   \item{p_val}{\eqn{p}-value that is corrected to \code{p_sig} decimal
+#'      places.}
 #'
 #' @export
 p_eval <- function(T_bs, T_n, p_sig){
@@ -715,8 +586,11 @@ p_eval <- function(T_bs, T_n, p_sig){
 #' @param lp_rhs_tau The RHS vector of the linear constraints to be updated.
 #' @param lp_sense_tau The sense vector fo the linear constraints to be updated
 #'
-#' @returns Returns the list of updated constraint matrix, RHS vector of the 
-#'   linear constraints and the sense vector.
+#' @return Returns the list of matrices that corresponds to the updated 
+#'   constraints:
+#'   \item{lp_lhs_tau}{Upated constraint matrix.}
+#'   \item{lp_rhs_tau}{Update RHS vector.}
+#'   \item{lp_sense_tau}{Update sense for the constraints.}
 #'
 #' @export
 tau_constraints <- function(length_tau, coeff_tau, coeff_x, ind_x, rhs, sense,
@@ -736,11 +610,19 @@ tau_constraints <- function(length_tau, coeff_tau, coeff_x, ind_x, rhs, sense,
 #' Checks and update the input
 #'
 #' @description This function checks and updates the input of the user. If 
-#'    there is any invalid input, this function will be terminated and generates 
-#'    appropriate error messages.
+#'    there is any invalid input, this function will be terminated and 
+#'    generates appropriate error messages.
 #'
 #' @inheritParams dkqs_cone
-#'
+#' 
+#' @return Returns the list of updated parameters as follows:
+#'   \item{df}{Upated data in class \code{data.frame}}
+#'   \item{A_obs}{Update "observed" matrix in class \code{matrix}.}
+#'   \item{A_tgt}{Update "target" matrix in class \code{matrix}.}
+#'   \item{beta_obs_tgt}{Obtain \eqn{\widehat{\bm{\beta}}_{\mathrm{tgt}}} 
+#'      that is obtained from the function \code{func_obs}.}
+#'   \item{solver}{Update name of solver in lower case.}
+#' 
 #' @export
 dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
                             bs_num, p_sig, tau_input, solver){
@@ -833,7 +715,7 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
          call. = FALSE)
   }
   
-  ### Part 9. Check lpsolve and qpsolve
+  ### Part 9. Check solvers
   # Check if the user supplied a name of linear or quadratic programming solver
   # that is supported by the function. If the user does not specify any linear
   # programming solver, the function will assign a linear or quadratic

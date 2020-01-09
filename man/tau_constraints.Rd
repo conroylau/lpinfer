@@ -37,8 +37,11 @@ constraint.}
 \item{lp_sense_tau}{The sense vector fo the linear constraints to be updated}
 }
 \value{
-Returns the list of updated constraint matrix, RHS vector of the 
-  linear constraints and the sense vector.
+Returns the list of matrices that corresponds to the updated 
+  constraints:
+  \item{lp_lhs_tau}{Upated constraint matrix.}
+  \item{lp_rhs_tau}{Update RHS vector.}
+  \item{lp_sense_tau}{Update sense for the constraints.}
 }
 \description{
 This function generates the constraints in the linear program

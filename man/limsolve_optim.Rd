@@ -2,7 +2,7 @@
 % Please edit documentation in R/dkqs.R
 \name{limsolve_optim}
 \alias{limsolve_optim}
-\title{limSolve function for linear and quadratic programs}
+\title{#' LP and QP solver by limSolve}
 \usage{
 limsolve_optim(
   obj2,
@@ -42,8 +42,9 @@ objective function.}
 \item{n}{The number of observations in the dataframe.}
 }
 \value{
-Returns the optimal objective value and the corresponding argument
-  to the quadratic or linear program.
+Returns the optimal point and optimal value.
+ \item{x}{Optimal point calculated from the optimizer.}
+ \item{objval}{Optimal value calculated from the optimizer.}
 }
 \description{
 This function computes the solution to linear and quadratic 

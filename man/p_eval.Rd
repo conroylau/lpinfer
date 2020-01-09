@@ -4,19 +4,21 @@
 \alias{p_eval}
 \title{Auxiliary function to calculate the p-value}
 \usage{
-p_eval(T_bs, T_star, p_sig)
+p_eval(T_bs, T_n, p_sig)
 }
 \arguments{
 \item{T_bs}{The test statistics obtained from bootstrap.}
 
-\item{T_star}{The test statistics obtained from quadratic program (5).}
+\item{T_n}{The test statistics obtained from quadratic program (5).}
 
 \item{p_sig}{The number of decimal places in the \eqn{p}-value.}
 }
 \value{
-Returns the \eqn{p}-value.
+Returns the \eqn{p}-value:
+  \item{p_val}{\eqn{p}-value that is corrected to \code{p_sig} decimal
+     places.}
 }
 \description{
-This function computes the \eqn{p}-value of the test based on the
-   bootstrap estimates.
+This function computes the \eqn{p}-value of the test based on
+   the bootstrap estimates.
 }

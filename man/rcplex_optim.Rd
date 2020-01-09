@@ -2,7 +2,7 @@
 % Please edit documentation in R/dkqs.R
 \name{rcplex_optim}
 \alias{rcplex_optim}
-\title{Rcplex solver for quadratic and linear programs}
+\title{LP and QP solver by Rcplex}
 \usage{
 rcplex_optim(
   obj2,
@@ -42,8 +42,9 @@ objective function.}
 \item{n}{The number of observations in the dataframe.}
 }
 \value{
-Returns the optimal objective value and the corresponding argument
-  to the linear or quadratic program.
+Returns the optimal point and optimal value.
+ \item{x}{Optimal point calculated from the optimizer.}
+ \item{objval}{Optimal value calculated from the optimizer.}
 }
 \description{
 This function computes the solution to the linear and quadratic

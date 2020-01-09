@@ -14,8 +14,7 @@ dkqs_cone_check(
   bs_num,
   p_sig,
   tau_input,
-  lpsolver,
-  qpsolver
+  solver
 )
 }
 \arguments{
@@ -35,15 +34,19 @@ of \eqn{t} in the missing data problem) in the null hypothesis.}
 
 \item{tau_input}{The value of tau chosen by the user.}
 
-\item{lpsolver}{The name of the linear programming solver package to 
-be used to obtain the solutions to the linear programs. The linear 
-programming solvers supported by this module are `\code{cplexAPI}', 
-`\code{gurobi}' and `\code{lpsolveAPI}'.}
-
-\item{qpsolver}{The name of the quadratic programming solver package to 
-be used to obtain the solutions to the quadratic programs. The quadratic 
-programming solvers supported by this module are `\code{cplexAPI}', 
-`\code{gurobi}' and `\code{osqp}'.}
+\item{solver}{The name of the linear and quadratic programming solver that 
+are used to obtain the solution to linear and quadratic programs. 
+The solvers supported by this module are `\code{cplexAPI}', 
+`\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
+}
+\value{
+Returns the list of updated parameters as follows:
+  \item{df}{Upated data in class \code{data.frame}}
+  \item{A_obs}{Update "observed" matrix in class \code{matrix}.}
+  \item{A_tgt}{Update "target" matrix in class \code{matrix}.}
+  \item{beta_obs_tgt}{Obtain \eqn{\widehat{\bm{\beta}}_{\mathrm{tgt}}} 
+     that is obtained from the function \code{func_obs}.}
+  \item{solver}{Update name of solver in lower case.}
 }
 \description{
 This function checks and updates the input of the user. If 

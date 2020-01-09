@@ -14,8 +14,7 @@ dkqs_cone(
   bs_num = 100,
   p_sig = 2,
   tau_input = 0.5,
-  lpsolver = NULL,
-  qpsolver = NULL
+  solver = NULL
 )
 }
 \arguments{
@@ -35,21 +34,21 @@ of \eqn{t} in the missing data problem) in the null hypothesis.}
 
 \item{tau_input}{The value of tau chosen by the user.}
 
-\item{lpsolver}{The name of the linear programming solver package to 
-be used to obtain the solutions to the linear programs. The linear 
-programming solvers supported by this module are `\code{cplexAPI}', 
-`\code{gurobi}' and `\code{lpsolveAPI}'.}
-
-\item{qpsolver}{The name of the quadratic programming solver package to 
-be used to obtain the solutions to the quadratic programs. The quadratic 
-programming solvers supported by this module are `\code{cplexAPI}', 
-`\code{gurobi}' and `\code{osqp}'.}
+\item{solver}{The name of the linear and quadratic programming solver that 
+are used to obtain the solution to linear and quadratic programs. 
+The solvers supported by this module are `\code{cplexAPI}', 
+`\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
 }
 \value{
-Returns the \eqn{p}-value, the value of tau used \eqn{\tau^\ast}, 
-  test statistic \eqn{T_n(\tau_n)}, the list of bootstrap test statistics 
-  \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}} and the list of tau-tightened
-  re-centered bootstrap estimators \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}.
+Returns a list of output calculated from the function:
+  \item{p_val}{\eqn{p}-value.}
+  \item{tau}{The value of tau used \eqn{\tau^\ast} in the linear and 
+     quadratic programs.}
+  \item{T_n}{Test statistic \eqn{T_n}.}
+  \item{T_bs}{The list of bootstrap test statistics 
+     \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}.}
+  \item{beta_bs_bar}{The list of \eqn{\tau}-tightened re-centered bootstrap 
+     estimators \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}.}
 }
 \description{
 This module conducts inference in quadratic programs using the 

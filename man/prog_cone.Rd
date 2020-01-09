@@ -4,17 +4,7 @@
 \alias{prog_cone}
 \title{Formulating and solving quadratic programs}
 \usage{
-prog_cone(
-  A_obs,
-  A_tgt,
-  beta_obs_hat,
-  beta_tgt,
-  tau,
-  problem,
-  n,
-  lp_solver,
-  qp_solver
-)
+prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n, solver)
 }
 \arguments{
 \item{beta_obs_hat}{The value of \eqn{\hat{\beta}_{\mathrm{obs}}} based on
@@ -29,12 +19,13 @@ of \eqn{t} in the missing data problem) in the null hypothesis.}
 
 \item{n}{The number of observations in the dataframe.}
 
-\item{lp_solver}{Name of the solver that solves the linear programs.}
-
-\item{qp_solver}{Name of the solver that solves the quadratic programs.}
+\item{solver}{Name of the solver that solves the linear and quadratic 
+programs.}
 }
 \value{
-Returns the solution to the quadratic program.
+Returns the optimal point and optimal value.
+ \item{x}{Optimal point calculated from the optimizer.}
+ \item{objval}{Optimal value calculated from the optimizer.}
 }
 \description{
 This function formulates the matrices and vectors, and solves 
