@@ -1,1 +1,1 @@
-vignettes/dkqs.md
+vignettes/linearprog.md
