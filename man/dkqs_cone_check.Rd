@@ -18,17 +18,17 @@ dkqs_cone_check(
 )
 }
 \arguments{
-\item{df}{The dataframe that contains the sample data.}
+\item{df}{The data being used in the inference.}
 
 \item{func_obs}{The function that generates the required 
 \eqn{\hat{\beta}_{\mathrm{obs}}}.}
 
-\item{beta_tgt}{The value of \eqn{\hat{\beta}_{\mathrm{tgt}}} (i.e. the value 
-of \eqn{t} in the missing data problem) in the null hypothesis.}
+\item{beta_tgt}{The value of \eqn{\hat{\beta}_{\mathrm{tgt}}} (i.e. the 
+value of \eqn{t} in the missing data problem) in the null hypothesis.}
 
 \item{bs_seed}{The starting value of the seed in bootstrap.}
 
-\item{bs_num}{The total number of bootstraps \eqn{B}.}
+\item{bs_num}{The total number of bootstraps \eqn{B} to be conducted.}
 
 \item{p_sig}{The number of decimal places in the \eqn{p}-value.}
 
@@ -50,6 +50,6 @@ Returns the list of updated parameters as follows:
 }
 \description{
 This function checks and updates the input of the user. If 
-   there is any invalid input, this function will be terminated and generates 
-   appropriate error messages.
+   there is any invalid input, this function will be terminated and 
+   generates appropriate error messages.
 }
