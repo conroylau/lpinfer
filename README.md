@@ -1,1 +1,1 @@
-vignettes/dkqs.Rmd
+vignettes/dkqs.md
