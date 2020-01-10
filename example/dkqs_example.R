@@ -41,8 +41,6 @@ pi = 1 - mean(df[,"D"])
 # Compute matrices required
 yp = seq(0,1,1/J)
 A_tgt = matrix(c(yp, yp), nrow = 1)
-beta_obs = matrix(rep((1 - pi)/J1,J1), nrow = J1)
-num_bs = 10
 # Define the value of tau to be used
 tau = sqrt(log(N)/N)
 
@@ -86,28 +84,27 @@ A_obs_twom = matrix(c(rep(0,J1), yp, rep(0,J1), rep(1, J1)), nrow = 2,
 # Define the value of beta_tgt and significant figures needed
 beta_tgt = .365
 p_sig = 4
-# Example 1 - Using full information approach, gurobi for LP and QP
-full_g_g = dkqs_cone(df, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 100, 
-                     p_sig, tau, "gurobi", "gurobi")
+# Example 1.1 - Using full information approach and gurobi solver
+full_gur = dkqs_cone(df, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 100, 
+                     p_sig, tau, "gurobi")
 
-# Example 2 - Using full information approach, gurobi for LP and osqp for QP
-full_g_o = dkqs_cone(df, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 100,
-                     p_sig, tau, "gurobi", "osqp")
+# Example 1.2 - Using full information approach and Rcplex solver
+full_rcp = dkqs_cone(df, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 100,
+                     p_sig, tau, "Rcplex")
 
-# Example 3 - Using two moments approach, Rcplex for LP and QP
+# Example 1.3 - Using full information approach and limSolve solver
+full_lim = dkqs_cone(df, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 100, 
+                     p_sig, tau, "limSolve")
+
+# Example 2.1 - Using full information approach and gurobi solver
+full_gur = dkqs_cone(df, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100, 
+                     p_sig, tau, "gurobi")
+
+# Example 2.2 - Using full information approach and Rcplex solver
+full_rcp = dkqs_cone(df, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100,
+                     p_sig, tau, "Rcplex")
+
+# Example 2.3 - Using two moments approach and limSolve solver
 twom_r_r = dkqs_cone(df, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100, 
-                     p_sig, tau, "Rcplex", "Rcplex")
-
-# Example 4 - Using two moments approach, lpSolveAPI for LP and Rcplex for QP
-twom_l_r = dkqs_cone(df, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100,
-                     p_sig, tau, "lpsolveapi", "Rcplex")
-
-# Example 5 - Using two moments approach, cplexAPI for LP and Rcplex for QP
-twom_c_r = dkqs_cone(df, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100,
-                     p_sig, tau, "cplexapi", "Rcplex")
-
-# Example 7 - Using two moments approach, limsolve for LP and QP
-twom_r_r = dkqs_cone(df, A_obs_twom, A_tgt, func_two_moment, .365, 1, 50000, 
-                     p_sig, tau, "limsolve", "limsolve")
-
+                     p_sig, tau, "limSolve")
 
