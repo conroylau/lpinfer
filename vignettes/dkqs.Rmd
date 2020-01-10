@@ -2,7 +2,7 @@
 title: 'linearprog: An R Package for Inference in Linear and Quadratic Programs'
 author: ''
 output:
-  pdf_document:
+  md_document:
     toc: yes
     df_print: paged
   html_document:
@@ -11,6 +11,9 @@ output:
     df_print: paged
   github_document:
     keep_html: yes
+    toc: yes
+    df_print: paged
+  pdf_document:
     toc: yes
     df_print: paged
 bibliography: refs.bib
