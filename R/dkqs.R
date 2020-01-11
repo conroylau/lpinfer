@@ -4,20 +4,17 @@
 #'    procedure suggested by Torgovitsky (2019) that incorporates the 
 #'    cone-tightening procedure proposed by Deb, Kitamura, Quah and
 #'    Stoye (2018).
-#' @import slam car modelr gurobi e1071 lpSolveAPI cplexAPI osqp Rcplex ddpcr
-#'    Momocs limSolve
+#' @import gurobi cplexAPI Rcplex Momocs limSolve
 #'
-#' @param df The dataframe that contains the sample data.
-#' @param A_obs The "observed matrix" in the quadratic program 
-#'    \eqn{A_{\mathrm{obs}}.
-#' @param A_tgt The "target matrix" in the quadratic program 
-#'    \eqn{A_{\mathrm{tgt}}.
+#' @param df The data being used in the inference.
+#' @param A_obs The "observed matrix" in the inference \eqn{A_{\mathrm{obs}}.
+#' @param A_tgt The "target matrix" in the inference \eqn{A_{\mathrm{tgt}}.
 #' @param func_obs The function that generates the required 
 #'    \eqn{\hat{\beta}_{\mathrm{obs}}}.
 #' @param beta_tgt The value of \eqn{\hat{\beta}_{\mathrm{tgt}}} (i.e. the 
 #'    value of \eqn{t} in the missing data problem) in the null hypothesis.
 #' @param bs_seed The starting value of the seed in bootstrap.
-#' @param bs_num The total number of bootstraps \eqn{B}.
+#' @param bs_num The total number of bootstraps \eqn{B} to be conducted.
 #' @param p_sig The number of decimal places in the \eqn{p}-value.
 #' @param tau_input The value of tau chosen by the user.
 #' @param solver The name of the linear and quadratic programming solver that 
@@ -83,7 +80,7 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
     stop("The problem is infeasible. Choose other values of tau.")
   }
   
-  #### Step 4: Compute T_n and x_star
+  #### Step 4: Compute T_n, x_star and s_star
   # Compute T_n
   T_n = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "test", n, 
                           solver)$objval
@@ -111,9 +108,9 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   cat(paste("p-value: ", p_val, ".\n", sep = ""))
   cat(paste("Value of tau used: ", round(tau, digits = 5), ".\n", 
             sep = ""))
-  invisible(list(p_val = p_val, 
-                 tau = tau, 
-                 T_n = T_n, 
+  invisible(list(p_val = as.numeric(p_val), 
+                 tau = as.numeric(tau), 
+                 T_n = as.numeric(T_n), 
                  T_bs = T_bs,
                  beta_bs_bar = beta_bs_bar))
 }
@@ -162,10 +159,8 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
   ones = matrix(rep(1, cn), nrow = 1)
   lb = matrix(rep(0, cn), nrow = 1)
   # Obtain parameters
-  theta_down = solver(NULL, A_tgt, 0, ones, c(1), "=", "min", lb, A_obs, 
-                         beta_obs_hat, n)
-  theta_up = solver(NULL, A_tgt, 0, ones, c(1), "=", "max", lb, A_obs, 
-                       beta_obs_hat, n)
+  theta_down = solver(NULL, A_tgt, n, ones, c(1), "=", "min", lb)
+  theta_up = solver(NULL, A_tgt, n, ones, c(1), "=", "max", lb)
     
   # Obtain required set of indices
   x_fullind = 1:cn
@@ -186,8 +181,8 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
   # If problem == "cone", this function solves linear program (5)
   # If program == "tau", this function solves linear program (6)
   if (problem == "test"){
-    ans = solver(obj2, obj1, obj0, rbind(A_tgt, ones), lp_rhs, lp_sense,
-                       "min", lb, A_obs, beta_obs_hat, n)
+    ans = solver(A_obs, beta_obs_hat, n, rbind(A_tgt, ones), lp_rhs, lp_sense,
+                 "min", lb)
   } else if (problem == "cone"){
   # Update lb
     lb_new = lb
@@ -195,8 +190,8 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
     lb_new[ind_down] = rhs_down
     lb_new[ind_0] = rhs_0
     ### Find solution using the solver
-    ans = solver(obj2, obj1, obj0, rbind(A_tgt, ones), lp_rhs, lp_sense,
-                       "min", lb_new, A_obs, beta_obs_hat, n)
+    ans = solver(A_obs, beta_obs_hat, n, rbind(A_tgt, ones), lp_rhs, lp_sense,
+                 "min", lb_new)
   } else if (problem == "tau"){
     # Update matrix A
     lp_lhs_tau = rbind(A_tgt, ones)
@@ -230,8 +225,8 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
       lp_rhs_tau = new_const$lp_rhs_tau
       lp_sense_tau = new_const$lp_sense_tau
     }
-    ans = solver(NULL, c(1, rep(0, cn)), 0, lp_lhs_tau, lp_rhs_tau,
-                 lp_sense_tau, "max", lb_tau, A_obs, beta_obs_hat, n)
+    ans = solver(NULL, c(1, rep(0, cn)), n, lp_lhs_tau, lp_rhs_tau,
+                 lp_sense_tau, "max", lb_tau)
   }
   return(ans)
 }
@@ -243,12 +238,9 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
 #'    
 #' @import gurobi
 #'
-#' @param obj2 The matrix that corresponds to the second-order term in the
-#'    quadratic program. This input will be set to \code{NULL} if the problem
-#'    considered is a linear program.
-#' @param obj1 The vector that corresponds to the first-order term in the
-#'    quadratic or linear program.
-#' @param obj0 The constant term in the quadratic or linear program.
+#' @param Af The matrix that is involved in the objective function.
+#' @param bf The vector that is involved in the objective function.
+#' @param nf The number of observations in the dataframe.
 #' @param A The constraint matrix.
 #' @param rhs The RHS vector for the linear constraints.
 #' @param modelsense The indicator of whether the model is to max or min an
@@ -263,22 +255,26 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
 #'  \item{objval}{Optimal value calculated from the optimizer.}
 #'
 #' @export
-gurobi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
-                         A_obs, beta_hat_obs, n){
-  # Gurobi set-up
+gurobi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
+  ### Step 1: Obtain the coefficients of the objective function
+  objective_return = objective_function(Af, bf, nf)
+  
+  ### Step 2: Gurobi set-up
   model = list()
-  model$Q = obj2
-  model$obj = obj1
-  model$objcon = obj0
+  model$Q = objective_return$obj2
+  model$obj = objective_return$obj1
+  model$objcon = objective_return$obj0
   model$A = A
   model$rhs = rhs
   model$sense = sense 
   model$modelsense = modelsense
   model$lb = lb
-  # Result of the linear or quadratic program, and return result
+  
+  ### Step 3: Result of the linear or quadratic program, and return result
   params = list(OutputFlag=0)
-  gurobi_result = gurobi(model, params)
-  return(gurobi_result)
+  solution = gurobi(model, params)
+  return(list(objval = as.numeric(solution$objval),
+              x = as.numeric(solution$x)))
 }
 
 #' LP and QP solver by cplexAPI
@@ -295,8 +291,10 @@ gurobi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
 #'  \item{objval}{Optimal value calculated from the optimizer.}
 #'
 #' @export
-cplexapi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
-                           A_obs, beta_hat_obs, n){
+cplexapi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
+  ### Step 0: Obtain the coefficients of the objective function
+  objective_return = objective_function(Af, bf, nf)
+  
   ### Step 1: Update the notations
   # Model sense
   modelsense[modelsense == "min"] = CPX_MIN
@@ -335,7 +333,7 @@ cplexapi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
                       ncol(A),
                       nrow(A),
                       modelsense,
-                      obj1,
+                      objective_return$obj1,
                       rhs,
                       sense,
                       beg,
@@ -351,8 +349,8 @@ cplexapi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
     stop("This version can only solve linear programs by CPLEX at the moment. 
          Please use another solver for quadratic progarms.")
   }
-  return(list(objval = solution$objval,
-              x = solution$x))
+  return(list(objval = as.numeric(solution$objval),
+              x = as.numeric(solution$x)))
 }
 
 #' LP and QP solver by Rcplex
@@ -371,8 +369,10 @@ cplexapi_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
 #'  \item{objval}{Optimal value calculated from the optimizer.}
 #'
 #' @export
-rcplex_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
-                         A_obs, beta_hat_obs, n){
+rcplex_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
+  ### Step 0: Obtain the coefficients of the objective function
+  objective_return = objective_function(Af, bf, nf)
+  
   ### Step 1: Update vectors and sense
   # Update sense
   sense[sense == ">="] = "G"
@@ -383,14 +383,14 @@ rcplex_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
   # Define Q matrix
   # - Keep Qmat as NULL for linear program
   # - Multiply obj2 by 2 for Q for quadratic program to offset the 1/2 factor
-  if (is.null(obj2) == TRUE){
-    Qmat = obj2
+  if (is.null(objective_return$obj2) == TRUE){
+    Qmat = objective_return$obj2
   } else {
-    Qmat = 2*obj2
+    Qmat = 2*objective_return$obj2
   }
   
   ### Step 2: Solve model
-  solution = Rcplex(cvec = t(obj1),
+  solution = Rcplex(cvec = t(objective_return$obj1),
                     Amat = A, 
                     bvec = rhs,
                     Qmat = Qmat,
@@ -402,13 +402,13 @@ rcplex_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
                     n = 1)
   
   ### Step 3: Update and return result
-  if (is.null(obj0) == FALSE){
-    objval = solution$obj + obj0
+  if (is.null(objective_return$obj0) == FALSE){
+    objval = solution$obj + objective_return$obj0
   } else {
     objval = solution$obj
   }
-  return(list(objval = objval,
-              x = solution$xopt))  
+  return(list(objval = as.numeric(objval),
+              x = as.numeric(solution$xopt)))
 }
 
 #' #' LP and QP solver by limSolve
@@ -427,8 +427,10 @@ rcplex_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
 #'  \item{objval}{Optimal value calculated from the optimizer.}
 #'   
 #' @export
-limsolve_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
-                           A_obs, beta_hat_obs, n){
+limsolve_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
+  ### Step 0: Obtain the coefficients of the objective function
+  objective_return = objective_function(Af, bf, nf)
+  
   ### Step 1: Update lower bounds
   # Change the lower bounds to inequality constriants
   lb_Amat = diag(length(lb))
@@ -441,9 +443,9 @@ limsolve_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
   ### Step 2: Update constraints
   # Objective function
   if (modelsense == "max"){
-    fcost = - obj1 
+    fcost = - objective_return$obj1 
   } else if (modelsense == "min"){
-    fcost = obj1
+    fcost = objective_return$obj1
   }
   # Equality constraints
   Emat = A[sense == "=",]
@@ -461,22 +463,23 @@ limsolve_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
   ###  Step 3 - Solve the model
   # Linear solver is used if obj2 is a zero matrix (i.e. number of zeros equals 
   # the total number of elements) or NULL
-  if (is.null(obj2) == TRUE | sum(obj2 == 0) == length(obj2)){
+  if (is.null(objective_return$obj2) == TRUE | 
+      sum(objective_return$obj2 == 0) == length(objective_return$obj2)){
     ### Linear program solver
     solution = linp(E = Emat, F = Fvec, G = Gmat, H = Hvec, Cost = fcost)
     # Obtain objective function, and add back the constant term, negate the 
     # solution if it is a max problem
     if (modelsense == "max"){
-      objval = -solution$solutionNorm + obj0      
+      objval = -solution$solutionNorm + objective_return$obj0      
     } else if (modelsense == "min"){
-      objval = solution$solutionNorm + obj0      
+      objval = solution$solutionNorm + objective_return$obj0      
     }
   } else {
     if (modelsense == "min"){
       ### Quadratic program solver
       # Formulate the two matrices
-      Amat = A_obs * sqrt(n)
-      Bvec = beta_hat_obs * sqrt(n)
+      Amat = Af * sqrt(nf)
+      Bvec = bf * sqrt(nf)
       solution = lsei(A = Amat, B = Bvec, E = Emat, F = Fvec, G = Gmat, 
                       H = Hvec)
       # Obtain objective function
@@ -487,8 +490,72 @@ limsolve_optim <- function(obj2, obj1, obj0, A, rhs, sense, modelsense, lb,
   }
   # Optimal the optimal value of x
   x = solution$X
-  return(list(x = x,
-              objval = objval))
+  return(list(x = as.numeric(x),
+              objval = as.numeric(objval)))
+}
+
+
+#' Auxiliary function to return the coefficient terms of the objective functions
+#' 
+#' @description This function computes the matrics in the objective functions 
+#'    for linear programs. This function takes matrix \eqn{\bm{A}} and 
+#'    \eqn{\bm{\beta}} as input and computes the coefficients of the objective 
+#'    function. 
+#'    
+#' @param A The matrix \eqn{\bm{A}},
+#' @param beta The column vector \eqn{\bm{\beta}}.
+#' @param n The sample size \eqn{n}.
+#' 
+#' @details 
+#' \argument{
+#'   \item{Quadratic programs}{
+#'      Given inputs \eqn{\bm{A} \in \mathbb{R}^{m\times m}} and 
+#'      \eqn{\bm{b} \in \mathbb{R}^m}, the equation of the objective function 
+#'      of the quadratic program can be written as
+#'      \deqn{n (\bm{A}\bm{x} -\bm{\beta})'(\bm{A}\bm{x}-\bm{\beta})
+#'      = n\bm{x}'\bm{A}'\bm{A}\bm{x} - 2n\bm{A}'\bm{\beta}\bm{x} + 
+#'      n\bm{\beta}'\bm{\beta}.}}
+#'   \item{Linear program}{
+#'      For all linear problems that are considered in this code, one of 
+#'      \eqn{\bm{A}} and \eqn{\bm{b}} is \code{NULL} or is a zero vector. The 
+#'      term that is nonzero and nonnull will be used as \code{obj1}.}
+#' }
+#' 
+#' @return Returns the following three quantities: \code{obj2} is the 
+#'   coefficient of the quadratic term, \code{obj1} is the coefficient of the 
+#'   linear term and \code{obj0} is the constant term. More explicitly, their
+#'   form are given as follows:
+#'   \item{obj2}{This is the coefficient for the second-order term. It is 
+#'     returned as \code{NULL} for linear programs and \eqn{n\bm{A}'\bm{A}} for
+#'     quadratic programs.}
+#'   \item{obj1}{This is the coefficient term of the linear term. For quadratic 
+#'     programs, it is returned as \eqn{-2n\bm{A}'\bm{\beta}}.}
+#'   \item{obj0}{This is the constant term of the linear program. For quadratic
+#'     programs, it is returned as \eqn{n\bm{\beta}'\bm{\beta}}.}
+#' @export
+objective_function <- function(A, b, n){
+  # If-else function to determine if it corresponds to a linear or quadratic
+  # program. This is identified by whether one of A and b is null or nonzero
+  # because it would be the case for linear programs that are considered in
+  # this package.
+  if (is.null(A) == TRUE | sum(A == 0) == length(A)){
+    # Linear program coefficients with nonzero vector b
+    obj2 = NULL
+    obj1 = b
+    obj0 = 0
+  } else if (is.null(b) == TRUE | sum(b == 0) == length(b)){
+    # Linear program coefficients with nonzero matrix A
+    obj2 = NULL
+    obj1 = A
+    obj0 = 0
+  } else {
+    # Quadratic program coefficients
+    obj2 = t(A) %*% A * n
+    obj1 = -2 * t(A) %*% b * n
+    obj0 = t(b) %*% b * n
+  }
+  # Return the above objective functions
+  return(list(obj2 = obj2, obj1 = obj1, obj0 = obj0))
 }
 
 #' Computes the bootstrap test statistics
@@ -657,7 +724,6 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
   if (dim(A_tgt)[1] != 1){
     stop("The argument 'A_tgt' has to be a column vector", call. = FALSE)
   }
-  
   # Update A_obs and A_tgt to ensure that they are both matrices
   A_obs = matrix_list[[1]]
   A_tgt = matrix_list[[2]]
