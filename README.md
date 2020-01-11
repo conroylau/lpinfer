@@ -183,7 +183,7 @@ Y
 </tbody>
 </table>
 
-The two variables that are used are as follows:
+where
 
 -   `Y` is a multivariate discrete outcome variable that takes value
     from 0 to 1 with step size 0.1.
@@ -255,9 +255,9 @@ information approach:
       return(beta)
     }
 
-The `func_full_info` function returns a vector of length *J* + 1 where
-element *i* of the vector refers to the probability that the
-corresponding value of *y*<sub>*i*</sub> is observed.
+The `func_full_info` function returns a vector of length that is equal to the
+number of distinct observations for *Y* where element *i* of the vector refers 
+to the probability that the corresponding value of  *y*<sub>*i*</sub> is observed.
 
 #### Two Moments Approach
 
@@ -309,7 +309,7 @@ based on the formula from page 15 of the supplemental appendix of Kamat
 
 ### Output
 
-The followings are the output when the two moments approach is used with
+The followings are the output when the **two moments approach** is used with
 the `gurobi` solver to test the hypothesis that `beta_tgt` is 0.375.
 
     library(linearprog)
@@ -329,8 +329,8 @@ the `gurobi` solver to test the hypothesis that `beta_tgt` is 0.375.
     #> p-value: 0.253.
     #> Value of tau used: 0.08311.
 
-Alternatively, the followings are the output when the full information
-approach is used with the `gurobi` solver to test the hypothesis that
+Alternatively, the followings are the output when the **full information
+approach** is used with the `gurobi` solver to test the hypothesis that
 `beta_tgt` is 0.375.
 
     library(linearprog)
