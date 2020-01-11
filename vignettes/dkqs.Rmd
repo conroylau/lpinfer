@@ -2,16 +2,16 @@
 title: 'linearprog: An R Package for Inference in Linear and Quadratic Programs'
 author: ''
 output:
+  md_document:
+    toc: yes
+    df_print: paged  
+  pdf_document:
+    toc: yes
+    df_print: paged
   html_document:
     keep_md: yes
     toc: yes
     df_print: paged
-  pdf_document:
-    toc: yes
-    df_print: paged
-  md_document:
-    toc: yes
-    df_print: paged  
   github_document:
     keep_html: yes
     toc: yes
@@ -43,7 +43,7 @@ require(Momocs)
 
 ## Introduction
 This package conducts inference on econometrics problems that can be 
-studied by linear and quadratic programming. This package uses the 
+studied by linear and quadratic programming using the 
 cone-tightening procedure of @dkqs2018.
 
 ## Scope of the Vignette
@@ -103,7 +103,7 @@ the `linearprog` package.
 library(linearprog)
 knitr::kable(head(sampledata, n = 10))
 ```
-The two variables that are used are as follows:
+where
 
 * `Y` is a multivariate discrete outcome variable that takes value from 0 to 1 
 with step size 0.1.
@@ -172,9 +172,9 @@ func_full_info <- function(df){
   return(beta)
 }
 ```
-The `func_full_info` function returns a vector of length *J* + 1 where element 
-*i* of the vector refers to the probability that the corresponding value of 
-*y*~*i*~ is observed.
+The `func_full_info` function returns a vector of length that is equal to the
+number of distinct observations for *Y* where element *i* of the vector refers 
+to the probability that the corresponding value of *y*~*i*~ is observed.
 
 #### Two Moments Approach
 
@@ -225,8 +225,8 @@ tau = sqrt(log(N)/N)
 ```
 
 ### Output {#output}
-The followings are the output when the two moments approach is used with the
-`gurobi` solver to test the hypothesis that `beta_tgt` is 0.375.
+The followings are the output when the **two moments approach** is used with 
+the `gurobi` solver to test the hypothesis that `beta_tgt` is 0.375.
 
 ```{r, syntax.eval.twom, eval = TRUE}
 library(linearprog)
@@ -242,8 +242,8 @@ dkqs_cone(df = sampledata,
          solver = "gurobi")
 ```
 
-Alternatively, the followings are the output when the full information
-approach is used with the `gurobi` solver to test the hypothesis that 
+Alternatively, the followings are the output when the **full information
+approach** is used with the `gurobi` solver to test the hypothesis that 
 `beta_tgt` is 0.375.
 
 ```{r, syntax.eval.full, eval = TRUE}
