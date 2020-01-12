@@ -12,8 +12,6 @@
 ##    - gurobi (LP & QP)
 ##    - cplexAPI (LP, QP in progress)
 ##    - Rcplex (LP & QP)
-##    - lpSolveAPI (LP)
-##    - osqp (QP)
 ##    - limsolve (LP & QP)
 ##
 ################################################################################
