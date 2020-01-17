@@ -5,16 +5,14 @@
 ##  This is an example code for applying the R module dkqs_cone on the missing
 ##  data problem using the sample data by Torgovitsky (2019). This file 
 ##  illustrates how the module can be used to obtain the p-values using the 
-##  full-information and two moments approach, and different linear and 
-##  quadratic programming solvers in R. Currently, the solvers supported are
-##  as follows:
+##  full-information and two moments approach, and different solvers in R that
+##  can solve both linear and quadratic programs. Currently, the solvers 
+##  supported are as follows:
 ##
-##    - gurobi (LP & QP)
-##    - cplexAPI (LP, QP in progress)
-##    - Rcplex (LP & QP)
-##    - lpSolveAPI (LP)
-##    - osqp (QP)
-##    - limsolve (LP & QP)
+##    - gurobi
+##    - cplexAPI (QP in progress)
+##    - Rcplex
+##    - limsolve
 ##
 ################################################################################
 
@@ -22,9 +20,7 @@
 library(modelr)
 library(gurobi)
 library(e1071)
-library(lpSolveAPI)
 library(cplexAPI)
-library(osqp)
 library(Rcplex)
 library(ddpcr)
 library(Momocs)
@@ -84,6 +80,7 @@ A_obs_twom = matrix(c(rep(0,J1), yp, rep(0,J1), rep(1, J1)), nrow = 2,
 # Define the value of beta_tgt and significant figures needed
 beta_tgt = .365
 p_sig = 4
+## Full information approach
 # Example 1.1 - Using full information approach and gurobi solver
 full_gur = dkqs_cone(df, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 100, 
                      p_sig, tau, "gurobi")
@@ -96,11 +93,12 @@ full_rcp = dkqs_cone(df, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 100,
 full_lim = dkqs_cone(df, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 100, 
                      p_sig, tau, "limSolve")
 
-# Example 2.1 - Using full information approach and gurobi solver
+## Two moments approach
+# Example 2.1 - Using two moments approach and gurobi solver
 full_gur = dkqs_cone(df, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100, 
                      p_sig, tau, "gurobi")
 
-# Example 2.2 - Using full information approach and Rcplex solver
+# Example 2.2 - Using two moments approach and Rcplex solver
 full_rcp = dkqs_cone(df, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100,
                      p_sig, tau, "Rcplex")
 
