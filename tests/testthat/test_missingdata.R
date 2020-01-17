@@ -1,3 +1,4 @@
+## Test file for the missing data file
 context("Missing data problem")
 
 # Load packages
@@ -28,6 +29,7 @@ func_full_info <- function(df){
   beta = as.matrix(beta)
   return(beta)
 }
+
 # Two moments approach
 func_two_moment <- function(df){
   # Initialize beta
@@ -128,29 +130,42 @@ test_that("limSolve solver",{
 ##------------------------------------------------------------------------------
 
 # Full information approach
-test_that("Full information approach",{
+test_that("Full information approach - Gurobi vs Rcplex",{
   # Tau
   expect_equal(full_g$tau, full_r$tau)
-  expect_equal(full_r$tau, full_l$tau)
   # p-value
   expect_equal(full_g$p_val, full_r$p_val)
-  expect_equal(full_r$p_val, full_l$p_val)
   # Test statistic
   expect_equal(full_g$T_n, full_r$T_n)
+})
+
+test_that("Full information approach - Rcplex vs limSolve",{
+  # Tau
+  expect_equal(full_r$tau, full_l$tau)
+  # p-value
+  expect_equal(full_r$p_val, full_l$p_val)
+  # Test statistic
   expect_equal(full_r$T_n, full_l$T_n)
 })
 
 # Two moments approach
-test_that("Two moments approach",{
+test_that("Two moments approach - Gurobi vs Rcplex",{
   # Tau
   expect_equal(twom_g$tau, twom_r$tau)
-  expect_equal(twom_r$tau, twom_l$tau)
   # p-value
   expect_equal(twom_g$p_val, twom_r$p_val)
-  expect_equal(twom_r$p_val, twom_l$p_val)
   # Test statistic
   expect_equal(twom_g$T_n, twom_r$T_n)
+})
+
+test_that("Two moments approach - Rcplex vs limSolve",{
+  # Tau
+  expect_equal(twom_r$tau, twom_l$tau)
+  # p-value
+  expect_equal(twom_r$p_val, twom_l$p_val)
+  # Test statistic
   expect_equal(twom_r$T_n, twom_l$T_n)
 })
+
 
 
