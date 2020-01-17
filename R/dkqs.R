@@ -148,12 +148,9 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
 #' @export
 prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
                       solver){
-  #### Step 1: Formulation of the objective function for (5)
+  #### Step 1: Obtain dimension of A_tgt
   rn = dim(A_tgt)[1]
   cn = dim(A_tgt)[2]
-  obj2 = t(A_obs) %*% A_obs * n
-  obj1 = -2 * t(A_obs) %*% beta_obs_hat * n
-  obj0 = t(beta_obs_hat) %*% beta_obs_hat * n
 
   #### Step 2: Formulation of constraints
   ones = matrix(rep(1, cn), nrow = 1)
@@ -292,10 +289,10 @@ gurobi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
 #'
 #' @export
 cplexapi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
-  ### Step 0: Obtain the coefficients of the objective function
+  ### Step 1: Obtain the coefficients of the objective function
   objective_return = objective_function(Af, bf, nf)
   
-  ### Step 1: Update the notations
+  ### Step 2: Update the notations
   # Model sense
   modelsense[modelsense == "min"] = CPX_MIN
   modelsense[modelsense == "max"] = CPX_MAX
@@ -309,7 +306,7 @@ cplexapi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
   lb[lb == -Inf] = -CPX_INFBOUND
   ub = rep(CPX_INFBOUND, length(lb))
   
-  ### Step 2: cplexAPI environment
+  ### Step 3: cplexAPI environment
   # Model environment
   env = cplexAPI::openEnvCPLEX()
   cplexAPI::setDblParmCPLEX(env, 1016, 1e-06)
@@ -324,7 +321,7 @@ cplexapi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
   val = c(A)
   val = val[val != 0]
   
-  ### Step 3: Solve the problem
+  ### Step 4: Solve the problem
   # A linear program is identified if obj2 == NULL
   if (is.null(obj2) == TRUE){
     # Solving linear program
@@ -370,10 +367,10 @@ cplexapi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
 #'
 #' @export
 rcplex_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
-  ### Step 0: Obtain the coefficients of the objective function
+  ### Step 1: Obtain the coefficients of the objective function
   objective_return = objective_function(Af, bf, nf)
   
-  ### Step 1: Update vectors and sense
+  ### Step 2: Update vectors and sense
   # Update sense
   sense[sense == ">="] = "G"
   sense[sense == "<="] = "L"
@@ -389,7 +386,7 @@ rcplex_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
     Qmat = 2*objective_return$obj2
   }
   
-  ### Step 2: Solve model
+  ### Step 3: Solve model
   solution = Rcplex(cvec = t(objective_return$obj1),
                     Amat = A, 
                     bvec = rhs,
@@ -428,10 +425,10 @@ rcplex_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
 #'   
 #' @export
 limsolve_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
-  ### Step 0: Obtain the coefficients of the objective function
+  ### Step 1: Obtain the coefficients of the objective function
   objective_return = objective_function(Af, bf, nf)
   
-  ### Step 1: Update lower bounds
+  ### Step 2: Update lower bounds
   # Change the lower bounds to inequality constriants
   lb_Amat = diag(length(lb))
   lb_bvec = lb
@@ -440,7 +437,7 @@ limsolve_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
   rhs = c(rhs, lb_bvec)
   sense = c(sense, rep(">=", length(lb_bvec)))
   
-  ### Step 2: Update constraints
+  ### Step 3: Update constraints
   # Objective function
   if (modelsense == "max"){
     fcost = - objective_return$obj1 
@@ -460,7 +457,7 @@ limsolve_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
   Gmat = rbind(Gmat1, Gmat2)
   Hvec = as.matrix(c(c(Hvec1), c(Hvec2)), ncol = 1, byrow = TRUE)
   
-  ###  Step 3 - Solve the model
+  ### Step 4 - Solve the model
   # Linear solver is used if obj2 is a zero matrix (i.e. number of zeros equals 
   # the total number of elements) or NULL
   if (is.null(objective_return$obj2) == TRUE | 
@@ -495,7 +492,8 @@ limsolve_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
 }
 
 
-#' Auxiliary function to return the coefficient terms of the objective functions
+#' Auxiliary function to return the coefficient terms of the objective 
+#' functions
 #' 
 #' @description This function computes the matrics in the objective functions 
 #'    for linear programs. This function takes matrix \eqn{\bm{A}} and 
