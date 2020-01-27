@@ -14,7 +14,8 @@ dkqs_cone(
   bs_num = 100,
   p_sig = 2,
   tau_input = 0.5,
-  solver = NULL
+  solver = NULL,
+  noisy = TRUE
 )
 }
 \arguments{
@@ -38,6 +39,11 @@ value of \eqn{t} in the missing data problem) in the null hypothesis.}
 are used to obtain the solution to linear and quadratic programs. 
 The solvers supported by this module are `\code{cplexAPI}', 
 `\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
+
+\item{noisy}{The boolean variable for whether the result messages should
+be displayed in the inference procedure. If it is set as \code{TRUE}, the 
+messages are displayed throughout the procedure. Otherwise, the messages
+will not be displayed.}
 }
 \value{
 Returns a list of output calculated from the function:
@@ -49,6 +55,8 @@ Returns a list of output calculated from the function:
      \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}.}
   \item{beta_bs_bar}{The list of \eqn{\tau}-tightened re-centered bootstrap 
      estimators \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}.}
+  \item{lb0}{Logical lower bound of the problem.}
+  \item{ub0}{Logical upper bound of the problem.}
 }
 \description{
 This module conducts inference in quadratic programs using the 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/dkqs.R
 \name{dkqs_cone_check}
 \alias{dkqs_cone_check}
-\title{Checks and update the input}
+\title{Checks and updates the input}
 \usage{
 dkqs_cone_check(
   df,
@@ -14,7 +14,8 @@ dkqs_cone_check(
   bs_num,
   p_sig,
   tau_input,
-  solver
+  solver,
+  noisy
 )
 }
 \arguments{
@@ -38,6 +39,11 @@ value of \eqn{t} in the missing data problem) in the null hypothesis.}
 are used to obtain the solution to linear and quadratic programs. 
 The solvers supported by this module are `\code{cplexAPI}', 
 `\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
+
+\item{noisy}{The boolean variable for whether the result messages should
+be displayed in the inference procedure. If it is set as \code{TRUE}, the 
+messages are displayed throughout the procedure. Otherwise, the messages
+will not be displayed.}
 }
 \value{
 Returns the list of updated parameters as follows:
