@@ -13,9 +13,8 @@
 #' @param ub1 Minimum possible upper bound for the confidence interval.
 #' @param tol Tolerance level in the bisection method.
 #' @param max_iter Maximum number of iterations in the bisection method.
-#' @param df_ci Dataframe that consists of the points and the corresponding
-#'    \eqn{p}-values that have been tested in constructing the confidence 
-#'    intervals. 
+#' @param df_ci Dataframe that consists the points and the corresponding
+#'    \eqn{p}-values that have been tested in the previous iterations.
 #' @param noisy The boolean variable for whether the result messages should
 #'    be displayed in the procedure of constructing confidence interval. If 
 #'    it is set as \code{TRUE}, the messages are displayed throughout the 
@@ -36,7 +35,6 @@ qpci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
                  noisy = TRUE){
   
   #### Step 1: Check and update the dependencies
-  #qpci_arg = as.list(match.call())
   check_return = qpci_check(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max_iter, 
                             df_ci, noisy)
   # Updates the dependencies
@@ -47,20 +45,21 @@ qpci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
   ub1 = check_return$ub1
   
   #### Step 2: Return confidence interval and dataframe
-  # Compute upper bound of confidence interval
+  ### Compute upper bound of confidence interval
   if (noisy == TRUE){
     cat(">>> Computing upper bound of confidence interval")
   }
   up_return = ci_bisection(f, farg, alpha, ub1, ub0, tol, max_iter, df_ci, 
                            noisy, 1)
+  # Update data frame
   df_ci = up_return$df_ci
-  # Compute lower bound of confidence interval
+  ### Compute lower bound of confidence interval
   if (noisy == TRUE){
     cat("\n>>> Computing lower bound of confidence interval")
   }
   down_return = ci_bisection(f, farg, alpha, lb0, lb1, tol, max_iter, df_ci, 
                              noisy, -1)
-  # Combines dataframe into one
+  # Update data frame
   df_ci = down_return$df_ci
 
   #### Step 3: Print confidence interval and return results
@@ -80,8 +79,8 @@ qpci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
 
 #' Bisection method
 #' 
-#' @description This function constructs the confidence interval of the 
-#'    testing procedure using the bisection method.
+#' @description This function constructs the two-sided confidence interval 
+#'    of a given testing procedure using the bisection method.
 #' 
 #' @param type Type of the confidence interval. Set \code{type} as 1 for the 
 #'    upper bound of the confidence interval and set \code{type} as -1 for the 
@@ -121,7 +120,7 @@ ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci, noisy,
   if ((fb1 - alpha_2sided) * (fb0 - alpha_2sided) > 0){
     stop("Please choose another interval.")
   }
-  # Mid-point
+  # Compute mid-point and evaluate the corresponding p-value
   c = (b+a)/2
   fc_return = bisec_eval(f, farg, c, df_ci)
   fc = fc_return$pval
@@ -138,6 +137,7 @@ ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci, noisy,
       }
       break
     }
+    # Display a dot to represent an iteration is completed
     if (noisy == TRUE){
       cat(".") 
     }
@@ -148,6 +148,7 @@ ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci, noisy,
     } else {
       a = c
     }
+    # Evaluate new mid-point
     c = (a+b)/2
     # Update data frame and p-value
     fc_return = bisec_eval(f, farg, c, df_ci)
@@ -155,6 +156,7 @@ ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci, noisy,
     df_ci = fc_return$df_ci  
   }
   
+  # Only called when the maximum number of iterations is reached
   if (noisy == TRUE & i == max_iter){
     cat(paste("\n       Reached the maximum number of iterations.\n", 
               sep = "")) 
@@ -169,16 +171,16 @@ ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci, noisy,
 
 #' Evaluation of test statistic and check if the point has been evaluated
 #' 
-#' @description This function checks if the p-value for the point considered 
-#'    has already been evaluated in previous iterations or provided by the 
-#'    user. The function will compute the p-value if it has been evaluated.
-#'    Otherwise, it will use the previous data.
+#' @description This function checks if the \eqn{p}-value for the point 
+#'    considered has already been evaluated in previous iterations or provided 
+#'    by the user. The function will compute the \eqn{p}-value if it has been 
+#'    evaluated. Otherwise, it will use the previous data.
 #' 
 #' @inheritParams qpci
 #' @param pt Point to be evaluated in the bisection method.
 #' 
-#' @return Returns the p-value of the point considered and an updated
-#'    dataframe that contains the points and the p-values.
+#' @return Returns the \eqn{p}-value of the point considered and an updated
+#'    dataframe that contains the points and the \eqn{p}-values.
 #'    \item{pval}{\eqn{p}-value of the point.}
 #'    \item{df_ci}{Updated Dataframe that consists of the points that have been 
 #'       tested in constructing the confidence intervals.}
@@ -210,9 +212,9 @@ bisec_eval <- function(f, farg, pt, df_ci){
 #' Determine whether a point is inside the confidence interval or not
 #' 
 #' @description This function determines whether the bisection method is going 
-#'    to be updated by choosing the left-half \eqn{[a,c]} or the right-half 
-#'    \eqn{[c,b]} of the interval as the updated interval to be considered
-#'    in the bisection method.
+#'    to be updated by choosing the left segment or the right segment of the 
+#'    interval as the updated interval for the next iteration in the bisection 
+#'    method.
 #'    
 #' @param pval \eqn{p}-value of the test statistic.
 #' @inheritParams qpci
@@ -220,19 +222,20 @@ bisec_eval <- function(f, farg, pt, df_ci){
 #' 
 #' @return Returns whether the part of the interval to be selected in the 
 #'    next iteration of the bisection method.
-#'    \item{part}{Left or right part of the interval.}
+#'    \item{part}{Left or right segment of the interval.}
 #'    
 #' @export
 #' 
 ci_inout <- function(pval, alpha, type){
   if (type == 1){
-    # Reject, pick left interval
+    ### Type == 1: Upper bound
     if (pval < alpha){
       part = "left"
     } else {
       part = "right"
     }
   } else if (type == -1){
+    ### Type == -1: Lower bound
     if (pval < alpha){
       part = "right"      
     } else {
@@ -242,13 +245,22 @@ ci_inout <- function(pval, alpha, type){
   return(part)
 }
 
-#' Checks and updates the input of the function lp_ci
+#' Checks and updates the input of the function \code{qpci}
 #' 
 #' @description This function checks and updates the input from the user for 
-#'    the function qpci If there is any invalid input, this function will 
-#'    terminate the procedure and generate appropriate error messages.
+#'    the function \code{qpci}. If there is any invalid input, this function 
+#'    will terminate the procedure and generate appropriate error messages.
 #'    
 #' @inheritParams qpci
+#' 
+#' @return Returns the updated value of the parameters back to the function 
+#'    \code{qpci} in the correct format.
+#'    \item{df_ci}{Data frame that stores the points that has been evaluated
+#'       and the corresponding \eqn{p}-values.}
+#'    \item{lb0}{Logical lower bound for the confidence interval.}
+#'    \item{lb1}{Maximum possible lower bound for the confidence interval.}
+#'    \item{ub0}{Logical upper bound for the confidence interval.}
+#'    \item{ub1}{Minimum possible upper bound for the confidence interval.}
 #' 
 #' @export
 #' 
@@ -311,7 +323,7 @@ qpci_check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max_iter,
     # If lb1 is null, assign lb1 as ub0
     lb1 = ub0
   } else {
-    # If lb1 is nonnull, check whether its numeric.
+    # If lb1 is nonnull, check whether its numeric
     if (!(is.numeric(lb1) == TRUE & length(lb1) == 1)) {
       stop("The argument 'lb1' must be a scalar.", call. = FALSE)
     } 
@@ -321,7 +333,7 @@ qpci_check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max_iter,
     # If ub1 is null, assign ub1 as lb0
     ub1 = lb0
   } else {
-    # If ub1 is nonnull, check whether its numeric.
+    # If ub1 is nonnull, check whether its numeric
     if (!(is.numeric(ub1) == TRUE & length(ub1) == 1)) {
       stop("The argument 'ub1' must be a scalar.", call. = FALSE)
     } 
@@ -352,11 +364,14 @@ qpci_check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max_iter,
   
   #### Part 9: Check df_ci
   if (is.null(df_ci) == TRUE){
+    ### Part A: If df_ci is null
     df_ci = data.frame(matrix(vector(), 0, 2,
                               dimnames=list(c(), c("point", "value"))),
                        stringsAsFactors=F)
   } else {
+    ### Part B: If df_ci is non-null
     if (class(df_ci) %in% c("data.frame", "matrix") == TRUE){
+      # Set df_ci as a data frame
       df_ci = as.data.frame(df_ci)  
       # Check the column names
       if (colnames(df_ci) != c("point", "value")){
@@ -396,13 +411,13 @@ qpci_check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max_iter,
 #' Compute the logical upper and lower bounds for dkqs_cone
 #' 
 #' @description This function computes the logical upper and lower bounds for
-#'    the test dkqs_cone.
+#'    the test \code{dkqs_cone}.
 #'    
 #' @inheritParams qpci
 #' 
 #' @return Returns the logical upper and lower bounds for dkqs_cone.
-#'    \item{lb0}{Logical lower bound for dkqs_cone}
-#'    \item{ub0}{Logical upper bound for dkqs_cone}
+#'    \item{lb0}{Logical lower bound for \code{dkqs_cone}.}
+#'    \item{ub0}{Logical upper bound for \code{dkqs_cone}.}
 #' 
 #' @export
 #' 
@@ -422,20 +437,20 @@ dkqs_cone_logicalb <- function(f, farg){
 }
 
 
-#' Wrapper function for qpci
+#' Wrapper function for \code{qpci}
 #' 
 #' @description This function serves a wrapper function for computing 
-#'    confidence interval with many significance level.
+#'    confidence interval with many significance levels.
 #' 
 #' @param alphas The list of significance levels to be used in constructing
 #'    the confidence intervals.
 #' @param noisy_one The boolean variable for whether the result messages should
-#'    be displayed in running the function qpci. If it is set as \code{TRUE}, 
-#'    the messages are displayed throughout the procedure. Otherwise, the 
-#'    messages will not be displayed.
+#'    be displayed in running the function \code{qpci}. If it is set as 
+#'    \code{TRUE}, the messages are displayed throughout the procedure. 
+#'    Otherwise, the messages will not be displayed.
 #' @param noisy_many The boolean variable for whether the result messages 
-#'    should be displayed in running the function many_qpci, i.e. the current
-#'    function. If it is set as \code{TRUE}, the messages are displayed 
+#'    should be displayed in running the function \qpci{many_qpci}, i.e. the 
+#'    current function. If it is set as \code{TRUE}, the messages are displayed 
 #'    throughout the procedure. Otherwise, the essages will not be displayed.
 #' @inheritParams qpci 
 #' 
@@ -470,6 +485,7 @@ many_qpci <- function(f, farg, alphas = c(.05), lb0 = NULL, lb1 = NULL,
     df_many_ci[i, "alpha"] = alphas[i]
     df_many_ci[i, "up"] = qpci_return$up
     df_many_ci[i, "down"] = qpci_return$down
+    # Update data frame
     df_ci = qpci_return$df_ci
     # Print result if noisy_many == TRUE
     if (noisy_many == TRUE){
