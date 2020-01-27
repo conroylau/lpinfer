@@ -33,9 +33,15 @@ Installation and Requirements
 -----------------------------
 
 `linearprog` can be installed from our GitHub repository via
+<<<<<<< HEAD
 
     devtools::install_github("conroylau/linearprog")
 
+=======
+``` r
+devtools::install_github("conroylau/linearprog")
+```
+>>>>>>> 245c267927e051644e431ec13be7258e806d3f52
 To use `linearprog`, one of the following packages for solving linear
 and quadratic programs is required. There are four options for the
 solver:
@@ -84,10 +90,17 @@ constructed by linear and quadratic programming.
 As an illustration, the dataset below studies the missing data problem
 and contains 1,000 simulated data with 2 columns. This dataset is
 included in the `linearprog` package.
+<<<<<<< HEAD
 
     library(linearprog)
     knitr::kable(head(sampledata, n = 10))
 
+=======
+``` r
+library(linearprog)
+knitr::kable(head(sampledata, n = 10))
+```
+>>>>>>> 245c267927e051644e431ec13be7258e806d3f52
 <table>
 <thead>
 <tr>
@@ -195,6 +208,7 @@ where
 The main command for applying the cone-tightening procedure in
 `linearprog` is called `dkqs_cone`. This command has the following
 syntax:
+<<<<<<< HEAD
 
     library(linearprog)
     dkqs_cone(df = sampledata, 
@@ -208,6 +222,21 @@ syntax:
               tau_input = tau,
               solver = gurobi)
 
+=======
+``` r
+library(linearprog)
+dkqs_cone(df = sampledata, 
+          A_obs = A_obs_twom, 
+          A_tgt = A_target, 
+          func_obs = func_two_moment, 
+          beta_tgt = 0.375, 
+          bs_seed = 1,
+          bs_num = 100,
+          p_sig = 2,
+          tau_input = tau,
+          solver = gurobi)
+```
+>>>>>>> 245c267927e051644e431ec13be7258e806d3f52
 where
 
 -   `df` refers to the data being used in the inference.
@@ -241,6 +270,7 @@ requirement for the function provided by the user is as follows:
 
 The following is an example of defining the function for the full
 information approach:
+<<<<<<< HEAD
 
     func_full_info <- function(df){
       beta = NULL
@@ -255,6 +285,22 @@ information approach:
       return(beta)
     }
 
+=======
+``` r
+func_full_info <- function(df){
+  beta = NULL
+  y_list = sort(unique(df[,"Y"]))
+  n = dim(df)[1]
+  yn = length(y_list)
+  for (i in 1:yn){
+    beta_i = sum((df[,"Y"] == y_list[i]) * (df[,"D"] == 1))/n
+    beta = c(beta,c(beta_i))
+  }
+  beta = as.matrix(beta)
+  return(beta)
+}
+```
+>>>>>>> 245c267927e051644e431ec13be7258e806d3f52
 The `func_full_info` function returns a vector of length that is equal to the
 number of distinct observations for *Y* where element *i* of the vector refers 
 to the probability that the corresponding value of  *y*<sub>*i*</sub> is observed.
@@ -263,6 +309,7 @@ to the probability that the corresponding value of  *y*<sub>*i*</sub> is observe
 
 The following is an example of defining the function for the two moments
 approach:
+<<<<<<< HEAD
 
     func_two_moment <- function(df){
       beta = matrix(c(0,0), nrow = 2)
@@ -272,6 +319,17 @@ approach:
       return(beta)
     }
 
+=======
+``` r
+func_two_moment <- function(df){
+  beta = matrix(c(0,0), nrow = 2)
+  n = dim(df)[1]
+  beta[1] = sum(df[,"Y"] * df[,"D"])/n
+  beta[2] = sum(df[,"D"])/n
+  return(beta)
+}
+```
+>>>>>>> 245c267927e051644e431ec13be7258e806d3f52
 The `func_two_moment` function returns a vector with two elements that
 corresponds to the two moments **E**\[*Y*<sub>*i*</sub>\] and
 **E**\[*Y*<sub>*i*</sub>*D*<sub>*i*</sub>\].
@@ -281,6 +339,7 @@ corresponds to the two moments **E**\[*Y*<sub>*i*</sub>\] and
 As shown in the syntax section, the matrices `A_obs` and `A_tgt` have to
 be defined in order to use the function. To construct the two matrices,
 the following parameters are needed:
+<<<<<<< HEAD
 
     N = dim(sampledata)[1]
     J1 = length(unique(sampledata[,"Y"]))
@@ -293,24 +352,51 @@ follows:
                     byrow = TRUE)
     A_target = matrix(c(yp, yp), nrow = 1)
 
+=======
+``` r
+N = dim(sampledata)[1]
+J1 = length(unique(sampledata[,"Y"]))
+yp = seq(0,1,1/(J1-1))
+```
+With the above quantities, the following matrices can be defined as
+follows:
+``` r
+A_obs_twom = matrix(c(rep(0,J1), yp, rep(0,J1), rep(1, J1)), nrow = 2,
+                byrow = TRUE)
+A_target = matrix(c(yp, yp), nrow = 1)
+```
+>>>>>>> 245c267927e051644e431ec13be7258e806d3f52
 The matrix `A_obs_twom` refers to the observed matrix for the two
 moments approach. If users would prefer using the full information
 approach, the following matrix that correspond to the full information
 approach has to be defined:
+<<<<<<< HEAD
 
     A_obs_full = cbind(matrix(rep(0,J1*J1), nrow = J1), diag(1, J1))
 
+=======
+``` r
+A_obs_full = cbind(matrix(rep(0,J1*J1), nrow = J1), diag(1, J1))
+```
+>>>>>>> 245c267927e051644e431ec13be7258e806d3f52
 Lastly, the value of tau can be defined freely by the user as long as
 the quadratic program is feasible. Here, we choose the value of tau
 based on the formula from page 15 of the supplemental appendix of Kamat
 (2019):
+<<<<<<< HEAD
 
     tau = sqrt(log(N)/N)
 
+=======
+``` r
+tau = sqrt(log(N)/N)
+```
+>>>>>>> 245c267927e051644e431ec13be7258e806d3f52
 ### Output
 
 The followings are the output when the **two moments approach** is used with
 the `gurobi` solver to test the hypothesis that `beta_tgt` is 0.375.
+<<<<<<< HEAD
 
     library(linearprog)
     dkqs_cone(df = sampledata, 
@@ -350,6 +436,47 @@ approach** is used with the `gurobi` solver to test the hypothesis that
     #> p-value: 0.253.
     #> Value of tau used: 0.08311.
 
+=======
+``` r
+library(linearprog)
+dkqs_cone(df = sampledata, 
+         A_obs = A_obs_twom, 
+         A_tgt = A_target, 
+         func_obs = func_two_moment, 
+         beta_tgt = 0.375, 
+         bs_seed = 1,
+         bs_num = 100,
+         p_sig = 3,
+         tau_input = tau,
+         solver = "gurobi")
+#> Linear and quadratic programming solver used: gurobi.
+#> ----------------------------------- 
+#> Test statistic: 0.06724.
+#> p-value: 0.253.
+#> Value of tau used: 0.08311.
+```
+Alternatively, the followings are the output when the **full information
+approach** is used with the `gurobi` solver to test the hypothesis that
+`beta_tgt` is 0.375.
+``` r
+library(linearprog)
+dkqs_cone(df = sampledata, 
+         A_obs = A_obs_full, 
+         A_tgt = A_target, 
+         func_obs = func_full_info, 
+         beta_tgt = 0.375, 
+         bs_seed = 1,
+         bs_num = 100,
+         p_sig = 3,
+         tau_input = tau,
+         solver = "gurobi")
+#> Linear and quadratic programming solver used: gurobi.
+#> ----------------------------------- 
+#> Test statistic: 0.01746.
+#> p-value: 0.253.
+#> Value of tau used: 0.08311.
+```
+>>>>>>> 245c267927e051644e431ec13be7258e806d3f52
 The results from the two approach should give the same *p*-value while
 the test statistic will be different as different moments are considered
 in the problem.

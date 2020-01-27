@@ -110,13 +110,44 @@ with step size 0.1.
 * `D` is a binary treatment where *Y*~*i*~ is observed for *D*~*i*~ = 1 and 
 not observed for *D*~*i*~ = 0.
 
+### Syntax  {#syntax}
+The main command for applying the cone-tightening procedure in `linearprog` is 
+called `dkqs_cone`. This command has the following syntax:
+```{r, syntax, eval = FALSE}
+library(linearprog)
+dkqs_cone(df = sampledata, 
+          A_obs = A_obs_twom, 
+          A_tgt = A_target, 
+          func_obs = func_two_moment, 
+          beta_tgt = 0.375, 
+          bs_seed = 1,
+          bs_num = 100,
+          p_sig = 2,
+          tau_input = tau,
+          solver = gurobi)
+```
+where
+
+* `df` refers to the data being used in the inference.
+* `A_obs` refers to the "observed matrix" in the inference.
+* `A_tgt` refers to the "target matrix" in the inference.
+* `func_obs` refers to the function that generates the vector of observed beta.
+* `beta_tgt` refers to the value of beta to be tested.
+* `bs_seed` refers to the starting value of the seed in bootstrap.
+* `bs_num` refers to the total number of bootstraps to be conducted.
+* `p_sig` refers to the number of decimal places in the *p*-value.
+* `tau_input` refers to the value of tau chosen by the user.
+* `solver` refers to the name of the solver used to solve the linear and 
+quadratic programs.
+
+The following two sections explain how the functions and the required 
+parameters can be constructed in order to apply the `dkqs_cone` function.
+
 ### Specifying the Functions {#functions}
 
-To conduct the tests in this `linearprog` package, users need to specify the
-functions to generate the observed value of beta from the dataset. This package
-provides the flexibility for users to specify their own function to generate
-the value of observed value of beta. The requirement for the function provided 
-by the user is as follows:
+The `dkqs_cone` function provides flexibility for users to specify the 
+functions to generate the observed value of beta from the dataset. The 
+requirement for the function provided by the user is as follows:
 
 * The function's only argument is the dataset.
 * The function only returns a numeric vector that corresponds to the vector for 
@@ -193,48 +224,12 @@ formula from page 15 of the supplemental appendix of @kamat2019:
 tau = sqrt(log(N)/N)
 ```
 
-### Calculating *p*-value
-
-The command for applying the cone-tightening procedure in `linearprog` is 
-called `dkqs_cone`. It takes the data, parameters and the function that can
-calculate the observed value of beta and returns the *p*-value.
-
-#### Syntax  {#syntax}
-This `dkqs_cone` command has the following syntax:
-```{r, syntax, eval = FALSE}
-dkqs_cone(df = sampledata, 
-          A_obs = A_obs_twom, 
-          A_tgt = A_target, 
-          func_obs = func_two_moment, 
-          beta_tgt = 0.375, 
-          bs_seed = 1,
-          bs_num = 100,
-          p_sig = 2,
-          tau_input = tau,
-          solver = gurobi,
-          noisy = TRUE)
-```
-where
-
-* `df` refers to the data being used in the inference.
-* `A_obs` refers to the "observed matrix" in the inference.
-* `A_tgt` refers to the "target matrix" in the inference.
-* `func_obs` refers to the function that generates the vector of observed beta.
-* `beta_tgt` refers to the value of beta to be tested.
-* `bs_seed` refers to the starting value of the seed in bootstrap.
-* `bs_num` refers to the total number of bootstraps to be conducted.
-* `p_sig` refers to the number of decimal places in the *p*-value.
-* `tau_input` refers to the value of tau chosen by the user.
-* `solver` refers to the name of the solver used to solve the linear and 
-quadratic programs.
-* `noisy` refers to the boolean variable for whether the result messages should
-be displayed in the procedure of calculating the *p*-value.
-
-#### Output {#output}
+### Output {#output}
 The followings are the output when the **two moments approach** is used with 
 the `gurobi` solver to test the hypothesis that `beta_tgt` is 0.375.
 
 ```{r, syntax.eval.twom, eval = TRUE}
+library(linearprog)
 dkqs_cone(df = sampledata, 
          A_obs = A_obs_twom, 
          A_tgt = A_target, 
@@ -415,6 +410,28 @@ many_qpci(f = dkqs_cone,
           noisy_one = FALSE, 
           noisy_many = TRUE)
 ```
+
+Alternatively, the followings are the output when the **full information
+approach** is used with the `gurobi` solver to test the hypothesis that 
+`beta_tgt` is 0.375.
+
+```{r, syntax.eval.full, eval = TRUE}
+library(linearprog)
+dkqs_cone(df = sampledata, 
+         A_obs = A_obs_full, 
+         A_tgt = A_target, 
+         func_obs = func_full_info, 
+         beta_tgt = 0.375, 
+         bs_seed = 1,
+         bs_num = 100,
+         p_sig = 3,
+         tau_input = tau,
+         solver = "gurobi")
+```
+
+The results from the two approach should give the same *p*-value while the 
+test statistic will be different as different moments are considered in the
+problem.
 
 ## Help, Feature Requests and Bug Reports
 Please post an issue on the 

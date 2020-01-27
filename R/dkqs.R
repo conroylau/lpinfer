@@ -115,8 +115,8 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   p_val = p_eval(T_bs, T_n, p_sig)
   
   #### Step 7: Obtain logical bounds for the function qrci
-  lb0 = x_return$lb0
-  ub0 = x_return$ub0
+  lb0 = tau_return$lb0
+  ub0 = tau_return$ub0
   
   #### Step 8: Print results
   if (noisy == TRUE){  
