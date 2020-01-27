@@ -2,10 +2,9 @@
 title: 'linearprog: An R Package for Inference in Linear and Quadratic Programs'
 author: ''
 output:
-  github_document:
-    keep_html: yes
+  md_document:
     toc: yes
-    df_print: paged
+    df_print: paged  
   pdf_document:
     toc: yes
     df_print: paged
@@ -13,9 +12,10 @@ output:
     keep_md: yes
     toc: yes
     df_print: paged
-  md_document:
+  github_document:
+    keep_html: yes
     toc: yes
-    df_print: paged  
+    df_print: paged
 bibliography: refs.bib
 vignette: |
   %\VignetteIndexEntry{dkqs} 
