@@ -21,6 +21,10 @@
 #'    are used to obtain the solution to linear and quadratic programs. 
 #'    The solvers supported by this module are `\code{cplexAPI}', 
 #'    `\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.
+#' @param noisy The boolean variable for whether the result messages should
+#'    be displayed in the inference procedure. If it is set as \code{TRUE}, the 
+#'    messages are displayed throughout the procedure. Otherwise, the messages
+#'    will not be displayed.
 #'    
 #' @return Returns a list of output calculated from the function:
 #'   \item{p_val}{\eqn{p}-value.}
@@ -31,14 +35,17 @@
 #'      \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}.}
 #'   \item{beta_bs_bar}{The list of \eqn{\tau}-tightened re-centered bootstrap 
 #'      estimators \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}.}
-#' @ 
+#'   \item{lb0}{Logical lower bound of the problem.}
+#'   \item{ub0}{Logical upper bound of the problem.}
+#'      
 #' @export
 dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
-                      bs_num = 100, p_sig = 2, tau_input = .5, solver = NULL){
+                      bs_num = 100, p_sig = 2, tau_input = .5, solver = NULL,
+                      noisy = TRUE){
   
   #### Step 1: Check and update the dependencies
   checkupdate = dkqs_cone_check(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
-                                bs_num, p_sig, tau_input, solver)
+                                bs_num, p_sig, tau_input, solver, noisy)
   # Update and return the quantities returned from the function dkqs_cone_check
   # (a) Dataframe
   df = checkupdate$df
@@ -48,8 +55,10 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   # (c) Solver for linear and quadratic programss
   solver = checkupdate$solver
   # Display the solver used
-  cat(paste("Linear and quadratic programming solver used: ", solver, ".\n", 
-            sep = ""))
+  if (noisy == TRUE){
+    cat(paste("Linear and quadratic programming solver used: ", solver, ".\n", 
+              sep = ""))    
+  }
   
   #### Step 2: Initialization
   # Initialization
@@ -89,8 +98,9 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
     stop("The problem is infeasible. Choose other values of tau.")
   }
   # Compute s_star
-  x_star = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "cone", n, 
-                     solver)$x  
+  x_return = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "cone", n, 
+                     solver)
+  x_star = x_return$x
   s_star = A_obs %*% x_star
   
   #### Step 5: Compute the bootstrap estimates
@@ -99,20 +109,31 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
                  beta_obs_hat, beta_tgt, tau, n, solver)
   T_bs = T_bs_return$T_bs
   beta_bs_bar = T_bs_return$beta_bs_bar_set
+  
   #### Step 6: Compute the p-value
   # decision = 1 refers to rejected, decision = 0 refers to not rejected
   p_val = p_eval(T_bs, T_n, p_sig)
   
-  cat(paste("-----------------------------------", "\n"))
-  cat(paste("Test statistic: ", round(T_n, digits = 5), ".\n", sep = ""))
-  cat(paste("p-value: ", p_val, ".\n", sep = ""))
-  cat(paste("Value of tau used: ", round(tau, digits = 5), ".\n", 
-            sep = ""))
+  #### Step 7: Obtain logical bounds for the function qrci
+  lb0 = x_return$lb0
+  ub0 = x_return$ub0
+  
+  #### Step 8: Print results
+  if (noisy == TRUE){  
+    cat(paste("-----------------------------------", "\n"))
+    cat(paste("Test statistic: ", round(T_n, digits = 5), ".\n", sep = ""))
+    cat(paste("p-value: ", p_val, ".\n", sep = ""))
+    cat(paste("Value of tau used: ", round(tau, digits = 5), ".\n", 
+              sep = ""))
+  }
+  
   invisible(list(p_val = as.numeric(p_val), 
                  tau = as.numeric(tau), 
                  T_n = as.numeric(T_n), 
                  T_bs = T_bs,
-                 beta_bs_bar = beta_bs_bar))
+                 beta_bs_bar = beta_bs_bar,
+                 lb0 = lb0,
+                 ub0 = ub0))
 }
 
 #' Formulating and solving quadratic programs
@@ -225,6 +246,10 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
     ans = solver(NULL, c(1, rep(0, cn)), n, lp_lhs_tau, lp_rhs_tau,
                  lp_sense_tau, "max", lb_tau)
   }
+  
+  #### Step 4: Append the logical bounds to the results
+  ans$lb0 = theta_down
+  ans$ub0 = theta_up
   return(ans)
 }
 
@@ -244,8 +269,6 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
 #'    objective function.
 #' @param sense The sense of the linear constraints.
 #' @param lb The lower lound vector.
-#' @inheritParams dkqs_cone
-#' @inheritParams prog_cone
 #'
 #' @return Returns the optimal point and optimal value.
 #'  \item{x}{Optimal point calculated from the optimizer.}
@@ -408,7 +431,7 @@ rcplex_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
               x = as.numeric(solution$xopt)))
 }
 
-#' #' LP and QP solver by limSolve
+#' LP and QP solver by limSolve
 #' 
 #' @description This function computes the solution to linear and quadratic 
 #'    programs using the `\code{limSolve}' package.
@@ -505,15 +528,15 @@ limsolve_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
 #' @param n The sample size \eqn{n}.
 #' 
 #' @details 
-#' \argument{
-#'   \item{Quadratic programs}{
-#'      Given inputs \eqn{\bm{A} \in \mathbb{R}^{m\times m}} and 
-#'      \eqn{\bm{b} \in \mathbb{R}^m}, the equation of the objective function 
+#' \itemize{
+#'   \item{\strong{Quadratic programs} ---
+#'      Given inputs \eqn{\bm{A} \in \mathbf{R}^{m\times m}} and 
+#'      \eqn{\bm{b} \in \mathbf{R}^m}, the equation of the objective function 
 #'      of the quadratic program can be written as
 #'      \deqn{n (\bm{A}\bm{x} -\bm{\beta})'(\bm{A}\bm{x}-\bm{\beta})
 #'      = n\bm{x}'\bm{A}'\bm{A}\bm{x} - 2n\bm{A}'\bm{\beta}\bm{x} + 
 #'      n\bm{\beta}'\bm{\beta}.}}
-#'   \item{Linear program}{
+#'   \item{\strong{Linear programs} ---
 #'      For all linear problems that are considered in this code, one of 
 #'      \eqn{\bm{A}} and \eqn{\bm{b}} is \code{NULL} or is a zero vector. The 
 #'      term that is nonzero and nonnull will be used as \code{obj1}.}
@@ -672,7 +695,7 @@ tau_constraints <- function(length_tau, coeff_tau, coeff_x, ind_x, rhs, sense,
               lp_sense_tau = lp_sense_tau))
 }
 
-#' Checks and update the input
+#' Checks and updates the input
 #'
 #' @description This function checks and updates the input of the user. If 
 #'    there is any invalid input, this function will be terminated and 
@@ -690,14 +713,14 @@ tau_constraints <- function(length_tau, coeff_tau, coeff_x, ind_x, rhs, sense,
 #' 
 #' @export
 dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
-                            bs_num, p_sig, tau_input, solver){
+                            bs_num, p_sig, tau_input, solver, noisy){
   ### Part 1. Check the dataframe
   if (class(df) %in% c("data.frame", "matrix") == TRUE){
     df = as.data.frame(df)  
   } else {
     stop(gsub("\\s+", " ",
-              "The data povided 'df' must either be a data.frame, data.table, 
-               matrix."), call. = FALSE)    
+              "The data povided 'df' must either be a data.frame, a data.table, 
+               or a matrix."), call. = FALSE)    
   }
   
   ### Part 2. Check the matrices A_obs and A_tgt
@@ -815,9 +838,11 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
     }
     # Display message to indicate that no solver is suggested by the user so
     # the module chooses one for the user
-    cat(paste("No linear and quadratic programming solver is suggested by the
-              user. The solver '", solver, "' is automatically selected", 
-              ".\n", sep = ""))
+    if (noisy == TRUE){
+      cat(paste("No linear and quadratic programming solver is suggested by the
+                user. The solver '", solver, "' is automatically selected", 
+                ".\n", sep = ""))
+    }
   } else{
     # Change solver name to lower cases
     solver = tolower(solver)
@@ -837,7 +862,12 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
     }
   }
   
-  ### Step 10. Return the upated information
+  ### Step 10. Check noisy
+  if (!(noisy == TRUE | noisy == FALSE)){
+    stop("The argument 'noisy' has to be boolean.")
+  }
+  
+  ### Step 11. Return the upated information
   return(list(df = df, 
               A_obs = A_obs,
               A_tgt = A_tgt,
