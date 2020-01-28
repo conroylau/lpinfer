@@ -13,18 +13,18 @@
 #' @param ub1 Minimum possible upper bound for the confidence interval.
 #' @param tol Tolerance level in the bisection method.
 #' @param max_iter Maximum number of iterations in the bisection method.
-#' @param df_ci Dataframe that consists the points and the corresponding
+#' @param df_ci Data frame that consists the points and the corresponding
 #'    \eqn{p}-values that have been tested in the previous iterations.
 #' @param noisy The boolean variable for whether the result messages should
 #'    be displayed in the procedure of constructing confidence interval. If 
 #'    it is set as \code{TRUE}, the messages are displayed throughout the 
 #'    procedure. Otherwise, the messages will not be displayed.
 #' 
-#' @returns Returns the confidence interval and a dataframe that contains the 
+#' @returns Returns the confidence interval and a data frame that contains the 
 #'    points being tested in the procedure.
 #'    \item{up}{Upper bound of the confidence interval.}
 #'    \item{low}{Lower bound of the confidence interval.}
-#'    \item{df_ci}{Dataframe that consists of the points and the corresponding
+#'    \item{df_ci}{data frame that consists of the points and the corresponding
 #'       \eqn{p}-values that have been tested in constructing the confidence 
 #'       intervals.}
 #' 
@@ -44,7 +44,7 @@ qpci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
   ub0 = check_return$ub0
   ub1 = check_return$ub1
   
-  #### Step 2: Return confidence interval and dataframe
+  #### Step 2: Return confidence interval and data frame
   ### Compute upper bound of confidence interval
   if (noisy == TRUE){
     cat(">>> Computing upper bound of confidence interval")
@@ -91,9 +91,9 @@ qpci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
 #' @inheritParams qpci
 #' 
 #' @return Return the solution of the bisection method and the updated 
-#'    dataframe.
+#'    data frame.
 #'    \item{soln}{Solution to the bisection method.}
-#'    \item{df_ci}{Dataframe that consists of the points and the corresponding
+#'    \item{df_ci}{data frame that consists of the points and the corresponding
 #'       \eqn{p}-values that have been tested in constructing the confidence 
 #'       intervals.}   
 #' 
@@ -180,9 +180,9 @@ ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci, noisy,
 #' @param pt Point to be evaluated in the bisection method.
 #' 
 #' @return Returns the \eqn{p}-value of the point considered and an updated
-#'    dataframe that contains the points and the \eqn{p}-values.
+#'    data frame that contains the points and the \eqn{p}-values.
 #'    \item{pval}{\eqn{p}-value of the point.}
-#'    \item{df_ci}{Updated Dataframe that consists of the points that have been 
+#'    \item{df_ci}{Updated data frame that consists of the points that have been 
 #'       tested in constructing the confidence intervals.}
 #' 
 #' @export
