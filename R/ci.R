@@ -15,7 +15,7 @@
 #' @param max_iter Maximum number of iterations in the bisection method.
 #' @param df_ci Data frame that consists the points and the corresponding
 #'    \eqn{p}-values that have been tested in the previous iterations.
-#' @param noisy The boolean variable for whether the result messages should
+#' @param progress The boolean variable for whether the result messages should
 #'    be displayed in the procedure of constructing confidence interval. If 
 #'    it is set as \code{TRUE}, the messages are displayed throughout the 
 #'    procedure. Otherwise, the messages will not be displayed.
@@ -32,11 +32,11 @@
 #' 
 qpci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL, 
                  ub1 = NULL, tol = .0001, max_iter = 20, df_ci = NULL,
-                 noisy = TRUE){
+                 progress = TRUE){
   
   #### Step 1: Check and update the dependencies
   check_return = qpci_check(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max_iter, 
-                            df_ci, noisy)
+                            df_ci, progress)
   # Updates the dependencies
   df_ci = check_return$df_ci
   lb0 = check_return$lb0
@@ -46,24 +46,24 @@ qpci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
   
   #### Step 2: Return confidence interval and data frame
   ### Compute upper bound of confidence interval
-  if (noisy == TRUE){
+  if (progress == TRUE){
     cat(">>> Computing upper bound of confidence interval")
   }
   up_return = ci_bisection(f, farg, alpha, ub1, ub0, tol, max_iter, df_ci, 
-                           noisy, 1)
+                           progress, 1)
   # Update data frame
   df_ci = up_return$df_ci
   ### Compute lower bound of confidence interval
-  if (noisy == TRUE){
+  if (progress == TRUE){
     cat("\n>>> Computing lower bound of confidence interval")
   }
   down_return = ci_bisection(f, farg, alpha, lb0, lb1, tol, max_iter, df_ci, 
-                             noisy, -1)
+                             progress, -1)
   # Update data frame
   df_ci = down_return$df_ci
 
   #### Step 3: Print confidence interval and return results
-  if (noisy == TRUE){
+  if (progress == TRUE){
     cat("-----------------------------------\n")
     cat(paste("Total number of iterations: ", 
               down_return$iter + up_return$iter, ".\n", sep = ""))
@@ -99,7 +99,7 @@ qpci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
 #' 
 #' @export 
 #'
-ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci, noisy,
+ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci, progress,
                          type){
   
   #### Step 1: Evaluate the end-points and the mid-point of b0 and b1
@@ -131,14 +131,14 @@ ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci, noisy,
     # Bisection method complete if the difference between the two points is
     # below the tolereance level.
     if ((b-a) < tol){
-      if (noisy == TRUE){
+      if (progress == TRUE){
         cat(paste("\n       Length of interval is below tolerance level. ",
                   "Bisection method is completed.\n", sep = "")) 
       }
       break
     }
     # Display a dot to represent an iteration is completed
-    if (noisy == TRUE){
+    if (progress == TRUE){
       cat(".") 
     }
     # Update interval based on whether the left section or the section of the 
@@ -157,7 +157,7 @@ ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci, noisy,
   }
   
   # Only called when the maximum number of iterations is reached
-  if (noisy == TRUE & i == max_iter){
+  if (progress == TRUE & i == max_iter){
     cat(paste("\n       Reached the maximum number of iterations.\n", 
               sep = "")) 
   }
@@ -265,7 +265,7 @@ ci_inout <- function(pval, alpha, type){
 #' @export
 #' 
 qpci_check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max_iter, 
-                       df_ci, noisy){
+                       df_ci, progress){
 
   #### Part 1. Check f
   if (class(f) != "function"){
@@ -397,9 +397,9 @@ qpci_check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max_iter,
     }
   }
 
-  #### Part 10: Check noisy
-  if (!(noisy == TRUE | noisy == FALSE)){
-    stop("The argument 'noisy' has to be boolean.")
+  #### Part 10: Check progress
+  if (!(progress == TRUE | progress == FALSE)){
+    stop("The argument 'progress' has to be boolean.")
   }
   
   ### Step 11: Return the upated information
@@ -446,11 +446,11 @@ dkqs_cone_logicalb <- function(f, farg){
 #' 
 #' @param alphas The list of significance levels to be used in constructing
 #'    the confidence intervals.
-#' @param noisy_one The boolean variable for whether the result messages should
-#'    be displayed in running the function \code{qpci}. If it is set as 
+#' @param progress_one The boolean variable for whether the result messages 
+#'    should be displayed in running the function \code{qpci}. If it is set as 
 #'    \code{TRUE}, the messages are displayed throughout the procedure. 
 #'    Otherwise, the messages will not be displayed.
-#' @param noisy_many The boolean variable for whether the result messages 
+#' @param progress_many The boolean variable for whether the result messages 
 #'    should be displayed in running the function \qpci{many_qpci}, i.e. the 
 #'    current function. If it is set as \code{TRUE}, the messages are displayed 
 #'    throughout the procedure. Otherwise, the essages will not be displayed.
@@ -462,7 +462,7 @@ dkqs_cone_logicalb <- function(f, farg){
 #' 
 many_qpci <- function(f, farg, alphas = c(.05), lb0 = NULL, lb1 = NULL, 
                       ub0 = NULL, ub1 = NULL, tol = NULL, max_iter = 10, 
-                      df_ci = NULL, noisy_one = FALSE, noisy_many = TRUE){
+                      df_ci = NULL, progress_one = FALSE, progress_many = TRUE){
   
   #### Step 1: Check input of alphas
   if (!(is.numeric(alphas) == TRUE)) {
@@ -482,15 +482,15 @@ many_qpci <- function(f, farg, alphas = c(.05), lb0 = NULL, lb1 = NULL,
     # Call qpci to compute the confidence interval for a particular value of 
     # alpha
     qpci_return = qpci(f, farg, alphas[i], lb0, lb1, ub0, ub1, tol, max_iter, 
-                       df_ci, noisy_one)
+                       df_ci, progress_one)
     # Obtain result
     df_many_ci[i, "alpha"] = alphas[i]
     df_many_ci[i, "up"] = qpci_return$up
     df_many_ci[i, "down"] = qpci_return$down
     # Update data frame
     df_ci = qpci_return$df_ci
-    # Print result if noisy_many == TRUE
-    if (noisy_many == TRUE){
+    # Print result if progress_many == TRUE
+    if (progress_many == TRUE){
       cat(paste("Confidence interval for significance level ", alphas[i], 
                 ": [", round(qpci_return$down, digits = 5), ", ", 
                 round(qpci_return$up, digits = 5),  "].\n", sep = ""))
