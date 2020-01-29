@@ -380,6 +380,8 @@ qpci_check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max_iter,
       }
       # Check if the values are numeric
       if (is.numeric(df_ci) == FALSE){
+        print(is.numeric(df_ci))
+        print(df_ci)
         stop("The data frame 'df_ci' has to be numeric.")
       }
       # Check if the p-values are bounded between [0, 1]

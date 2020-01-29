@@ -38,7 +38,7 @@ procedure.}
 
 \item{max_iter}{Maximum number of iterations in the bisection method.}
 
-\item{df_ci}{Dataframe that consists the points and the corresponding
+\item{df_ci}{Data frame that consists the points and the corresponding
 \eqn{p}-values that have been tested in the previous iterations.}
 
 \item{noisy}{The boolean variable for whether the result messages should
@@ -47,11 +47,11 @@ it is set as \code{TRUE}, the messages are displayed throughout the
 procedure. Otherwise, the messages will not be displayed.}
 }
 \value{
-Returns the confidence interval and a dataframe that contains the 
+Returns the confidence interval and a data frame that contains the 
    points being tested in the procedure.
    \item{up}{Upper bound of the confidence interval.}
    \item{low}{Lower bound of the confidence interval.}
-   \item{df_ci}{Dataframe that consists of the points and the corresponding
+   \item{df_ci}{data frame that consists of the points and the corresponding
       \eqn{p}-values that have been tested in constructing the confidence 
       intervals.}
 }

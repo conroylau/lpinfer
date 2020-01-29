@@ -26,7 +26,7 @@ procedure.}
 
 \item{max_iter}{Maximum number of iterations in the bisection method.}
 
-\item{df_ci}{Dataframe that consists the points and the corresponding
+\item{df_ci}{Data frame that consists the points and the corresponding
 \eqn{p}-values that have been tested in the previous iterations.}
 
 \item{noisy}{The boolean variable for whether the result messages should

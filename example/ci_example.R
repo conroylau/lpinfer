@@ -87,9 +87,9 @@ farg = list(df = df,
             noisy = FALSE)
 
 ### Demonstration 1: Construction of confidence interval
-qpci(dkqs_cone, farg, 0.05, 0, 0.4, 1, .6, 0.001, 10, NULL, TRUE)
+qpci(dkqs_cone, farg, 0.05, 0, 0.4, 1, .6, 0.001, 50, NULL, TRUE)
 
 ### Demonstration 2: Use wrapper function to construct a list of 
 ### confidence intervals
-many_qpci(dkqs_cone, farg, c(0.01, 0.02, 0.05, 0.1), 0, 0.4, .6, 1, 
-          0.0000001, 10, NULL, FALSE, TRUE)
+many_qpci(dkqs_cone, farg, c(0.01, 0.02, 0.05, 0.1), 0, 0.4, 1, .6, 
+          0.00001, 50, NULL, FALSE, TRUE)
