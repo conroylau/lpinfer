@@ -132,8 +132,8 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
                  T_n = as.numeric(T_n), 
                  T_bs = T_bs,
                  beta_bs_bar = beta_bs_bar,
-                 lb0 = lb0,
-                 ub0 = ub0))
+                 lb0 = lb0$objval,
+                 ub0 = ub0$objval))
 }
 
 #' Formulating and solving quadratic programs
