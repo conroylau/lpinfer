@@ -21,7 +21,7 @@
 #'    are used to obtain the solution to linear and quadratic programs. 
 #'    The solvers supported by this module are `\code{cplexAPI}', 
 #'    `\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.
-#' @param noisy The boolean variable for whether the result messages should
+#' @param progress The boolean variable for whether the result messages should
 #'    be displayed in the inference procedure. If it is set as \code{TRUE}, the 
 #'    messages are displayed throughout the procedure. Otherwise, the messages
 #'    will not be displayed.
@@ -37,15 +37,18 @@
 #'      estimators \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}.}
 #'   \item{lb0}{Logical lower bound of the problem.}
 #'   \item{ub0}{Logical upper bound of the problem.}
-#'      
+#' 
+#' @details If the value of the test statistic \eqn{T_n} is zero, the bootstrap
+#'    procedure will be skipped.
+#' 
 #' @export
 dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
                       bs_num = 100, p_sig = 2, tau_input = .5, solver = NULL,
-                      noisy = TRUE){
+                      progress = TRUE){
   
   #### Step 1: Check and update the dependencies
   checkupdate = dkqs_cone_check(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
-                                bs_num, p_sig, tau_input, solver, noisy)
+                                bs_num, p_sig, tau_input, solver, progress)
   # Update and return the quantities returned from the function dkqs_cone_check
   # (a) Dataframe
   df = checkupdate$df
@@ -55,7 +58,7 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   # (c) Solver for linear and quadratic programss
   solver = checkupdate$solver
   # Display the solver used
-  if (noisy == TRUE){
+  if (progress == TRUE){
     cat(paste("Linear and quadratic programming solver used: ", solver, ".\n", 
               sep = ""))    
   }
@@ -105,10 +108,19 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   
   #### Step 5: Compute the bootstrap estimates
   # T_bs is the list of bootstrap test statistics used
-  T_bs_return = beta_bs(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs, 
-                 beta_obs_hat, beta_tgt, tau, n, solver)
-  T_bs = T_bs_return$T_bs
-  beta_bs_bar = T_bs_return$beta_bs_bar_set
+  if (T_n != 0){
+    T_bs_return = beta_bs(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, 
+                          func_obs, beta_obs_hat, beta_tgt, tau, n, solver)
+    T_bs = T_bs_return$T_bs
+    beta_bs_bar = T_bs_return$beta_bs_bar_set
+  } else {
+    if (progress == TRUE){
+      cat("Bootstrap is skipped because the value of the test statistic is
+          zero.\n")
+      beta_bs_bar = NULL
+      T_bs_return = NULL
+    }
+  }
   
   #### Step 6: Compute the p-value
   # decision = 1 refers to rejected, decision = 0 refers to not rejected
@@ -119,7 +131,7 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   ub0 = x_return$ub0
   
   #### Step 8: Print results
-  if (noisy == TRUE){  
+  if (progress == TRUE){  
     cat(paste("-----------------------------------", "\n"))
     cat(paste("Test statistic: ", round(T_n, digits = 5), ".\n", sep = ""))
     cat(paste("p-value: ", p_val, ".\n", sep = ""))
@@ -713,7 +725,7 @@ tau_constraints <- function(length_tau, coeff_tau, coeff_x, ind_x, rhs, sense,
 #' 
 #' @export
 dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
-                            bs_num, p_sig, tau_input, solver, noisy){
+                            bs_num, p_sig, tau_input, solver, progress){
   ### Part 1. Check the dataframe
   if (class(df) %in% c("data.frame", "matrix") == TRUE){
     df = as.data.frame(df)  
@@ -838,7 +850,7 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
     }
     # Display message to indicate that no solver is suggested by the user so
     # the module chooses one for the user
-    if (noisy == TRUE){
+    if (progress == TRUE){
       cat(paste("No linear and quadratic programming solver is suggested by the
                 user. The solver '", solver, "' is automatically selected", 
                 ".\n", sep = ""))
@@ -862,9 +874,9 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
     }
   }
   
-  ### Step 10. Check noisy
-  if (!(noisy == TRUE | noisy == FALSE)){
-    stop("The argument 'noisy' has to be boolean.")
+  ### Step 10. Check progress
+  if (!(progress == TRUE | progress == FALSE)){
+    stop("The argument 'progress' has to be boolean.")
   }
   
   ### Step 11. Return the upated information
