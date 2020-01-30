@@ -27,6 +27,10 @@
 #'    \item{df_ci}{data frame that consists of the points and the corresponding
 #'       \eqn{p}-values that have been tested in constructing the confidence 
 #'       intervals.}
+#'       
+#' @details The number of decimal places displayed in the messages (if 
+#'    \code{progress} is set as \code{TRUE}) is equal to the number of decimal
+#'    places in the variable \code{tol}.
 #' 
 #' @export 
 #' 
@@ -43,6 +47,8 @@ qpci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
   lb1 = check_return$lb1
   ub0 = check_return$ub0
   ub1 = check_return$ub1
+  # Compute the number of decimal places in tol
+  dp = decimal_places(tol)
   
   #### Step 2: Return confidence interval and data frame
   ### Compute upper bound of confidence interval
@@ -50,7 +56,7 @@ qpci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
     cat("\n=== Computing upper bound of confidence interval ===\n")
   }
   up_return = ci_bisection(f, farg, alpha, ub1, ub0, tol, max_iter, df_ci, 
-                           progress, 1)
+                           progress, 1, dp)
   # Update data frame
   df_ci = up_return$df_ci
   ### Compute lower bound of confidence interval
@@ -58,7 +64,7 @@ qpci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
     cat("\n=== Computing lower bound of confidence interval ===\n")
   }
   down_return = ci_bisection(f, farg, alpha, lb0, lb1, tol, max_iter, df_ci, 
-                             progress, -1)
+                             progress, -1, dp)
   # Update data frame
   df_ci = down_return$df_ci
 
@@ -68,8 +74,9 @@ qpci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
     cat(paste("Total number of iterations: ", 
               down_return$iter + up_return$iter, ".\n", sep = ""))
     cat(paste("Tolerance level: ", tol, ".\n", sep = ""))
-    cat(paste("Confidence interval: [", round(down_return$pt, digits = 5), 
-              ", ", round(up_return$pt, digits = 5), "].\n", sep = "")) 
+    cat(paste("Confidence interval: [", 
+              round(down_return$pt, digits = dp), ", ", 
+              round(up_return$pt, digits = dp), "].\n", sep = "")) 
   }
   
   invisible(list(up = up_return$pt,
@@ -88,6 +95,9 @@ qpci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
 #' @param b0 Logical lower or upper bound for the confidence interval.
 #' @param b1 Maximum possible lower bound or minimum possible upper bound for 
 #'    the confidence interval.
+#' @param dp Number of decimal places to be displayed for the \eqn{p}-values
+#'    and confidence intervals in the messages if \code{progress} is set 
+#'    as \code{TRUE}.
 #' @inheritParams qpci
 #' 
 #' @return Return the solution of the bisection method and the updated 
@@ -100,7 +110,7 @@ qpci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
 #' @export 
 #'
 ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci,
-                         progress, type){
+                         progress, type, dp){
   
   #### Step 1: Evaluate the end-points and the mid-point of b0 and b1
   # Divide alpha by 2
@@ -111,7 +121,7 @@ ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci,
   fb0 = fb0_return$pval
   df_ci = fb0_return$df_ci
   # Print information
-  bisec_print("left end", alpha_2sided, fb0_return, a, b, progress)
+  bisec_print("left end", alpha_2sided, fb0_return, a, b, progress, dp)
   
   ## Right end-point b
   b = b1
@@ -119,7 +129,7 @@ ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci,
   fb1 = fb1_return$pval
   df_ci = fb1_return$df_ci
   # Print information
-  bisec_print("right end", alpha_2sided, fb1_return, a, b, progress)
+  bisec_print("right end", alpha_2sided, fb1_return, a, b, progress, dp)
 
   # If fb1 and fb0 are of the same sign, ask user to choose another interval
   if ((fb1 - alpha_2sided) * (fb0 - alpha_2sided) > 0){
@@ -150,7 +160,7 @@ ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci,
       a = c
     }
     # Print information
-    bisec_print(i, alpha_2sided, fc_return, a, b, progress)
+    bisec_print(i, alpha_2sided, fc_return, a, b, progress, dp)
     # Evaluate new mid-point
     c = (a+b)/2
     # Update data frame and p-value
@@ -527,7 +537,7 @@ many_qpci <- function(f, farg, alphas = c(.05), lb0 = NULL, lb1 = NULL,
 #' 
 #' @export
 #' 
-bisec_print <- function(procedure, alphahalf, returnlist, a, b, progress){
+bisec_print <- function(procedure, alphahalf, returnlist, a, b, progress, dp){
   # The messages are being displayed only if 'progress' is set to TRUE
   if (progress == TRUE){
     #### Step 1: Display what point it is evaluating
@@ -541,7 +551,8 @@ bisec_print <- function(procedure, alphahalf, returnlist, a, b, progress){
     
     #### Step 2: Print the p-value  
     space6 = "      "
-    cat(paste0(space6, "* p-value: ", returnlist$pval, "\n"))
+    cat(paste0(space6, "* p-value: ", 
+               round(returnlist$pval, digits = dp), "\n"))
     
     #### Step 3: Print the decision of reject or do not reject
     if (returnlist$pval < alphahalf){
@@ -552,7 +563,35 @@ bisec_print <- function(procedure, alphahalf, returnlist, a, b, progress){
     
     #### Step 4: Print the current interval
     if (procedure != "left end" & procedure != "right end"){
-      cat(paste0(space6, "* Current interval: [", a, ", ", b, "]\n"))  
+      cat(paste0(space6, "* Current interval: [", 
+                 round(a, digits = dp), ", ", 
+                 round(b, digits = dp), "]\n"))  
     }
+  }
+}
+
+#' Auxiliary function: Count decimal places
+#' 
+#' @description This function returns the number of decimal places of a real 
+#'    snumber.
+#' 
+#' @param x Real number.
+#' 
+#' @return Returns the number of decimal places of the number.
+#'    \item{dp}{Number of decimal places of the number \code{x}.}
+#'    
+#' @export
+#' 
+decimal_places <- function(x){
+  if ((x %% 1) == 0){
+    #### Case 1: x is an integer
+    invisible(0)
+  } else {
+    #### Case 2: x is not an integer
+    x = as.character(x)
+    xsplit = strsplit(x, ".", fixed = TRUE)
+    # Count the number of digits after the dot
+    dp = nchar(xsplit[[1]][2])
+    invisible(dp) 
   }
 }

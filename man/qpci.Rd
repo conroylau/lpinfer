@@ -59,3 +59,8 @@ Returns the confidence interval and a data frame that contains the
 This function constructs the confidence interval using the
    bisection method.
 }
+\details{
+The number of decimal places displayed in the messages (if 
+   \code{progress} is set as \code{TRUE}) is equal to the number of decimal
+   places in the variable \code{tol}.
+}

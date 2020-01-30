@@ -4,7 +4,7 @@
 \alias{bisec_print}
 \title{Print messages in bisection procedure}
 \usage{
-bisec_print(procedure, alphahalf, returnlist, a, b, progress)
+bisec_print(procedure, alphahalf, returnlist, a, b, progress, dp)
 }
 \arguments{
 \item{procedure}{Variable indicating whether the function is evaluating 

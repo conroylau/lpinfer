@@ -4,7 +4,7 @@
 \alias{ci_bisection}
 \title{Bisection method}
 \usage{
-ci_bisection(f, farg, alpha, b0, b1, tol, max_iter, df_ci, progress, type)
+ci_bisection(f, farg, alpha, b0, b1, tol, max_iter, df_ci, progress, type, dp)
 }
 \arguments{
 \item{f}{Function that represents a testing procedure.}
@@ -34,6 +34,10 @@ procedure. Otherwise, the messages will not be displayed.}
 \item{type}{Type of the confidence interval. Set \code{type} as 1 for the 
 upper bound of the confidence interval and set \code{type} as -1 for the 
 lower bound of the confidence interval.}
+
+\item{dp}{Number of decimal places to be displayed for the \eqn{p}-values
+and confidence intervals in the messages if \code{progress} is set 
+as \code{TRUE}.}
 }
 \value{
 Return the solution of the bisection method and the updated 
