@@ -81,28 +81,52 @@ A_obs_twom = matrix(c(rep(0,J1), yp, rep(0,J1), rep(1, J1)), nrow = 2,
 beta_tgt = .365
 p_sig = 4
 ## Full information approach
-# Example 1.1 - Using full information approach and gurobi solver
+# Example 1.1a - Using full information approach and gurobi solver (1 core)
 full_gur = dkqs_cone(df, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 100, 
-                     p_sig, tau, "gurobi")
+                     p_sig, tau, "gurobi", 1, TRUE)
 
-# Example 1.2 - Using full information approach and Rcplex solver
+# Example 1.1b - Using full information approach and gurobi solver (8 cores)
+full_gur = dkqs_cone(df, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 100, 
+                     p_sig, tau, "gurobi", 8, TRUE)
+
+# Example 1.2a - Using full information approach and Rcplex solver (1 core)
 full_rcp = dkqs_cone(df, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 100,
-                     p_sig, tau, "Rcplex")
+                     p_sig, tau, "Rcplex", 1, TRUE)
 
-# Example 1.3 - Using full information approach and limSolve solver
+# Example 1.2b - Using full information approach and Rcplex solver (8 cores)
+full_rcp = dkqs_cone(df, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 100,
+                     p_sig, tau, "Rcplex", 8, TRUE)
+
+# Example 1.3a - Using full information approach and limSolve solver (1 core)
 full_lim = dkqs_cone(df, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 100, 
-                     p_sig, tau, "limSolve")
+                     p_sig, tau, "limSolve", 1, TRUE)
+
+# Example 1.3b - Using full information approach and limSolve solver (8 cores)
+full_lim = dkqs_cone(df, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 100, 
+                     p_sig, tau, "limSolve", 8, TRUE)
 
 ## Two moments approach
-# Example 2.1 - Using two moments approach and gurobi solver
+# Example 2.1a - Using two moments approach and gurobi solver (1 core)
 full_gur = dkqs_cone(df, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100, 
-                     p_sig, tau, "gurobi")
+                     p_sig, tau, "gurobi", 1, TRUE)
 
-# Example 2.2 - Using two moments approach and Rcplex solver
+# Example 2.1b - Using two moments approach and gurobi solver (8 cores)
+full_gur = dkqs_cone(df, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100, 
+                     p_sig, tau, "gurobi", 8, TRUE)
+
+# Example 2.2a - Using two moments approach and Rcplex solver (1 core)
 full_rcp = dkqs_cone(df, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100,
-                     p_sig, tau, "Rcplex")
+                     p_sig, tau, "Rcplex", 1, TRUE)
 
-# Example 2.3 - Using two moments approach and limSolve solver
+# Example 2.2b - Using two moments approach and Rcplex solver (8 cores)
+full_rcp = dkqs_cone(df, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100,
+                     p_sig, tau, "Rcplex", 8, TRUE)
+
+# Example 2.3a - Using two moments approach and limSolve solver (1 core)
 twom_r_r = dkqs_cone(df, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100, 
-                     p_sig, tau, "limSolve")
+                     p_sig, tau, "limSolve", 1, TRUE)
+
+# Example 2.3b - Using two moments approach and limSolve solver (8 cores)
+twom_r_r = dkqs_cone(df, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100, 
+                     p_sig, tau, "limSolve", 8, TRUE)
 

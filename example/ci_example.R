@@ -18,6 +18,8 @@ library(Rcplex)
 library(ddpcr)
 library(Momocs)
 library(limSolve)
+library(foreach)
+library(doMC)
 
 ### Part 2: Data preparation
 # Read data
@@ -84,7 +86,7 @@ farg = list(df = df,
             p_sig = p_sig,
             tau_input = tau,
             solver = "gurobi",
-            cores = 1,
+            cores = 8,
             progress = FALSE)
 
 ### Demonstration 1: Construction of confidence interval
