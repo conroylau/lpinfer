@@ -1057,8 +1057,14 @@ summary.dkqs_cone <- function(x, ...){
   
   #### Step 2: Basic results
   cat(sprintf("Test statistic: %s.\n", round(x$T_n, digits = 5)))  
+  cat("\n")
+  
   cat(sprintf("p-value: %s.\n", round(x$p_val, digits = 5)))
+  cat("\n")
+  
   cat(sprintf("Value of tau used: %s.\n", round(x$tau, digits = 5)))
+  cat("\n")
+  
   cat(sprintf("Linear and quadratic programming solver used: %s.\n", 
               x$solver))
   cat("\n")

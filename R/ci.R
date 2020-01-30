@@ -185,7 +185,7 @@ ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci,
   for (i in 1:max_iter){
     # Bisection method complete if the difference between the two points is
     # below the tolereance level.
-    if ((b-a) < tol){
+    if (abs(b-a) < tol){
       tol_msg = paste("      * Length of interval is below tolerance level. ",
                       "Bisection method is completed.\n", sep = "")
       if (progress == TRUE){
@@ -626,6 +626,7 @@ bisec_print <- function(procedure, alphahalf, returnlist, a, b, progress, dp,
   }
   
   #### Step 6: Update data frame
+  # Update column 1, i.e. whether evaluating end-points or iterations
   if (procedure == "left end"){
     df_bis[df_bis_row + 1,1] = "Left end-point"
   } else if (procedure == "right end"){
@@ -638,6 +639,7 @@ bisec_print <- function(procedure, alphahalf, returnlist, a, b, progress, dp,
   df_bis[df_bis_row + 1, 3] = b
   df_bis[df_bis_row + 1, 4] = returnlist$pval
   df_bis[df_bis_row + 1, 5] = decision
+  # Column 6 is used to store |b-a|<tol or max. iteration is reached
   df_bis[df_bis_row + 1, 6] = ""
   
   #### Step 7: Return data frame
@@ -710,7 +712,9 @@ summary.qpci <- function(x, ...){
   
   #### Step 2: Basic results
   cat(sprintf("Total number of iterations: %s.\n", round(x$iter, digits = 5)))  
+  cat("\n")
   cat(sprintf("Tolerance level: %s.\n", round(x$tol, digits = 5)))
+  cat("\n")
   cat(sprintf("Confidence interval: [%s, %s].\n", 
               round(x$down, digits = 5),
               round(x$up, digits = 5)))
