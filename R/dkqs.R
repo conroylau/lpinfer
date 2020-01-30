@@ -1,10 +1,11 @@
-#' Computes the p-value of a quadratic program
+#' Computes the \eqn{p}-value of a quadratic program
 #'
 #' @description This module conducts inference in quadratic programs using the 
 #'    procedure suggested by Torgovitsky (2019) that incorporates the 
 #'    cone-tightening procedure proposed by Deb, Kitamura, Quah and
 #'    Stoye (2018).
-#' @import gurobi cplexAPI Rcplex Momocs limSolve
+#'    
+#' @import gurobi cplexAPI Rcplex Momocs limSolve foreach doMC
 #'
 #' @param df The data being used in the inference.
 #' @param A_obs The "observed matrix" in the inference \eqn{A_{\mathrm{obs}}.
@@ -21,6 +22,9 @@
 #'    are used to obtain the solution to linear and quadratic programs. 
 #'    The solvers supported by this module are `\code{cplexAPI}', 
 #'    `\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.
+#' @param cores Number of cores to be used in the parallelized for-loop. 
+#'    Parallelized for-loop is used if \code{cores} is set to be an integer
+#'    greater than or equal to 2.
 #' @param progress The boolean variable for whether the result messages should
 #'    be displayed in the inference procedure. If it is set as \code{TRUE}, the 
 #'    messages are displayed throughout the procedure. Otherwise, the messages
@@ -42,13 +46,15 @@
 #'    procedure will be skipped.
 #' 
 #' @export
+#' 
 dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
                       bs_num = 100, p_sig = 2, tau_input = .5, solver = NULL,
-                      progress = TRUE){
+                      cores = 1, progress = TRUE){
   
   #### Step 1: Check and update the dependencies
   checkupdate = dkqs_cone_check(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
-                                bs_num, p_sig, tau_input, solver, progress)
+                                bs_num, p_sig, tau_input, solver, progress,
+                                cores)
   # Update and return the quantities returned from the function dkqs_cone_check
   # (a) Dataframe
   df = checkupdate$df
@@ -57,11 +63,13 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   A_tgt = checkupdate$A_tgt
   # (c) Solver for linear and quadratic programss
   solver = checkupdate$solver
-  # Display the solver used
+  # (d) Display the solver used
   if (progress == TRUE){
     cat(paste("Linear and quadratic programming solver used: ", solver, ".\n", 
               sep = ""))    
   }
+  # (e) Update the number of cores
+  cores = checkupdate$cores
   
   #### Step 2: Initialization
   # Initialization
@@ -108,15 +116,30 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   
   #### Step 5: Compute the bootstrap estimates
   # T_bs is the list of bootstrap test statistics used
+  # After the cores argument is updated, it must be a positive integer
   if (T_n != 0){
-    T_bs_return = beta_bs(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, 
-                          func_obs, beta_obs_hat, beta_tgt, tau, n, solver)
+    if (cores == 1){
+      # No parallelization
+      T_bs_return = beta_bs(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, 
+                            func_obs, beta_obs_hat, beta_tgt, tau, n, solver)
+    } else {
+      # Parallelization
+      T_bs_return = beta_bs_parallel(df, bs_seed, bs_num, J, s_star, A_obs, 
+                                     A_tgt, func_obs, beta_obs_hat, beta_tgt, 
+                                     tau, n, solver, cores)  
+      # Display number of cores used
+      if (progress == TRUE){
+        cat(paste("Number of cores used in bootstrap procedure: ", cores, 
+                  ".\n", sep = ""))
+      }
+    }
+    # Retrive answer
     T_bs = T_bs_return$T_bs
-    beta_bs_bar = T_bs_return$beta_bs_bar_set
+    beta_bs_bar = T_bs_return$beta_bs_bar_set 
   } else {
     if (progress == TRUE){
-      cat("Bootstrap is skipped because the value of the test statistic is
-          zero.\n")
+      cat(paste("Bootstrap is skipped because the value of the test statistic",
+                "is zero.\n"))
       beta_bs_bar = NULL
       T_bs_return = NULL
     }
@@ -179,6 +202,7 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
 #' }
 #'
 #' @export
+#' 
 prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
                       solver){
   #### Step 1: Obtain dimension of A_tgt
@@ -287,6 +311,7 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
 #'  \item{objval}{Optimal value calculated from the optimizer.}
 #'
 #' @export
+#' 
 gurobi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
   ### Step 1: Obtain the coefficients of the objective function
   objective_return = objective_function(Af, bf, nf)
@@ -323,6 +348,7 @@ gurobi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
 #'  \item{objval}{Optimal value calculated from the optimizer.}
 #'
 #' @export
+#' 
 cplexapi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
   ### Step 1: Obtain the coefficients of the objective function
   objective_return = objective_function(Af, bf, nf)
@@ -401,6 +427,7 @@ cplexapi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
 #'  \item{objval}{Optimal value calculated from the optimizer.}
 #'
 #' @export
+#' 
 rcplex_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
   ### Step 1: Obtain the coefficients of the objective function
   objective_return = objective_function(Af, bf, nf)
@@ -459,6 +486,7 @@ rcplex_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
 #'  \item{objval}{Optimal value calculated from the optimizer.}
 #'   
 #' @export
+#' 
 limsolve_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
   ### Step 1: Obtain the coefficients of the objective function
   objective_return = objective_function(Af, bf, nf)
@@ -565,7 +593,9 @@ limsolve_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
 #'     programs, it is returned as \eqn{-2n\bm{A}'\bm{\beta}}.}
 #'   \item{obj0}{This is the constant term of the linear program. For quadratic
 #'     programs, it is returned as \eqn{n\bm{\beta}'\bm{\beta}}.}
+#'     
 #' @export
+#' 
 objective_function <- function(A, b, n){
   # If-else function to determine if it corresponds to a linear or quadratic
   # program. This is identified by whether one of A and b is null or nonzero
@@ -611,6 +641,7 @@ objective_function <- function(A, b, n){
 #'     bootstrap estimates \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}}
 #'
 #' @export
+#' 
 beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs, 
                     beta_obs_hat, beta_tgt, tau, n, solver){
   T_bs = NULL
@@ -639,6 +670,71 @@ beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs,
               beta_bs_bar_set = beta_bs_bar_set))
 }
 
+#' Computes the bootstrap test statistics with parallelization
+#' 
+#' @description This function computes the bootstrap test statistics with 
+#'    parallelized for-loops.
+#' 
+#' @import doMC foreach
+#' 
+#' @inheritParams beta_bs 
+#' @inheritParams dkqs_cone
+#' @inheritParams prog_cone
+#' 
+#' @return Returns the list of estimates from bootstrap:
+#'   \item{T_bs}{A list of bootstrap test statistics 
+#'      \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}.}
+#'  \item{beta_bs_bar_set}{A list of \eqn{\tau_n}-tightened recentered 
+#'     bootstrap estimates \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}}
+#' 
+#' @export
+#' 
+beta_bs_parallel <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, 
+                             func_obs, beta_obs_hat, beta_tgt, tau, n, solver, 
+                             cores){
+  #### Step 1: Register the number of cores and extract information
+  # Register core
+  registerDoMC(cores)
+  # Computer dimension
+  beta_bs_nrow = length(beta_obs_hat)
+  # Initialize data frames
+  T_bs = NULL
+  beta_bs_bar_set = NULL
+  
+  # Parallelized for-loop below
+  listans = foreach(i=1:bs_num, .multicombine = TRUE, .combine="comb") %dopar% {
+    #### Step 2: Set the seed
+    set.seed(bs_seed + i)
+    ####  Step 3: Draw the subsample
+    df_bs = as.data.frame(sample_n(df, n, replace = TRUE))
+    # Re-index the rows
+    rownames(df_bs) = 1:nrow(df_bs)
+    ####  Step 4: Compute the bootstrap estimates
+    # Compute the value of beta_bs_star using the function func_obs
+    beta_bs_star = func_obs(df_bs)
+    ####  Step 5: Compute the bootstrap test statistic
+    beta_bs_bar = beta_bs_star - beta_obs_hat + s_star
+    T_bs_i = prog_cone(A_obs, A_tgt, beta_bs_bar, beta_tgt, tau, "cone", n, 
+                       solver)$objval
+    #### Step 6: Combine the results (parallelization)
+    T_bs = data.frame(T_bs_i)
+    beta_bs_bar_set = data.frame(beta_bs_bar) 
+    
+    list(T_bs, beta_bs_bar_set)
+  }
+  
+  #### Step 7: Retrive information from output
+  T_bs = as.vector(unlist(listans[[1]]))
+  beta_bs_bar_set = data.frame(matrix(as.matrix(listans[[2]]), 
+                                      nrow = beta_bs_nrow, 
+                                      ncol = bs_num,
+                                      byrow = FALSE))
+  
+  # Return the bootstrap test statistic
+  return(list(T_bs = T_bs,
+              beta_bs_bar_set = beta_bs_bar_set))
+}
+
 #' Auxiliary function to calculate the p-value
 #'
 #' @description This function computes the \eqn{p}-value of the test based on
@@ -653,6 +749,7 @@ beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs,
 #'      places.}
 #'
 #' @export
+#' 
 p_eval <- function(T_bs, T_n, p_sig){
   # Initialization
   p_val = NULL
@@ -693,6 +790,7 @@ p_eval <- function(T_bs, T_n, p_sig){
 #'   \item{lp_sense_tau}{Update sense for the constraints.}
 #'
 #' @export
+#' 
 tau_constraints <- function(length_tau, coeff_tau, coeff_x, ind_x, rhs, sense,
                             lp_lhs_tau, lp_rhs_tau, lp_sense_tau){
   temp = rep(0, length_tau)
@@ -717,15 +815,18 @@ tau_constraints <- function(length_tau, coeff_tau, coeff_x, ind_x, rhs, sense,
 #' 
 #' @return Returns the list of updated parameters as follows:
 #'   \item{df}{Upated data in class \code{data.frame}}
-#'   \item{A_obs}{Update "observed" matrix in class \code{matrix}.}
-#'   \item{A_tgt}{Update "target" matrix in class \code{matrix}.}
+#'   \item{A_obs}{Updated "observed" matrix in class \code{matrix}.}
+#'   \item{A_tgt}{Updated "target" matrix in class \code{matrix}.}
 #'   \item{beta_obs_tgt}{Obtain \eqn{\widehat{\bm{\beta}}_{\mathrm{tgt}}} 
 #'      that is obtained from the function \code{func_obs}.}
-#'   \item{solver}{Update name of solver in lower case.}
+#'   \item{solver}{Updated name of solver in lower case.}
+#'   \item{cores}{Updated number of cores to be used in the parallelization
+#'      of the for-loop in the bootstrap procedure.}
 #' 
 #' @export
+#' 
 dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
-                            bs_num, p_sig, tau_input, solver, progress){
+                            bs_num, p_sig, tau_input, solver, progress, cores){
   ### Part 1. Check the dataframe
   if (class(df) %in% c("data.frame", "matrix") == TRUE){
     df = as.data.frame(df)  
@@ -879,10 +980,28 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
     stop("The argument 'progress' has to be boolean.")
   }
   
-  ### Step 11. Return the upated information
+  ### Step 11. Check cores
+  # Display warning message if the number of cores specified is not a positive
+  # integer, and continue the program with no paralleization
+  if ((is.numeric(cores) == TRUE & length(cores) == 1 & cores >= 0 & 
+       cores%%1 == 0) == FALSE){
+    # Case 1: Number of cores provided is not 
+    warning(paste("The number of cores used in the parallelization ('cores')",
+                  "has to be a positive integer.\n"))
+    warning("Parallelization is not used in constructing the bootstrap.\n") 
+    cores = 1
+  } else if (cores > detectCores()){
+    # Case 2: Number of cores provided > number of cores in the computer
+    warning(paste("The number of cores provided is greater than the number of",
+                  "cores in the computer.\n"))  
+  }
+  
+  ### Step 12. Return the upated information
   return(list(df = df, 
               A_obs = A_obs,
               A_tgt = A_tgt,
               beta_obs_hat = beta_obs_hat,
-              solver = solver))
+              solver = solver,
+              cores = cores))
 }
+

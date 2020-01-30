@@ -15,7 +15,8 @@ dkqs_cone_check(
   p_sig,
   tau_input,
   solver,
-  noisy
+  progress,
+  cores
 )
 }
 \arguments{
@@ -40,19 +41,25 @@ are used to obtain the solution to linear and quadratic programs.
 The solvers supported by this module are `\code{cplexAPI}', 
 `\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
 
-\item{noisy}{The boolean variable for whether the result messages should
+\item{progress}{The boolean variable for whether the result messages should
 be displayed in the inference procedure. If it is set as \code{TRUE}, the 
 messages are displayed throughout the procedure. Otherwise, the messages
 will not be displayed.}
+
+\item{cores}{Number of cores to be used in the parallelized for-loop. 
+Parallelized for-loop is used if \code{cores} is set to be an integer
+greater than or equal to 2.}
 }
 \value{
 Returns the list of updated parameters as follows:
   \item{df}{Upated data in class \code{data.frame}}
-  \item{A_obs}{Update "observed" matrix in class \code{matrix}.}
-  \item{A_tgt}{Update "target" matrix in class \code{matrix}.}
+  \item{A_obs}{Updated "observed" matrix in class \code{matrix}.}
+  \item{A_tgt}{Updated "target" matrix in class \code{matrix}.}
   \item{beta_obs_tgt}{Obtain \eqn{\widehat{\bm{\beta}}_{\mathrm{tgt}}} 
      that is obtained from the function \code{func_obs}.}
-  \item{solver}{Update name of solver in lower case.}
+  \item{solver}{Updated name of solver in lower case.}
+  \item{cores}{Updated number of cores to be used in the parallelization
+     of the for-loop in the bootstrap procedure.}
 }
 \description{
 This function checks and updates the input of the user. If 

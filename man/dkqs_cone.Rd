@@ -2,7 +2,7 @@
 % Please edit documentation in R/dkqs.R
 \name{dkqs_cone}
 \alias{dkqs_cone}
-\title{Computes the p-value of a quadratic program}
+\title{Computes the \eqn{p}-value of a quadratic program}
 \usage{
 dkqs_cone(
   df,
@@ -15,7 +15,8 @@ dkqs_cone(
   p_sig = 2,
   tau_input = 0.5,
   solver = NULL,
-  noisy = TRUE
+  cores = 1,
+  progress = TRUE
 )
 }
 \arguments{
@@ -40,7 +41,11 @@ are used to obtain the solution to linear and quadratic programs.
 The solvers supported by this module are `\code{cplexAPI}', 
 `\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
 
-\item{noisy}{The boolean variable for whether the result messages should
+\item{cores}{Number of cores to be used in the parallelized for-loop. 
+Parallelized for-loop is used if \code{cores} is set to be an integer
+greater than or equal to 2.}
+
+\item{progress}{The boolean variable for whether the result messages should
 be displayed in the inference procedure. If it is set as \code{TRUE}, the 
 messages are displayed throughout the procedure. Otherwise, the messages
 will not be displayed.}
@@ -63,4 +68,8 @@ This module conducts inference in quadratic programs using the
    procedure suggested by Torgovitsky (2019) that incorporates the 
    cone-tightening procedure proposed by Deb, Kitamura, Quah and
    Stoye (2018).
+}
+\details{
+If the value of the test statistic \eqn{T_n} is zero, the bootstrap
+   procedure will be skipped.
 }
