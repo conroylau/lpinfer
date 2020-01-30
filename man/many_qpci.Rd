@@ -15,8 +15,8 @@ many_qpci(
   tol = NULL,
   max_iter = 10,
   df_ci = NULL,
-  noisy_one = FALSE,
-  noisy_many = TRUE
+  progress_one = FALSE,
+  progress_many = FALSE
 )
 }
 \arguments{
@@ -43,12 +43,12 @@ the confidence intervals.}
 \item{df_ci}{Data frame that consists the points and the corresponding
 \eqn{p}-values that have been tested in the previous iterations.}
 
-\item{noisy_one}{The boolean variable for whether the result messages should
-be displayed in running the function \code{qpci}. If it is set as 
+\item{progress_one}{The boolean variable for whether the result messages 
+should be displayed in running the function \code{qpci}. If it is set as 
 \code{TRUE}, the messages are displayed throughout the procedure. 
 Otherwise, the messages will not be displayed.}
 
-\item{noisy_many}{The boolean variable for whether the result messages 
+\item{progress_many}{The boolean variable for whether the result messages 
 should be displayed in running the function \qpci{many_qpci}, i.e. the 
 current function. If it is set as \code{TRUE}, the messages are displayed 
 throughout the procedure. Otherwise, the essages will not be displayed.}

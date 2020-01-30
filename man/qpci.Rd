@@ -15,7 +15,7 @@ qpci(
   tol = 1e-04,
   max_iter = 20,
   df_ci = NULL,
-  noisy = TRUE
+  progress = FALSE
 )
 }
 \arguments{
@@ -41,7 +41,7 @@ procedure.}
 \item{df_ci}{Data frame that consists the points and the corresponding
 \eqn{p}-values that have been tested in the previous iterations.}
 
-\item{noisy}{The boolean variable for whether the result messages should
+\item{progress}{The boolean variable for whether the result messages should
 be displayed in the procedure of constructing confidence interval. If 
 it is set as \code{TRUE}, the messages are displayed throughout the 
 procedure. Otherwise, the messages will not be displayed.}

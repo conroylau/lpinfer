@@ -32,7 +32,7 @@
 #' 
 qpci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL, 
                  ub1 = NULL, tol = .0001, max_iter = 20, df_ci = NULL,
-                 progress = TRUE){
+                 progress = FALSE){
   
   #### Step 1: Check and update the dependencies
   check_return = qpci_check(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max_iter, 
@@ -47,7 +47,7 @@ qpci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
   #### Step 2: Return confidence interval and data frame
   ### Compute upper bound of confidence interval
   if (progress == TRUE){
-    cat(">>> Computing upper bound of confidence interval")
+    cat("\n=== Computing upper bound of confidence interval ===\n")
   }
   up_return = ci_bisection(f, farg, alpha, ub1, ub0, tol, max_iter, df_ci, 
                            progress, 1)
@@ -55,7 +55,7 @@ qpci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
   df_ci = up_return$df_ci
   ### Compute lower bound of confidence interval
   if (progress == TRUE){
-    cat("\n>>> Computing lower bound of confidence interval")
+    cat("\n=== Computing lower bound of confidence interval ===\n")
   }
   down_return = ci_bisection(f, farg, alpha, lb0, lb1, tol, max_iter, df_ci, 
                              progress, -1)
@@ -93,28 +93,33 @@ qpci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
 #' @return Return the solution of the bisection method and the updated 
 #'    data frame.
 #'    \item{soln}{Solution to the bisection method.}
-#'    \item{df_ci}{data frame that consists of the points and the corresponding
-#'       \eqn{p}-values that have been tested in constructing the confidence 
-#'       intervals.}   
+#'    \item{df_ci}{data frame that consists of the points and the 
+#'       corresponding \eqn{p}-values that have been tested in constructing the 
+#'       confidence intervals.}   
 #' 
 #' @export 
 #'
-ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci, progress,
-                         type){
+ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci,
+                         progress, type){
   
   #### Step 1: Evaluate the end-points and the mid-point of b0 and b1
   # Divide alpha by 2
   alpha_2sided = alpha/2
-  # Left end-point a
+  ## Left end-point a
   a = b0
   fb0_return = bisec_eval(f, farg, a, df_ci)
   fb0 = fb0_return$pval
   df_ci = fb0_return$df_ci
-  # Right end-point b
+  # Print information
+  bisec_print("left end", alpha_2sided, fb0_return, a, b, progress)
+  
+  ## Right end-point b
   b = b1
   fb1_return = bisec_eval(f, farg, b, df_ci)
   fb1 = fb1_return$pval
   df_ci = fb1_return$df_ci
+  # Print information
+  bisec_print("right end", alpha_2sided, fb1_return, a, b, progress)
 
   # If fb1 and fb0 are of the same sign, ask user to choose another interval
   if ((fb1 - alpha_2sided) * (fb0 - alpha_2sided) > 0){
@@ -132,14 +137,10 @@ ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci, progress,
     # below the tolereance level.
     if ((b-a) < tol){
       if (progress == TRUE){
-        cat(paste("\n       Length of interval is below tolerance level. ",
+        cat(paste("      * Length of interval is below tolerance level. ",
                   "Bisection method is completed.\n", sep = "")) 
       }
       break
-    }
-    # Display a dot to represent an iteration is completed
-    if (progress == TRUE){
-      cat(".") 
     }
     # Update interval based on whether the left section or the section of the 
     # interval is chosen
@@ -148,6 +149,8 @@ ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci, progress,
     } else {
       a = c
     }
+    # Print information
+    bisec_print(i, alpha_2sided, fc_return, a, b, progress)
     # Evaluate new mid-point
     c = (a+b)/2
     # Update data frame and p-value
@@ -158,7 +161,7 @@ ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci, progress,
   
   # Only called when the maximum number of iterations is reached
   if (progress == TRUE & i == max_iter){
-    cat(paste("\n       Reached the maximum number of iterations.\n", 
+    cat(paste("      * Reached the maximum number of iterations.\n", 
               sep = "")) 
   }
   
@@ -462,7 +465,8 @@ dkqs_cone_logicalb <- function(f, farg){
 #' 
 many_qpci <- function(f, farg, alphas = c(.05), lb0 = NULL, lb1 = NULL, 
                       ub0 = NULL, ub1 = NULL, tol = NULL, max_iter = 10, 
-                      df_ci = NULL, progress_one = FALSE, progress_many = TRUE){
+                      df_ci = NULL, progress_one = FALSE, 
+                      progress_many = FALSE){
   
   #### Step 1: Check input of alphas
   if (!(is.numeric(alphas) == TRUE)) {
@@ -501,3 +505,54 @@ many_qpci <- function(f, farg, alphas = c(.05), lb0 = NULL, lb1 = NULL,
   invisible(list(df_many_ci = df_many_ci))
 }
 
+#' Print messages in bisection procedure
+#' 
+#' @description This function prints the information in the bisection 
+#'    procedure.
+#'    
+#' @param procedure Variable indicating whether the function is evaluating 
+#'    the end-points or first mid-point, or is iterating through the bisection
+#'    procedure.
+#' @param alphahalf Half of significance value that is used to evaluate the
+#'    confidence interval.
+#' @param returnlist List of information obtained from running 
+#'    \code{bisec_eval}.
+#' @param a Lower bound of the current interval. This is \code{NULL} if the
+#'    initial end-points are being evaluated.
+#' @param b Upper bound of teh current interval. This is \code{NULL} if the
+#'    initial end-points are being evaluated.
+#' @inheritParams qpci 
+#' 
+#' @return Nothing is returned from this function.
+#' 
+#' @export
+#' 
+bisec_print <- function(procedure, alphahalf, returnlist, a, b, progress){
+  # The messages are being displayed only if 'progress' is set to TRUE
+  if (progress == TRUE){
+    #### Step 1: Display what point it is evaluating
+    if (is.numeric(procedure) == FALSE){
+      # Case 1: 'procedure' is not numeric if evaluating the initial 3 points
+      cat(paste0(">>> Evaluating the first ", procedure, "-point\n"))
+    } else {
+      # Case 2: 'procedure' is numeric if evaluating the bisection method
+      cat(paste0(">>> Iteration ", procedure, "\n"))   
+    }
+    
+    #### Step 2: Print the p-value  
+    space6 = "      "
+    cat(paste0(space6, "* p-value: ", returnlist$pval, "\n"))
+    
+    #### Step 3: Print the decision of reject or do not reject
+    if (returnlist$pval < alphahalf){
+      cat(paste0(space6, "* Decision: Reject\n")) 
+    } else {
+      cat(paste0(space6, "* Decision: Do not reject\n")) 
+    }
+    
+    #### Step 4: Print the current interval
+    if (procedure != "left end" & procedure != "right end"){
+      cat(paste0(space6, "* Current interval: [", a, ", ", b, "]\n"))  
+    }
+  }
+}

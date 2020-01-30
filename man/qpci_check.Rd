@@ -4,7 +4,7 @@
 \alias{qpci_check}
 \title{Checks and updates the input of the function \code{qpci}}
 \usage{
-qpci_check(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max_iter, df_ci, noisy)
+qpci_check(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max_iter, df_ci, progress)
 }
 \arguments{
 \item{f}{Function that represents a testing procedure.}
@@ -29,7 +29,7 @@ procedure.}
 \item{df_ci}{Data frame that consists the points and the corresponding
 \eqn{p}-values that have been tested in the previous iterations.}
 
-\item{noisy}{The boolean variable for whether the result messages should
+\item{progress}{The boolean variable for whether the result messages should
 be displayed in the procedure of constructing confidence interval. If 
 it is set as \code{TRUE}, the messages are displayed throughout the 
 procedure. Otherwise, the messages will not be displayed.}

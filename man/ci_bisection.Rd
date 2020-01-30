@@ -4,7 +4,7 @@
 \alias{ci_bisection}
 \title{Bisection method}
 \usage{
-ci_bisection(f, farg, alpha, b0, b1, tol, max_iter, df_ci, noisy, type)
+ci_bisection(f, farg, alpha, b0, b1, tol, max_iter, df_ci, progress, type)
 }
 \arguments{
 \item{f}{Function that represents a testing procedure.}
@@ -26,7 +26,7 @@ the confidence interval.}
 \item{df_ci}{Data frame that consists the points and the corresponding
 \eqn{p}-values that have been tested in the previous iterations.}
 
-\item{noisy}{The boolean variable for whether the result messages should
+\item{progress}{The boolean variable for whether the result messages should
 be displayed in the procedure of constructing confidence interval. If 
 it is set as \code{TRUE}, the messages are displayed throughout the 
 procedure. Otherwise, the messages will not be displayed.}
@@ -39,9 +39,9 @@ lower bound of the confidence interval.}
 Return the solution of the bisection method and the updated 
    data frame.
    \item{soln}{Solution to the bisection method.}
-   \item{df_ci}{data frame that consists of the points and the corresponding
-      \eqn{p}-values that have been tested in constructing the confidence 
-      intervals.}
+   \item{df_ci}{data frame that consists of the points and the 
+      corresponding \eqn{p}-values that have been tested in constructing the 
+      confidence intervals.}
 }
 \description{
 This function constructs the two-sided confidence interval 
