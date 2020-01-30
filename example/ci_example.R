@@ -26,7 +26,7 @@ df = read.csv("./data/sampledata.csv")
 N = dim(df)[1]
 J = length(unique(df[,"Y"])) - 1
 J1 = J + 1
-pi = 1 - mean(df[,"D"])
+
 # Compute matrices required
 yp = seq(0,1,1/J)
 A_tgt = matrix(c(yp, yp), nrow = 1)
@@ -84,10 +84,21 @@ farg = list(df = df,
             p_sig = p_sig,
             tau_input = tau,
             solver = "gurobi",
-            noisy = FALSE)
+            cores = 1,
+            progress = FALSE)
 
 ### Demonstration 1: Construction of confidence interval
-qpci(dkqs_cone, farg, 0.05, 0, 0.4, 1, .6, 0.001, 50, NULL, TRUE)
+qpci_output = qpci(f = dkqs_cone, 
+                   farg = farg, 
+                   alpha = 0.05, 
+                   lb0 = 0, 
+                   lb1 = 0.4, 
+                   ub0 = 1, 
+                   ub1 = .6, 
+                   tol = 0.001, 
+                   max_iter = 50, 
+                   df_ci = NULL, 
+                   progress = TRUE)
 
 ### Demonstration 2: Use wrapper function to construct a list of 
 ### confidence intervals

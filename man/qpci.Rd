@@ -54,6 +54,15 @@ Returns the confidence interval and a data frame that contains the
    \item{df_ci}{data frame that consists of the points and the corresponding
       \eqn{p}-values that have been tested in constructing the confidence 
       intervals.}
+   \item{df_up}{Data frame storing the information for the bisection 
+      method in each iteration when evaluating the upper bound of the 
+      confidence interval.}
+   \item{df_down}{Data frame storing the information for the bisection 
+      method in each iteration when evaluating the lower bound of the 
+      confidence interval.}
+   \item{tol}{Tolerance level in the bisection method.}
+   \item{iter}{Total number of iterations taken.}
+   \item{call}{The function that has been called.}
 }
 \description{
 This function constructs the confidence interval using the

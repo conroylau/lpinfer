@@ -43,9 +43,11 @@ as \code{TRUE}.}
 Return the solution of the bisection method and the updated 
    data frame.
    \item{soln}{Solution to the bisection method.}
-   \item{df_ci}{data frame that consists of the points and the 
+   \item{df_ci}{Data frame that consists of the points and the 
       corresponding \eqn{p}-values that have been tested in constructing the 
-      confidence intervals.}
+      confidence intervals.}   
+   \item{df_bis}{Data frame storing the information for the bisection 
+      method in each iteration.}
 }
 \description{
 This function constructs the two-sided confidence interval 

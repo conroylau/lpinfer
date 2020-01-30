@@ -2,9 +2,9 @@
 % Please edit documentation in R/ci.R
 \name{bisec_print}
 \alias{bisec_print}
-\title{Print messages in bisection procedure}
+\title{Print messages in bisection procedure and store results}
 \usage{
-bisec_print(procedure, alphahalf, returnlist, a, b, progress, dp)
+bisec_print(procedure, alphahalf, returnlist, a, b, progress, dp, df_bis)
 }
 \arguments{
 \item{procedure}{Variable indicating whether the function is evaluating 
@@ -27,11 +27,16 @@ initial end-points are being evaluated.}
 be displayed in the procedure of constructing confidence interval. If 
 it is set as \code{TRUE}, the messages are displayed throughout the 
 procedure. Otherwise, the messages will not be displayed.}
+
+\item{df_bis}{Data frame storing the information from the bisection method.}
 }
 \value{
-Nothing is returned from this function.
+Return the updated data frame that stores the information for the
+   the iteration.
+   \item{df_bis}{Data frame storing the information for the bisection 
+      method in each iteration.}
 }
 \description{
 This function prints the information in the bisection 
-   procedure.
+   procedure and store the result for each iteration.
 }

@@ -41,6 +41,8 @@
 #'      estimators \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}.}
 #'   \item{lb0}{Logical lower bound of the problem.}
 #'   \item{ub0}{Logical upper bound of the problem.}
+#'   \item{solver}{Solver used in solving the linear and quadratic programs.}
+#'   \item{call}{The function that has been called.}
 #' 
 #' @details If the value of the test statistic \eqn{T_n} is zero, the bootstrap
 #'    procedure will be skipped.
@@ -51,7 +53,10 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
                       bs_num = 100, p_sig = 2, tau_input = .5, solver = NULL,
                       cores = 1, progress = TRUE){
   
-  #### Step 1: Check and update the dependencies
+  #### Step 1: Obtain call, check and update the dependencies
+  # Obtain call information
+  call = match.call()
+  # Check and update
   checkupdate = dkqs_cone_check(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
                                 bs_num, p_sig, tau_input, solver, progress,
                                 cores)
@@ -78,6 +83,7 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   # Compute beta_obs_hat using the function defined by user
   beta_obs_hat = checkupdate$beta_obs_hat
   ### Assign the solver to be used
+  solver_name = solver
   if (solver == "gurobi"){
     solver = gurobi_optim
   } else if (solver == "cplexapi"){
@@ -162,13 +168,19 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
               sep = ""))
   }
   
-  invisible(list(p_val = as.numeric(p_val), 
-                 tau = as.numeric(tau), 
-                 T_n = as.numeric(T_n), 
-                 T_bs = T_bs,
-                 beta_bs_bar = beta_bs_bar,
-                 lb0 = lb0$objval,
-                 ub0 = ub0$objval))
+  #### Step 9: Assign the return list
+  output = list(p_val = as.numeric(p_val), 
+                tau = as.numeric(tau), 
+                T_n = as.numeric(T_n), 
+                T_bs = T_bs,
+                beta_bs_bar = beta_bs_bar,
+                lb0 = lb0$objval,
+                ub0 = ub0$objval,
+                solver = solver_name,
+                call = call)
+  attr(output, "class") = "dkqs_cone"
+  
+  invisible(output)
 }
 
 #' Formulating and solving quadratic programs
@@ -1004,4 +1016,62 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
               solver = solver,
               cores = cores))
 }
+
+#' Print results from \code{dkqs_cone}
+#' 
+#' @description This function uses the print method on the return list of the
+#'    function \code{dkqs_cone}.
+#'    
+#' @param x Object returned from \code{dkqs_cone}.
+#' @param ... Additional arguments.
+#' 
+#' @return Print the basic set of results from \code{dkqs_cone}.
+#' 
+#' @export
+#' 
+print.dkqs_cone <- function(x, ...){
+  cat(sprintf("Test statistic: %s.\n", round(x$T_n, digits = 5)))  
+  cat(sprintf("p-value: %s.\n", round(x$p_val, digits = 5)))
+  cat(sprintf("Value of tau used: %s.\n", round(x$tau, digits = 5)))
+  cat(sprintf("Linear and quadratic programming solver used: %s.\n", 
+              x$solver))
+}
+
+#' Summary of results from \code{dkqs_cone}
+#' 
+#' @description This function uses the print method on the return list of the
+#'    function \code{dkqs_cone}.
+#'    
+#' @param x Object returned from \code{dkqs_cone}.
+#' @param ... Additional arguments.
+#' 
+#' @return Print the summary of the basic set of results from \code{dkqs_cone}.
+#' 
+#' @export
+#' 
+summary.dkqs_cone <- function(x, ...){
+  #### Step 1: Display what has been the function
+  cat("Call:\n")
+  dput(x$call)
+  cat("\n")
+  
+  #### Step 2: Basic results
+  cat(sprintf("Test statistic: %s.\n", round(x$T_n, digits = 5)))  
+  cat(sprintf("p-value: %s.\n", round(x$p_val, digits = 5)))
+  cat(sprintf("Value of tau used: %s.\n", round(x$tau, digits = 5)))
+  cat(sprintf("Linear and quadratic programming solver used: %s.\n", 
+              x$solver))
+  cat("\n")
+  
+  #### Step 3: Bootstrap test statistics
+  cat("Bootstrap test statistics:\n")
+  print(x$T_bs)
+  cat("\n")
+  
+  #### Step 4: Bootstrap betas
+  cat("Bootstrap betas:\n")
+  print(x$beta_bs_bar)
+  cat("\n")
+}
+
 

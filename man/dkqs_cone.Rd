@@ -62,6 +62,8 @@ Returns a list of output calculated from the function:
      estimators \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}.}
   \item{lb0}{Logical lower bound of the problem.}
   \item{ub0}{Logical upper bound of the problem.}
+  \item{solver}{Solver used in solving the linear and quadratic programs.}
+  \item{call}{The function that has been called.}
 }
 \description{
 This module conducts inference in quadratic programs using the 

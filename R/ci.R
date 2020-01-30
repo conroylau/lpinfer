@@ -27,6 +27,15 @@
 #'    \item{df_ci}{data frame that consists of the points and the corresponding
 #'       \eqn{p}-values that have been tested in constructing the confidence 
 #'       intervals.}
+#'    \item{df_up}{Data frame storing the information for the bisection 
+#'       method in each iteration when evaluating the upper bound of the 
+#'       confidence interval.}
+#'    \item{df_down}{Data frame storing the information for the bisection 
+#'       method in each iteration when evaluating the lower bound of the 
+#'       confidence interval.}
+#'    \item{tol}{Tolerance level in the bisection method.}
+#'    \item{iter}{Total number of iterations taken.}
+#'    \item{call}{The function that has been called.}
 #'       
 #' @details The number of decimal places displayed in the messages (if 
 #'    \code{progress} is set as \code{TRUE}) is equal to the number of decimal
@@ -38,7 +47,10 @@ qpci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
                  ub1 = NULL, tol = .0001, max_iter = 20, df_ci = NULL,
                  progress = FALSE){
   
-  #### Step 1: Check and update the dependencies
+  #### Step 1: Obtain call, check and update the dependencies
+  # Obtain call information
+  call = match.call()
+  # Check and update
   check_return = qpci_check(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max_iter, 
                             df_ci, progress)
   # Updates the dependencies
@@ -59,6 +71,8 @@ qpci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
                            progress, 1, dp)
   # Update data frame
   df_ci = up_return$df_ci
+  # Data frame storing all messages in each iteration
+  df_up = up_return$df_bis
   ### Compute lower bound of confidence interval
   if (progress == TRUE){
     cat("\n=== Computing lower bound of confidence interval ===\n")
@@ -67,7 +81,9 @@ qpci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
                              progress, -1, dp)
   # Update data frame
   df_ci = down_return$df_ci
-
+  # Data frame storing all messages in each iteration
+  df_down = down_return$df_bis
+  
   #### Step 3: Print confidence interval and return results
   if (progress == TRUE){
     cat("-----------------------------------\n")
@@ -79,9 +95,18 @@ qpci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
               round(up_return$pt, digits = dp), "].\n", sep = "")) 
   }
   
-  invisible(list(up = up_return$pt,
-                 down = down_return$pt,
-                 df_ci = df_ci))
+  #### Step 4: Assign the return list
+  output = list(up = up_return$pt,
+                down = down_return$pt,
+                df_ci = df_ci,
+                df_up = df_up,
+                df_down = df_down,
+                tol = tol,
+                iter = down_return$iter + up_return$iter,
+                call = call)
+  attr(output, "class") = "qpci"
+  
+  invisible(output)
 }
 
 #' Bisection method
@@ -103,9 +128,11 @@ qpci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
 #' @return Return the solution of the bisection method and the updated 
 #'    data frame.
 #'    \item{soln}{Solution to the bisection method.}
-#'    \item{df_ci}{data frame that consists of the points and the 
+#'    \item{df_ci}{Data frame that consists of the points and the 
 #'       corresponding \eqn{p}-values that have been tested in constructing the 
 #'       confidence intervals.}   
+#'    \item{df_bis}{Data frame storing the information for the bisection 
+#'       method in each iteration.}
 #' 
 #' @export 
 #'
@@ -113,6 +140,17 @@ ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci,
                          progress, type, dp){
   
   #### Step 1: Evaluate the end-points and the mid-point of b0 and b1
+  # Initialize data frame to collect the information in the bisection method
+  df_bis = data.frame(matrix(vector(), 0, 6,
+                             dimnames=list(c(), 
+                                           c("iteration", 
+                                             "left",
+                                             "right",
+                                             "p-value",
+                                             "decision",
+                                             "remark"))),
+                      stringsAsFactors=F)
+  
   # Divide alpha by 2
   alpha_2sided = alpha/2
   ## Left end-point a
@@ -121,7 +159,8 @@ ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci,
   fb0 = fb0_return$pval
   df_ci = fb0_return$df_ci
   # Print information
-  bisec_print("left end", alpha_2sided, fb0_return, a, b, progress, dp)
+  df_bis = bisec_print("left end", alpha_2sided, fb0_return, a, "NA", progress, 
+                       dp, df_bis)$df_bis
   
   ## Right end-point b
   b = b1
@@ -129,7 +168,8 @@ ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci,
   fb1 = fb1_return$pval
   df_ci = fb1_return$df_ci
   # Print information
-  bisec_print("right end", alpha_2sided, fb1_return, a, b, progress, dp)
+  df_bis = bisec_print("right end", alpha_2sided, fb1_return, "NA", b, 
+                       progress, dp, df_bis)$df_bis
 
   # If fb1 and fb0 are of the same sign, ask user to choose another interval
   if ((fb1 - alpha_2sided) * (fb0 - alpha_2sided) > 0){
@@ -146,10 +186,12 @@ ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci,
     # Bisection method complete if the difference between the two points is
     # below the tolereance level.
     if ((b-a) < tol){
+      tol_msg = paste("      * Length of interval is below tolerance level. ",
+                      "Bisection method is completed.\n", sep = "")
       if (progress == TRUE){
-        cat(paste("      * Length of interval is below tolerance level. ",
-                  "Bisection method is completed.\n", sep = "")) 
+        cat(tol_msg) 
       }
+      df_bis[nrow(df_bis), 6] = tol_msg
       break
     }
     # Update interval based on whether the left section or the section of the 
@@ -160,7 +202,8 @@ ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci,
       a = c
     }
     # Print information
-    bisec_print(i, alpha_2sided, fc_return, a, b, progress, dp)
+    df_bis = bisec_print(i , alpha_2sided, fc_return, a, b, progress,
+                         dp, df_bis)$df_bis
     # Evaluate new mid-point
     c = (a+b)/2
     # Update data frame and p-value
@@ -170,16 +213,19 @@ ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci,
   }
   
   # Only called when the maximum number of iterations is reached
+  iter_msg = paste("      * Reached the maximum number of iterations.\n", 
+                   sep = "")
   if (progress == TRUE & i == max_iter){
-    cat(paste("      * Reached the maximum number of iterations.\n", 
-              sep = "")) 
+    cat(iter_msg) 
   }
+  df_bis[nrow(df_bis), 6] = tol_msg
   
   #### Step 3: Return results
   # Return the results
   invisible(list(pt = c,
                  iter = i,
-                 df_ci = df_ci))
+                 df_ci = df_ci,
+                 df_bis = df_bis))
 }
 
 #' Evaluation of test statistic and check if the point has been evaluated
@@ -515,10 +561,10 @@ many_qpci <- function(f, farg, alphas = c(.05), lb0 = NULL, lb1 = NULL,
   invisible(list(df_many_ci = df_many_ci))
 }
 
-#' Print messages in bisection procedure
+#' Print messages in bisection procedure and store results
 #' 
 #' @description This function prints the information in the bisection 
-#'    procedure.
+#'    procedure and store the result for each iteration.
 #'    
 #' @param procedure Variable indicating whether the function is evaluating 
 #'    the end-points or first mid-point, or is iterating through the bisection
@@ -531,43 +577,71 @@ many_qpci <- function(f, farg, alphas = c(.05), lb0 = NULL, lb1 = NULL,
 #'    initial end-points are being evaluated.
 #' @param b Upper bound of teh current interval. This is \code{NULL} if the
 #'    initial end-points are being evaluated.
+#' @param df_bis Data frame storing the information from the bisection method.
 #' @inheritParams qpci 
 #' 
-#' @return Nothing is returned from this function.
+#' @return Return the updated data frame that stores the information for the
+#'    the iteration.
+#'    \item{df_bis}{Data frame storing the information for the bisection 
+#'       method in each iteration.}
 #' 
 #' @export
 #' 
-bisec_print <- function(procedure, alphahalf, returnlist, a, b, progress, dp){
+bisec_print <- function(procedure, alphahalf, returnlist, a, b, progress, dp,
+                        df_bis){
+  
+  #### Step 1: Obtain information about the current data frame
+  df_bis_row = nrow(df_bis)
+  
   # The messages are being displayed only if 'progress' is set to TRUE
   if (progress == TRUE){
-    #### Step 1: Display what point it is evaluating
+    #### Step 2: Display what point it is evaluating
     if (is.numeric(procedure) == FALSE){
-      # Case 1: 'procedure' is not numeric if evaluating the initial 3 points
+      # Case A: 'procedure' is not numeric if evaluating the initial 3 points
       cat(paste0(">>> Evaluating the first ", procedure, "-point\n"))
     } else {
-      # Case 2: 'procedure' is numeric if evaluating the bisection method
+      # Case B: 'procedure' is numeric if evaluating the bisection method
       cat(paste0(">>> Iteration ", procedure, "\n"))   
     }
     
-    #### Step 2: Print the p-value  
+    #### Step 3: Print the p-value  
     space6 = "      "
     cat(paste0(space6, "* p-value: ", 
                round(returnlist$pval, digits = dp), "\n"))
     
-    #### Step 3: Print the decision of reject or do not reject
+    #### Step 4: Print the decision of reject or do not reject
     if (returnlist$pval < alphahalf){
-      cat(paste0(space6, "* Decision: Reject\n")) 
+      decision = "Reject"
     } else {
-      cat(paste0(space6, "* Decision: Do not reject\n")) 
+      decision = "Do not reject"
     }
+    cat(paste0(space6, "* Decision: ", decision, "\n")) 
     
-    #### Step 4: Print the current interval
+    #### Step 5: Print the current interval
     if (procedure != "left end" & procedure != "right end"){
       cat(paste0(space6, "* Current interval: [", 
                  round(a, digits = dp), ", ", 
                  round(b, digits = dp), "]\n"))  
     }
   }
+  
+  #### Step 6: Update data frame
+  if (procedure == "left end"){
+    df_bis[df_bis_row + 1,1] = "Left end-point"
+  } else if (procedure == "right end"){
+    df_bis[df_bis_row + 1,1] = "Right end-point"
+  } else if (is.numeric(procedure) == TRUE){
+    df_bis[df_bis_row + 1,1] = procedure
+  }
+  
+  df_bis[df_bis_row + 1, 2] = a
+  df_bis[df_bis_row + 1, 3] = b
+  df_bis[df_bis_row + 1, 4] = returnlist$pval
+  df_bis[df_bis_row + 1, 5] = decision
+  df_bis[df_bis_row + 1, 6] = ""
+  
+  #### Step 7: Return data frame
+  invisible(list(df_bis = df_bis))
 }
 
 #' Auxiliary function: Count decimal places
@@ -595,3 +669,105 @@ decimal_places <- function(x){
     invisible(dp) 
   }
 }
+
+#' Print results from \code{qpci}
+#' 
+#' @description This function uses the print method on the return list of the
+#'    function \code{qpci}.
+#'    
+#' @param x Object returned from \code{qpci}.
+#' @param ... Additional arguments.
+#' 
+#' @return Print the basic set of results from \code{qpci}.
+#' 
+#' @export
+#' 
+print.qpci <- function(x, ...){
+  cat(sprintf("Total number of iterations: %s.\n", round(x$iter, digits = 5)))  
+  cat(sprintf("Tolerance level: %s.\n", round(x$tol, digits = 5)))
+  cat(sprintf("Confidence interval: [%s, %s].\n", 
+              round(x$down, digits = 5),
+              round(x$up, digits = 5)))
+}
+
+#' Summary of results from \code{qpci}
+#' 
+#' @description This function uses the print method on the return list of the
+#'    function \code{qpci}.
+#'    
+#' @param x Object returned from \code{qpci}.
+#' @param ... Additional arguments.
+#' 
+#' @return Print the summary of the basic set of results from \code{qpci}.
+#' 
+#' @export
+#' 
+summary.qpci <- function(x, ...){
+  #### Step 1: Display what has been the function
+  cat("Call:\n")
+  dput(x$call)
+  cat("\n")
+  
+  #### Step 2: Basic results
+  cat(sprintf("Total number of iterations: %s.\n", round(x$iter, digits = 5)))  
+  cat(sprintf("Tolerance level: %s.\n", round(x$tol, digits = 5)))
+  cat(sprintf("Confidence interval: [%s, %s].\n", 
+              round(x$down, digits = 5),
+              round(x$up, digits = 5)))
+  cat("\n")
+  
+  #### Step 3: Upper bound interim messages
+  cat("=== Iterations in constructing upper bound:\n")
+  summary_bisection_print(x$df_up)
+
+  #### Step 4: Lower bound interim messages
+  cat("=== Iterations in constructing lower bound:\n")
+  summary_bisection_print(x$df_down)
+  cat("\n")  
+}
+
+#' Print results in constructing bounds in bisection method
+#' 
+#' @description This function is used inside the \code{summary.qpci} to print
+#'    the results in each step of the bisection method.
+#' 
+#' @inheritParams bisec_print
+#' 
+#' @return Nothing is returned in this function.
+#' 
+#' @export
+#' 
+summary_bisection_print <- function(df_bis){
+  
+  #### Step 1: Count the number of rows
+  df_row = nrow(df_bis)
+  
+  #### Step 2: Print the results
+  for (i in 1:df_row){
+    # Part A: Display what point it is evaluating
+    if (df_bis[i,1] == "Left end-point"){
+      cat(">>> Evaluating the first left end-point\n")
+    } else if (df_bis[i,1] == "Right end-point"){
+      cat(">>> Evaluating the first right end-point\n")
+    } else {
+      cat(sprintf(">>> Iteration %s\n", df_bis[i,1]))
+    }
+    # Part B: Print the p-value  
+    cat(sprintf("      * p-value: %s. \n", df_bis[i,4]))
+    # Part C: Print the decision of reject or do not reject
+    cat(sprintf("      * Decision: %s. \n", df_bis[i,5]))
+    # Part D: Print the current interval
+    if (df_bis[i,1] != "Left end-point" & df_bis[i,1] != "Right end-point"){
+      cat(sprintf("      * Confidence interval: [%s, %s].\n", 
+                  round(as.numeric(df_bis[i,2]), digits = 5),
+                  round(as.numeric(df_bis[i,3]), digits = 5)))
+    }
+    # Part E: Print special message, if any
+    if (df_bis[i,6] != ""){
+      cat(sprintf("%s\n", df_bis[i,6]))
+    }
+  }
+  cat("\n")
+}
+
+
