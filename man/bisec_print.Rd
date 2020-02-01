@@ -37,6 +37,6 @@ Return the updated data frame that stores the information for the
       method in each iteration.}
 }
 \description{
-This function prints the information in the bisection 
-   procedure and store the result for each iteration.
+This function prints the information in \code{ci\_bisection} 
+   and store the result for each iteration.
 }
