@@ -25,6 +25,8 @@ library(Rcplex)
 library(ddpcr)
 library(Momocs)
 library(limSolve)
+library(foreach)
+library(doMC)
 
 ### Part 2: Data preparation
 # Read data

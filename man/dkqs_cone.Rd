@@ -16,7 +16,7 @@ dkqs_cone(
   tau_input = 0.5,
   solver = NULL,
   cores = 1,
-  progress = TRUE
+  progress = FALSE
 )
 }
 \arguments{

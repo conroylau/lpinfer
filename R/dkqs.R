@@ -51,7 +51,7 @@
 #' 
 dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
                       bs_num = 100, p_sig = 2, tau_input = .5, solver = NULL,
-                      cores = 1, progress = TRUE){
+                      cores = 1, progress = FALSE){
   
   #### Step 1: Obtain call, check and update the dependencies
   # Obtain call information
@@ -177,6 +177,7 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
                 lb0 = lb0$objval,
                 ub0 = ub0$objval,
                 solver = solver_name,
+                cores = cores,
                 call = call)
   attr(output, "class") = "dkqs_cone"
   
@@ -677,7 +678,8 @@ beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs,
     T_bs = c(T_bs, T_bs_i)
     beta_bs_bar_set = cbind(beta_bs_bar_set, beta_bs_bar)
   }
-  # Return the bootstrap test statistic
+  
+  #### Step 5: Return results
   return(list(T_bs = T_bs,
               beta_bs_bar_set = beta_bs_bar_set))
 }
@@ -713,6 +715,12 @@ beta_bs_parallel <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt,
   T_bs = NULL
   beta_bs_bar_set = NULL
   
+  # Comb function for using parallel programming
+  comb <- function(x, ...) {
+    lapply(seq_along(x), function(i) c(x[[i]], lapply(list(...), 
+                                                      function(y) y[[i]])))
+  }
+  
   # Parallelized for-loop below
   listans = foreach(i=1:bs_num, .multicombine = TRUE, .combine="comb") %dopar% {
     #### Step 2: Set the seed
@@ -735,14 +743,14 @@ beta_bs_parallel <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt,
     list(T_bs, beta_bs_bar_set)
   }
   
-  #### Step 7: Retrive information from output
+  #### Step 7: Retrieve information from output
   T_bs = as.vector(unlist(listans[[1]]))
   beta_bs_bar_set = data.frame(matrix(as.matrix(listans[[2]]), 
                                       nrow = beta_bs_nrow, 
                                       ncol = bs_num,
                                       byrow = FALSE))
   
-  # Return the bootstrap test statistic
+  #### Step 8: Return results
   return(list(T_bs = T_bs,
               beta_bs_bar_set = beta_bs_bar_set))
 }
@@ -1035,6 +1043,7 @@ print.dkqs_cone <- function(x, ...){
   cat(sprintf("Value of tau used: %s.\n", round(x$tau, digits = 5)))
   cat(sprintf("Linear and quadratic programming solver used: %s.\n", 
               x$solver))
+  cat(sprintf("Number of cores used: %s.\n", x$cores))
 }
 
 #' Summary of results from \code{dkqs_cone}
@@ -1067,6 +1076,9 @@ summary.dkqs_cone <- function(x, ...){
   
   cat(sprintf("Linear and quadratic programming solver used: %s.\n", 
               x$solver))
+  cat("\n")
+  
+  cat(sprintf("Number of cores used: %s.\n", x$cores))
   cat("\n")
   
   #### Step 3: Bootstrap test statistics
