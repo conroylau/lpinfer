@@ -36,9 +36,9 @@ Installation and Requirements
 -----------------------------
 
 `linearprog` can be installed from our GitHub repository via
-``` r
-devtools::install_github("conroylau/linearprog")
-```
+
+    devtools::install_github("conroylau/linearprog")
+
 To use `linearprog`, one of the following packages for solving linear
 and quadratic programs is required. There are four options for the
 solver:
@@ -92,7 +92,7 @@ included in the `linearprog` package.
 ``` r
 library(linearprog)
 knitr::kable(head(sampledata, n = 10))
-```
+``` 
 <table>
 <thead>
 <tr>
@@ -192,7 +192,7 @@ where
 
 -   `Y` is a multivariate discrete outcome variable that takes value
     from 0 to 1 with step size 0.1.
--   `D` is a binary treatment where *Y*~*i*~ is observed for
+-   `D` is a binary treatment where *Y*<sub>*i*</sub> is observed for
     *D*<sub>*i*</sub> = 1 and not observed for *D*<sub>*i*</sub> = 0.
 
 ### Specifying the Functions
@@ -252,14 +252,14 @@ corresponds to the two moments **E**[*Y*<sub>*i*</sub>] and
 To conduct the inference in this package, the matrices `A_obs` and
 `A_tgt` have to be defined in order to use the function. To construct
 the two matrices, the following parameters are needed:
-```r
+``` r
 N = dim(sampledata)[1]
 J1 = length(unique(sampledata[,"Y"]))
 yp = seq(0,1,1/(J1-1))
 ```
 With the above quantities, the following matrices can be defined as
 follows:
-```r
+``` r
 A_obs_twom = matrix(c(rep(0,J1), yp, rep(0,J1), rep(1, J1)), nrow = 2,
                 byrow = TRUE)
 A_target = matrix(c(yp, yp), nrow = 1)
@@ -268,14 +268,14 @@ The matrix `A_obs_twom` refers to the observed matrix for the two
 moments approach. If users would prefer using the full information
 approach, the following matrix that correspond to the full information
 approach has to be defined:
-```r
+``` r
 A_obs_full = cbind(matrix(rep(0,J1*J1), nrow = J1), diag(1, J1))
 ```
 Lastly, the value of tau can be defined freely by the user as long as
 the quadratic program is feasible. Here, we choose the value of tau
 based on the formula from page 15 of the supplemental appendix of Kamat
 (2019):
-```r
+``` r
 tau = sqrt(log(N)/N)
 ```
 ### Calculating *p*-value
@@ -287,7 +287,7 @@ that can calculate the observed value of beta and returns the *p*-value.
 #### Syntax
 
 This `dkqs_cone` command has the following syntax:
-```r
+``` r
 dkqs_cone(df = sampledata, 
           A_obs = A_obs_twom, 
           A_tgt = A_target, 
@@ -298,13 +298,14 @@ dkqs_cone(df = sampledata,
           p_sig = 2,
           tau_input = tau,
           solver = gurobi,
-          noisy = TRUE)
+          cores = 1,
+          progress = TRUE)
 ```
 where
 
--   `df` refers to the data being used in the inference.
--   `A_obs` refers to the “observed matrix” in the inference.
--   `A_tgt` refers to the “target matrix” in the inference.
+-   `df` refers to the data set.
+-   `A_obs` refers to the “observed matrix”.
+-   `A_tgt` refers to the “target matrix”.
 -   `func_obs` refers to the function that generates the vector of
     observed beta.
 -   `beta_tgt` refers to the value of beta to be tested.
@@ -314,16 +315,31 @@ where
 -   `tau_input` refers to the value of tau chosen by the user.
 -   `solver` refers to the name of the solver used to solve the linear
     and quadratic programs.
--   `noisy` refers to the boolean variable for whether the result
+-   `cores` refers to the number of cores to be used in the parallelized
+    for-loop for computing the bootstrap test statistics. See <span
+    id="parallel-dkqs">here</span> for more details.
+-   `progress` refers to the boolean variable for whether the result
     messages should be displayed in the procedure of calculating the
     *p*-value.
+
+#### Using Parallel Programming
+
+The `linearprog` package supports the use of parallel programming in
+computing the bootstrap test statistics to reduce the computational
+time. To use parallel programming, specify the number of cores that you
+would like to use in the argument `cores`. If you do not want to use
+parallel programming, you may input 1 or any other non-numeric variables
+in `cores`.
+
+For best performance, it is advisible to specify the number of cores to
+be less than or equal to the cores that you have on your machine.
 
 #### Output
 
 The followings are the output when the **two moments approach** is used
 with the `gurobi` solver to test the hypothesis that `beta_tgt` is
 0.375.
-```r
+``` r
 dkqs_cone(df = sampledata, 
          A_obs = A_obs_twom, 
          A_tgt = A_target, 
@@ -334,29 +350,33 @@ dkqs_cone(df = sampledata,
          p_sig = 3,
          tau_input = tau,
          solver = "gurobi",
-         noisy = TRUE)
+         cores = 8,
+         progress = TRUE)
 #> Linear and quadratic programming solver used: gurobi.
+#> Number of cores used in bootstrap procedure: 8.
 #> ----------------------------------- 
 #> Test statistic: 0.06724.
 #> p-value: 0.253.
 #> Value of tau used: 0.08311.
-```
+``` 
 Alternatively, the followings are the output when the **full information
 approach** is used with the `gurobi` solver to test the hypothesis that
 `beta_tgt` is 0.375.
-```r
-dkqs_cone(df = sampledata, 
-         A_obs = A_obs_full, 
-         A_tgt = A_target, 
-         func_obs = func_full_info, 
-         beta_tgt = 0.375, 
-         bs_seed = 1,
-         bs_num = 100,
-         p_sig = 3,
-         tau_input = tau,
-         solver = "gurobi",
-         noisy = TRUE)
+``` r
+dkqs_p = dkqs_cone(df = sampledata, 
+                   A_obs = A_obs_full, 
+                   A_tgt = A_target, 
+                   func_obs = func_full_info, 
+                   beta_tgt = 0.375, 
+                   bs_seed = 1,
+                   bs_num = 100,
+                   p_sig = 3,
+                   tau_input = tau,
+                   solver = "gurobi",
+                   cores = 8,
+                   progress = TRUE)
 #> Linear and quadratic programming solver used: gurobi.
+#> Number of cores used in bootstrap procedure: 8.
 #> ----------------------------------- 
 #> Test statistic: 0.01746.
 #> p-value: 0.253.
@@ -365,6 +385,10 @@ dkqs_cone(df = sampledata,
 The results from the two approach should give the same *p*-value while
 the test statistic will be different as different moments are considered
 in the problem.
+
+The message generated at the end of the function can be re-generated by
+`print(dkqs_p)`. All message displayed when the function is calculating
+the *p*-value can be re-generated by `summary(dkqs_p)`.
 
 ### Constructing Confidence Intervals
 
@@ -376,19 +400,19 @@ and applying the biscetion method.
 #### Syntax
 
 The syntax of the `qpci` function is as follows:
-```r
+``` r
 qpci(f = dkqs_cone, 
      farg = dkqs_farg, 
-     alpha = .05, 
+     alpha = 0.05, 
      lb0 = NULL, 
      lb1 = NULL, 
      ub0 = NULL, 
      ub1 = NULL, 
-     tol = .0001, 
+     tol = 0.0001, 
      max_iter = 20, 
      df_ci = NULL,
-     noisy = TRUE)
-```
+     progress = FALSE)
+``` 
 where
 
 -   `f` refers to the function that represents a testing procedure.
@@ -407,7 +431,7 @@ where
 -   `df_ci` refers to dataframe that consists of the points and the
     corresponding *p*-values that have been tested in constructing the
     confidence intervals.
--   `noisy` refers to the boolean variable for whether the result
+-   `progress` refers to the boolean variable for whether the result
     messages should be displayed in the procedure of constructing
     confidence interval.
 
@@ -416,7 +440,7 @@ where
 To use the `qpci` function, the arguments for the function of the test
 statistic has to be specified and passed to `farg`. For instance, if the
 test `dkqs_cone` is used, then the arguments can be defined as follows:
-```r
+``` r
 dkqs_farg = list(df = sampledata,
                  A_obs = A_obs_full,
                  A_tgt = A_target,
@@ -426,9 +450,10 @@ dkqs_farg = list(df = sampledata,
                  p_sig = 2,
                  tau_input = tau,
                  solver = "gurobi",
-                 noisy = FALSE)
-```
-Note that the argument for the target value of beta, i.e. the value to
+                 cores = 8,
+                 progress = FALSE)
+``` 
+Note that the argument for the target value of beta, i.e. the value to
 be tested under the null, is not required in the above argument
 assignment.
 
@@ -449,32 +474,100 @@ requirement for the data frame is as follows:
 The following shows a sample output of the function `qpci` that is used
 to the confidence interval for the test `dkqs_cone` with significance
 level 0.05.
-```r
-qpci(f = dkqs_cone, 
-     farg = dkqs_farg, 
-     alpha = 0.05, 
-     lb0 = 0, 
-     lb1 = 0.4, 
-     ub0 = 1, 
-     ub1 = 0.6, 
-     tol = 0.001, 
-     max_iter = 10, 
-     df_ci = NULL, 
-     noisy = TRUE)
-#> >>> Computing upper bound of confidence interval.........
-#>        Length of interval is below tolerance level. Bisection method is completed.
+``` r
+qpci_dkqs = qpci(f = dkqs_cone, 
+                 farg = dkqs_farg, 
+                 alpha = 0.05, 
+                 lb0 = 0, 
+                 lb1 = 0.4, 
+                 ub0 = 1, 
+                 ub1 = 0.6, 
+                 tol = 0.001, 
+                 max_iter = 5, 
+                 df_ci = NULL, 
+                 progress = TRUE)
 #> 
-#>        Reached the maximum number of iterations.
+#> === Computing upper bound of confidence interval ===
+#> >>> Evaluating the first left end-point
+#>       * Point being evaluated: 0.6
+#>       * p-value: 0.78
+#>       * Decision: Do not reject
+#> >>> Evaluating the first right end-point
+#>       * Point being evaluated: 1
+#>       * p-value: 0
+#>       * Decision: Reject
+#> >>> Iteration 1
+#>       * Point being evaluated: 0.8
+#>       * p-value: 0
+#>       * Decision: Reject
+#>       * Current interval: [0.6, 1]
+#> >>> Iteration 2
+#>       * Point being evaluated: 0.7
+#>       * p-value: 0
+#>       * Decision: Reject
+#>       * Current interval: [0.6, 0.8]
+#> >>> Iteration 3
+#>       * Point being evaluated: 0.65
+#>       * p-value: 0.05
+#>       * Decision: Do not reject
+#>       * Current interval: [0.6, 0.7]
+#> >>> Iteration 4
+#>       * Point being evaluated: 0.675
+#>       * p-value: 0
+#>       * Decision: Reject
+#>       * Current interval: [0.65, 0.7]
+#> >>> Iteration 5
+#>       * Point being evaluated: 0.662
+#>       * p-value: 0
+#>       * Decision: Reject
+#>       * Current interval: [0.65, 0.675]
+#>       * Reached the maximum number of iterations.
 #> 
-#> >>> Computing lower bound of confidence interval.........
-#>        Length of interval is below tolerance level. Bisection method is completed.
-#> 
-#>        Reached the maximum number of iterations.
+#> === Computing lower bound of confidence interval ===
+#> >>> Evaluating the first left end-point
+#>       * Point being evaluated: 0
+#>       * p-value: 0
+#>       * Decision: Reject
+#> >>> Evaluating the first right end-point
+#>       * Point being evaluated: 0.4
+#>       * p-value: 0.79
+#>       * Decision: Do not reject
+#> >>> Iteration 1
+#>       * Point being evaluated: 0.2
+#>       * p-value: 0
+#>       * Decision: Reject
+#>       * Current interval: [0, 0.4]
+#> >>> Iteration 2
+#>       * Point being evaluated: 0.3
+#>       * p-value: 0
+#>       * Decision: Reject
+#>       * Current interval: [0.2, 0.4]
+#> >>> Iteration 3
+#>       * Point being evaluated: 0.35
+#>       * p-value: 0
+#>       * Decision: Reject
+#>       * Current interval: [0.3, 0.4]
+#> >>> Iteration 4
+#>       * Point being evaluated: 0.375
+#>       * p-value: 0.26
+#>       * Decision: Do not reject
+#>       * Current interval: [0.35, 0.4]
+#> >>> Iteration 5
+#>       * Point being evaluated: 0.363
+#>       * p-value: 0.03
+#>       * Decision: Do not reject
+#>       * Current interval: [0.35, 0.375]
+#>       * Reached the maximum number of iterations.
 #> -----------------------------------
-#> Total number of iterations: 20.
+#> Total number of iterations: 10.
 #> Tolerance level: 0.001.
-#> Confidence interval: [0.36211, 0.65352].
+#> Confidence interval: [0.356, 0.656].
 ```
+The message generated at the end of the function can be re-generated by
+`print(qpci_dkqs)`. All message displayed when the function is
+constructing the confidence interval can be re-generated by
+`summary(qpci_dkqs)`.
+
 ### Constructing Multiple Confidence Intervals
 
 The `many_qpci` function is a wrapper for the `qpci` function where the
@@ -484,28 +577,29 @@ can be constructed in one command.
 #### Syntax
 
 The syntax for the `many_qpci` function is as follows:
-```r
+``` r
 many_qpci(f = dkqs_cone, 
           farg = dkqs_farg, 
-          alphas = c(.01, .05), 
+          alphas = c(0.01, 0.05), 
           lb0 = NULL, 
           lb1 = NULL, 
           ub0 = NULL, 
           ub1 = NULL, 
-          tol = .0001, 
+          tol = 0.0001, 
           max_iter = 20, 
           df_ci = NULL,
-          noisy_one = TRUE,
-          noisy_many = TRUE)
+          progress_one = TRUE,
+          progress_many = TRUE)
 ```
 where
 
 -   `alphas` refers to the list of significance levels to be used in
     constructing the confidence intervals.
--   `noisy_one` refers to the boolean variable for whether the result
+-   `progress_one` refers to the boolean variable for whether the result
     messages should be displayed in running the function `qpci`.
--   `noisy_many` refers to the boolean variable for whether the result
-    messages should be displayed in running the function `many_qpci`.
+-   `progress_many` refers to the boolean variable for whether the
+    result messages should be displayed in running the function
+    `many_qpci`.
 -   The rest of the arguments are the same as the function `qpci` and
     they can be found [here](#qpci_syntax).
 
@@ -513,30 +607,30 @@ where
 
 The following shows a sample output of the function `qpci_many` that is
 used to the confidence intervals for the test `dkqs_cone` with
-significance level 0.01, 0.02, 0.05 and 0.1.
-```r
-many_qpci(f = dkqs_cone,
-          farg = dkqs_farg,
-          alphas = c(0.01, 0.02, 0.05, 0.1),
-          lb0 = 0,
-          lb1 = .4,
-          ub0 = 1,
-          ub1 = .6,
-          tol = .001,
-          max_iter = 10,
-          df_ci = NULL,
-          noisy_one = FALSE,
-          noisy_many = TRUE)
+significance level 0.01, 0.05 and 0.1.
+``` r
+many_qpci(f = dkqs_cone, 
+          farg = dkqs_farg, 
+          alphas = c(0.01, 0.05, 0.1), 
+          lb0 = 0, 
+          lb1 = 0.4, 
+          ub0 = 1, 
+          ub1 = 0.6, 
+          tol = 0.001, 
+          max_iter = 10, 
+          df_ci = NULL, 
+          progress_one = FALSE, 
+          progress_many = TRUE)
 #> Confidence interval for significance level 0.01: [0.35742, 0.65977].
-#> Confidence interval for significance level 0.02: [0.35742, 0.65977].
 #> Confidence interval for significance level 0.05: [0.36211, 0.65352].
 #> Confidence interval for significance level 0.1: [0.36523, 0.65039].
-```
+``` 
 Help, Feature Requests and Bug Reports
 --------------------------------------
 
 Please post an issue on the [GitHub
-repository](https://github.com/conroylau/linearprog/issues).
+repository](https://github.com/conroylau/linearprog/issues), and we are
+happy to help.
 
 References
 ----------
