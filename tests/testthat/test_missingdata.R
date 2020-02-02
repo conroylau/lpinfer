@@ -8,6 +8,8 @@ library(cplexAPI)
 library(Rcplex)
 library(Momocs)
 library(limSolve)
+library(foreach)
+library(doMC)
 
 ##------------------------------------------------------------------------------
 ## Define functions to match the moments
@@ -64,107 +66,131 @@ A_obs_twom = matrix(c(rep(0,J1), yp, rep(0,J1), rep(1, J1)), nrow = 2,
                     byrow = TRUE)
 
 ##------------------------------------------------------------------------------
-## Obtain results for each solver
+### Define arguments and produce output
 ##------------------------------------------------------------------------------
 # Parameters to test
 beta_tgt = .365
 p_sig = 4
 
-### Gurobi solver
-# Full information
-full_g = dkqs_cone(df, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 100, 
-                   p_sig, tau, "gurobi")
-# Two moments
-twom_g = dkqs_cone(df, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100, 
-                   p_sig, tau, "gurobi")
-### Rcplex solver
-# Full information
-full_r = dkqs_cone(df, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 100, 
-                   p_sig, tau, "rcplex")
-# Two moments
-twom_r = dkqs_cone(df, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100, 
-                   p_sig, tau, "rcplex")
+### Define arguments
+farg = list(df = df,
+            A_tgt = A_tgt,
+            bs_seed = 1,
+            bs_num = 100,
+            p_sig = p_sig,
+            tau_input = tau,
+            beta_tgt = beta_tgt,
+            cores = 8,
+            progress = TRUE)
 
-### limSolve solver
-# Full information
-full_l = dkqs_cone(df, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 100, 
-                   p_sig, tau, "limsolve")
-# Two moments
-twom_l = dkqs_cone(df, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100, 
-                   p_sig, tau, "limsolve")
+### Generate output for full-information appraoch
+# Append full-information arguments
+farg$A_obs = A_obs_full
+farg$func_obs = func_full_info
+
+# Gurobi
+farg$solver = "gurobi"
+full_g = do.call(dkqs_cone, farg)
+
+# Rcplex
+farg$solver = "rcplex"
+full_r = do.call(dkqs_cone, farg)
+
+# limSolve
+farg$solver = "limsolve"
+full_l = do.call(dkqs_cone, farg)
+
+### Generate output for two-moments appraoch
+# Append full-information arguments
+farg$A_obs = A_obs_twom
+farg$func_obs = func_two_moment
+
+# Gurobi
+farg$solver = "gurobi"
+twom_g = do.call(dkqs_cone, farg)
+
+# Rcplex
+farg$solver = "rcplex"
+twom_r = do.call(dkqs_cone, farg)
+
+# limSolve
+farg$solver = "limsolve"
+twom_l = do.call(dkqs_cone, farg)
+
 
 ##------------------------------------------------------------------------------
 ## Test 1: Test equivalence of two moments approach and full information 
 ## appraoch for each optimizer
-##
-## * I only test whether the p-value and the value of tau used are the same 
-##   because the value of bootstrap betas and test statistic could vary across
-##   the two approaches because the two appraoches use different moment 
-##   information
 ##------------------------------------------------------------------------------
+
+# Function to test the output with same solver and two different approaches
+# dkqs_return1 = function 1
+# dkqs_return1 = function 2
+# dp = number of decimal places
+dkqs_test_output_samesolver <- function(dkqs_return1, dkqs_return2, dp){
+  expect_equal(dkqs_return1$p_val, dkqs_return2$p_val)
+  expect_equal(dkqs_return1$tau, dkqs_return2$tau)
+  expect_equal(dkqs_return1$lb0, dkqs_return2$lb0)
+  expect_equal(dkqs_return1$ub0, dkqs_return2$ub0)
+  expect_equal(dkqs_return1$solver, dkqs_return2$solver)
+  expect_equal(dkqs_return1$cores, dkqs_return2$cores)
+}
 
 # Gurobi
 test_that("Gurobi solver",{
-  expect_equal(full_g$tau, twom_g$tau)
-  expect_equal(full_g$p_val, twom_g$p_val)
+  dkqs_test_output_samesolver(full_g, twom_g)
 })
 
 # Rcplex solver
 test_that("Rcplex solver",{
-  expect_equal(full_r$tau, twom_r$tau)
-  expect_equal(full_r$p_val, twom_r$p_val)
+  dkqs_test_output_samesolver(full_r, twom_r)
 })
 
 # limSolve solver
 test_that("limSolve solver",{
-  expect_equal(full_l$tau, twom_l$tau)
-  expect_equal(full_l$p_val, twom_l$p_val)
+  dkqs_test_output_samesolver(full_l, twom_l)
 })
 
 ##------------------------------------------------------------------------------
 ## Test 2: Test equivalence of results across different optimizers for each 
 ## approach
-##
-## * In this section, I test only the output of tau, p-value and test statistic
-##   from each solver for each approach
 ##------------------------------------------------------------------------------
+
+# Function to test the output with same solver with different approach
+# dkqs_return1 = function 1
+# dkqs_return1 = function 2
+# dp = number of decimal places
+dkqs_test_output_approach <- function(dkqs_return1, dkqs_return2, dp){
+  expect_equal(dkqs_return1$p_val, dkqs_return2$p_val)
+  expect_equal(dkqs_return1$tau, dkqs_return2$tau)
+  expect_equal(round(dkqs_return1$T_n, digits = dp), 
+               round(dkqs_return2$T_n, digits = dp))
+  expect_equal(round(dkqs_return1$beta_bs_bar, digits = dp), 
+               round(dkqs_return2$beta_bs_bar, digits = dp))
+  expect_equal(dkqs_return1$lb0, dkqs_return2$lb0)
+  expect_equal(dkqs_return1$ub0, dkqs_return2$ub0)
+  expect_equal(dkqs_return1$cores, dkqs_return2$cores)
+}
+
+# Set decimal places
+dp = 5
 
 # Full information approach
 test_that("Full information approach - Gurobi vs Rcplex",{
-  # Tau
-  expect_equal(full_g$tau, full_r$tau)
-  # p-value
-  expect_equal(full_g$p_val, full_r$p_val)
-  # Test statistic
-  expect_equal(full_g$T_n, full_r$T_n)
+  dkqs_test_output_approach(full_g, full_r, dp)
 })
 
 test_that("Full information approach - Rcplex vs limSolve",{
-  # Tau
-  expect_equal(full_r$tau, full_l$tau)
-  # p-value
-  expect_equal(full_r$p_val, full_l$p_val)
-  # Test statistic
-  expect_equal(full_r$T_n, full_l$T_n)
+  dkqs_test_output_approach(full_r, full_l, dp)
 })
 
 # Two moments approach
 test_that("Two moments approach - Gurobi vs Rcplex",{
-  # Tau
-  expect_equal(twom_g$tau, twom_r$tau)
-  # p-value
-  expect_equal(twom_g$p_val, twom_r$p_val)
-  # Test statistic
-  expect_equal(twom_g$T_n, twom_r$T_n)
+  dkqs_test_output_approach(twom_g, twom_r, dp)
 })
 
 test_that("Two moments approach - Rcplex vs limSolve",{
-  # Tau
-  expect_equal(twom_r$tau, twom_l$tau)
-  # p-value
-  expect_equal(twom_r$p_val, twom_l$p_val)
-  # Test statistic
-  expect_equal(twom_r$T_n, twom_l$T_n)
+  dkqs_test_output_approach(twom_r, twom_l, dp)
 })
 
 
