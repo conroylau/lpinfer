@@ -1,8 +1,8 @@
 ################################################################################
 ##
-##  Example file for qpci function
+##  Example file for invertci function
 ##  
-##  This is an example code for applying the R module qpci on the missing
+##  This is an example code for applying the R module invertci on the missing
 ##  data problem using the sample data by Torgovitsky (2019). This file 
 ##  illustrates how the module can be used to obtain the confidence interval
 ##  for the cone-tightening procedure problem.
@@ -90,19 +90,19 @@ farg = list(df = df,
             progress = FALSE)
 
 ### Demonstration 1: Construction of confidence interval
-qpci_output = qpci(f = dkqs_cone, 
-                   farg = farg, 
-                   alpha = 0.05, 
-                   lb0 = 0, 
-                   lb1 = 0.4, 
-                   ub0 = 1, 
-                   ub1 = .6, 
-                   tol = 0.001, 
-                   max_iter = 50, 
-                   df_ci = NULL, 
-                   progress = TRUE)
+invertci_output = invertci(f = dkqs_cone, 
+                           farg = farg, 
+                           alpha = 0.05, 
+                           lb0 = 0, 
+                           lb1 = 0.4, 
+                           ub0 = 1, 
+                           ub1 = .6, 
+                           tol = 0.001, 
+                           max_iter = 50, 
+                           df_ci = NULL, 
+                           progress = TRUE)
 
 ### Demonstration 2: Use wrapper function to construct a list of 
 ### confidence intervals
-many_qpci(dkqs_cone, farg, c(0.01, 0.02, 0.05, 0.1), 0, 0.4, 1, .6, 
-          0.00001, 50, NULL, FALSE, TRUE)
+many_invertci(dkqs_cone, farg, c(0.01, 0.02, 0.05, 0.1), 0, 0.4, 1, .6, 
+              0.00001, 50, NULL, FALSE, TRUE)

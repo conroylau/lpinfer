@@ -120,7 +120,7 @@ farg_l_twom = farg
 ##------------------------------------------------------------------------------
 ## Construct arguments for constructing confidence interval
 ##------------------------------------------------------------------------------
-qpci_arg = list(f = dkqs_cone,
+invertci_arg = list(f = dkqs_cone,
                 alpha = 0.05, 
                 lb0 = 0, 
                 lb1 = 0.4, 
@@ -135,28 +135,28 @@ qpci_arg = list(f = dkqs_cone,
 ## Construct the output
 ##------------------------------------------------------------------------------
 ### Gurobi & Full info
-qpci_arg$farg = farg_g_full
-qpci_g_full = do.call(qpci, qpci_arg)
+invertci_arg$farg = farg_g_full
+invertci_g_full = do.call(invertci, invertci_arg)
 
 ### Gurobi & Two moments
-qpci_arg$farg = farg_g_twom
-qpci_g_twom = do.call(qpci, qpci_arg)
+invertci_arg$farg = farg_g_twom
+invertci_g_twom = do.call(invertci, invertci_arg)
 
 ### Rcplex & Full info
-qpci_arg$farg = farg_r_full
-qpci_r_full = do.call(qpci, qpci_arg)
+invertci_arg$farg = farg_r_full
+invertci_r_full = do.call(invertci, invertci_arg)
 
 ### Rcplex & Two moments
-qpci_arg$farg = farg_r_twom
-qpci_r_twom = do.call(qpci, qpci_arg)
+invertci_arg$farg = farg_r_twom
+invertci_r_twom = do.call(invertci, invertci_arg)
 
 ### limSolve & Full info
-qpci_arg$farg = farg_l_full
-qpci_l_full = do.call(qpci, qpci_arg)
+invertci_arg$farg = farg_l_full
+invertci_l_full = do.call(invertci, invertci_arg)
 
 ### limSolve & Two moments
-qpci_arg$farg = farg_l_twom
-qpci_l_twom = do.call(qpci, qpci_arg)
+invertci_arg$farg = farg_l_twom
+invertci_l_twom = do.call(invertci, invertci_arg)
 
 ##------------------------------------------------------------------------------
 ## Test 1: Test equivalence of two moments approach and full information 
@@ -179,17 +179,17 @@ ci_test <- function(dkqs_return1, dkqs_return2, dp){
 
 # Gurobi
 test_that("Gurobi solver",{
-  ci_test(qpci_g_full, qpci_g_twom, dp)
+  ci_test(invertci_g_full, invertci_g_twom, dp)
 })
 
 # Rcplex solver
 test_that("Rcplex solver",{
-  ci_test(qpci_r_full, qpci_r_twom, dp)
+  ci_test(invertci_r_full, invertci_r_twom, dp)
 })
 
 # limSolve solver
 test_that("limSolve solver",{
-  ci_test(qpci_l_full, qpci_l_twom, dp)
+  ci_test(invertci_l_full, invertci_l_twom, dp)
 })
 
 ##------------------------------------------------------------------------------
@@ -199,20 +199,20 @@ test_that("limSolve solver",{
 
 # Full information approach
 test_that("Full information approach - Gurobi vs Rcplex",{
-  ci_test(qpci_g_full, qpci_r_full, dp)
+  ci_test(invertci_g_full, invertci_r_full, dp)
 })
 
 test_that("Full information approach - Rcplex vs limSolve",{
-  ci_test(qpci_r_full, qpci_l_full, dp)
+  ci_test(invertci_r_full, invertci_l_full, dp)
 })
 
 # Two moments approach
 test_that("Two moments approach - Gurobi vs Rcplex",{
-  ci_test(qpci_g_twom, qpci_r_twom, dp)
+  ci_test(invertci_g_twom, invertci_r_twom, dp)
 })
 
 test_that("Two moments approach - Rcplex vs limSolve",{
-  ci_test(qpci_r_twom, qpci_l_twom, dp)
+  ci_test(invertci_r_twom, invertci_l_twom, dp)
 })
 
 
