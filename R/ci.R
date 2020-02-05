@@ -43,7 +43,7 @@
 #' 
 #' @export 
 #' 
-qpci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL, 
+invertci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL, 
                  ub1 = NULL, tol = .0001, max_iter = 20, df_ci = NULL,
                  progress = FALSE){
   
@@ -51,8 +51,8 @@ qpci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
   # Obtain call information
   call = match.call()
   # Check and update
-  check_return = qpci_check(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max_iter, 
-                            df_ci, progress)
+  check_return = invertci_check(f, farg, alpha, lb0, lb1, ub0, ub1, tol, 
+                                max_iter, df_ci, progress)
   # Updates the dependencies
   df_ci = check_return$df_ci
   lb0 = check_return$lb0
@@ -104,7 +104,7 @@ qpci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
                 tol = tol,
                 iter = down_return$iter + up_return$iter,
                 call = call)
-  attr(output, "class") = "qpci"
+  attr(output, "class") = "invertci"
   
   invisible(output)
 }
@@ -123,7 +123,7 @@ qpci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
 #' @param dp Number of decimal places to be displayed for the \eqn{p}-values
 #'    and confidence intervals in the messages if \code{progress} is set 
 #'    as \code{TRUE}.
-#' @inheritParams qpci
+#' @inheritParams invertci
 #' 
 #' @return Return the solution of the bisection method and the updated 
 #'    data frame.
@@ -237,7 +237,7 @@ ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci,
 #'    by the user. The function will compute the \eqn{p}-value if it has been 
 #'    evaluated. Otherwise, it will use the previous data.
 #' 
-#' @inheritParams qpci
+#' @inheritParams invertci
 #' @param pt Point to be evaluated in the bisection method.
 #' 
 #' @return Returns the \eqn{p}-value of the point considered and an updated
@@ -278,7 +278,7 @@ bisec_eval <- function(f, farg, pt, df_ci){
 #'    method.
 #'    
 #' @param pval \eqn{p}-value of the test statistic.
-#' @inheritParams qpci
+#' @inheritParams invertci
 #' @inheritParams ci_bisection
 #' 
 #' @return Returns whether the part of the interval to be selected in the 
@@ -306,16 +306,16 @@ ci_inout <- function(pval, alpha, type){
   return(part)
 }
 
-#' Checks and updates the input of the function \code{qpci}
+#' Checks and updates the input of the function \code{invertci}
 #' 
 #' @description This function checks and updates the input from the user for 
-#'    the function \code{qpci}. If there is any invalid input, this function 
+#'    the function \code{invertci}. If there is any invalid input, this function 
 #'    will terminate the procedure and generate appropriate error messages.
 #'    
-#' @inheritParams qpci
+#' @inheritParams invertci
 #' 
 #' @return Returns the updated value of the parameters back to the function 
-#'    \code{qpci} in the correct format.
+#'    \code{invertci} in the correct format.
 #'    \item{df_ci}{Data frame that stores the points that has been evaluated
 #'       and the corresponding \eqn{p}-values.}
 #'    \item{lb0}{Logical lower bound for the confidence interval.}
@@ -325,7 +325,7 @@ ci_inout <- function(pval, alpha, type){
 #' 
 #' @export
 #' 
-qpci_check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max_iter, 
+invertci_check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max_iter, 
                        df_ci, progress){
 
   #### Part 1. Check f
@@ -474,7 +474,7 @@ qpci_check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max_iter,
 #' @description This function computes the logical upper and lower bounds for
 #'    the test \code{dkqs_cone}.
 #'    
-#' @inheritParams qpci
+#' @inheritParams invertci
 #' 
 #' @return Returns the logical upper and lower bounds for dkqs_cone.
 #'    \item{lb0}{Logical lower bound for \code{dkqs_cone}.}
@@ -498,7 +498,7 @@ dkqs_cone_logicalb <- function(f, farg){
 }
 
 
-#' Wrapper function for \code{qpci}
+#' Wrapper function for \code{invertci}
 #' 
 #' @description This function serves a wrapper function for computing 
 #'    confidence interval with many significance levels.
@@ -506,20 +506,20 @@ dkqs_cone_logicalb <- function(f, farg){
 #' @param alphas The list of significance levels to be used in constructing
 #'    the confidence intervals.
 #' @param progress_one The boolean variable for whether the result messages 
-#'    should be displayed in running the function \code{qpci}. If it is set as 
+#'    should be displayed in running the function \code{invertci}. If it is set as 
 #'    \code{TRUE}, the messages are displayed throughout the procedure. 
 #'    Otherwise, the messages will not be displayed.
 #' @param progress_many The boolean variable for whether the result messages 
-#'    should be displayed in running the function \qpci{many_qpci}, i.e. the 
+#'    should be displayed in running the function \code{many_invertci}, i.e. the 
 #'    current function. If it is set as \code{TRUE}, the messages are displayed 
 #'    throughout the procedure. Otherwise, the essages will not be displayed.
-#' @inheritParams qpci 
+#' @inheritParams invertci 
 #' 
 #' @return Returns a list of confidence intervals.
 #' 
 #' @export
 #' 
-many_qpci <- function(f, farg, alphas = c(.05), lb0 = NULL, lb1 = NULL, 
+many_invertci <- function(f, farg, alphas = c(.05), lb0 = NULL, lb1 = NULL, 
                       ub0 = NULL, ub1 = NULL, tol = NULL, max_iter = 10, 
                       df_ci = NULL, progress_one = FALSE, 
                       progress_many = FALSE){
@@ -539,22 +539,22 @@ many_qpci <- function(f, farg, alphas = c(.05), lb0 = NULL, lb1 = NULL,
   
   #### Step 3: For-loop to compute the confidence intervals
   for (i in 1:alpha_n){
-    # Call qpci to compute the confidence interval for a particular value of 
-    # alpha
+    # Call invertci to compute the confidence interval for a particular value 
+    # of alpha
     
-    qpci_return = qpci(f, farg, alphas[i], lb0, lb1, ub0, ub1, tol, max_iter, 
-                       df_ci, progress_one)
+    invertci_return = invertci(f, farg, alphas[i], lb0, lb1, ub0, ub1, tol, 
+                               max_iter, df_ci, progress_one)
     # Obtain result
     df_many_ci[i, "alpha"] = alphas[i]
-    df_many_ci[i, "up"] = qpci_return$up
-    df_many_ci[i, "down"] = qpci_return$down
+    df_many_ci[i, "up"] = invertci_return$up
+    df_many_ci[i, "down"] = invertci_return$down
     # Update data frame
-    df_ci = qpci_return$df_ci
+    df_ci = invertci_return$df_ci
     # Print result if progress_many == TRUE
     if (progress_many == TRUE){
       cat(paste("Confidence interval for significance level ", alphas[i], 
-                ": [", round(qpci_return$down, digits = 5), ", ", 
-                round(qpci_return$up, digits = 5),  "].\n", sep = ""))
+                ": [", round(invertci_return$down, digits = 5), ", ", 
+                round(invertci_return$up, digits = 5),  "].\n", sep = ""))
     }
   }
   
@@ -579,7 +579,7 @@ many_qpci <- function(f, farg, alphas = c(.05), lb0 = NULL, lb1 = NULL,
 #' @param b Upper bound of teh current interval. This is \code{NULL} if the
 #'    initial end-points are being evaluated.
 #' @param df_bis Data frame storing the information from the bisection method.
-#' @inheritParams qpci 
+#' @inheritParams invertci 
 #' 
 #' @return Return the updated data frame that stores the information for the
 #'    the iteration.
@@ -688,19 +688,19 @@ decimal_places <- function(x){
   }
 }
 
-#' Print results from \code{qpci}
+#' Print results from \code{invertci}
 #' 
 #' @description This function uses the print method on the return list of the
-#'    function \code{qpci}.
+#'    function \code{invertci}.
 #'    
-#' @param x Object returned from \code{qpci}.
+#' @param x Object returned from \code{invertci}.
 #' @param ... Additional arguments.
 #' 
-#' @return Print the basic set of results from \code{qpci}.
+#' @return Print the basic set of results from \code{invertci}.
 #' 
 #' @export
 #' 
-print.qpci <- function(x, ...){
+print.invertci <- function(x, ...){
   cat(sprintf("Total number of iterations: %s.\n", round(x$iter, digits = 5)))  
   cat(sprintf("Tolerance level: %s.\n", round(x$tol, digits = 5)))
   cat(sprintf("Confidence interval: [%s, %s].\n", 
@@ -708,19 +708,19 @@ print.qpci <- function(x, ...){
               round(x$up, digits = 5)))
 }
 
-#' Summary of results from \code{qpci}
+#' Summary of results from \code{invertci}
 #' 
 #' @description This function uses the print method on the return list of the
-#'    function \code{qpci}.
+#'    function \code{invertci}.
 #'    
-#' @param x Object returned from \code{qpci}.
+#' @param x Object returned from \code{invertci}.
 #' @param ... Additional arguments.
 #' 
-#' @return Print the summary of the basic set of results from \code{qpci}.
+#' @return Print the summary of the basic set of results from \code{invertci}.
 #' 
 #' @export
 #' 
-summary.qpci <- function(x, ...){
+summary.inverci <- function(x, ...){
   #### Part 1: Display what has been the function
   cat("Call:\n")
   dput(x$call)
@@ -748,8 +748,8 @@ summary.qpci <- function(x, ...){
 
 #' Print results in constructing bounds in bisection method
 #' 
-#' @description This function is used inside the \code{summary.qpci} to print
-#'    the results in each step of the bisection method.
+#' @description This function is used inside the \code{summary.invertci} to 
+#'    print the results in each step of the bisection method.
 #' 
 #' @inheritParams bisec_print
 #' 
