@@ -297,7 +297,7 @@ dkqs_cone(df = sampledata,
           bs_num = 100,
           p_sig = 2,
           tau_input = tau,
-          solver = gurobi,
+          solver = "gurobi",
           cores = 1,
           progress = TRUE)
 ```
