@@ -1049,7 +1049,7 @@ print.dkqs <- function(x, ...){
 #' Summary of results from \code{dkqs}
 #' 
 #' @description This function uses the print method on the return list of the
-#'    function \code{dkqs}.
+#'    function \code{dkqs}. This is a wrapper of the \code{print} command.
 #'    
 #' @param x Object returned from \code{dkqs}.
 #' @param ... Additional arguments.
