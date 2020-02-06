@@ -29,10 +29,10 @@
 #'    \item{df_ci}{data frame that consists of the points and the corresponding
 #'       \eqn{p}-values that have been tested in constructing the confidence 
 #'       intervals.}
-#'    \item{df_up}{Data frame storing the information for the bisection 
+#'    \item{df_ub}{Data frame storing the information for the bisection 
 #'       method in each iteration when evaluating the upper bound of the 
 #'       confidence interval.}
-#'    \item{df_down}{Data frame storing the information for the bisection 
+#'    \item{df_lb}{Data frame storing the information for the bisection 
 #'       method in each iteration when evaluating the lower bound of the 
 #'       confidence interval.}
 #'    \item{tol}{Tolerance level in the bisection method.}
@@ -69,48 +69,48 @@ invertci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
   if (progress == TRUE){
     cat("\n=== Computing upper bound of confidence interval ===\n")
   }
-  up_return = ci_bisection(f, farg, alpha, ub1, ub0, tol, max_iter, df_ci, 
+  ub_return = ci_bisection(f, farg, alpha, ub1, ub0, tol, max_iter, df_ci, 
                            progress, 1, dp)
   # Update data frame
-  df_ci = up_return$df_ci
+  df_ci = ub_return$df_ci
   # Data frame storing all messages in each iteration
-  df_up = up_return$df_bis
+  df_ub = ub_return$df_bis
   # Obtain termination message
-  termination_ub = up_return$last_iter_msg
+  termination_ub = ub_return$last_iter_msg
   
   ### Compute lower bound of confidence interval
   if (progress == TRUE){
     cat("\n=== Computing lower bound of confidence interval ===\n")
   }
-  down_return = ci_bisection(f, farg, alpha, lb0, lb1, tol, max_iter, df_ci, 
+  lb_return = ci_bisection(f, farg, alpha, lb0, lb1, tol, max_iter, df_ci, 
                              progress, -1, dp)
   # Update data frame
-  df_ci = down_return$df_ci
+  df_ci = lb_return$df_ci
   # Data frame storing all messages in each iteration
-  df_down = down_return$df_bis
+  df_lb = lb_return$df_bis
   # Obtain termination message
-  termination_lb = down_return$last_iter_msg
+  termination_lb = lb_return$last_iter_msg
   
   #### Step 3: Print confidence interval and return results
   if (progress == TRUE){
     cat("-----------------------------------\n")
     cat(paste("Total number of iterations: ", 
-              down_return$iter + up_return$iter, ".\n", sep = ""))
+              lb_return$iter + ub_return$iter, ".\n", sep = ""))
     cat(paste("Tolerance level: ", tol, ".\n", sep = ""))
     cat(paste("Confidence interval: [", 
-              round(down_return$pt, digits = dp), ", ", 
-              round(up_return$pt, digits = dp), "].\n", sep = "")) 
+              round(lb_return$pt, digits = dp), ", ", 
+              round(ub_return$pt, digits = dp), "].\n", sep = "")) 
   }
   
   # Assign the return list
-  output = list(up = up_return$pt,
-                down = down_return$pt,
+  output = list(ub = ub_return$pt,
+                lb = lb_return$pt,
                 df_ci = df_ci,
-                df_up = df_up,
-                df_down = df_down,
+                df_ub = df_ub,
+                df_lb = df_lb,
                 tol = tol,
                 alpha = alpha,
-                iter = down_return$iter + up_return$iter,
+                iter = lb_return$iter + ub_return$iter,
                 call = call,
                 termination_ub = termination_ub,
                 termination_lb = termination_lb)
@@ -716,8 +716,8 @@ print.invertci <- function(x, ...){
   cat(sprintf("Total number of iterations: %s.\n", round(x$iter, digits = 5)))  
   cat(sprintf("Tolerance level: %s.\n", round(x$tol, digits = 5)))
   cat(sprintf("Confidence interval: [%s, %s].\n", 
-              round(x$down, digits = 5),
-              round(x$up, digits = 5)))
+              round(x$lb, digits = 5),
+              round(x$ub, digits = 5)))
 }
 
 #' Summary of results from \code{invertci}
@@ -746,8 +746,8 @@ summary.invertci <- function(x, ...){
   cat("=== Iterations in constructing upper bound:\n")
   cat(paste0("Iteration\t Test point \t Lower bound \t ",
   "Upper bound \t p-value\t Decision\n"))
-  for(i in 1:nrow(x$df_up)){
-    summary_bisection_print(x$df_up, i)
+  for(i in 1:nrow(x$df_ub)){
+    summary_bisection_print(x$df_ub, i)
   }
   cat(x$termination_ub)
   cat("\n\n")  
@@ -756,8 +756,8 @@ summary.invertci <- function(x, ...){
   cat("=== Iterations in constructing lower bound:\n")
   cat(paste0("Iteration\t Test point \t Lower bound \t ",
              "Upper bound \t p-value\t Decision\n"))
-  for(i in 1:nrow(x$df_down)){
-    summary_bisection_print(x$df_down, i)
+  for(i in 1:nrow(x$df_lb)){
+    summary_bisection_print(x$df_lb, i)
   }
   cat(x$termination_lb)
   cat("\n\n")  
