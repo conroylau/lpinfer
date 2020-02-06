@@ -2,6 +2,8 @@
 #' 
 #' @description This function constructs the confidence interval using the
 #'    bisection method. 
+#'    
+#' @import parallel foreach doMC
 #' 
 #' @param f Function that represents a testing procedure.
 #' @param farg List of arguments to be passed to the function of testing 

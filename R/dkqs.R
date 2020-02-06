@@ -5,7 +5,7 @@
 #'    cone-tightening procedure proposed by Deb, Kitamura, Quah and
 #'    Stoye (2018).
 #'    
-#' @import gurobi cplexAPI Rcplex Momocs limSolve foreach doMC
+#' @import gurobi cplexAPI Rcplex Momocs limSolve foreach doMC parallel
 #'
 #' @param df The data being used in the inference.
 #' @param A_obs The "observed matrix" in the inference \eqn{A_{\mathrm{obs}}.
@@ -342,7 +342,7 @@ gurobi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
   
   ### Step 3: Result of the linear or quadratic program, and return result
   params = list(OutputFlag=0)
-  solution = gurobi(model, params)
+  solution = gurobi::gurobi(model, params)
   return(list(objval = as.numeric(solution$objval),
               x = as.numeric(solution$x)))
 }
@@ -376,8 +376,8 @@ cplexapi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
   sense[sense == "=="] = "E"
   sense[sense == "="] = "E"
   # Bounds
-  lb[lb == Inf] = CPX_INFBOUND
-  lb[lb == -Inf] = -CPX_INFBOUND
+  lb[lb == Inf] = cplexAPI::CPX_INFBOUND
+  lb[lb == -Inf] = -cplexAPI::CPX_INFBOUND
   ub = rep(CPX_INFBOUND, length(lb))
   
   ### Step 3: cplexAPI environment
@@ -399,27 +399,28 @@ cplexapi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
   # A linear program is identified if obj2 == NULL
   if (is.null(obj2) == TRUE){
     # Solving linear program
-    copyLpwNamesCPLEX(env,
-                      prob,
-                      ncol(A),
-                      nrow(A),
-                      modelsense,
-                      objective_return$obj1,
-                      rhs,
-                      sense,
-                      beg,
-                      cnt,
-                      ind,
-                      val,
-                      lb,
-                      ub)
-    lpoptCPLEX(env, prob)
-    solution = solutionCPLEX(env, prob)
+    cplexAPI::copyLpwNamesCPLEX(env,
+                                prob,
+                                ncol(A),
+                                nrow(A),
+                                modelsense,
+                                objective_return$obj1,
+                                rhs,
+                                sense,
+                                beg,
+                                cnt,
+                                ind,
+                                val,
+                                lb,
+                                ub)
+    cplexAPI::lpoptCPLEX(env, prob)
+    solution = cplexAPI::solutionCPLEX(env, prob)
   } else {
     # Solving quadratic program
     stop("This version can only solve linear programs by CPLEX at the moment. 
          Please use another solver for quadratic progarms.")
   }
+  cplexAPI::closeEnvCPLEX(env)
   return(list(objval = as.numeric(solution$objval),
               x = as.numeric(solution$x)))
 }
@@ -462,7 +463,7 @@ rcplex_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
   }
   
   ### Step 3: Solve model
-  solution = Rcplex(cvec = t(objective_return$obj1),
+  solution = Rcplex::Rcplex(cvec = t(objective_return$obj1),
                     Amat = A, 
                     bvec = rhs,
                     Qmat = Qmat,
@@ -539,7 +540,8 @@ limsolve_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
   if (is.null(objective_return$obj2) == TRUE | 
       sum(objective_return$obj2 == 0) == length(objective_return$obj2)){
     ### Linear program solver
-    solution = linp(E = Emat, F = Fvec, G = Gmat, H = Hvec, Cost = fcost)
+    solution = limSolve::linp(E = Emat, F = Fvec, G = Gmat, H = Hvec, 
+                              Cost = fcost)
     # Obtain objective function, and add back the constant term, negate the 
     # solution if it is a max problem
     if (modelsense == "max"){
@@ -553,8 +555,8 @@ limsolve_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
       # Formulate the two matrices
       Amat = Af * sqrt(nf)
       Bvec = bf * sqrt(nf)
-      solution = lsei(A = Amat, B = Bvec, E = Emat, F = Fvec, G = Gmat, 
-                      H = Hvec)
+      solution = limSolve::lsei(A = Amat, B = Bvec, E = Emat, F = Fvec, 
+                                G = Gmat, H = Hvec)
       # Obtain objective function
       objval = solution$solutionNorm
     } else if (modelsense == "max"){
@@ -664,8 +666,7 @@ beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs,
     #### Step 1: Set the seed
     set.seed(bs_seed + i)
     ####  Step 2: Draw the subsample
-    #df_bs = as.data.frame(resample_bootstrap(as.data.frame(df)))
-    df_bs = as.data.frame(sample_n(df, n, replace = TRUE))
+    df_bs = as.data.frame(Momocs::sample_n(df, n, replace = TRUE))
     # Re-index the rows
     rownames(df_bs) = 1:nrow(df_bs)
     ####  Step 3: Compute the bootstrap estimates
@@ -708,7 +709,7 @@ beta_bs_parallel <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt,
                              cores){
   #### Step 1: Register the number of cores and extract information
   # Register core
-  registerDoMC(cores)
+  doMC::registerDoMC(cores)
   # Computer dimension
   beta_bs_nrow = length(beta_obs_hat)
   # Initialize data frames
@@ -721,12 +722,16 @@ beta_bs_parallel <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt,
                                                       function(y) y[[i]])))
   }
   
+  # Assign dopar
+  `%dopar%` = foreach::`%dopar%`
+  
   # Parallelized for-loop below
-  listans = foreach(i=1:bs_num, .multicombine = TRUE, .combine="comb") %dopar% {
+  listans = foreach::foreach(i=1:bs_num, .multicombine = TRUE, 
+                             .combine="comb") %dopar% {
     #### Step 2: Set the seed
     set.seed(bs_seed + i)
     ####  Step 3: Draw the subsample
-    df_bs = as.data.frame(sample_n(df, n, replace = TRUE))
+    df_bs = as.data.frame(Momocs::sample_n(df, n, replace = TRUE))
     # Re-index the rows
     rownames(df_bs) = 1:nrow(df_bs)
     ####  Step 4: Compute the bootstrap estimates
@@ -1009,8 +1014,8 @@ dkqs_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
     warning(paste("The number of cores used in the parallelization ('cores')",
                   "has to be a positive integer.\n"))
     warning("Parallelization is not used in constructing the bootstrap.\n") 
-    cores = 1
-  } else if (cores > detectCores()){
+    cores = 1 
+  } else if (cores > parallel::detectCores()){
     # Case 2: Number of cores provided > number of cores in the computer
     warning(paste("The number of cores provided is greater than the number of",
                   "cores in the computer.\n"))  
