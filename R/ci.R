@@ -75,6 +75,9 @@ invertci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
   df_ci = up_return$df_ci
   # Data frame storing all messages in each iteration
   df_up = up_return$df_bis
+  # Obtain termination message
+  termination_ub = up_return$last_iter_msg
+  
   ### Compute lower bound of confidence interval
   if (progress == TRUE){
     cat("\n=== Computing lower bound of confidence interval ===\n")
@@ -85,6 +88,8 @@ invertci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
   df_ci = down_return$df_ci
   # Data frame storing all messages in each iteration
   df_down = down_return$df_bis
+  # Obtain termination message
+  termination_lb = down_return$last_iter_msg
   
   #### Step 3: Print confidence interval and return results
   if (progress == TRUE){
@@ -104,8 +109,11 @@ invertci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
                 df_up = df_up,
                 df_down = df_down,
                 tol = tol,
+                alpha = alpha,
                 iter = down_return$iter + up_return$iter,
-                call = call)
+                call = call,
+                termination_ub = termination_ub,
+                termination_lb = termination_lb)
   attr(output, "class") = "invertci"
   
   invisible(output)
@@ -143,15 +151,14 @@ ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci,
   
   #### Step 1: Evaluate the end-points and the mid-point of b0 and b1
   # Initialize data frame to collect the information in the bisection method
-  df_bis = data.frame(matrix(vector(), 0, 7,
+  df_bis = data.frame(matrix(vector(), 0, 6,
                              dimnames=list(c(), 
                                            c("iteration", 
                                              "point",
                                              "left",
                                              "right",
                                              "p-value",
-                                             "decision",
-                                             "remark"))),
+                                             "decision"))),
                       stringsAsFactors=F)
 
   # Divide alpha by 2
@@ -162,6 +169,7 @@ ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci,
   fb0 = fb0_return$pval
   df_ci = fb0_return$df_ci
   # Print information
+  cat("Iteration\t Test point \t Lower bound \t Upper bound \t p-value\t Decision\n")
   df_bis = bisec_print("left end", alpha_2sided, fb0_return, a, "NA", progress, 
                        dp, df_bis)$df_bis
   
@@ -186,15 +194,15 @@ ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci,
 
   #### Step 2: Bisection method
   for (i in 1:max_iter){
-    tol_msg = paste("      * Length of interval is below tolerance level. ",
-                    "Bisection method is completed.\n", sep = "")
     # Bisection method complete if the difference between the two points is
     # below the tolereance level.
     if (abs(b-a) < tol){
+      tol_msg = paste(">>> Length of interval is below tolerance level. ",
+                      "Bisection method is completed.\n", sep = "")
+      last_iter_msg = ">>> Length of interval is below tolerance level"
       if (progress == TRUE){
         cat(tol_msg) 
       }
-      df_bis[nrow(df_bis), 7] = tol_msg
       break
     }
     # Update interval based on whether the left section or the section of the 
@@ -217,19 +225,21 @@ ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci,
   }
   
   # Only called when the maximum number of iterations is reached
-  iter_msg = paste("      * Reached the maximum number of iterations.\n", 
-                   sep = "")
+  iter_msg = paste(">>> Reached the maximum number of iterations. ",
+                   "Bisection method is completed.\n", sep = "") 
+  last_iter_msg = ">>> Reached maximum number of iterations"
   if (progress == TRUE & i == max_iter){
     cat(iter_msg) 
+    
   }
-  df_bis[nrow(df_bis), 7] = tol_msg
   
   #### Step 3: Return results
   # Return the results
   invisible(list(pt = c,
                  iter = i,
                  df_ci = df_ci,
-                 df_bis = df_bis))
+                 df_bis = df_bis,
+                 last_iter_msg = last_iter_msg))
 }
 
 #' Evaluation of test statistic and check if the point has been evaluated
@@ -609,58 +619,58 @@ bisec_print <- function(procedure, alphahalf, returnlist, a, b, progress, dp,
     #### Step 2: Print the iteration
     if (is.numeric(procedure) == FALSE){
       # Case A: 'procedure' is not numeric if evaluating the initial 3 points
-      cat(paste0(">>> Evaluating the first ", procedure, "-point\n"))
+      # cat(paste0(">>> Evaluating the first ", procedure, "-point\n"))
       if (procedure == "left end"){
-        cat(paste0(space6, "* Point being evaluated: ", 
-                   round(a, digits = dp), "\n"))  
+        # cat(paste0(space6, "* Point being evaluated: ", 
+        #            round(a, digits = dp), "\n"))  
         df_bis[df_bis_row + 1, 2] = a
       } else if (procedure == "right end"){
-        cat(paste0(space6, "* Point being evaluated: ", 
-                   round(b, digits = dp), "\n")) 
+        # cat(paste0(space6, "* Point being evaluated: ", 
+        #            round(b, digits = dp), "\n")) 
         df_bis[df_bis_row + 1, 2] = b
       }
     } else {
       # Case B: 'procedure' is numeric if evaluating the bisection method
-      cat(paste0(">>> Iteration ", procedure, "\n"))   
-      cat(paste0(space6, "* Point being evaluated: ", 
-                 round((a+b)/2, digits = dp), "\n"))
+      # cat(paste0(">>> Iteration ", procedure, "\n"))   
+      # cat(paste0(space6, "* Point being evaluated: ", 
+      #            round((a+b)/2, digits = dp), "\n"))
       df_bis[df_bis_row + 1, 2] = (a+b)/2
     }
     
     #### Step 3: Print the p-value  
-    cat(paste0(space6, "* p-value: ", 
-               round(returnlist$pval, digits = dp), "\n"))
+    # cat(paste0(space6, "* p-value: ", 
+    #            round(returnlist$pval, digits = dp), "\n"))
     
     #### Step 4: Print the decision
-    cat(paste0(space6, "* Decision: ", decision, "\n")) 
+    # cat(paste0(space6, "* Decision: ", decision, "\n")) 
     
     #### Step 5: Print the current interval
     if (procedure != "left end" & procedure != "right end"){
-      cat(paste0(space6, "* Current interval: [", 
-                 round(a, digits = dp), ", ", 
-                 round(b, digits = dp), "]\n"))  
+      # cat(paste0(space6, "* Current interval: [", 
+      #            round(a, digits = dp), ", ", 
+      #            round(b, digits = dp), "]\n"))  
     }
   }
   
   #### Step 6: Update data frame
   # Update column 1, i.e. whether evaluating end-points or iterations
   if (procedure == "left end"){
-    df_bis[df_bis_row + 1,1] = "Left end-point"
+    df_bis[df_bis_row + 1,1] = "Left end-pt."
   } else if (procedure == "right end"){
-    df_bis[df_bis_row + 1,1] = "Right end-point"
+    df_bis[df_bis_row + 1,1] = "Right end-pt."
   } else if (is.numeric(procedure) == TRUE){
     df_bis[df_bis_row + 1,1] = procedure
   }
-  
   
   df_bis[df_bis_row + 1, 3] = a
   df_bis[df_bis_row + 1, 4] = b
   df_bis[df_bis_row + 1, 5] = returnlist$pval
   df_bis[df_bis_row + 1, 6] = decision
-  # Column 6 is used to store |b-a|<tol or max. iteration is reached
-  df_bis[df_bis_row + 1, 7] = ""
+
+  #### Step 7: Print information
+  summary_bisection_print(df_bis, df_bis_row + 1)
   
-  #### Step 7: Return information
+  #### Step 8: Return information
   invisible(list(df_bis = df_bis))
 }
 
@@ -722,36 +732,42 @@ print.invertci <- function(x, ...){
 #' 
 #' @export
 #' 
-summary.inverci <- function(x, ...){
+summary.invertci <- function(x, ...){
   #### Part 1: Display what has been the function
   cat("Call:\n")
   dput(x$call)
   cat("\n")
   
   #### Part 2: Basic results
-  cat(sprintf("Total number of iterations: %s.\n", round(x$iter, digits = 5)))  
-  cat("\n")
-  cat(sprintf("Tolerance level: %s.\n", round(x$tol, digits = 5)))
-  cat("\n")
-  cat(sprintf("Confidence interval: [%s, %s].\n", 
-              round(x$down, digits = 5),
-              round(x$up, digits = 5)))
+  cat(sprintf("Significance level: %s.\n", round(x$alpha, digits = 5)))  
   cat("\n")
   
   #### Part 3: Messages in constructing the upper bound
   cat("=== Iterations in constructing upper bound:\n")
-  summary_bisection_print(x$df_up)
-
+  cat(paste0("Iteration\t Test point \t Lower bound \t ",
+  "Upper bound \t p-value\t Decision\n"))
+  for(i in 1:nrow(x$df_up)){
+    summary_bisection_print(x$df_up, i)
+  }
+  cat(x$termination_ub)
+  cat("\n\n")  
+  
   #### Part 4: Messages in constructing the lower bound
   cat("=== Iterations in constructing lower bound:\n")
-  summary_bisection_print(x$df_down)
-  cat("\n")  
+  cat(paste0("Iteration\t Test point \t Lower bound \t ",
+             "Upper bound \t p-value\t Decision\n"))
+  for(i in 1:nrow(x$df_down)){
+    summary_bisection_print(x$df_down, i)
+  }
+  cat(x$termination_lb)
+  cat("\n\n")  
 }
 
 #' Print results in constructing bounds in bisection method
 #' 
-#' @description This function is used inside the \code{summary.invertci} to 
-#'    print the results in each step of the bisection method.
+#' @description This function is used to display the message when constructing
+#'    the bounds and used in \code{summary.invertci} to print the results in 
+#'    each step of the bisection method.
 #' 
 #' @inheritParams bisec_print
 #' 
@@ -759,39 +775,44 @@ summary.inverci <- function(x, ...){
 #' 
 #' @export
 #' 
-summary_bisection_print <- function(df_bis){
+summary_bisection_print <- function(df_bis, i){
   
-  #### Step 1: Count the number of rows
-  df_row = nrow(df_bis)
-  
-  #### Step 2: Print the results
-  for (i in 1:df_row){
-    # Part A: Display what point it is evaluating
-    if (df_bis[i,1] == "Left end-point"){
-      cat(">>> Evaluating the first left end-point\n")
-    } else if (df_bis[i,1] == "Right end-point"){
-      cat(">>> Evaluating the first right end-point\n")
-    } else {
-      cat(sprintf(">>> Iteration %s\n", df_bis[i,1]))
-    }
-    # Part B: Point being evaluated
-    cat(sprintf("      * Point being evaluated: %s. \n", df_bis[i,2]))
-    # Part C: Print the p-value  
-    cat(sprintf("      * p-value: %s. \n", df_bis[i,5]))
-    # Part D: Print the decision of reject or do not reject
-    cat(sprintf("      * Decision: %s. \n", df_bis[i,6]))
-    # Part E: Print the current interval
-    if (df_bis[i,1] != "Left end-point" & df_bis[i,1] != "Right end-point"){
-      cat(sprintf("      * Confidence interval: [%s, %s].\n", 
-                  round(as.numeric(df_bis[i,3]), digits = 5),
-                  round(as.numeric(df_bis[i,4]), digits = 5)))
-    }
-    # Part E: Print special message, if any
-    if (df_bis[i,6] != ""){
-      cat(sprintf("%s\n", df_bis[i,7]))
-    }
+  ### Data cleaning
+  print_iter1 = df_bis[i, 1]
+  if (print_iter1 == "Left end-pt." | print_iter1 == "Right end-pt."){
+    print_iter1 = paste(print_iter1, "\t")
+  } else {
+    print_iter1 = paste(print_iter1, "\t\t")
   }
-  cat("\n")
+  
+  print_iter2 = df_bis[i, 2]
+  
+  print_iter3 = df_bis[i, 3]
+  if (print_iter3 != "NA"){
+    print_iter3 = format(round(as.numeric(print_iter3), digits = 5), nsmall = 5)
+  } else {
+    print_iter3 = "NA\t"
+  }
+  
+  print_iter4 = df_bis[i, 4]
+  if (print_iter4 != "NA"){
+    print_iter4 = format(round(as.numeric(print_iter4), digits = 5), nsmall = 5)
+  } else {
+    print_iter4 = "NA\t"
+  }
+  
+  print_iter5 = format(round(as.numeric(df_bis[i, 5]), digits = 5), nsmall = 5)
+  
+  print_iter6 = df_bis[i, 6]
+  
+  ### Print results
+  cat(paste(print_iter1, 
+            format(round(print_iter2, digits = 5), nsmall = 5),"\t",
+            print_iter3,"\t",
+            print_iter4,"\t",
+            print_iter5,"\t",
+            print_iter6,"\t\n"))
+  
 }
 
 
