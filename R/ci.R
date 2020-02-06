@@ -196,9 +196,9 @@ ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci,
   df_bis = data.frame(matrix(vector(), 0, 6,
                              dimnames=list(c(), 
                                            c("iteration", 
-                                             "point",
                                              "left",
                                              "right",
+                                             "point",
                                              "p-value",
                                              "decision"))),
                       stringsAsFactors=F)
@@ -211,7 +211,7 @@ ci_bisection <- function(f, farg, alpha, b0, b1, tol, max_iter, df_ci,
   fb0 = fb0_return$pval
   df_ci = fb0_return$df_ci
   # Print information
-  cat("Iteration\t Test point \t Lower bound \t Upper bound \t p-value\t Decision\n")
+  cat("Iteration\t Lower bound \t Upper bound \t Test point \t p-value\t Reject?\n")
   df_bis = bisec_print("left end", alpha_2sided, fb0_return, a, "NA", progress, 
                        dp, df_bis)$df_bis
   
@@ -585,9 +585,9 @@ bisec_print <- function(procedure, alphahalf, returnlist, a, b, progress, dp,
   space6 = "      "
   # Update decision
   if (returnlist$pval < alphahalf){
-    decision = "Reject"
+    decision = TRUE
   } else {
-    decision = "Do not reject"
+    decision = FALSE
   }
   
   
@@ -599,13 +599,13 @@ bisec_print <- function(procedure, alphahalf, returnlist, a, b, progress, dp,
       if (procedure == "left end"){
         # cat(paste0(space6, "* Point being evaluated: ", 
         #            round(a, digits = dp), "\n"))  
-        df_bis[df_bis_row + 1, 2] = a
+        df_bis[df_bis_row + 1, 4] = a
       } else if (procedure == "right end"){
-        df_bis[df_bis_row + 1, 2] = b
+        df_bis[df_bis_row + 1, 4] = b
       }
     } else {
       # Case B: 'procedure' is numeric if evaluating the bisection method
-      df_bis[df_bis_row + 1, 2] = (a+b)/2
+      df_bis[df_bis_row + 1, 4] = (a+b)/2
     }
     
   }
@@ -613,15 +613,15 @@ bisec_print <- function(procedure, alphahalf, returnlist, a, b, progress, dp,
   #### Step 5: Update data frame
   # Update column 1, i.e. whether evaluating end-points or iterations
   if (procedure == "left end"){
-    df_bis[df_bis_row + 1,1] = "Left end-pt."
+    df_bis[df_bis_row + 1,1] = "Left end pt."
   } else if (procedure == "right end"){
-    df_bis[df_bis_row + 1,1] = "Right end-pt."
+    df_bis[df_bis_row + 1,1] = "Right end pt."
   } else if (is.numeric(procedure) == TRUE){
     df_bis[df_bis_row + 1,1] = procedure
   }
   
-  df_bis[df_bis_row + 1, 3] = a
-  df_bis[df_bis_row + 1, 4] = b
+  df_bis[df_bis_row + 1, 2] = a
+  df_bis[df_bis_row + 1, 3] = b
   df_bis[df_bis_row + 1, 5] = returnlist$pval
   df_bis[df_bis_row + 1, 6] = decision
 
@@ -770,8 +770,8 @@ summary.invertci_single <- function(x, ...){
   
   #### Part 3: Messages in constructing the upper bound
   cat("=== Iterations in constructing upper bound:\n")
-  cat(paste0("Iteration\t Test point \t Lower bound \t ",
-             "Upper bound \t p-value\t Decision\n"))
+  cat(paste0("Iteration\t Lower bound \t Upper bound \t ",
+             "Test point \t p-value\t Reject?\n"))
   for(j in 1:nrow(x$df_ub)){
     summary_bisection_print(x$df_ub, j)
   }
@@ -780,8 +780,8 @@ summary.invertci_single <- function(x, ...){
   
   #### Part 4: Messages in constructing the lower bound
   cat("=== Iterations in constructing lower bound:\n")
-  cat(paste0("Iteration\t Test point \t Lower bound \t ",
-             "Upper bound \t p-value\t Decision\n"))
+  cat(paste0("Iteration\t Lower bound \t Upper bound \t ",
+             "Test point \t p-value\t Reject?\n"))
   for(j in 1:nrow(x$df_lb)){
     summary_bisection_print(x$df_lb, j)
   }
@@ -821,8 +821,8 @@ summary.invertci_multiple <- function(x, ...){
     
     #### Part 3: Messages in constructing the upper bound
     cat("=== Iterations in constructing upper bound:\n")
-    cat(paste0("Iteration\t Test point \t Lower bound \t ",
-               "Upper bound \t p-value\t Decision\n"))
+    cat(paste0("Iteration\t Lower bound \t Upper bound \t ",
+               "Test point \t p-value\t Reject?\n"))
     for(j in 1:nrow(x$df_ub[[i]])){
       summary_bisection_print(x$df_ub[[i]], j)
     }
@@ -831,8 +831,8 @@ summary.invertci_multiple <- function(x, ...){
     
     #### Part 4: Messages in constructing the lower bound
     cat("=== Iterations in constructing lower bound:\n")
-    cat(paste0("Iteration\t Test point \t Lower bound \t ",
-               "Upper bound \t p-value\t Decision\n"))
+    cat(paste0("Iteration\t Lower bound \t Upper bound \t ",
+               "Test point \t p-value\t Reject?\n"))
     for(j in 1:nrow(x$df_lb[[i]])){
       summary_bisection_print(x$df_lb[[i]], j)
     }
@@ -859,13 +859,18 @@ summary_bisection_print <- function(df_bis, i){
   
   ### Data cleaning
   print_iter1 = df_bis[i, 1]
-  if (print_iter1 == "Left end-pt." | print_iter1 == "Right end-pt."){
+  if (print_iter1 == "Left end pt." | print_iter1 == "Right end pt."){
     print_iter1 = paste(print_iter1, "\t")
   } else {
     print_iter1 = paste(print_iter1, "\t\t")
   }
   
   print_iter2 = df_bis[i, 2]
+  if (print_iter2 != "NA"){
+    print_iter2 = format(round(as.numeric(print_iter2), digits = 5), nsmall = 5)
+  } else {
+    print_iter2 = "NA\t"
+  }
   
   print_iter3 = df_bis[i, 3]
   if (print_iter3 != "NA"){
@@ -875,11 +880,6 @@ summary_bisection_print <- function(df_bis, i){
   }
   
   print_iter4 = df_bis[i, 4]
-  if (print_iter4 != "NA"){
-    print_iter4 = format(round(as.numeric(print_iter4), digits = 5), nsmall = 5)
-  } else {
-    print_iter4 = "NA\t"
-  }
   
   print_iter5 = format(round(as.numeric(df_bis[i, 5]), digits = 5), nsmall = 5)
   
@@ -887,9 +887,9 @@ summary_bisection_print <- function(df_bis, i){
   
   ### Print results
   cat(paste(print_iter1, 
-            format(round(print_iter2, digits = 5), nsmall = 5),"\t",
+            print_iter2,"\t",
             print_iter3,"\t",
-            print_iter4,"\t",
+            format(round(print_iter4, digits = 5), nsmall = 5),"\t",
             print_iter5,"\t",
             print_iter6,"\t\n"))
   
