@@ -56,61 +56,103 @@ invertci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
   check_return = invertci_check(f, farg, alpha, lb0, lb1, ub0, ub1, tol, 
                                 max_iter, df_ci, progress)
   # Updates the dependencies
-  df_ci = check_return$df_ci
   lb0 = check_return$lb0
   lb1 = check_return$lb1
   ub0 = check_return$ub0
   ub1 = check_return$ub1
   # Compute the number of decimal places in tol
   dp = decimal_places(tol)
+  # Initialize lists
+  df_ub_list = NULL
+  df_lb_list = NULL
+  termination_ub_list = NULL
+  termination_lb_list = NULL
+  ub_list = NULL
+  lb_list = NULL
+  iter_list = NULL
   
   #### Step 2: Return confidence interval and data frame
-  ### Compute upper bound of confidence interval
-  if (progress == TRUE){
-    cat("\n=== Computing upper bound of confidence interval ===\n")
-  }
-  ub_return = ci_bisection(f, farg, alpha, ub1, ub0, tol, max_iter, df_ci, 
-                           progress, 1, dp)
-  # Update data frame
-  df_ci = ub_return$df_ci
-  # Data frame storing all messages in each iteration
-  df_ub = ub_return$df_bis
-  # Obtain termination message
-  termination_ub = ub_return$last_iter_msg
   
-  ### Compute lower bound of confidence interval
-  if (progress == TRUE){
-    cat("\n=== Computing lower bound of confidence interval ===\n")
-  }
-  lb_return = ci_bisection(f, farg, alpha, lb0, lb1, tol, max_iter, df_ci, 
+  for (i in 1:length(alpha)){
+    df_ci = check_return$df_ci
+    cat(sprintf("< Constructing confidence interval for alpha = %s >\n", 
+                alpha[i]))
+    ### Compute upper bound of confidence interval
+    if (progress == TRUE){
+      cat("\n=== Computing upper bound of confidence interval ===\n")
+    }
+    ub_return = ci_bisection(f, farg, alpha[i], ub1, ub0, tol, max_iter, df_ci, 
+                             progress, 1, dp)
+    # Update data frame
+    df_ci = ub_return$df_ci
+    # Data frame storing all messages in each iteration
+    df_ub = ub_return$df_bis
+    # Obtain termination message
+    termination_ub = ub_return$last_iter_msg
+    # Obtain upper bound
+    ub = ub_return$pt
+    
+    ### Compute lower bound of confidence interval
+    if (progress == TRUE){
+      cat("\n=== Computing lower bound of confidence interval ===\n")
+    }
+    lb_return = ci_bisection(f, farg, alpha[i], lb0, lb1, tol, max_iter, df_ci, 
                              progress, -1, dp)
-  # Update data frame
-  df_ci = lb_return$df_ci
-  # Data frame storing all messages in each iteration
-  df_lb = lb_return$df_bis
-  # Obtain termination message
-  termination_lb = lb_return$last_iter_msg
+    # Update data frame
+    df_ci = lb_return$df_ci
+    # Data frame storing all messages in each iteration
+    df_lb = lb_return$df_bis
+    # Obtain termination message
+    termination_lb = lb_return$last_iter_msg
+    # Obtain lower bound
+    lb = lb_return$pt
+    
+    # Iterations 
+    iter = lb_return$iter + ub_return$iter
+    
+    #### Step 3: Print confidence interval and return results
+    if (progress == TRUE){
+      cat("-----------------------------------\n")
+      cat(paste("< Significance level: ", alpha[i], " >\n", sep = ""))
+      cat(paste("Tolerance level: ", tol, ".\n", sep = ""))
+      cat(paste("Total number of iterations: ", iter, ".\n", sep = ""))
+      cat(paste("Confidence interval: [", 
+                round(lb, digits = dp), ", ", 
+                round(ub, digits = dp), "].\n\n", sep = "")) 
+    }
+    
+    #### Step 4: Store information as list if alphas is a vector
+    if (length(alpha) > 1){
+      df_ub_list = c(df_ub_list, list(df_ub))
+      df_lb_list = c(df_lb_list, list(df_lb))
+      termination_ub_list = c(termination_ub_list, list(termination_ub))
+      termination_lb_list = c(termination_lb_list, list(termination_lb))
+      lb_list = c(lb_list, list(lb))
+      ub_list = c(ub_list, list(ub))
+      iter_list = c(iter_list, list(iter))
+    }
+  }
   
-  #### Step 3: Print confidence interval and return results
-  if (progress == TRUE){
-    cat("-----------------------------------\n")
-    cat(paste("Total number of iterations: ", 
-              lb_return$iter + ub_return$iter, ".\n", sep = ""))
-    cat(paste("Tolerance level: ", tol, ".\n", sep = ""))
-    cat(paste("Confidence interval: [", 
-              round(lb_return$pt, digits = dp), ", ", 
-              round(ub_return$pt, digits = dp), "].\n", sep = "")) 
+  #### Step 5: Rename variables for output
+  if (length(alpha) > 1){
+    df_lb = df_lb_list
+    df_ub = df_ub_list
+    termination_lb = termination_lb_list
+    termination_ub = termination_ub_list
+    lb = lb_list
+    ub = ub_list
+    iter = iter_list
   }
   
   # Assign the return list
-  output = list(ub = ub_return$pt,
-                lb = lb_return$pt,
+  output = list(ub = ub,
+                lb = lb,
                 df_ci = df_ci,
                 df_ub = df_ub,
                 df_lb = df_lb,
                 tol = tol,
                 alpha = alpha,
-                iter = lb_return$iter + ub_return$iter,
+                iter = iter,
                 call = call,
                 termination_ub = termination_ub,
                 termination_lb = termination_lb)
@@ -352,8 +394,8 @@ invertci_check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max_iter,
   }   
   
   #### Part 3. Check alpha
-  if ((is.numeric(alpha) == TRUE & length(alpha) == 1 & alpha >= 0 & 
-       alpha <= 1) == FALSE){
+  if ((is.numeric(alpha) == TRUE & sum(alpha >= 0) == length(alpha)
+       & sum(alpha <= 1) == length(alpha)) == FALSE){
     stop("The significance level ('alpha') has to be in the interval [0,1].", 
          call. = FALSE)
   }    
@@ -509,71 +551,6 @@ dkqs_logicalb <- function(f, farg){
                  ub0 = ub0))
 }
 
-
-#' Wrapper function for \code{invertci}
-#' 
-#' @description This function serves a wrapper function for computing 
-#'    confidence interval with many significance levels.
-#' 
-#' @param alphas The list of significance levels to be used in constructing
-#'    the confidence intervals.
-#' @param progress_one The boolean variable for whether the result messages 
-#'    should be displayed in running the function \code{invertci}. If it is set as 
-#'    \code{TRUE}, the messages are displayed throughout the procedure. 
-#'    Otherwise, the messages will not be displayed.
-#' @param progress_many The boolean variable for whether the result messages 
-#'    should be displayed in running the function \code{many_invertci}, i.e. the 
-#'    current function. If it is set as \code{TRUE}, the messages are displayed 
-#'    throughout the procedure. Otherwise, the essages will not be displayed.
-#' @inheritParams invertci 
-#' 
-#' @return Returns a list of confidence intervals.
-#' 
-#' @export
-#' 
-many_invertci <- function(f, farg, alphas = c(.05), lb0 = NULL, lb1 = NULL, 
-                      ub0 = NULL, ub1 = NULL, tol = NULL, max_iter = 10, 
-                      df_ci = NULL, progress_one = FALSE, 
-                      progress_many = FALSE){
-  
-  #### Step 1: Check input of alphas
-  if (!(is.numeric(alphas) == TRUE)) {
-    stop("The argument 'alphas' must be in numeric format.", call. = FALSE)
-  }  
-  
-  #### Step 2: Initialization and hard-coded information
-  # Count number of alphas
-  alpha_n = length(alphas)
-  # Empty data frame to collect the confidence intervals
-  df_many_ci = data.frame(matrix(vector(), 0, 3,
-                                 dimnames=list(c(), c("alpha", "down", "up"))),
-                          stringsAsFactors=F)
-  
-  #### Step 3: For-loop to compute the confidence intervals
-  for (i in 1:alpha_n){
-    # Call invertci to compute the confidence interval for a particular value 
-    # of alpha
-    
-    invertci_return = invertci(f, farg, alphas[i], lb0, lb1, ub0, ub1, tol, 
-                               max_iter, df_ci, progress_one)
-    # Obtain result
-    df_many_ci[i, "alpha"] = alphas[i]
-    df_many_ci[i, "up"] = invertci_return$up
-    df_many_ci[i, "down"] = invertci_return$down
-    # Update data frame
-    df_ci = invertci_return$df_ci
-    # Print result if progress_many == TRUE
-    if (progress_many == TRUE){
-      cat(paste("Confidence interval for significance level ", alphas[i], 
-                ": [", round(invertci_return$down, digits = 5), ", ", 
-                round(invertci_return$up, digits = 5),  "].\n", sep = ""))
-    }
-  }
-  
-  #### Step 4: Return result
-  invisible(list(df_many_ci = df_many_ci))
-}
-
 #' Print messages in bisection procedure and store results
 #' 
 #' @description This function prints the information in \code{ci\_bisection} 
@@ -619,40 +596,21 @@ bisec_print <- function(procedure, alphahalf, returnlist, a, b, progress, dp,
     #### Step 2: Print the iteration
     if (is.numeric(procedure) == FALSE){
       # Case A: 'procedure' is not numeric if evaluating the initial 3 points
-      # cat(paste0(">>> Evaluating the first ", procedure, "-point\n"))
       if (procedure == "left end"){
         # cat(paste0(space6, "* Point being evaluated: ", 
         #            round(a, digits = dp), "\n"))  
         df_bis[df_bis_row + 1, 2] = a
       } else if (procedure == "right end"){
-        # cat(paste0(space6, "* Point being evaluated: ", 
-        #            round(b, digits = dp), "\n")) 
         df_bis[df_bis_row + 1, 2] = b
       }
     } else {
       # Case B: 'procedure' is numeric if evaluating the bisection method
-      # cat(paste0(">>> Iteration ", procedure, "\n"))   
-      # cat(paste0(space6, "* Point being evaluated: ", 
-      #            round((a+b)/2, digits = dp), "\n"))
       df_bis[df_bis_row + 1, 2] = (a+b)/2
     }
     
-    #### Step 3: Print the p-value  
-    # cat(paste0(space6, "* p-value: ", 
-    #            round(returnlist$pval, digits = dp), "\n"))
-    
-    #### Step 4: Print the decision
-    # cat(paste0(space6, "* Decision: ", decision, "\n")) 
-    
-    #### Step 5: Print the current interval
-    if (procedure != "left end" & procedure != "right end"){
-      # cat(paste0(space6, "* Current interval: [", 
-      #            round(a, digits = dp), ", ", 
-      #            round(b, digits = dp), "]\n"))  
-    }
   }
   
-  #### Step 6: Update data frame
+  #### Step 5: Update data frame
   # Update column 1, i.e. whether evaluating end-points or iterations
   if (procedure == "left end"){
     df_bis[df_bis_row + 1,1] = "Left end-pt."
@@ -667,10 +625,10 @@ bisec_print <- function(procedure, alphahalf, returnlist, a, b, progress, dp,
   df_bis[df_bis_row + 1, 5] = returnlist$pval
   df_bis[df_bis_row + 1, 6] = decision
 
-  #### Step 7: Print information
+  #### Step 6: Print information
   summary_bisection_print(df_bis, df_bis_row + 1)
   
-  #### Step 8: Return information
+  #### Step 7: Return information
   invisible(list(df_bis = df_bis))
 }
 
@@ -713,11 +671,57 @@ decimal_places <- function(x){
 #' @export
 #' 
 print.invertci <- function(x, ...){
+  if (length(x$alpha) == 1){
+    print.invertci_single(x)
+  } else {
+    print.invertci_multiple(x)
+  }
+}
+
+#' Print results from \code{invertci} with a single alpha
+#' 
+#' @description This function uses the print method on the return list of the
+#'    function \code{invertci}.
+#'    
+#' @param x Object returned from \code{invertci}.
+#' @param ... Additional arguments.
+#' 
+#' @return Print the basic set of results from \code{invertci}.
+#' 
+#' @export
+#' 
+print.invertci_single <- function(x, ...){
+  cat(sprintf("< Significance level: %s >\n", round(x$alpha, digits = 5)))
   cat(sprintf("Total number of iterations: %s.\n", round(x$iter, digits = 5)))  
-  cat(sprintf("Tolerance level: %s.\n", round(x$tol, digits = 5)))
   cat(sprintf("Confidence interval: [%s, %s].\n", 
               round(x$lb, digits = 5),
               round(x$ub, digits = 5)))
+}
+
+#' Print results from \code{invertci} with vector-valued alpha
+#' 
+#' @description This function uses the print method on the return list of the
+#'    function \code{invertci}.
+#'    
+#' @param x Object returned from \code{invertci}.
+#' @param ... Additional arguments.
+#' 
+#' @return Print the basic set of results from \code{invertci}.
+#' 
+#' @export
+#' 
+print.invertci_multiple <- function(x, ...){
+  for (i in 1:length(x$alpha)){
+    if (i > 1){
+      cat("--------------------------------------\n")
+    }
+    cat(sprintf("< Significance level: %s >\n", round(x$alpha[i], digits = 5)))
+    cat(sprintf("Total number of iterations: %s.\n", round(x$iter[[i]], 
+                                                           digits = 5)))  
+    cat(sprintf("Confidence interval: [%s, %s].\n", 
+                round(x$lb[[i]], digits = 5),
+                round(x$ub[[i]], digits = 5)))
+  }
 }
 
 #' Summary of results from \code{invertci}
@@ -733,6 +737,27 @@ print.invertci <- function(x, ...){
 #' @export
 #' 
 summary.invertci <- function(x, ...){
+  if (length(x$alpha) == 1){
+    summary.invertci_single(x)
+  } else {
+    summary.invertci_multiple(x)
+  }
+}
+
+
+#' Summary of results from \code{invertci} for a single alpha
+#' 
+#' @description This function uses the print method on the return list of the
+#'    function \code{invertci}.
+#'    
+#' @param x Object returned from \code{invertci}.
+#' @param ... Additional arguments.
+#' 
+#' @return Print the summary of the basic set of results from \code{invertci}.
+#' 
+#' @export
+#' 
+summary.invertci_single <- function(x, ...){
   #### Part 1: Display what has been the function
   cat("Call:\n")
   dput(x$call)
@@ -740,14 +765,15 @@ summary.invertci <- function(x, ...){
   
   #### Part 2: Basic results
   cat(sprintf("Significance level: %s.\n", round(x$alpha, digits = 5)))  
-  cat("\n")
+  
+  cat("\n") 
   
   #### Part 3: Messages in constructing the upper bound
   cat("=== Iterations in constructing upper bound:\n")
   cat(paste0("Iteration\t Test point \t Lower bound \t ",
-  "Upper bound \t p-value\t Decision\n"))
-  for(i in 1:nrow(x$df_ub)){
-    summary_bisection_print(x$df_ub, i)
+             "Upper bound \t p-value\t Decision\n"))
+  for(j in 1:nrow(x$df_ub)){
+    summary_bisection_print(x$df_ub, j)
   }
   cat(x$termination_ub)
   cat("\n\n")  
@@ -756,12 +782,66 @@ summary.invertci <- function(x, ...){
   cat("=== Iterations in constructing lower bound:\n")
   cat(paste0("Iteration\t Test point \t Lower bound \t ",
              "Upper bound \t p-value\t Decision\n"))
-  for(i in 1:nrow(x$df_lb)){
-    summary_bisection_print(x$df_lb, i)
+  for(j in 1:nrow(x$df_lb)){
+    summary_bisection_print(x$df_lb, j)
   }
   cat(x$termination_lb)
-  cat("\n\n")  
+  cat("\n\n")   
+    
 }
+
+#' Summary of results from \code{invertci} with multiple alphas
+#' 
+#' @description This function uses the print method on the return list of the
+#'    function \code{invertci}.
+#'    
+#' @param x Object returned from \code{invertci}.
+#' @param ... Additional arguments.
+#' 
+#' @return Print the summary of the basic set of results from \code{invertci}.
+#' 
+#' @export
+#' 
+summary.invertci_multiple <- function(x, ...){
+  #### Part 1: Display what has been the function
+  cat("Call:\n")
+  dput(x$call)
+  cat("\n")
+  
+  #### Part 2: Basic results
+  cat("Significance levels considered: ")
+  for (i in 1:length(x$alpha)){
+    cat(paste(round(unlist(x$alpha[i]), digits = 5), " "))
+  }
+  
+  cat("\n\n") 
+  
+  for (i in 1:length(x$alpha)){
+    cat(sprintf("< Confidence interval for alpha = %s >\n", x$alpha[i]))
+    
+    #### Part 3: Messages in constructing the upper bound
+    cat("=== Iterations in constructing upper bound:\n")
+    cat(paste0("Iteration\t Test point \t Lower bound \t ",
+               "Upper bound \t p-value\t Decision\n"))
+    for(j in 1:nrow(x$df_ub[[i]])){
+      summary_bisection_print(x$df_ub[[i]], j)
+    }
+    cat(x$termination_ub[[i]])
+    cat("\n\n")  
+    
+    #### Part 4: Messages in constructing the lower bound
+    cat("=== Iterations in constructing lower bound:\n")
+    cat(paste0("Iteration\t Test point \t Lower bound \t ",
+               "Upper bound \t p-value\t Decision\n"))
+    for(j in 1:nrow(x$df_lb[[i]])){
+      summary_bisection_print(x$df_lb[[i]], j)
+    }
+    cat(x$termination_lb[[i]])
+    cat("\n\n")   
+  }
+}
+
+
 
 #' Print results in constructing bounds in bisection method
 #' 
