@@ -1059,37 +1059,7 @@ print.dkqs <- function(x, ...){
 #' @export
 #' 
 summary.dkqs <- function(x, ...){
-  #### Step 1: Display what has been the function
-  cat("Call:\n")
-  dput(x$call)
-  cat("\n")
-  
-  #### Step 2: Basic results
-  cat(sprintf("Test statistic: %s.\n", round(x$T_n, digits = 5)))  
-  cat("\n")
-  
-  cat(sprintf("p-value: %s.\n", round(x$p_val, digits = 5)))
-  cat("\n")
-  
-  cat(sprintf("Value of tau used: %s.\n", round(x$tau, digits = 5)))
-  cat("\n")
-  
-  cat(sprintf("Linear and quadratic programming solver used: %s.\n", 
-              x$solver))
-  cat("\n")
-  
-  cat(sprintf("Number of cores used: %s.\n", x$cores))
-  cat("\n")
-  
-  #### Step 3: Bootstrap test statistics
-  cat("Bootstrap test statistics:\n")
-  print(x$T_bs)
-  cat("\n")
-  
-  #### Step 4: Bootstrap betas
-  cat("Bootstrap betas:\n")
-  print(x$beta_bs_bar)
-  cat("\n")
+  print(x)
 }
 
 
