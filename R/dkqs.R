@@ -68,11 +68,6 @@ dkqs <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   A_tgt = checkupdate$A_tgt
   # (c) Solver for linear and quadratic programss
   solver = checkupdate$solver
-  # (d) Display the solver used
-  if (progress == TRUE){
-    cat(paste("Linear and quadratic programming solver used: ", solver, ".\n", 
-              sep = ""))    
-  }
   # (e) Update the number of cores
   cores = checkupdate$cores
   
@@ -161,6 +156,9 @@ dkqs <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   
   #### Step 8: Print results
   if (progress == TRUE){  
+    # (d) Display the solver used
+    cat(paste("Linear and quadratic programming solver used: ", solver_name, ".\n", 
+              sep = ""))    
     cat(paste("-----------------------------------", "\n"))
     cat(paste("Test statistic: ", round(T_n, digits = 5), ".\n", sep = ""))
     cat(paste("p-value: ", p_val, ".\n", sep = ""))
@@ -640,7 +638,7 @@ objective_function <- function(A, b, n){
 #'
 #' @description This function computes the bootstrap test statistics.
 #'
-#' @import modelr
+#' @import modelr dplyr
 #'
 #' @param J The number of distinct nonzero values in vector \eqn{\bm{y}}.
 #' @param s_star The value of 
@@ -661,6 +659,9 @@ beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs,
                     beta_obs_hat, beta_tgt, tau, n, solver){
   T_bs = NULL
   beta_bs_bar_set = NULL
+  # Count the increment
+  inc_progress = 100/(bs_num-1)
+  # Initialize the progress counter
   # Loop through all indices in the bootstrap
   for (i in 1:bs_num){
     #### Step 1: Set the seed
@@ -678,6 +679,10 @@ beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs,
                        solver)$objval
     T_bs = c(T_bs, T_bs_i)
     beta_bs_bar_set = cbind(beta_bs_bar_set, beta_bs_bar)
+    # Update progress bar
+    svMisc::progress((i)* inc_progress)
+    # Display completion message when the bootstrap procedure is completed
+    if (i == bs_num) cat("Bootstrap completed!\n")
   }
   
   #### Step 5: Return results
