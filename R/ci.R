@@ -65,8 +65,7 @@ invertci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
   # Initialize lists
   df_ub_list = NULL
   df_lb_list = NULL
-  termination_ub_list = NULL
-  termination_lb_list = NULL
+  termination_list = NULL
   ub_list = NULL
   lb_list = NULL
   iter_list = NULL
@@ -75,6 +74,8 @@ invertci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
   
   for (i in 1:length(alpha)){
     df_ci = check_return$df_ci
+    termination = NULL
+    
     cat(sprintf("< Constructing confidence interval for alpha = %s >\n", 
                 alpha[i]))
     ### Compute upper bound of confidence interval
@@ -88,7 +89,7 @@ invertci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
     # Data frame storing all messages in each iteration
     df_ub = ub_return$df_bis
     # Obtain termination message
-    termination_ub = ub_return$last_iter_msg
+    termination$ub = ub_return$last_iter_msg
     # Obtain upper bound
     ub = ub_return$pt
     
@@ -103,7 +104,7 @@ invertci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
     # Data frame storing all messages in each iteration
     df_lb = lb_return$df_bis
     # Obtain termination message
-    termination_lb = lb_return$last_iter_msg
+    termination$lb = lb_return$last_iter_msg
     # Obtain lower bound
     lb = lb_return$pt
     
@@ -125,8 +126,7 @@ invertci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
     if (length(alpha) > 1){
       df_ub_list = c(df_ub_list, list(df_ub))
       df_lb_list = c(df_lb_list, list(df_lb))
-      termination_ub_list = c(termination_ub_list, list(termination_ub))
-      termination_lb_list = c(termination_lb_list, list(termination_lb))
+      termination_list = c(termination_list, list(termination))
       lb_list = c(lb_list, list(lb))
       ub_list = c(ub_list, list(ub))
       iter_list = c(iter_list, list(iter))
@@ -137,8 +137,7 @@ invertci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
   if (length(alpha) > 1){
     df_lb = df_lb_list
     df_ub = df_ub_list
-    termination_lb = termination_lb_list
-    termination_ub = termination_ub_list
+    termination = termination_list
     lb = lb_list
     ub = ub_list
     iter = iter_list
@@ -154,8 +153,7 @@ invertci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
                 alpha = alpha,
                 iter = iter,
                 call = call,
-                termination_ub = termination_ub,
-                termination_lb = termination_lb)
+                termination = termination)
   attr(output, "class") = "invertci"
   
   invisible(output)
@@ -775,7 +773,7 @@ summary.invertci_single <- function(x, ...){
   for(j in 1:nrow(x$df_ub)){
     summary_bisection_print(x$df_ub, j)
   }
-  cat(x$termination_ub)
+  cat(x$termination$ub)
   cat("\n\n")  
   
   #### Part 4: Messages in constructing the lower bound
@@ -785,7 +783,7 @@ summary.invertci_single <- function(x, ...){
   for(j in 1:nrow(x$df_lb)){
     summary_bisection_print(x$df_lb, j)
   }
-  cat(x$termination_lb)
+  cat(x$termination$lb)
   cat("\n\n")   
     
 }
@@ -826,7 +824,7 @@ summary.invertci_multiple <- function(x, ...){
     for(j in 1:nrow(x$df_ub[[i]])){
       summary_bisection_print(x$df_ub[[i]], j)
     }
-    cat(x$termination_ub[[i]])
+    cat(x$termination[[i]]$ub)
     cat("\n\n")  
     
     #### Part 4: Messages in constructing the lower bound
@@ -836,7 +834,7 @@ summary.invertci_multiple <- function(x, ...){
     for(j in 1:nrow(x$df_lb[[i]])){
       summary_bisection_print(x$df_lb[[i]], j)
     }
-    cat(x$termination_lb[[i]])
+    cat(x$termination[[i]]$lb)
     cat("\n\n")   
   }
 }
