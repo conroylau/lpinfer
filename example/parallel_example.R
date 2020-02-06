@@ -64,14 +64,14 @@ func_two_moment <- function(df){
 ### Part 4: Compute A_obs based on the two functions in part 3
 A_obs_full = cbind(matrix(rep(0,J1*J1), nrow = J1), diag(1, J1))
 
-### Part 5: Run the dkqs_cone module to compute p-values
+### Part 5: Run the dkqs module to compute p-values
 # Define the value of beta_tgt and significant figures needed
 beta_tgt = .365
 p_sig = 4
 
 # Example 1 - Using full information approach and gurobi solver (1 core)
 t10 = Sys.time()
-full_gur = dkqs_cone(df, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 1000, 
+full_gur = dkqs(df, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 1000, 
                      p_sig, tau, "gurobi", 1, FALSE)
 t11 = Sys.time()
 time1 = t11 - t10
@@ -79,7 +79,7 @@ time1 = t11 - t10
 # Example 2 - Using full information approach and gurobi solver (n cores)
 cores = 8
 t80 = Sys.time()
-full_gur = dkqs_cone(df, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 1000, 
+full_gur = dkqs(df, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 1000, 
                      p_sig, tau, "gurobi", cores, FALSE)
 t81 = Sys.time()
 time8 = t81 - t80
