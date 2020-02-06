@@ -682,7 +682,7 @@ beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs,
     # Update progress bar
     svMisc::progress((i)* inc_progress)
     # Display completion message when the bootstrap procedure is completed
-    if (i == bs_num) cat("Bootstrap completed!\n")
+    if (i == bs_num) cat("")
   }
   
   #### Step 5: Return results
