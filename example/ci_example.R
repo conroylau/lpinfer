@@ -20,6 +20,7 @@ library(Momocs)
 library(limSolve)
 library(foreach)
 library(doMC)
+library(parallel)
 
 ### Part 2: Data preparation
 # Read data
