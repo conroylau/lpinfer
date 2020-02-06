@@ -4,7 +4,7 @@
 \alias{summary_bisection_print}
 \title{Print results in constructing bounds in bisection method}
 \usage{
-summary_bisection_print(df_bis)
+summary_bisection_print(df_bis, i)
 }
 \arguments{
 \item{df_bis}{Data frame storing the information from the bisection method.}
@@ -13,6 +13,7 @@ summary_bisection_print(df_bis)
 Nothing is returned in this function.
 }
 \description{
-This function is used inside the \code{summary.qpci} to print
-   the results in each step of the bisection method.
+This function is used to display the message when constructing
+   the bounds and used in \code{summary.invertci} to print the results in 
+   each step of the bisection method.
 }
