@@ -15,7 +15,9 @@ Imports:
     foreach,
     doMC,
     e1071,
-    parallel	
+    parallel,
+    Momocs,
+    ddpcr
 Suggests: 
     knitr,
     rmarkdown,
