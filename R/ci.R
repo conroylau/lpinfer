@@ -350,8 +350,8 @@ invertci_check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max_iter,
   if (is.null(lb0) | is.null(ub0)){
     ### Part A: If lb0 and ub0 are null, check whether if the function is dkqs
     ### If yes, compute lb0 and ub0. Otherwise, return terminate the function.
-    if (as.character(substitute(f)) == "dkqs_cone"){
-      logicalb_return = dkqs_cone_logicalb(f, farg)
+    if (as.character(substitute(f)) == "dkqs"){
+      logicalb_return = dkqs_logicalb(f, farg)
       if (is.null(lb0)){
         lb0 = logicalb_return$lb0
       }
@@ -469,25 +469,25 @@ invertci_check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max_iter,
               ub1 = ub1))
 }
 
-#' Compute the logical upper and lower bounds for dkqs_cone
+#' Compute the logical upper and lower bounds for dkqs
 #' 
 #' @description This function computes the logical upper and lower bounds for
-#'    the test \code{dkqs_cone}.
+#'    the test \code{dkqs}.
 #'    
 #' @inheritParams invertci
 #' 
-#' @return Returns the logical upper and lower bounds for dkqs_cone.
-#'    \item{lb0}{Logical lower bound for \code{dkqs_cone}.}
-#'    \item{ub0}{Logical upper bound for \code{dkqs_cone}.}
+#' @return Returns the logical upper and lower bounds for dkqs.
+#'    \item{lb0}{Logical lower bound for \code{dkqs}.}
+#'    \item{ub0}{Logical upper bound for \code{dkqs}.}
 #' 
 #' @export
 #' 
-dkqs_cone_logicalb <- function(f, farg){
+dkqs_logicalb <- function(f, farg){
   
   #### Step 1: Assign a value to beta_tgt for returning the results
   farg$beta_tgt = 0
   
-  #### Step 2: Run dkqs_cone to obtain the logical bounds
+  #### Step 2: Run dkqs to obtain the logical bounds
   dkqs_return = do.call(f, farg)
   lb0 = dkqs_return$lb0
   ub0 = dkqs_return$ub0

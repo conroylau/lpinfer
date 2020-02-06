@@ -49,7 +49,7 @@
 #' 
 #' @export
 #' 
-dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
+dkqs <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
                       bs_num = 100, p_sig = 2, tau_input = .5, solver = NULL,
                       cores = 1, progress = FALSE){
   
@@ -57,10 +57,10 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   # Obtain call information
   call = match.call()
   # Check and update
-  checkupdate = dkqs_cone_check(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
+  checkupdate = dkqs_check(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
                                 bs_num, p_sig, tau_input, solver, progress,
                                 cores)
-  # Update and return the quantities returned from the function dkqs_cone_check
+  # Update and return the quantities returned from the function dkqs_check
   # (a) Dataframe
   df = checkupdate$df
   # (b) Matrices for linear and quadratic programs
@@ -179,7 +179,7 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
                 solver = solver_name,
                 cores = cores,
                 call = call)
-  attr(output, "class") = "dkqs_cone"
+  attr(output, "class") = "dkqs"
   
   invisible(output)
 }
@@ -197,7 +197,7 @@ dkqs_cone <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
 #' @param beta_obs_hat The value of \eqn{\hat{\beta}_{\mathrm{obs}}} based on
 #'    the function supplied by the user.
 #' @param n The number of observations in the dataframe.
-#' @inheritParams dkqs_cone
+#' @inheritParams dkqs
 #'
 #' @return Returns the optimal point and optimal value.
 #'  \item{x}{Optimal point calculated from the optimizer.}
@@ -353,7 +353,7 @@ gurobi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
 #'    programs using the `\code{cplexAPI}' package.
 #'    
 #' @inheritParams cplexAPI
-#' @inheritParams dkqs_cone
+#' @inheritParams dkqs
 #' @inheritParams prog_cone
 #'
 #' @return Returns the optimal point and optimal value.
@@ -432,7 +432,7 @@ cplexapi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
 #' @import Rcplex
 #'
 #' @inheritParams gurobi_optim
-#' @inheritParams dkqs_cone
+#' @inheritParams dkqs
 #' @inheritParams prog_cone
 #'
 #' @return Returns the optimal point and optimal value.
@@ -491,7 +491,7 @@ rcplex_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
 #' @import limSolve
 #'
 #' @inheritParams gurobi_optim
-#' @inheritParams dkqs_cone
+#' @inheritParams dkqs
 #' @inheritParams prog_cone
 #'
 #' @return Returns the optimal point and optimal value.
@@ -644,7 +644,7 @@ objective_function <- function(A, b, n){
 #' @param s_star The value of 
 #'    \eqn{\hat{s}^\ast \equiv A_{\mathrm{obs}}\hat{\bm{x}}_n^\ast} 
 #'    in the cone-tightening procedure.
-#' @inheritParams dkqs_cone
+#' @inheritParams dkqs
 #' @inheritParams prog_cone
 #'
 #' @return Returns the list of estimates from bootstrap:
@@ -692,7 +692,7 @@ beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs,
 #' @import doMC foreach
 #' 
 #' @inheritParams beta_bs 
-#' @inheritParams dkqs_cone
+#' @inheritParams dkqs
 #' @inheritParams prog_cone
 #' 
 #' @return Returns the list of estimates from bootstrap:
@@ -831,7 +831,7 @@ tau_constraints <- function(length_tau, coeff_tau, coeff_x, ind_x, rhs, sense,
 #'    there is any invalid input, this function will be terminated and 
 #'    generates appropriate error messages.
 #'
-#' @inheritParams dkqs_cone
+#' @inheritParams dkqs
 #' 
 #' @return Returns the list of updated parameters as follows:
 #'   \item{df}{Upated data in class \code{data.frame}}
@@ -845,7 +845,7 @@ tau_constraints <- function(length_tau, coeff_tau, coeff_x, ind_x, rhs, sense,
 #' 
 #' @export
 #' 
-dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
+dkqs_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
                             bs_num, p_sig, tau_input, solver, progress, cores){
   ### Part 1. Check the dataframe
   if (class(df) %in% c("data.frame", "matrix") == TRUE){
@@ -1025,19 +1025,19 @@ dkqs_cone_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
               cores = cores))
 }
 
-#' Print results from \code{dkqs_cone}
+#' Print results from \code{dkqs}
 #' 
 #' @description This function uses the print method on the return list of the
-#'    function \code{dkqs_cone}.
+#'    function \code{dkqs}.
 #'    
-#' @param x Object returned from \code{dkqs_cone}.
+#' @param x Object returned from \code{dkqs}.
 #' @param ... Additional arguments.
 #' 
-#' @return Print the basic set of results from \code{dkqs_cone}.
+#' @return Print the basic set of results from \code{dkqs}.
 #' 
 #' @export
 #' 
-print.dkqs_cone <- function(x, ...){
+print.dkqs <- function(x, ...){
   cat(sprintf("Test statistic: %s.\n", round(x$T_n, digits = 5)))  
   cat(sprintf("p-value: %s.\n", round(x$p_val, digits = 5)))
   cat(sprintf("Value of tau used: %s.\n", round(x$tau, digits = 5)))
@@ -1046,19 +1046,19 @@ print.dkqs_cone <- function(x, ...){
   cat(sprintf("Number of cores used: %s.\n", x$cores))
 }
 
-#' Summary of results from \code{dkqs_cone}
+#' Summary of results from \code{dkqs}
 #' 
 #' @description This function uses the print method on the return list of the
-#'    function \code{dkqs_cone}.
+#'    function \code{dkqs}.
 #'    
-#' @param x Object returned from \code{dkqs_cone}.
+#' @param x Object returned from \code{dkqs}.
 #' @param ... Additional arguments.
 #' 
-#' @return Print the summary of the basic set of results from \code{dkqs_cone}.
+#' @return Print the summary of the basic set of results from \code{dkqs}.
 #' 
 #' @export
 #' 
-summary.dkqs_cone <- function(x, ...){
+summary.dkqs <- function(x, ...){
   #### Step 1: Display what has been the function
   cat("Call:\n")
   dput(x$call)

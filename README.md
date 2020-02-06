@@ -281,25 +281,25 @@ tau = sqrt(log(N)/N)
 ### Calculating *p*-value
 
 The command for applying the cone-tightening procedure in `linearprog`
-is called `dkqs_cone`. It takes the data, parameters and the function
+is called `dkqs`. It takes the data, parameters and the function
 that can calculate the observed value of beta and returns the *p*-value.
 
 #### Syntax
 
-This `dkqs_cone` command has the following syntax:
+This `dkqs` command has the following syntax:
 ``` r
-dkqs_cone(df = sampledata, 
-          A_obs = A_obs_twom, 
-          A_tgt = A_target, 
-          func_obs = func_two_moment, 
-          beta_tgt = 0.375, 
-          bs_seed = 1,
-          bs_num = 100,
-          p_sig = 2,
-          tau_input = tau,
-          solver = "gurobi",
-          cores = 1,
-          progress = TRUE)
+dkqs(df = sampledata, 
+     A_obs = A_obs_twom, 
+     A_tgt = A_target, 
+     func_obs = func_two_moment, 
+     beta_tgt = 0.375, 
+     bs_seed = 1,
+     bs_num = 100,
+     p_sig = 2,
+     tau_input = tau,
+     solver = "gurobi",
+     cores = 1,
+     progress = TRUE)
 ```
 where
 
@@ -340,7 +340,7 @@ The followings are the output when the **two moments approach** is used
 with the `gurobi` solver to test the hypothesis that `beta_tgt` is
 0.375.
 ``` r
-dkqs_cone(df = sampledata, 
+dkqs(df = sampledata, 
          A_obs = A_obs_twom, 
          A_tgt = A_target, 
          func_obs = func_two_moment, 
@@ -363,7 +363,7 @@ Alternatively, the followings are the output when the **full information
 approach** is used with the `gurobi` solver to test the hypothesis that
 `beta_tgt` is 0.375.
 ``` r
-dkqs_p = dkqs_cone(df = sampledata, 
+dkqs_p = dkqs(df = sampledata, 
                    A_obs = A_obs_full, 
                    A_tgt = A_target, 
                    func_obs = func_full_info, 
@@ -408,16 +408,16 @@ dkqs_args = list(df = sampledata,
                  cores = 1,
                  progress = FALSE)
 
-# Run dkqs_cone with one core
+# Run dkqs with one core
 t10 = Sys.time()
-do.call(dkqs_cone, dkqs_args)
+do.call(dkqs, dkqs_args)
 t11 = Sys.time()
 time1 = t11 - t10
 
-# Run dkqs_cone with eight cores
+# Run dkqs with eight cores
 dkqs_args$cores = 8
 t80 = Sys.time()
-do.call(dkqs_cone, dkqs_args)
+do.call(dkqs, dkqs_args)
 t81 = Sys.time()
 time8 = t81 - t80
 
@@ -438,7 +438,7 @@ and applying the biscetion method.
 
 The syntax of the `invertci` function is as follows:
 ``` r
-invertci(f = dkqs_cone, 
+invertci(f = dkqs, 
      farg = dkqs_farg, 
      alpha = 0.05, 
      lb0 = NULL, 
@@ -476,7 +476,7 @@ where
 
 To use the `invertci` function, the arguments for the function of the test
 statistic has to be specified and passed to `farg`. For instance, if the
-test `dkqs_cone` is used, then the arguments can be defined as follows:
+test `dkqs` is used, then the arguments can be defined as follows:
 ``` r
 dkqs_farg = list(df = sampledata,
                  A_obs = A_obs_full,
@@ -509,10 +509,10 @@ requirement for the data frame is as follows:
 #### Output
 
 The following shows a sample output of the function `invertci` that is used
-to the confidence interval for the test `dkqs_cone` with significance
+to the confidence interval for the test `dkqs` with significance
 level 0.05.
 ``` r
-invertci_dkqs = invertci(f = dkqs_cone, 
+invertci_dkqs = invertci(f = dkqs, 
                  farg = dkqs_farg, 
                  alpha = 0.05, 
                  lb0 = 0, 
@@ -615,7 +615,7 @@ can be constructed in one command.
 
 The syntax for the `many_invertci` function is as follows:
 ``` r
-many_invertci(f = dkqs_cone, 
+many_invertci(f = dkqs, 
           farg = dkqs_farg, 
           alphas = c(0.01, 0.05), 
           lb0 = NULL, 
@@ -643,10 +643,10 @@ where
 #### Output
 
 The following shows a sample output of the function `invertci_many` that is
-used to the confidence intervals for the test `dkqs_cone` with
+used to the confidence intervals for the test `dkqs` with
 significance level 0.01, 0.05 and 0.1.
 ``` r
-many_invertci(f = dkqs_cone, 
+many_invertci(f = dkqs, 
           farg = dkqs_farg, 
           alphas = c(0.01, 0.05, 0.1), 
           lb0 = 0, 

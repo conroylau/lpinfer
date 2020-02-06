@@ -71,12 +71,12 @@ A_obs_full = cbind(matrix(rep(0,J1*J1), nrow = J1), diag(1, J1))
 A_obs_twom = matrix(c(rep(0,J1), yp, rep(0,J1), rep(1, J1)), nrow = 2,
                     byrow = TRUE)
 
-### Part 5: Run the dkqs_cone module to compute p-values
+### Part 5: Run the dkqs module to compute p-values
 # Define the value of beta_tgt and significant figures needed
 beta_tgt = .365
 p_sig = 4
 
-### Part 6: Arguments for the dkqs_cone function without beta_tgt
+### Part 6: Arguments for the dkqs function without beta_tgt
 farg = list(df = df,
             A_obs = A_obs_full,
             A_tgt = A_tgt,
@@ -90,7 +90,7 @@ farg = list(df = df,
             progress = FALSE)
 
 ### Demonstration 1: Construction of confidence interval
-invertci_output = invertci(f = dkqs_cone, 
+invertci_output = invertci(f = dkqs, 
                            farg = farg, 
                            alpha = 0.05, 
                            lb0 = 0, 
@@ -104,5 +104,5 @@ invertci_output = invertci(f = dkqs_cone,
 
 ### Demonstration 2: Use wrapper function to construct a list of 
 ### confidence intervals
-many_invertci(dkqs_cone, farg, c(0.01, 0.02, 0.05, 0.1), 0, 0.4, 1, .6, 
+many_invertci(dkqs, farg, c(0.01, 0.02, 0.05, 0.1), 0, 0.4, 1, .6, 
               0.00001, 50, NULL, FALSE, TRUE)

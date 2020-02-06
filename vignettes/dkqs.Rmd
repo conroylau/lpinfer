@@ -201,24 +201,24 @@ tau = sqrt(log(N)/N)
 ### Calculating *p*-value
 
 The command for applying the cone-tightening procedure in `linearprog` is 
-called `dkqs_cone`. It takes the data, parameters and the function that can
+called `dkqs`. It takes the data, parameters and the function that can
 calculate the observed value of beta and returns the *p*-value.
 
 #### Syntax  {#syntax}
-This `dkqs_cone` command has the following syntax:
+This `dkqs` command has the following syntax:
 ```{r, syntax, eval = FALSE}
-dkqs_cone(df = sampledata, 
-          A_obs = A_obs_twom, 
-          A_tgt = A_target, 
-          func_obs = func_two_moment, 
-          beta_tgt = 0.375, 
-          bs_seed = 1,
-          bs_num = 100,
-          p_sig = 2,
-          tau_input = tau,
-          solver = gurobi,
-          cores = 1,
-          progress = TRUE)
+dkqs(df = sampledata, 
+     A_obs = A_obs_twom, 
+     A_tgt = A_target, 
+     func_obs = func_two_moment, 
+     beta_tgt = 0.375, 
+     bs_seed = 1,
+     bs_num = 100,
+     p_sig = 2,
+     tau_input = tau,
+     solver = gurobi,
+     cores = 1,
+     progress = TRUE)
 ```
 where
 
@@ -254,18 +254,18 @@ The followings are the output when the **two moments approach** is used with
 the `gurobi` solver to test the hypothesis that `beta_tgt` is 0.375.
 
 ```{r, syntax.eval.twom, eval = TRUE}
-dkqs_cone(df = sampledata, 
-         A_obs = A_obs_twom, 
-         A_tgt = A_target, 
-         func_obs = func_two_moment, 
-         beta_tgt = 0.375, 
-         bs_seed = 1,
-         bs_num = 100,
-         p_sig = 3,
-         tau_input = tau,
-         solver = "gurobi",
-         cores = 8,
-         progress = TRUE)
+dkqs(df = sampledata, 
+     A_obs = A_obs_twom, 
+     A_tgt = A_target, 
+     func_obs = func_two_moment, 
+     beta_tgt = 0.375, 
+     bs_seed = 1,
+     bs_num = 100,
+     p_sig = 3,
+     tau_input = tau,
+     solver = "gurobi",
+     cores = 8,
+     progress = TRUE)
 ```
 
 Alternatively, the followings are the output when the **full information
@@ -313,16 +313,16 @@ dkqs_args = list(df = sampledata,
                  cores = 1,
                  progress = FALSE)
 
-# Run dkqs_cone with one core
+# Run dkqs with one core
 t10 = Sys.time()
-do.call(dkqs_cone, dkqs_args)
+do.call(dkqs, dkqs_args)
 t11 = Sys.time()
 time1 = t11 - t10
 
-# Run dkqs_cone with eight cores
+# Run dkqs with eight cores
 dkqs_args$cores = 8
 t80 = Sys.time()
-do.call(dkqs_cone, dkqs_args)
+do.call(dkqs, dkqs_args)
 t81 = Sys.time()
 time8 = t81 - t80
 
@@ -342,7 +342,7 @@ biscetion method.
 The syntax of the `invertci` function is as follows:
 
 ```{r, invertci_syntax, eval = FALSE}
-invertci(f = dkqs_cone, 
+invertci(f = dkqs, 
      farg = dkqs_farg, 
      alpha = 0.05, 
      lb0 = NULL, 
@@ -375,7 +375,7 @@ should be displayed in the procedure of constructing confidence interval.
 #### Specifying the Argument
 To use the `invertci` function, the arguments for the function of the test 
 statistic has to be specified and passed to `farg`. For instance, if the test 
-`dkqs_cone` is used, then the arguments can be defined as follows:
+`dkqs` is used, then the arguments can be defined as follows:
 
 ```{r, qprc_dkqs_farg, eval = TRUE}
 dkqs_farg = list(df = sampledata,
@@ -407,10 +407,10 @@ contains the values of betas that has been evaluated) and the second column is
 #### Output
 
 The following shows a sample output of the function `invertci` that is used to 
-the confidence interval for the test `dkqs_cone` with significance level 0.05.
+the confidence interval for the test `dkqs` with significance level 0.05.
 
 ```{r, eval = TRUE}
-invertci_dkqs = invertci(f = dkqs_cone, 
+invertci_dkqs = invertci(f = dkqs, 
                  farg = dkqs_farg, 
                  alpha = 0.05, 
                  lb0 = 0, 
@@ -437,7 +437,7 @@ constructed in one command.
 The syntax for the `many_invertci` function is as follows:
 
 ```{r, many_invertci_syntax, eval = FALSE}
-many_invertci(f = dkqs_cone, 
+many_invertci(f = dkqs, 
           farg = dkqs_farg, 
           alphas = c(0.01, 0.05), 
           lb0 = NULL, 
@@ -464,11 +464,11 @@ be found [here](#invertci_syntax).
 #### Output
 
 The following shows a sample output of the function `invertci_many` that is used to 
-the confidence intervals for the test `dkqs_cone` with significance level 
+the confidence intervals for the test `dkqs` with significance level 
 0.01, 0.05 and 0.1.
 
 ```{r, eval = TRUE}
-many_invertci(f = dkqs_cone, 
+many_invertci(f = dkqs, 
           farg = dkqs_farg, 
           alphas = c(0.01, 0.05, 0.1), 
           lb0 = 0, 
