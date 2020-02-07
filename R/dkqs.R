@@ -335,7 +335,8 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
 #' LP and QP solver by Gurobi
 #'
 #' @description This function computes the solution to the quadratic or linear
-#'    program using the `\code{Gurobi}' package.
+#'    program using the `\code{Gurobi}' package. This function can have linear
+#'    and/or quadratic constraints.
 #'    
 #' @import gurobi
 #'
@@ -348,6 +349,8 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
 #'    objective function.
 #' @param sense The sense of the linear constraints.
 #' @param lb The lower lound vector.
+#' @param qc List of quadratic constraint(s). There can be multiple quadratic
+#'    constraints.
 #'
 #' @return Returns the optimal point and optimal value.
 #'  \item{x}{Optimal point calculated from the optimizer.}
@@ -355,17 +358,22 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
 #'
 #' @export
 #' 
-gurobi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
+gurobi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL){
   ### Step 1: Obtain the coefficients of the objective function
   objective_return = objective_function(Af, bf, nf)
   
   ### Step 2: Gurobi set-up
   model = list()
+  # Objective function - Quadratic/Linear
   model$Q = objective_return$obj2
   model$obj = objective_return$obj1
   model$objcon = objective_return$obj0
+  # Linear constraints
   model$A = A
   model$rhs = rhs
+  # Quadrtaic constraints
+  model$quadcon = qc
+  # Model sense and lower bound
   model$sense = sense 
   model$modelsense = modelsense
   model$lb = lb
