@@ -66,7 +66,7 @@ A_obs_twom = matrix(c(rep(0,J1), yp, rep(0,J1), rep(1, J1)), nrow = 2,
                     byrow = TRUE)
 
 ##------------------------------------------------------------------------------
-## Construct arguments for dkqs_cone command for each solver and approach
+## Construct arguments for dkqs command for each solver and approach
 ##------------------------------------------------------------------------------
 # Parameters to test
 beta_tgt = .365
@@ -120,7 +120,7 @@ farg_l_twom = farg
 ##------------------------------------------------------------------------------
 ## Construct arguments for constructing confidence interval
 ##------------------------------------------------------------------------------
-invertci_arg = list(f = dkqs_cone,
+invertci_arg = list(f = dkqs,
                 alpha = 0.05, 
                 lb0 = 0, 
                 lb1 = 0.4, 

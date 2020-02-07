@@ -90,15 +90,15 @@ farg$func_obs = func_full_info
 
 # Gurobi
 farg$solver = "gurobi"
-full_g = do.call(dkqs_cone, farg)
+full_g = do.call(dkqs, farg)
 
 # Rcplex
 farg$solver = "rcplex"
-full_r = do.call(dkqs_cone, farg)
+full_r = do.call(dkqs, farg)
 
 # limSolve
 farg$solver = "limsolve"
-full_l = do.call(dkqs_cone, farg)
+full_l = do.call(dkqs, farg)
 
 ### Generate output for two-moments appraoch
 # Append full-information arguments
@@ -107,15 +107,15 @@ farg$func_obs = func_two_moment
 
 # Gurobi
 farg$solver = "gurobi"
-twom_g = do.call(dkqs_cone, farg)
+twom_g = do.call(dkqs, farg)
 
 # Rcplex
 farg$solver = "rcplex"
-twom_r = do.call(dkqs_cone, farg)
+twom_r = do.call(dkqs, farg)
 
 # limSolve
 farg$solver = "limsolve"
-twom_l = do.call(dkqs_cone, farg)
+twom_l = do.call(dkqs, farg)
 
 
 ##------------------------------------------------------------------------------
