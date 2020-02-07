@@ -224,8 +224,22 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
   ones = matrix(rep(1, cn), nrow = 1)
   lb = matrix(rep(0, cn), nrow = 1)
   # Obtain parameters
-  theta_down = solver(NULL, A_tgt, n, ones, c(1), "=", "min", lb)
-  theta_up = solver(NULL, A_tgt, n, ones, c(1), "=", "max", lb)
+  theta_down = do.call(solver, list(Af  = NULL, 
+                                    bf  = A_tgt, 
+                                    nf  = n, 
+                                    A   = ones, 
+                                    rhs = c(1), 
+                                    sense = "=", 
+                                    modelsense ="min",
+                                    lb = lb))
+  theta_up = do.call(solver, list(Af  = NULL, 
+                                 bf  = A_tgt, 
+                                 nf  = n, 
+                                 A   = ones, 
+                                 rhs = c(1), 
+                                 sense = "=", 
+                                 modelsense ="max",
+                                 lb = lb))
     
   # Obtain required set of indices
   x_fullind = 1:cn
@@ -246,8 +260,14 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
   # If problem == "cone", this function solves linear program (5)
   # If program == "tau", this function solves linear program (6)
   if (problem == "test"){
-    ans = solver(A_obs, beta_obs_hat, n, rbind(A_tgt, ones), lp_rhs, lp_sense,
-                 "min", lb)
+    ans = do.call(solver, list(Af  = A_obs, 
+                               bf  = beta_obs_hat, 
+                               nf  = n, 
+                               A   = rbind(A_tgt, ones), 
+                               rhs = lp_rhs, 
+                               sense = lp_sense, 
+                               modelsense ="min",
+                               lb = lb))
   } else if (problem == "cone"){
   # Update lb
     lb_new = lb
@@ -255,8 +275,14 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
     lb_new[ind_down] = rhs_down
     lb_new[ind_0] = rhs_0
     ### Find solution using the solver
-    ans = solver(A_obs, beta_obs_hat, n, rbind(A_tgt, ones), lp_rhs, lp_sense,
-                 "min", lb_new)
+    ans = do.call(solver, list(Af  = A_obs, 
+                               bf  = beta_obs_hat, 
+                               nf  = n, 
+                               A   = rbind(A_tgt, ones), 
+                               rhs = lp_rhs, 
+                               sense = lp_sense, 
+                               modelsense ="min",
+                               lb = lb_new))
   } else if (problem == "tau"){
     # Update matrix A
     lp_lhs_tau = rbind(A_tgt, ones)
@@ -290,8 +316,14 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
       lp_rhs_tau = new_const$lp_rhs_tau
       lp_sense_tau = new_const$lp_sense_tau
     }
-    ans = solver(NULL, c(1, rep(0, cn)), n, lp_lhs_tau, lp_rhs_tau,
-                 lp_sense_tau, "max", lb_tau)
+    ans = do.call(solver, list(Af  = NULL, 
+                               bf  = c(1, rep(0, cn)), 
+                               nf  = n, 
+                               A   = lp_lhs_tau, 
+                               rhs = lp_rhs_tau, 
+                               sense = lp_sense_tau, 
+                               modelsense ="max",
+                               lb = lb_tau))
   }
   
   #### Step 4: Append the logical bounds to the results
