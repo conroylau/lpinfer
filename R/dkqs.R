@@ -350,7 +350,7 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
 #' @param sense The sense of the linear constraints.
 #' @param lb The lower lound vector.
 #' @param qc List of quadratic constraint(s). There can be multiple quadratic
-#'    constraints.
+#'    constraints. Each constraint has to be a list.
 #'
 #' @return Returns the optimal point and optimal value.
 #'  \item{x}{Optimal point calculated from the optimizer.}
@@ -364,7 +364,7 @@ gurobi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL){
   
   ### Step 2: Gurobi set-up
   model = list()
-  # Objective function - Quadratic/Linear
+  # Objective function - Quadratic / list
   model$Q = objective_return$obj2
   model$obj = objective_return$obj1
   model$objcon = objective_return$obj0
@@ -372,7 +372,8 @@ gurobi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL){
   model$A = A
   model$rhs = rhs
   # Quadrtaic constraints
-  model$quadcon = qc
+  model$quadcon = qc 
+  
   # Model sense and lower bound
   model$sense = sense 
   model$modelsense = modelsense
