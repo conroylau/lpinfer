@@ -49,13 +49,13 @@ invertci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
                  ub1 = NULL, tol = .0001, max_iter = 20, df_ci = NULL,
                  progress = FALSE){
   
-  #### Step 1: Obtain call, check and update the dependencies
+  #### Step 1: Obtain call, check and update the input
   # Obtain call information
   call = match.call()
   # Check and update
   check_return = invertci_check(f, farg, alpha, lb0, lb1, ub0, ub1, tol, 
                                 max_iter, df_ci, progress)
-  # Updates the dependencies
+  # Updates the input
   lb0 = check_return$lb0
   lb1 = check_return$lb1
   ub0 = check_return$ub0
