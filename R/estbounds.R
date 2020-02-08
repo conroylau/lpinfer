@@ -14,7 +14,7 @@
 #' @param beta_shp_ineq RHS vector in inequality shape constraints.
 #' @param lnorm Norm used in the optimization problem.
 #' @param kappa Parameter used in the second step of the two-step procedure 
-#'    for obtaining the solution subjected to the shape constraints.
+#'    for obtaining the solution subject to the shape constraints.
 #' @param estimate Boolean variable to indicate whether the estimated 
 #'    problem should be considered.
 #' @inheritParams dkqs
@@ -25,7 +25,10 @@
 #'   \item{lb}{Lower bound with shape constraints}
 #'   \item{est}{Indicator of whether estimation is involved in the 
 #'   estimation}
-#' 
+#'   \item{call}{The function that has been called.}
+#'   \item{lnorm}{Norm used in the optimization problem.}
+#'   
+#'    
 #' @export
 #' 
 estbounds <- function(df, func_obs, A_obs, A_tgt, beta_tgt,
@@ -68,7 +71,7 @@ estbounds <- function(df, func_obs, A_obs, A_tgt, beta_tgt,
     ub = ub_shp0$objval
     lb = lb_shp0$objval
     if (progress == TRUE){
-      cat(sprintf("The true bound is [%s, %s].", lb_shp0$objval, 
+      cat(sprintf("True bounds subject to shape constraints: [%s, %s]\n", lb_shp0$objval, 
                   ub_shp0$objval))      
     }
     
@@ -123,7 +126,7 @@ estbounds <- function(df, func_obs, A_obs, A_tgt, beta_tgt,
     
     ## Print results
     if (progress == TRUE){
-      cat(sprintf("The estimated bound is [%s, %s].\n", 
+      cat(sprintf("Estimated bounds subject to shape constraints: [%s, %s]\n", 
                   round(lb, digits = 5), 
                   round(ub, digits = 5))) 
     }
@@ -134,7 +137,9 @@ estbounds <- function(df, func_obs, A_obs, A_tgt, beta_tgt,
   #### Step 4: Assign the return list and define class
   output = list(ub = ub,
                 lb = lb,
-                est = est)
+                est = est,
+                call = call,
+                lnorm = lnorm)
   
   attr(output, "class") = "estbounds"
   
@@ -512,11 +517,16 @@ estbounds_check_Ab <- function(A, b, Aname, bname){
 #' @export
 #' 
 print.estbounds <- function(x, ...){
+  cat("Call:\n")
+  dput(x$call)
+  cat("\n")
+  
   if (x$est == TRUE){
-    cat(sprintf("The estimated bound with shape constraints is [%s, %s]. \n", 
+    cat(sprintf("Norm used in optimization problem: %s-norm \n", x$lnorm))
+    cat(sprintf("Estimated bounds subject to shape constraints: [%s, %s] \n", 
                 round(x$lb, digits = 5), round(x$ub, digits = 5)))
   } else {
-    cat(sprintf("The true bound with shape constrains is [%s, %s]. \n", 
+    cat(sprintf("True bounds subject to shape constraints: [%s, %s] \n", 
                 x$lb, x$ub)) 
   }
 }
