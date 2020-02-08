@@ -4,7 +4,7 @@
 \alias{gurobi_optim}
 \title{LP and QP solver by Gurobi}
 \usage{
-gurobi_optim(Af, bf, nf, A, rhs, sense, modelsense, lb)
+gurobi_optim(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL)
 }
 \arguments{
 \item{Af}{The matrix that is involved in the objective function.}
@@ -23,6 +23,9 @@ gurobi_optim(Af, bf, nf, A, rhs, sense, modelsense, lb)
 objective function.}
 
 \item{lb}{The lower lound vector.}
+
+\item{qc}{List of quadratic constraint(s). There can be multiple quadratic
+constraints. Each constraint has to be a list.}
 }
 \value{
 Returns the optimal point and optimal value.
@@ -31,5 +34,6 @@ Returns the optimal point and optimal value.
 }
 \description{
 This function computes the solution to the quadratic or linear
-   program using the `\code{Gurobi}' package.
+   program using the `\code{Gurobi}' package. This function can have linear
+   and/or quadratic constraints.
 }
