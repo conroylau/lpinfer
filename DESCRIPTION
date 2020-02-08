@@ -17,7 +17,8 @@ Imports:
     e1071,
     parallel,
     Momocs,
-    ddpcr
+    ddpcr,
+    Matrix
 Suggests: 
     knitr,
     rmarkdown,
