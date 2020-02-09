@@ -385,13 +385,13 @@ estbounds_check <- function(df, func_obs, A_obs, A_tgt,
     stop("The argument 'kappa' must be a nonnegative scalar.", call. = FALSE)
   } 
   
-  #### Step 6: Check 'lnorm'
+  #### Step 5: Check 'lnorm'
   if (lnorm != 1 & lnorm != 2 & lnorm != "sup"){
     stop("Only 1-norm, 2-norm and sup-norm is supported in this function.", 
          call. = FALSE)
   }
   
-  #### Part 7: Check solver - only 'gurobi' can be used to obtain the bounds 
+  #### Part 6: Check solver - only 'gurobi' can be used to obtain the bounds 
   #### of the shape restriction
   # Turn the name of solver to lower case 
   solver = tolower(solver)
@@ -423,17 +423,17 @@ estbounds_check <- function(df, func_obs, A_obs, A_tgt,
                      (version 8.1-1 or later).")), call. = FALSE)
   }
   
-  #### Step 8 Check estimate
+  #### Step 7 Check estimate
   if (!(estimate == TRUE | estimate == FALSE)){
     stop("The argument 'estimate' has to be boolean.", call. = FALSE)
   }
   
-  #### Step 9. Check progress
+  #### Step 8. Check progress
   if (!(progress == TRUE | progress == FALSE)){
     stop("The argument 'progress' has to be boolean.", call. = FALSE)
   }
   
-  #### Step 10. Return the updated information
+  #### Step 9 Return the updated information
   invisible(list(df = df,
                  A_obs = A_obs,
                  A_tgt = A_tgt,
