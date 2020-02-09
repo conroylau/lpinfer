@@ -1,5 +1,5 @@
-## Test file for the missing data file
-context("Missing data problem")
+## Test file for dkqs
+context("Tests for dkqs")
 
 # Load packages
 library(modelr)

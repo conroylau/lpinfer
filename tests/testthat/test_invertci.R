@@ -1,4 +1,4 @@
-## Test file for the missing data file
+## Test file for invert CI
 context("Constructing confidence interval")
 
 # Load packages
