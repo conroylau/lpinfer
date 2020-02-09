@@ -81,7 +81,7 @@ A_obs_twom = matrix(c(rep(0,J1), yp, rep(0,J1), rep(1, J1)), nrow = 2,
 
 ### Part 5: Run the dkqs module to compute p-values
 # Define the value of beta_tgt and significant figures needed
-beta_tgt = .365
+beta_tgt = .375
 p_sig = 4
 ## Full information approach
 # Example 1.1a - Using full information approach and gurobi solver (1 core)
