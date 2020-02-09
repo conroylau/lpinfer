@@ -80,47 +80,30 @@ A_shp_eq_dkqs = matrix(rep(1, ncol(A_obs_full)), nrow = 1)
 A_shp_ineq_dkqs = NULL
 beta_shp_ineq_dkqs = NULL
 
+# Set function arguments
+farg = list(df = df,
+            A_obs = A_obs_full,
+            A_tgt = A_tgt,
+            func_obs = func_full_info,
+            A_shp_eq = A_shp_eq,
+            A_shp_ineq = A_shp_ineq_dkqs,
+            beta_shp_eq = beta_shp_eq,
+            beta_shp_ineq = beta_shp_ineq_dkqs,
+            kappa = 1e-20,
+            lnorm = 2,
+            solver = "gurobi",
+            estimate = FALSE,
+            progress = TRUE)
+
 # True bound
-est_ans1 = estbounds(df = df,
-                     A_obs = A_obs_full,
-                     A_tgt = A_tgt,
-                     func_obs = func_full_info,
-                     A_shp_eq = A_shp_eq,
-                     A_shp_ineq = A_shp_ineq_dkqs,
-                     beta_shp_eq = beta_shp_eq,
-                     beta_shp_ineq = beta_shp_ineq_dkqs,
-                     kappa = 1e-15,
-                     lnorm = 2,
-                     solver = "gurobi",
-                     estimate = FALSE,
-                     progress = TRUE)
+est_ans1 = do.call(estbounds, farg)
 
 # Estimated bound with full-information approach
-est_ans2 = estbounds(df = df,
-                     A_obs = A_obs_full,
-                     A_tgt = A_tgt,
-                     func_obs = func_full_info,
-                     A_shp_eq = A_shp_eq,
-                     A_shp_ineq = A_shp_ineq_dkqs,
-                     beta_shp_eq = beta_shp_eq,
-                     beta_shp_ineq = beta_shp_ineq_dkqs,
-                     kappa = 1e-15,
-                     lnorm = 2,
-                     solver = "gurobi",
-                     estimate = TRUE,
-                     progress = TRUE)
+farg$estimate = TRUE
+est_ans2 = do.call(estbounds, farg)
 
 # Estimated bound with two-moments approach
-est_ans3 = estbounds(df = df,
-                     A_obs = A_obs_twom,
-                     A_tgt = A_tgt,
-                     func_obs = func_two_moment,
-                     A_shp_eq = A_shp_eq,
-                     A_shp_ineq = A_shp_ineq_dkqs,
-                     beta_shp_eq = beta_shp_eq,
-                     beta_shp_ineq = beta_shp_ineq_dkqs,
-                     kappa = 1e-15,
-                     lnorm = 2,
-                     solver = "gurobi",
-                     estimate = TRUE,
-                     progress = TRUE)
+farg$A_obs = A_obs_twom
+farg$func_obs = func_two_moment
+est_ans3 = do.call(estbounds, farg)
+
