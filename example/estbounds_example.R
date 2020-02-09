@@ -75,7 +75,6 @@ A_obs_twom = matrix(c(rep(0,J1), yp, rep(0,J1), rep(1, J1)), nrow = 2,
                     byrow = TRUE)
 
 ### Part 5 Set the parameters and shape constraints
-beta_tgt = .375
 beta_shp_eq_dkqs = c(1)
 A_shp_eq_dkqs = matrix(rep(1, ncol(A_obs_full)), nrow = 1)
 A_shp_ineq_dkqs = NULL
@@ -85,7 +84,6 @@ beta_shp_ineq_dkqs = NULL
 est_ans1 = estbounds(df = df,
                      A_obs = A_obs_full,
                      A_tgt = A_tgt,
-                     beta_tgt = beta_tgt,
                      func_obs = func_full_info,
                      A_shp_eq = A_shp_eq,
                      A_shp_ineq = A_shp_ineq_dkqs,
@@ -101,7 +99,6 @@ est_ans1 = estbounds(df = df,
 est_ans2 = estbounds(df = df,
                      A_obs = A_obs_full,
                      A_tgt = A_tgt,
-                     beta_tgt = beta_tgt,
                      func_obs = func_full_info,
                      A_shp_eq = A_shp_eq,
                      A_shp_ineq = A_shp_ineq_dkqs,
@@ -117,7 +114,6 @@ est_ans2 = estbounds(df = df,
 est_ans3 = estbounds(df = df,
                      A_obs = A_obs_twom,
                      A_tgt = A_tgt,
-                     beta_tgt = beta_tgt,
                      func_obs = func_two_moment,
                      A_shp_eq = A_shp_eq,
                      A_shp_ineq = A_shp_ineq_dkqs,

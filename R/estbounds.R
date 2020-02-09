@@ -32,7 +32,7 @@
 #' @export
 #' 
 
-estbounds <- function(df, func_obs, A_obs, A_tgt, beta_tgt,
+estbounds <- function(df, func_obs, A_obs, A_tgt,
                       A_shp_eq, A_shp_ineq, beta_shp_eq, beta_shp_ineq,
                       kappa = 1e-5, lnorm = 2, solver = "gurobi", 
                       estimate = TRUE, progress = TRUE){
@@ -41,7 +41,7 @@ estbounds <- function(df, func_obs, A_obs, A_tgt, beta_tgt,
   # Obtain call information
   call = match.call()
   # Check and update
-  estbounds_return = estbounds_check(df, func_obs, A_obs, A_tgt, beta_tgt,
+  estbounds_return = estbounds_check(df, func_obs, A_obs, A_tgt,
                                      A_shp_eq, A_shp_ineq, beta_shp_eq, 
                                      beta_shp_ineq, kappa, lnorm, solver, 
                                      estimate, progress)
@@ -50,7 +50,6 @@ estbounds <- function(df, func_obs, A_obs, A_tgt, beta_tgt,
   A_obs = estbounds_return$A_obs
   A_tgt = estbounds_return$A_tgt
   beta_obs = estbounds_return$beta_obs
-  beta_tgt = estbounds_return$beta_tgt
   A_shp_eq = estbounds_return$A_shp_eq
   A_shp_ineq = estbounds_return$A_shp_ineq
   beta_shp_eq = estbounds_return$beta_shp_eq
@@ -64,10 +63,10 @@ estbounds <- function(df, func_obs, A_obs, A_tgt, beta_tgt,
   
   ### Scenario 1: Estimate = FASLE, i.e. solve the exact problem
   if (estimate == FALSE){
-    ub_shp0 = estbounds_original(A_obs, A_tgt, beta_tgt, beta_obs, A_shp_eq, 
+    ub_shp0 = estbounds_original(A_obs, A_tgt, beta_obs, A_shp_eq, 
                                  A_shp_ineq, beta_shp_eq, beta_shp_ineq, 
                                  "max", solver)
-    lb_shp0 = estbounds_original(A_obs, A_tgt, beta_tgt, beta_obs, A_shp_eq, 
+    lb_shp0 = estbounds_original(A_obs, A_tgt, beta_obs, A_shp_eq, 
                                  A_shp_ineq, beta_shp_eq, beta_shp_ineq, 
                                  "min", solver)
     ub = ub_shp0$objval
@@ -164,7 +163,7 @@ estbounds <- function(df, func_obs, A_obs, A_tgt, beta_tgt,
 #' 
 #' @export
 #' 
-estbounds_original <- function(A_obs, A_tgt, beta_tgt, beta_obs, A_shp_eq, 
+estbounds_original <- function(A_obs, A_tgt, beta_obs, A_shp_eq, 
                                A_shp_ineq, beta_shp_eq, beta_shp_ineq,
                                original_sense, solver){
   
@@ -315,7 +314,6 @@ estbounds2_L2 <- function(firststepsoln, A_obs, beta_obs, modelsense,
 #'       \item{\code{A_obs}}
 #'       \item{\code{A_tgt}}
 #'       \item{\code{beta_obs}}
-#'       \item{\code{beta_tgt}}
 #'       \item{\code{A_shp_eq}}
 #'       \item{\code{beta_shp_eq}}
 #'       \item{\code{A_shp_ineq}}
@@ -325,7 +323,7 @@ estbounds2_L2 <- function(firststepsoln, A_obs, beta_obs, modelsense,
 #' 
 #' @export
 #' 
-estbounds_check <- function(df, func_obs, A_obs, A_tgt, beta_tgt,
+estbounds_check <- function(df, func_obs, A_obs, A_tgt,
                             A_shp_eq, A_shp_ineq, beta_shp_eq, beta_shp_ineq,
                             kappa, lnorm, solver, estimate, progress){
 
@@ -359,32 +357,30 @@ estbounds_check <- function(df, func_obs, A_obs, A_tgt, beta_tgt,
     }
   }
   
-  #### Part 3. Check beta_tgt
-  if (!(is.numeric(beta_tgt) == TRUE & length(beta_tgt) == 1)) {
-    stop("The argument 'beta_tgt' must be a scalar.", call. = FALSE)
-  }  
-  
-  #### Part 4. Check matrices and vectors
-  # Check A_shp_eq and beta_shp_eq
+  #### Part 3. Check matrices and vectors
+  ## Check A_shp_eq and beta_shp_eq
   eq_return = estbounds_check_Ab(A_shp_eq, beta_shp_eq, "A_shp_eq", 
                                  "beta_shp_eq")
   A_shp_eq = eq_return$A_updated
   b_shp_eq = eq_return$b_updated
-  # Check A_shp_ineq and beta_shp_ineq
+  ## Check A_shp_ineq and beta_shp_ineq
   ineq_return = estbounds_check_Ab(A_shp_ineq, beta_shp_ineq, "A_shp_ineq", 
                                    "beta_shp_ineq")
   A_shp_ineq = ineq_return$A_updated
   b_shp_ineq = ineq_return$b_updated
-  # Check A_tgt and beta_tgt
+  ## Check A_tgt
+  # Assign beta_tgt - just for the purpose of checking A_tgt using the
+  # command estbounds_check_Ab. beta_tgt is not used in this module
+  beta_tgt = c(1)
   tgt_return = estbounds_check_Ab(A_tgt, beta_tgt, "A_tgt", "beta_tgt")
   A_tgt = tgt_return$A_updated
-  beta_tgt = tgt_return$b_updated
-  # Check A_obs and beta_obs
+  # beta_tgt is not returned - as it is not needed
+  ## Check A_obs and beta_obs
   obs_return = estbounds_check_Ab(A_obs, beta_obs, "A_obs", "beta_obs")
   A_obs = obs_return$A_updated
   beta_obs = obs_return$b_updated
 
-  #### Step 5: Check 'kappa'
+  #### Step 4: Check 'kappa'
   if (!(is.numeric(kappa) == TRUE & length(kappa) == 1 & kappa >= 0)) {
     stop("The argument 'kappa' must be a nonnegative scalar.", call. = FALSE)
   } 
@@ -442,7 +438,6 @@ estbounds_check <- function(df, func_obs, A_obs, A_tgt, beta_tgt,
                  A_obs = A_obs,
                  A_tgt = A_tgt,
                  beta_obs = beta_obs,
-                 beta_tgt = beta_tgt,
                  A_shp_eq = A_shp_eq,
                  A_shp_ineq = A_shp_ineq,
                  beta_shp_eq = beta_shp_eq,
