@@ -1034,9 +1034,8 @@ dkqs_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
     # Display message to indicate that no solver is suggested by the user so
     # the module chooses one for the user
     if (progress == TRUE){
-      cat(paste("No linear and quadratic programming solver is suggested by the
-                user. The solver '", solver, "' is automatically selected", 
-                ".\n", sep = ""))
+      cat(paste("No solver solver is suggested by the user. The solver '", 
+                solver, "' is automatically selected", ".\n", sep = ""))
     }
   } else{
     # Change solver name to lower cases
