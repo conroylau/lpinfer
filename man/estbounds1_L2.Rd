@@ -2,11 +2,13 @@
 % Please edit documentation in R/estbounds.R
 \name{estbounds1_L2}
 \alias{estbounds1_L2}
-\title{Estimates the bounds with shape contraints (Step 1 with \eqn{\ell^2}-norm)}
+\title{Estimates the bounds with shape contraints (Stage 1 with \eqn{\ell^2}-norm)}
 \usage{
 estbounds1_L2(A_obs, beta_obs, A1, rhs1, sense1, lb, solver)
 }
 \arguments{
+\item{A_obs}{The "observed matrix" in the inference \eqn{A_{\mathrm{obs}}}.}
+
 \item{A1}{Constraint matrix for step 1 in the linear program of bound
 estimation.}
 
@@ -24,12 +26,12 @@ The solvers supported by this module are `\code{cplexAPI}',
 \value{
 Returns the solution to the first step of the two-step procedure 
    and argument for the linear/quadratic program.
- \item{x}{Optimal point calculated from the optimizer.}
  \item{objval}{Optimal value calculated from the optimizer.}
+ \item{x}{Optimal point calculated from the optimizer.}
  \item{larg}{Arguments for the linear/quadratic program.}
 }
 \description{
-This function evaluates the solution to step 1 of the linear
-   program in obtaining the estimated bound. \eqn{\ell^2}-norm is used 
-   in the objective function.
+This function evaluates the solution to stage 1 of the 
+   two-step procedure obtaining the estimated bound. \eqn{\ell^2}-norm 
+   is used in the objective function.
 }

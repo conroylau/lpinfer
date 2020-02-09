@@ -4,7 +4,7 @@
 \alias{print.invertci_multiple}
 \title{Print results from \code{invertci} with vector-valued alpha}
 \usage{
-\method{print}{invertci_multiple}(x, ...)
+print.invertci_multiple(x, ...)
 }
 \arguments{
 \item{x}{Object returned from \code{invertci}.}

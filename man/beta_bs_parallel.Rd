@@ -34,6 +34,10 @@ beta_bs_parallel(
 \eqn{\hat{s}^\ast \equiv A_{\mathrm{obs}}\hat{\bm{x}}_n^\ast} 
 in the cone-tightening procedure.}
 
+\item{A_obs}{The "observed matrix" in the inference \eqn{A_{\mathrm{obs}}}.}
+
+\item{A_tgt}{The "target matrix" in the inference \eqn{A_{\mathrm{tgt}}}.}
+
 \item{func_obs}{The function that generates the required 
 \eqn{\hat{\beta}_{\mathrm{obs}}}.}
 

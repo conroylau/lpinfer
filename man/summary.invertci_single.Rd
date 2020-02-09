@@ -4,7 +4,7 @@
 \alias{summary.invertci_single}
 \title{Summary of results from \code{invertci} for a single alpha}
 \usage{
-\method{summary}{invertci_single}(x, ...)
+summary.invertci_single(x, ...)
 }
 \arguments{
 \item{x}{Object returned from \code{invertci}.}

@@ -4,7 +4,7 @@
 \alias{print.estbounds}
 \title{Print results from \code{estbounds}}
 \usage{
-\method{print}{estbounds}(x, ...)
+print.estbounds(x, ...)
 }
 \arguments{
 \item{x}{Object returned from \code{estbounds}.}
@@ -12,7 +12,8 @@
 \item{...}{Additional arguments.}
 }
 \value{
-Print the basic set of results from \code{estbounds}.
+Nothing is returned. This function prints results from 
+   \code{estbounds}.
 }
 \description{
 This function uses the print method on the return list of the

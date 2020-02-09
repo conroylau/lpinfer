@@ -4,7 +4,7 @@
 \alias{summary.estbounds}
 \title{Summary of results from \code{estbounds}}
 \usage{
-\method{summary}{estbounds}(x, ...)
+summary.estbounds(x, ...)
 }
 \arguments{
 \item{x}{Object returned from \code{estbounds}.}
@@ -12,7 +12,7 @@
 \item{...}{Additional arguments.}
 }
 \value{
-Print the summary of the basic set of results from 
+Nothing is returned. This function prints results from 
    \code{estbounds}.
 }
 \description{

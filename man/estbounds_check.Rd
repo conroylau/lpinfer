@@ -27,6 +27,10 @@ estbounds_check(
 \item{func_obs}{The function that generates the required 
 \eqn{\hat{\beta}_{\mathrm{obs}}}.}
 
+\item{A_obs}{The "observed matrix" in the inference \eqn{A_{\mathrm{obs}}}.}
+
+\item{A_tgt}{The "target matrix" in the inference \eqn{A_{\mathrm{tgt}}}.}
+
 \item{beta_tgt}{The value of \eqn{\hat{\beta}_{\mathrm{tgt}}} (i.e. the 
 value of \eqn{t} in the missing data problem) in the null hypothesis.}
 
@@ -39,7 +43,7 @@ value of \eqn{t} in the missing data problem) in the null hypothesis.}
 \item{beta_shp_ineq}{RHS vector in inequality shape constraints.}
 
 \item{kappa}{Parameter used in the second step of the two-step procedure 
-for obtaining the solution subjected to the shape constraints.}
+for obtaining the solution subject to the shape constraints.}
 
 \item{lnorm}{Norm used in the optimization problem.}
 

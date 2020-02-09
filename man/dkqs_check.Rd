@@ -22,6 +22,10 @@ dkqs_check(
 \arguments{
 \item{df}{The data being used in the inference.}
 
+\item{A_obs}{The "observed matrix" in the inference \eqn{A_{\mathrm{obs}}}.}
+
+\item{A_tgt}{The "target matrix" in the inference \eqn{A_{\mathrm{tgt}}}.}
+
 \item{func_obs}{The function that generates the required 
 \eqn{\hat{\beta}_{\mathrm{obs}}}.}
 

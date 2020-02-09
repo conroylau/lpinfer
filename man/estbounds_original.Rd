@@ -18,6 +18,10 @@ estbounds_original(
 )
 }
 \arguments{
+\item{A_obs}{The "observed matrix" in the inference \eqn{A_{\mathrm{obs}}}.}
+
+\item{A_tgt}{The "target matrix" in the inference \eqn{A_{\mathrm{tgt}}}.}
+
 \item{beta_tgt}{The value of \eqn{\hat{\beta}_{\mathrm{tgt}}} (i.e. the 
 value of \eqn{t} in the missing data problem) in the null hypothesis.}
 
@@ -40,8 +44,8 @@ The solvers supported by this module are `\code{cplexAPI}',
 }
 \value{
 Returns the solution to the linear program.
- \item{x}{Optimal point calculated from the optimizer.}
  \item{objval}{Optimal value calculated from the optimizer.}
+ \item{x}{Optimal point calculated from the optimizer.}
 }
 \description{
 The function computes the true bound subject to the shape 
