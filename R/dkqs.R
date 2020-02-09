@@ -8,8 +8,8 @@
 #' @import gurobi cplexAPI Rcplex Momocs limSolve foreach doMC parallel
 #'
 #' @param df The data being used in the inference.
-#' @param A_obs The "observed matrix" in the inference \eqn{A_{\mathrm{obs}}.
-#' @param A_tgt The "target matrix" in the inference \eqn{A_{\mathrm{tgt}}.
+#' @param A_obs The "observed matrix" in the inference \eqn{A_{\mathrm{obs}}}.
+#' @param A_tgt The "target matrix" in the inference \eqn{A_{\mathrm{tgt}}}.
 #' @param func_obs The function that generates the required 
 #'    \eqn{\hat{\beta}_{\mathrm{obs}}}.
 #' @param beta_tgt The value of \eqn{\hat{\beta}_{\mathrm{tgt}}} (i.e. the 
@@ -44,8 +44,8 @@
 #'   \item{solver}{Solver used in solving the linear and quadratic programs.}
 #'   \item{call}{The function that has been called.}
 #' 
-#' @details If the value of the test statistic \eqn{T_n} is zero, the bootstrap
-#'    procedure will be skipped.
+#' @details If the value of the test statistic \eqn{T_n} is zero, the
+#'    bootstrap procedure will be skipped.
 #' 
 #' @export
 #' 

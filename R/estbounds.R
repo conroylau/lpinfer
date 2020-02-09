@@ -5,7 +5,7 @@
 #'    to estimate the shape constraints using a two-step procedure and 
 #'    some tolerance level.
 #' 
-#' @require Matrix gurobi
+#' @import Matrix gurobi
 #' 
 #' @param beta_obs Observed value of parameter of interest.
 #' @param A_shp_eq Matrix representing equality shape constraints.
