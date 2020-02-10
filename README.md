@@ -1,43 +1,47 @@
 linearprog: An R Package for Inference in Linear and Quadratic Programs
 ================
--   [Introduction](#introduction)
--   [Scope of the Vignette](#scope-of-the-vignette)
--   [Installation and Requirements](#installation-and-requirements)
--   [Usage Demonstration 1: Missing Data
-    Problem](#usage-demonstration-1-missing-data-problem)
-    -   [Background and Data](#data)
-    -   [Specifying the Functions](#functions)
-    -   [Specifying the Parameters](#specifying-the-parameters)
-    -   [Calculating *p*-value](#calculating-p-value)
-    -   [Constructing Confidence
-        Intervals](#constructing-confidence-intervals)
-    -   [Constructing Multiple Confidence
-        Intervals](#constructing-multiple-confidence-intervals)
--   [Help, Feature Requests and Bug
-    Reports](#help-feature-requests-and-bug-reports)
--   [References](#references)
 
-Introduction
-------------
+  - [Introduction](#introduction)
+  - [Scope of the Vignette](#scope-of-the-vignette)
+  - [Installation and Requirements](#installation-and-requirements)
+  - [Usage Demonstration 1: Missing Data
+    Problem](#usage-demonstration-1-missing-data-problem)
+      - [Background and Data](#data)
+      - [Specifying the Functions](#functions)
+      - [Specifying the Parameters](#specifying-the-parameters)
+      - [Calculating *p*-value](#calculating-p-value)
+      - [Constructing Confidence
+        Intervals](#constructing-confidence-intervals)
+      - [Constructing Multiple Confidence
+        Intervals](#constructing-multiple-confidence-intervals)
+      - [Constructing Bounds subject to Shape
+        Constraints](#constructing-bounds-subject-to-shape-constraints)
+  - [Help, Feature Requests and Bug
+    Reports](#help-feature-requests-and-bug-reports)
+  - [References](#references)
+
+## Introduction
 
 This package conducts inference on econometrics problems that can be
 studied by linear and quadratic programming using the cone-tightening
-procedure of Deb et al. (2018).
+procedure of Deb et al. (2018). Based on the test statistic, this package
+can compute the *p*-value, construct confidence intervals and estimate the 
+bounds subject to shape constraints. 
 
-Scope of the Vignette
----------------------
+## Scope of the Vignette
 
 This vignette is intended as a guide to use the `linearprog` package.
 Readers may refer to section 4.2 of Deb et al. (2018) for details about
 the cone-tightening procedure and the supplemental appendix of Kamat
 (2019).
 
-Installation and Requirements
------------------------------
+## Installation and Requirements
 
 `linearprog` can be installed from our GitHub repository via
 
-    devtools::install_github("conroylau/linearprog")
+``` r
+devtools::install_github("conroylau/linearprog")
+```
 
 To use `linearprog`, one of the following packages for solving linear
 and quadratic programs is required. There are four options for the
@@ -59,11 +63,11 @@ solver:
     addition, both packages have to be installed on the command line to
     link the package to the correct CPLEX library. The two packages’
     name and installation instrutions are as follows:
-
+    
     1.  `Rcplex` — the instructions to install the R package can be
         found
         [here](https://cran.r-project.org/web/packages/Rcplex/INSTALL).
-
+    
     2.  `cplexAPI` — the instructions to install the R package can be
         found
         [here](https://cran.r-project.org/web/packages/cplexAPI/INSTALL).
@@ -74,8 +78,7 @@ solver:
 If no package is specified, one of the above packages will be
 automatically chosen from those that are available.
 
-Usage Demonstration 1: Missing Data Problem
--------------------------------------------
+## Usage Demonstration 1: Missing Data Problem
 
 ### Background and Data
 
@@ -89,110 +92,205 @@ for the missing data problem.
 As an illustration, the dataset below studies the missing data problem
 and contains 1,000 simulated data with 2 columns. This dataset is
 included in the `linearprog` package.
+
 ``` r
 library(linearprog)
 knitr::kable(head(sampledata, n = 10))
-``` 
+```
+
 <table>
+
 <thead>
+
 <tr>
+
 <th style="text-align:right;">
+
 D
+
 </th>
+
 <th style="text-align:right;">
+
 Y
+
 </th>
+
 </tr>
+
 </thead>
+
 <tbody>
+
 <tr>
+
 <td style="text-align:right;">
+
 1
+
 </td>
+
 <td style="text-align:right;">
+
 0.9
+
 </td>
+
 </tr>
+
 <tr>
+
 <td style="text-align:right;">
+
 1
+
 </td>
+
 <td style="text-align:right;">
+
 0.9
+
 </td>
+
 </tr>
+
 <tr>
+
 <td style="text-align:right;">
+
 1
+
 </td>
+
 <td style="text-align:right;">
+
 0.0
+
 </td>
+
 </tr>
+
 <tr>
+
 <td style="text-align:right;">
+
 0
+
 </td>
+
 <td style="text-align:right;">
+
 0.2
+
 </td>
+
 </tr>
+
 <tr>
+
 <td style="text-align:right;">
+
 1
+
 </td>
+
 <td style="text-align:right;">
+
 0.4
+
 </td>
+
 </tr>
+
 <tr>
+
 <td style="text-align:right;">
+
 1
+
 </td>
+
 <td style="text-align:right;">
+
 0.8
+
 </td>
+
 </tr>
+
 <tr>
+
 <td style="text-align:right;">
+
 1
+
 </td>
+
 <td style="text-align:right;">
+
 0.5
+
 </td>
+
 </tr>
+
 <tr>
+
 <td style="text-align:right;">
+
 1
+
 </td>
+
 <td style="text-align:right;">
+
 0.6
+
 </td>
+
 </tr>
+
 <tr>
+
 <td style="text-align:right;">
+
 1
+
 </td>
+
 <td style="text-align:right;">
+
 0.9
+
 </td>
+
 </tr>
+
 <tr>
+
 <td style="text-align:right;">
+
 1
+
 </td>
+
 <td style="text-align:right;">
+
 0.7
+
 </td>
+
 </tr>
+
 </tbody>
+
 </table>
 
 where
 
--   `Y` is a multivariate discrete outcome variable that takes value
+  - `Y` is a multivariate discrete outcome variable that takes value
     from 0 to 1 with step size 0.1.
--   `D` is a binary treatment where *Y*<sub>*i*</sub> is observed for
+  - `D` is a binary treatment where *Y*<sub>*i*</sub> is observed for
     *D*<sub>*i*</sub> = 1 and not observed for *D*<sub>*i*</sub> = 0.
 
 ### Specifying the Functions
@@ -203,14 +301,15 @@ This package provides the flexibility for users to specify their own
 function to generate the value of observed value of beta. The
 requirement for the function provided by the user is as follows:
 
--   The function’s only argument is the dataset.
--   The function only returns a numeric vector that corresponds to the
+  - The function’s only argument is the dataset.
+  - The function only returns a numeric vector that corresponds to the
     vector for the observed beta.
 
 #### Full Information Approach
 
 The following is an example of defining the function for the full
 information approach:
+
 ``` r
 func_full_info <- function(df){
   beta = NULL
@@ -225,6 +324,7 @@ func_full_info <- function(df){
   return(beta)
 }
 ```
+
 The `func_full_info` function returns a vector of length that is equal
 to the number of distinct observations for *Y* where element *i* of the
 vector refers to the probability that the corresponding value of
@@ -234,6 +334,7 @@ vector refers to the probability that the corresponding value of
 
 The following is an example of defining the function for the two moments
 approach:
+
 ``` r
 func_two_moment <- function(df){
   beta = matrix(c(0,0), nrow = 2)
@@ -243,6 +344,7 @@ func_two_moment <- function(df){
   return(beta)
 }
 ```
+
 The `func_two_moment` function returns a vector with two elements that
 corresponds to the two moments **E**[*Y*<sub>*i*</sub>] and
 **E**[*Y*<sub>*i*</sub>*D*<sub>*i*</sub>].
@@ -252,41 +354,50 @@ corresponds to the two moments **E**[*Y*<sub>*i*</sub>] and
 To conduct the inference in this package, the matrices `A_obs` and
 `A_tgt` have to be defined in order to use the function. To construct
 the two matrices, the following parameters are needed:
+
 ``` r
 N = dim(sampledata)[1]
 J1 = length(unique(sampledata[,"Y"]))
 yp = seq(0,1,1/(J1-1))
 ```
+
 With the above quantities, the following matrices can be defined as
 follows:
+
 ``` r
 A_obs_twom = matrix(c(rep(0,J1), yp, rep(0,J1), rep(1, J1)), nrow = 2,
                 byrow = TRUE)
 A_target = matrix(c(yp, yp), nrow = 1)
 ```
+
 The matrix `A_obs_twom` refers to the observed matrix for the two
 moments approach. If users would prefer using the full information
 approach, the following matrix that correspond to the full information
 approach has to be defined:
+
 ``` r
 A_obs_full = cbind(matrix(rep(0,J1*J1), nrow = J1), diag(1, J1))
 ```
+
 Lastly, the value of tau can be defined freely by the user as long as
 the quadratic program is feasible. Here, we choose the value of tau
 based on the formula from page 15 of the supplemental appendix of Kamat
 (2019):
+
 ``` r
 tau = sqrt(log(N)/N)
 ```
+
 ### Calculating *p*-value
 
 The command for applying the cone-tightening procedure in `linearprog`
-is called `dkqs`. It takes the data, parameters and the function
-that can calculate the observed value of beta and returns the *p*-value.
+is called `dkqs`. It takes the data, parameters and the function that
+can calculate the observed value of beta and returns the *p*-value.
 
 #### Syntax
 
 This `dkqs` command has the following syntax:
+
 ``` r
 dkqs(df = sampledata, 
      A_obs = A_obs_twom, 
@@ -297,28 +408,29 @@ dkqs(df = sampledata,
      bs_num = 100,
      p_sig = 2,
      tau_input = tau,
-     solver = "gurobi",
+     solver = gurobi,
      cores = 1,
      progress = TRUE)
 ```
+
 where
 
--   `df` refers to the data set.
--   `A_obs` refers to the “observed matrix”.
--   `A_tgt` refers to the “target matrix”.
--   `func_obs` refers to the function that generates the vector of
+  - `df` refers to the data set.
+  - `A_obs` refers to the “observed matrix”.
+  - `A_tgt` refers to the “target matrix”.
+  - `func_obs` refers to the function that generates the vector of
     observed beta.
--   `beta_tgt` refers to the value of beta to be tested.
--   `bs_seed` refers to the starting value of the seed in bootstrap.
--   `bs_num` refers to the total number of bootstraps to be conducted.
--   `p_sig` refers to the number of decimal places in the *p*-value.
--   `tau_input` refers to the value of tau chosen by the user.
--   `solver` refers to the name of the solver used to solve the linear
+  - `beta_tgt` refers to the value of beta to be tested.
+  - `bs_seed` refers to the starting value of the seed in bootstrap.
+  - `bs_num` refers to the total number of bootstraps to be conducted.
+  - `p_sig` refers to the number of decimal places in the *p*-value.
+  - `tau_input` refers to the value of tau chosen by the user.
+  - `solver` refers to the name of the solver used to solve the linear
     and quadratic programs.
--   `cores` refers to the number of cores to be used in the parallelized
-    for-loop for computing the bootstrap test statistics. See <span
-    id="parallel-dkqs">here</span> for more details.
--   `progress` refers to the boolean variable for whether the result
+  - `cores` refers to the number of cores to be used in the parallelized
+    for-loop for computing the bootstrap test statistics. See
+    <span id="parallel-dkqs">here</span> for more details.
+  - `progress` refers to the boolean variable for whether the result
     messages should be displayed in the procedure of calculating the
     *p*-value.
 
@@ -339,49 +451,53 @@ be less than or equal to the cores that you have on your machine.
 The followings are the output when the **two moments approach** is used
 with the `gurobi` solver to test the hypothesis that `beta_tgt` is
 0.375.
+
 ``` r
 dkqs(df = sampledata, 
-         A_obs = A_obs_twom, 
-         A_tgt = A_target, 
-         func_obs = func_two_moment, 
-         beta_tgt = 0.375, 
-         bs_seed = 1,
-         bs_num = 100,
-         p_sig = 3,
-         tau_input = tau,
-         solver = "gurobi",
-         cores = 8,
-         progress = TRUE)
-#> Linear and quadratic programming solver used: gurobi.
+     A_obs = A_obs_twom, 
+     A_tgt = A_target, 
+     func_obs = func_two_moment, 
+     beta_tgt = 0.375, 
+     bs_seed = 1,
+     bs_num = 100,
+     p_sig = 3,
+     tau_input = tau,
+     solver = "gurobi",
+     cores = 8,
+     progress = TRUE)
 #> Number of cores used in bootstrap procedure: 8.
+#> Linear and quadratic programming solver used: gurobi.
 #> ----------------------------------- 
 #> Test statistic: 0.06724.
 #> p-value: 0.253.
 #> Value of tau used: 0.08311.
-``` 
+```
+
 Alternatively, the followings are the output when the **full information
 approach** is used with the `gurobi` solver to test the hypothesis that
 `beta_tgt` is 0.375.
+
 ``` r
 dkqs_p = dkqs(df = sampledata, 
-                   A_obs = A_obs_full, 
-                   A_tgt = A_target, 
-                   func_obs = func_full_info, 
-                   beta_tgt = 0.375, 
-                   bs_seed = 1,
-                   bs_num = 100,
-                   p_sig = 3,
-                   tau_input = tau,
-                   solver = "gurobi",
-                   cores = 8,
-                   progress = TRUE)
-#> Linear and quadratic programming solver used: gurobi.
+              A_obs = A_obs_full, 
+              A_tgt = A_target, 
+              func_obs = func_full_info, 
+              beta_tgt = 0.375, 
+              bs_seed = 1,
+              bs_num = 100,
+              p_sig = 3,
+              tau_input = tau,
+              solver = "gurobi",
+              cores = 8,
+              progress = TRUE)
 #> Number of cores used in bootstrap procedure: 8.
+#> Linear and quadratic programming solver used: gurobi.
 #> ----------------------------------- 
 #> Test statistic: 0.01746.
 #> p-value: 0.253.
 #> Value of tau used: 0.08311.
 ```
+
 The results from the two approach should give the same *p*-value while
 the test statistic will be different as different moments are considered
 in the problem.
@@ -394,7 +510,7 @@ On the other hand, the computational time for using multiple cores
 should be shorter than using a single core for a large number of
 bootstraps. This is illustrated by the example below:
 
-```r
+``` r
 dkqs_args = list(df = sampledata, 
                  A_obs = A_obs_full, 
                  A_tgt = A_target, 
@@ -411,6 +527,7 @@ dkqs_args = list(df = sampledata,
 # Run dkqs with one core
 t10 = Sys.time()
 do.call(dkqs, dkqs_args)
+
 t11 = Sys.time()
 time1 = t11 - t10
 
@@ -423,10 +540,11 @@ time8 = t81 - t80
 
 # Print the time used
 print(sprintf("Time used with 1 core: %s", time1))
-#> [1] "Time used with 1 core: 3.71159601211548"
+#> [1] "Time used with 1 core: 4.6271800994873"
 print(sprintf("Time used with 8 cores: %s", time8))
-#> [1] "Time used with 8 cores: 1.73412299156189" 
+#> [1] "Time used with 8 cores: 1.70605516433716"
 ```
+
 ### Constructing Confidence Intervals
 
 The command for constructing the two-sided confidence interval for a
@@ -437,46 +555,50 @@ and applying the biscetion method.
 #### Syntax
 
 The syntax of the `invertci` function is as follows:
+
 ``` r
 invertci(f = dkqs, 
-     farg = dkqs_farg, 
-     alpha = 0.05, 
-     lb0 = NULL, 
-     lb1 = NULL, 
-     ub0 = NULL, 
-     ub1 = NULL, 
-     tol = 0.0001, 
-     max_iter = 20, 
-     df_ci = NULL,
-     progress = FALSE)
-``` 
+         farg = dkqs_farg, 
+         alpha = 0.05, 
+         lb0 = NULL, 
+         lb1 = NULL, 
+         ub0 = NULL, 
+         ub1 = NULL, 
+         tol = 0.0001, 
+         max_iter = 20, 
+         df_ci = NULL,
+         progress = FALSE)
+```
+
 where
 
--   `f` refers to the function that represents a testing procedure.
--   `farg` refers to the list of arguments to be passed to the function
+  - `f` refers to the function that represents a testing procedure.
+  - `farg` refers to the list of arguments to be passed to the function
     of testing procedure.
--   `alpha` refers to the signifance level of the test.
--   `lb0` refers to the logical lower bound for the confidence interval.
--   `lb1` refers to the maximum possible lower bound for the confidence
+  - `alpha` refers to the signifance level of the test.
+  - `lb0` refers to the logical lower bound for the confidence interval.
+  - `lb1` refers to the maximum possible lower bound for the confidence
     interval.
--   `ub0` refers to the logical upper bound for the confidence interval.
--   `ub1` refers to the minimum possible upper bound for the confidence
+  - `ub0` refers to the logical upper bound for the confidence interval.
+  - `ub1` refers to the minimum possible upper bound for the confidence
     interval.
--   `tol` refers to the tolerance level in the bisection method.
--   `max_iter` refers to the maximum number of iterations in the
+  - `tol` refers to the tolerance level in the bisection method.
+  - `max_iter` refers to the maximum number of iterations in the
     bisection method.
--   `df_ci` refers to dataframe that consists of the points and the
+  - `df_ci` refers to dataframe that consists of the points and the
     corresponding *p*-values that have been tested in constructing the
     confidence intervals.
--   `progress` refers to the boolean variable for whether the result
+  - `progress` refers to the boolean variable for whether the result
     messages should be displayed in the procedure of constructing
     confidence interval.
 
 #### Specifying the Argument
 
-To use the `invertci` function, the arguments for the function of the test
-statistic has to be specified and passed to `farg`. For instance, if the
-test `dkqs` is used, then the arguments can be defined as follows:
+To use the `invertci` function, the arguments for the function of the
+test statistic has to be specified and passed to `farg`. For instance,
+if the test `dkqs` is used, then the arguments can be defined as
+follows:
+
 ``` r
 dkqs_farg = list(df = sampledata,
                  A_obs = A_obs_full,
@@ -489,7 +611,8 @@ dkqs_farg = list(df = sampledata,
                  solver = "gurobi",
                  cores = 8,
                  progress = FALSE)
-``` 
+```
+
 Note that the argument for the target value of beta, i.e. the value to
 be tested under the null, is not required in the above argument
 assignment.
@@ -497,109 +620,63 @@ assignment.
 #### Specifying the Data Frame `df_ci`
 
 If the *p*-values at certain points have already been evaluated, users
-can store them in a data frame and pass it to the function `invertci`. The
-requirement for the data frame is as follows:
+can store them in a data frame and pass it to the function `invertci`.
+The requirement for the data frame is as follows:
 
--   The data frame can only has two columns. The first column is `point`
+  - The data frame can only has two columns. The first column is `point`
     (which contains the values of betas that has been evaluated) and the
     second column is `value` (which corresponds to the *p*-values being
     evaluated).
--   The data frame can only contain numeric values.
+  - The data frame can only contain numeric values.
 
 #### Output
 
-The following shows a sample output of the function `invertci` that is used
-to the confidence interval for the test `dkqs` with significance
+The following shows a sample output of the function `invertci` that is
+used to the confidence interval for the test `dkqs` with significance
 level 0.05.
+
 ``` r
 invertci_dkqs = invertci(f = dkqs, 
-                 farg = dkqs_farg, 
-                 alpha = 0.05, 
-                 lb0 = 0, 
-                 lb1 = 0.4, 
-                 ub0 = 1, 
-                 ub1 = 0.6, 
-                 tol = 0.001, 
-                 max_iter = 5, 
-                 df_ci = NULL, 
-                 progress = TRUE)
+                         farg = dkqs_farg, 
+                         alpha = 0.05, 
+                         lb0 = 0, 
+                         lb1 = 0.4, 
+                         ub0 = 1, 
+                         ub1 = 0.6, 
+                         tol = 0.001, 
+                         max_iter = 5, 
+                         df_ci = NULL, 
+                         progress = TRUE)
+#> < Constructing confidence interval for alpha = 0.05 >
 #> 
 #> === Computing upper bound of confidence interval ===
-#> >>> Evaluating the first left end-point
-#>       * Point being evaluated: 0.6
-#>       * p-value: 0.78
-#>       * Decision: Do not reject
-#> >>> Evaluating the first right end-point
-#>       * Point being evaluated: 1
-#>       * p-value: 0
-#>       * Decision: Reject
-#> >>> Iteration 1
-#>       * Point being evaluated: 0.8
-#>       * p-value: 0
-#>       * Decision: Reject
-#>       * Current interval: [0.6, 1]
-#> >>> Iteration 2
-#>       * Point being evaluated: 0.7
-#>       * p-value: 0
-#>       * Decision: Reject
-#>       * Current interval: [0.6, 0.8]
-#> >>> Iteration 3
-#>       * Point being evaluated: 0.65
-#>       * p-value: 0.05
-#>       * Decision: Do not reject
-#>       * Current interval: [0.6, 0.7]
-#> >>> Iteration 4
-#>       * Point being evaluated: 0.675
-#>       * p-value: 0
-#>       * Decision: Reject
-#>       * Current interval: [0.65, 0.7]
-#> >>> Iteration 5
-#>       * Point being evaluated: 0.662
-#>       * p-value: 0
-#>       * Decision: Reject
-#>       * Current interval: [0.65, 0.675]
-#>       * Reached the maximum number of iterations.
+#> Iteration         Lower bound     Upper bound     Test point  p-value     Reject?
+#> Left end pt.      0.60000         NA              0.60000     0.78000     FALSE  
+#> Right end pt.     NA              1.00000         1.00000     0.00000     TRUE   
+#> 1                 0.60000         1.00000         0.80000     0.00000     TRUE   
+#> 2                 0.60000         0.80000         0.70000     0.00000     TRUE   
+#> 3                 0.60000         0.70000         0.65000     0.05000     FALSE  
+#> 4                 0.65000         0.70000         0.67500     0.00000     TRUE   
+#> 5                 0.65000         0.67500         0.66250     0.00000     TRUE   
+#> >>> Reached the maximum number of iterations. Bisection method is completed.
 #> 
 #> === Computing lower bound of confidence interval ===
-#> >>> Evaluating the first left end-point
-#>       * Point being evaluated: 0
-#>       * p-value: 0
-#>       * Decision: Reject
-#> >>> Evaluating the first right end-point
-#>       * Point being evaluated: 0.4
-#>       * p-value: 0.79
-#>       * Decision: Do not reject
-#> >>> Iteration 1
-#>       * Point being evaluated: 0.2
-#>       * p-value: 0
-#>       * Decision: Reject
-#>       * Current interval: [0, 0.4]
-#> >>> Iteration 2
-#>       * Point being evaluated: 0.3
-#>       * p-value: 0
-#>       * Decision: Reject
-#>       * Current interval: [0.2, 0.4]
-#> >>> Iteration 3
-#>       * Point being evaluated: 0.35
-#>       * p-value: 0
-#>       * Decision: Reject
-#>       * Current interval: [0.3, 0.4]
-#> >>> Iteration 4
-#>       * Point being evaluated: 0.375
-#>       * p-value: 0.26
-#>       * Decision: Do not reject
-#>       * Current interval: [0.35, 0.4]
-#> >>> Iteration 5
-#>       * Point being evaluated: 0.363
-#>       * p-value: 0.03
-#>       * Decision: Do not reject
-#>       * Current interval: [0.35, 0.375]
-#>       * Reached the maximum number of iterations.
+#> Iteration         Lower bound     Upper bound     Test point  p-value     Reject?
+#> Left end pt.      0.00000         NA              0.00000     0.00000     TRUE   
+#> Right end pt.     NA              0.40000         0.40000     0.79000     FALSE  
+#> 1                 0.00000         0.40000         0.20000     0.00000     TRUE   
+#> 2                 0.20000         0.40000         0.30000     0.00000     TRUE   
+#> 3                 0.30000         0.40000         0.35000     0.00000     TRUE   
+#> 4                 0.35000         0.40000         0.37500     0.26000     FALSE  
+#> 5                 0.35000         0.37500         0.36250     0.03000     FALSE  
+#> >>> Reached the maximum number of iterations. Bisection method is completed.
 #> -----------------------------------
-#> Total number of iterations: 10.
+#> < Significance level: 0.05 >
 #> Tolerance level: 0.001.
+#> Total number of iterations: 10.
 #> Confidence interval: [0.356, 0.656].
 ```
+
 The message generated at the end of the function can be re-generated by
 `print(invertci_dkqs)`. All message displayed when the function is
 constructing the confidence interval can be re-generated by
@@ -607,76 +684,248 @@ constructing the confidence interval can be re-generated by
 
 ### Constructing Multiple Confidence Intervals
 
-The `many_invertci` function is a wrapper for the `invertci` function where the
-user can pass multiple values of alpha so multiple confidence intervals
-can be constructed in one command.
+The function `invertci` can also be used to generate multiple confidence
+intervals if the argument `alpha` is a vector. For instnace, the
+following code produces confidence intervals for alpha equals 0.01, 0.05
+and 0.1.
+
+``` r
+invertci_dkqs_multi = invertci(f = dkqs, 
+                               farg = dkqs_farg, 
+                               alpha = c(0.01, 0.05, 0.1), 
+                               lb0 = 0, 
+                               lb1 = 0.4, 
+                               ub0 = 1, 
+                               ub1 = 0.6, 
+                               tol = 0.001, 
+                               max_iter = 5, 
+                               df_ci = NULL, 
+                               progress = TRUE)
+#> < Constructing confidence interval for alpha = 0.01 >
+#> 
+#> === Computing upper bound of confidence interval ===
+#> Iteration         Lower bound     Upper bound     Test point  p-value     Reject?
+#> Left end pt.      0.60000         NA              0.60000     0.78000     FALSE  
+#> Right end pt.     NA              1.00000         1.00000     0.00000     TRUE   
+#> 1                 0.60000         1.00000         0.80000     0.00000     TRUE   
+#> 2                 0.60000         0.80000         0.70000     0.00000     TRUE   
+#> 3                 0.60000         0.70000         0.65000     0.05000     FALSE  
+#> 4                 0.65000         0.70000         0.67500     0.00000     TRUE   
+#> 5                 0.65000         0.67500         0.66250     0.00000     TRUE   
+#> >>> Reached the maximum number of iterations. Bisection method is completed.
+#> 
+#> === Computing lower bound of confidence interval ===
+#> Iteration         Lower bound     Upper bound     Test point  p-value     Reject?
+#> Left end pt.      0.00000         NA              0.00000     0.00000     TRUE   
+#> Right end pt.     NA              0.40000         0.40000     0.79000     FALSE  
+#> 1                 0.00000         0.40000         0.20000     0.00000     TRUE   
+#> 2                 0.20000         0.40000         0.30000     0.00000     TRUE   
+#> 3                 0.30000         0.40000         0.35000     0.00000     TRUE   
+#> 4                 0.35000         0.40000         0.37500     0.26000     FALSE  
+#> 5                 0.35000         0.37500         0.36250     0.03000     FALSE  
+#> >>> Reached the maximum number of iterations. Bisection method is completed.
+#> -----------------------------------
+#> < Significance level: 0.01 >
+#> Tolerance level: 0.001.
+#> Total number of iterations: 10.
+#> Confidence interval: [0.356, 0.656].
+#> 
+#> < Constructing confidence interval for alpha = 0.05 >
+#> 
+#> === Computing upper bound of confidence interval ===
+#> Iteration         Lower bound     Upper bound     Test point  p-value     Reject?
+#> Left end pt.      0.60000         NA              0.60000     0.78000     FALSE  
+#> Right end pt.     NA              1.00000         1.00000     0.00000     TRUE   
+#> 1                 0.60000         1.00000         0.80000     0.00000     TRUE   
+#> 2                 0.60000         0.80000         0.70000     0.00000     TRUE   
+#> 3                 0.60000         0.70000         0.65000     0.05000     FALSE  
+#> 4                 0.65000         0.70000         0.67500     0.00000     TRUE   
+#> 5                 0.65000         0.67500         0.66250     0.00000     TRUE   
+#> >>> Reached the maximum number of iterations. Bisection method is completed.
+#> 
+#> === Computing lower bound of confidence interval ===
+#> Iteration         Lower bound     Upper bound     Test point  p-value     Reject?
+#> Left end pt.      0.00000         NA              0.00000     0.00000     TRUE   
+#> Right end pt.     NA              0.40000         0.40000     0.79000     FALSE  
+#> 1                 0.00000         0.40000         0.20000     0.00000     TRUE   
+#> 2                 0.20000         0.40000         0.30000     0.00000     TRUE   
+#> 3                 0.30000         0.40000         0.35000     0.00000     TRUE   
+#> 4                 0.35000         0.40000         0.37500     0.26000     FALSE  
+#> 5                 0.35000         0.37500         0.36250     0.03000     FALSE  
+#> >>> Reached the maximum number of iterations. Bisection method is completed.
+#> -----------------------------------
+#> < Significance level: 0.05 >
+#> Tolerance level: 0.001.
+#> Total number of iterations: 10.
+#> Confidence interval: [0.356, 0.656].
+#> 
+#> < Constructing confidence interval for alpha = 0.1 >
+#> 
+#> === Computing upper bound of confidence interval ===
+#> Iteration         Lower bound     Upper bound     Test point  p-value     Reject?
+#> Left end pt.      0.60000         NA              0.60000     0.78000     FALSE  
+#> Right end pt.     NA              1.00000         1.00000     0.00000     TRUE   
+#> 1                 0.60000         1.00000         0.80000     0.00000     TRUE   
+#> 2                 0.60000         0.80000         0.70000     0.00000     TRUE   
+#> 3                 0.60000         0.70000         0.65000     0.05000     FALSE  
+#> 4                 0.65000         0.70000         0.67500     0.00000     TRUE   
+#> 5                 0.65000         0.67500         0.66250     0.00000     TRUE   
+#> >>> Reached the maximum number of iterations. Bisection method is completed.
+#> 
+#> === Computing lower bound of confidence interval ===
+#> Iteration         Lower bound     Upper bound     Test point  p-value     Reject?
+#> Left end pt.      0.00000         NA              0.00000     0.00000     TRUE   
+#> Right end pt.     NA              0.40000         0.40000     0.79000     FALSE  
+#> 1                 0.00000         0.40000         0.20000     0.00000     TRUE   
+#> 2                 0.20000         0.40000         0.30000     0.00000     TRUE   
+#> 3                 0.30000         0.40000         0.35000     0.00000     TRUE   
+#> 4                 0.35000         0.40000         0.37500     0.26000     FALSE  
+#> 5                 0.35000         0.37500         0.36250     0.03000     TRUE   
+#> >>> Reached the maximum number of iterations. Bisection method is completed.
+#> -----------------------------------
+#> < Significance level: 0.1 >
+#> Tolerance level: 0.001.
+#> Total number of iterations: 10.
+#> Confidence interval: [0.369, 0.656].
+```
+
+### Constructing Bounds subject to Shape Constraints
+
+Another application of the `linearprog` package is to construct the
+bounds estimates subject to certain shape constraints. This is obtained
+by the `estbounds` function. The linear program for obtaining the exact
+bounds subject to shape constraints may not be necessarily feasible.
+Hence, an `estimate` option for the package is available for the user.
 
 #### Syntax
 
-The syntax for the `many_invertci` function is as follows:
+The `estbounds` command has the following syntax:
+
 ``` r
-many_invertci(f = dkqs, 
-          farg = dkqs_farg, 
-          alphas = c(0.01, 0.05), 
-          lb0 = NULL, 
-          lb1 = NULL, 
-          ub0 = NULL, 
-          ub1 = NULL, 
-          tol = 0.0001, 
-          max_iter = 20, 
-          df_ci = NULL,
-          progress_one = TRUE,
-          progress_many = TRUE)
+estbounds1 = estbounds(df = sampledata,
+                       func_obs = func_full_info,
+                       A_obs = A_obs_full,
+                       A_tgt = A_target,
+                       A_shp_eq = A_shp_eq_dkqs,
+                       A_shp_ineq = A_shp_ineq_dkqs,
+                       beta_shp_eq = beta_shp_eq_dkqs,
+                       beta_shp_ineq = beta_shp_ineq_dkqs,
+                       kappa = 1e-10,
+                       lnorm = 2,
+                       solver = "gurobi",
+                       estimate = FALSE,
+                       progress = TRUE)
 ```
-where
 
--   `alphas` refers to the list of significance levels to be used in
-    constructing the confidence intervals.
--   `progress_one` refers to the boolean variable for whether the result
-    messages should be displayed in running the function `invertci`.
--   `progress_many` refers to the boolean variable for whether the
-    result messages should be displayed in running the function
-    `many_invertci`.
--   The rest of the arguments are the same as the function `invertci` and
-    they can be found [here](#invertci_syntax).
+where 
 
-#### Output
+  - `A_shp_eq` refers to the matrix representing the equality shape 
+  constraints. 
+  - `A_shp_ineq` refers to the matrix representing the inequality shape 
+  constraints. 
+  - `beta_shp_eq` refers to the RHS vector in equality shape constraints. 
+  - `beta_shp_ineq` refers to the RHS vector in inequality shape constraints. 
+  - `lnorm` refers to the norm used in the optimization problem. The norms 
+  that are supported by this function are the 1-norm, 2-norm and the sup-norm. 
+  - `kappa` refers to the parameter used in the second step of the two-step 
+  procedure for obtaining the solution subject to the shape constraints. 
+  - `estimate` refers to the boolean variable that indicate whether the 
+  estimated problem should be considered.
 
-The following shows a sample output of the function `invertci_many` that is
-used to the confidence intervals for the test `dkqs` with
-significance level 0.01, 0.05 and 0.1.
+The remaining arguments have the same definition as that has been
+defined earlier, which can be found <span id="syntax">here</span>.
+
+#### Specifying the Matrices for Shape Constraints
+
+The shape constraints are characterized by equality and inequality
+constraints. Each type of the contraints are represented by a matrix and
+a vector.
+
+For instance, the equality constraints may be defined as follows:
+
 ``` r
-many_invertci(f = dkqs, 
-          farg = dkqs_farg, 
-          alphas = c(0.01, 0.05, 0.1), 
-          lb0 = 0, 
-          lb1 = 0.4, 
-          ub0 = 1, 
-          ub1 = 0.6, 
-          tol = 0.001, 
-          max_iter = 10, 
-          df_ci = NULL, 
-          progress_one = FALSE, 
-          progress_many = TRUE)
-#> Confidence interval for significance level 0.01: [0.35742, 0.65977].
-#> Confidence interval for significance level 0.05: [0.36211, 0.65352].
-#> Confidence interval for significance level 0.1: [0.36523, 0.65039].
-``` 
-Help, Feature Requests and Bug Reports
---------------------------------------
+A_shp_eq_dkqs = matrix(rep(1, ncol(A_obs_full)), nrow = 1)
+beta_shp_eq_dkqs = c(1)
+```
+
+If the other set of contraints is empty, set `NULL` to the matrix and vector.
+
+``` r
+A_shp_ineq_dkqs = NULL
+beta_shp_ineq_dkqs = NULL
+```
+
+#### Sample Output
+
+The following is a sample output the bounds are estimated with a
+tolerance level of `1e-10`.
+
+``` r
+estbounds1 = estbounds(df = sampledata,
+                       func_obs = func_full_info,
+                       A_obs = A_obs_full,
+                       A_tgt = A_target,
+                       A_shp_eq = A_shp_eq_dkqs,
+                       A_shp_ineq = A_shp_ineq_dkqs,
+                       beta_shp_eq = beta_shp_eq_dkqs,
+                       beta_shp_ineq = beta_shp_ineq_dkqs,
+                       kappa = 1e-10,
+                       lnorm = 2,
+                       solver = "gurobi",
+                       estimate = TRUE,
+                       progress = TRUE)
+#> Estimated bounds subject to shape constraints: [0.38316, 0.63344]
+```
+
+The following is the sample output when the actual bounds are constructed
+without estimation.
+
+``` r
+estbounds1 = estbounds(df = sampledata,
+                       func_obs = func_full_info,
+                       A_obs = A_obs_full,
+                       A_tgt = A_target,
+                       A_shp_eq = A_shp_eq_dkqs,
+                       A_shp_ineq = A_shp_ineq_dkqs,
+                       beta_shp_eq = beta_shp_eq_dkqs,
+                       beta_shp_ineq = beta_shp_ineq_dkqs,
+                       kappa = 1e-10,
+                       lnorm = 2,
+                       solver = "gurobi",
+                       estimate = FALSE,
+                       progress = TRUE)
+#> True bounds subject to shape constraints: [0.3832, 0.6332]
+```
+
+## Help, Feature Requests and Bug Reports
 
 Please post an issue on the [GitHub
 repository](https://github.com/conroylau/linearprog/issues), and we are
 happy to help.
 
-References
-----------
+## References
+
+<div id="refs" class="references hanging-indent">
+
+<div id="ref-dkqs2018">
 
 Deb, R., Y. Kitamura, J. K. H. Quah, and Stoye J. 2018. “Revealed Price
 Preference: Theory and Empirical Analysis.” *Working Paper*.
 
+</div>
+
+<div id="ref-kamat2019">
+
 Kamat, V. 2019. “Identification with Latent Choice Sets.” *Working
 Paper*.
 
+</div>
+
+<div id="ref-manski1989">
+
 Manski, C. F. 1989. “Anatomy of the Selection Problem.” *The Journal of
 Human Resources* 24: 343–60.
+
+</div>
+
+</div>
