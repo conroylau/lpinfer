@@ -7,7 +7,6 @@
 #' 
 #' @import Matrix gurobi
 #' 
-#' @param beta_obs Observed value of parameter of interest.
 #' @param A_shp_eq Matrix representing equality shape constraints.
 #' @param A_shp_ineq Matrix representing inequality shape constraints.
 #' @param beta_shp_eq RHS vector in equality shape constraints.
@@ -111,10 +110,16 @@ estbounds <- function(df, func_obs, A_obs, A_tgt,
       # Stage one of the problem
       estbounds21 = estbounds1_L2(A_obs, beta_obs, A1, rhs1, sense1, 
                                   lb_zero, solver)
+      # Return stop message if there is no feasible solution for stage one
+      # of the problem
+      if (is.numeric(estbounds21$objval) == FALSE){
+        stop("The equality and inequality constraints are contradictory. Please
+             ensure that the constraints are correctly specified.")
+      }
       # Stage two of the problem
-      estbounds_ub = estbounds2_L2(estbounds21, A_obs, beta_obs, "max", 
+      estbounds_ub = estbounds2_L2(estbounds21, A_tgt, A_obs, beta_obs, "max", 
                                    kappa, solver)
-      estbounds_lb = estbounds2_L2(estbounds21, A_obs, beta_obs, "min", 
+      estbounds_lb = estbounds2_L2(estbounds21, A_tgt, A_obs, beta_obs, "min", 
                                    kappa, solver)
     } else if (lnorm == "sup"){
       ## sup-norm
@@ -259,7 +264,7 @@ estbounds1_L2 <- function(A_obs, beta_obs, A1, rhs1, sense1, lb, solver){
 #' 
 #' @export
 #' 
-estbounds2_L2 <- function(firststepsoln, A_obs, beta_obs, modelsense, 
+estbounds2_L2 <- function(firststepsoln, A_tgt, A_obs, beta_obs, modelsense, 
                           kappa, solver){
   #### Step 1: Extract information from the first-stage solution
   Qhat = firststepsoln$objval
