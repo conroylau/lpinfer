@@ -75,8 +75,10 @@ A_obs_twom = matrix(c(rep(0,J1), yp, rep(0,J1), rep(1, J1)), nrow = 2,
                     byrow = TRUE)
 
 ### Part 5 Set the parameters and shape constraints
-beta_shp_eq_dkqs = c(1)
+# Equality constraint
 A_shp_eq_dkqs = matrix(rep(1, ncol(A_obs_full)), nrow = 1)
+beta_shp_eq_dkqs = c(1)
+# Inequality constraint
 A_shp_ineq_dkqs = NULL
 beta_shp_ineq_dkqs = NULL
 
@@ -85,9 +87,9 @@ farg = list(df = df,
             A_obs = A_obs_full,
             A_tgt = A_tgt,
             func_obs = func_full_info,
-            A_shp_eq = A_shp_eq,
+            A_shp_eq = A_shp_eq_dkqs,
             A_shp_ineq = A_shp_ineq_dkqs,
-            beta_shp_eq = beta_shp_eq,
+            beta_shp_eq = beta_shp_eq_dkqs,
             beta_shp_ineq = beta_shp_ineq_dkqs,
             kappa = 1e-20,
             lnorm = 2,
