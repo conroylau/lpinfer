@@ -9,7 +9,6 @@ estbounds_check(
   func_obs,
   A_obs,
   A_tgt,
-  beta_tgt,
   A_shp_eq,
   A_shp_ineq,
   beta_shp_eq,
@@ -30,9 +29,6 @@ estbounds_check(
 \item{A_obs}{The "observed matrix" in the inference \eqn{A_{\mathrm{obs}}}.}
 
 \item{A_tgt}{The "target matrix" in the inference \eqn{A_{\mathrm{tgt}}}.}
-
-\item{beta_tgt}{The value of \eqn{\hat{\beta}_{\mathrm{tgt}}} (i.e. the 
-value of \eqn{t} in the missing data problem) in the null hypothesis.}
 
 \item{A_shp_eq}{Matrix representing equality shape constraints.}
 
@@ -68,7 +64,6 @@ Returns the updated value of the parameters back to the function
       \item{\code{A_obs}}
       \item{\code{A_tgt}}
       \item{\code{beta_obs}}
-      \item{\code{beta_tgt}}
       \item{\code{A_shp_eq}}
       \item{\code{beta_shp_eq}}
       \item{\code{A_shp_ineq}}

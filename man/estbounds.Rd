@@ -9,7 +9,6 @@ estbounds(
   func_obs,
   A_obs,
   A_tgt,
-  beta_tgt,
   A_shp_eq,
   A_shp_ineq,
   beta_shp_eq,
@@ -30,9 +29,6 @@ estbounds(
 \item{A_obs}{The "observed matrix" in the inference \eqn{A_{\mathrm{obs}}}.}
 
 \item{A_tgt}{The "target matrix" in the inference \eqn{A_{\mathrm{tgt}}}.}
-
-\item{beta_tgt}{The value of \eqn{\hat{\beta}_{\mathrm{tgt}}} (i.e. the 
-value of \eqn{t} in the missing data problem) in the null hypothesis.}
 
 \item{A_shp_eq}{Matrix representing equality shape constraints.}
 
@@ -59,8 +55,6 @@ problem should be considered.}
 be displayed in the inference procedure. If it is set as \code{TRUE}, the 
 messages are displayed throughout the procedure. Otherwise, the messages
 will not be displayed.}
-
-\item{beta_obs}{Observed value of parameter of interest.}
 }
 \value{
 Returns the bounds subject to the shape constraints.

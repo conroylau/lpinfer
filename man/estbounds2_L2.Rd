@@ -4,14 +4,14 @@
 \alias{estbounds2_L2}
 \title{Estimates the bounds with shape contraints (Stage 2 with \eqn{\ell^2}-norm)}
 \usage{
-estbounds2_L2(firststepsoln, A_obs, beta_obs, modelsense, kappa, solver)
+estbounds2_L2(firststepsoln, A_tgt, A_obs, beta_obs, modelsense, kappa, solver)
 }
 \arguments{
 \item{firststepsoln}{List of solutions to the first step problem.}
 
-\item{A_obs}{The "observed matrix" in the inference \eqn{A_{\mathrm{obs}}}.}
+\item{A_tgt}{The "target matrix" in the inference \eqn{A_{\mathrm{tgt}}}.}
 
-\item{beta_obs}{Observed value of parameter of interest.}
+\item{A_obs}{The "observed matrix" in the inference \eqn{A_{\mathrm{obs}}}.}
 
 \item{modelsense}{The indicator of whether the model is to max or min an
 objective function.}
