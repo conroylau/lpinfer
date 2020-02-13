@@ -156,7 +156,6 @@ dkqs <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   
   #### Step 8: Print results
   if (progress == TRUE){  
-    # (d) Display the solver used
     cat(paste("Linear and quadratic programming solver used: ", solver_name, ".\n", 
               sep = ""))    
     cat(paste("-----------------------------------", "\n"))
@@ -165,8 +164,11 @@ dkqs <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
     cat(paste("Value of tau used: ", round(tau, digits = 5), ".\n", 
               sep = ""))
   }
+
+  #### Step 9: Close the progress bar that is used in the bootstrap procedure
+  close(T_bs_return$pb)
   
-  #### Step 9: Assign the return list
+  #### Step 10: Assign the return list
   output = list(p_val = as.numeric(p_val), 
                 tau = as.numeric(tau), 
                 T_n = as.numeric(T_n), 
@@ -692,43 +694,48 @@ objective_function <- function(A, b, n){
 #'   \item{T_bs}{A list of bootstrap test statistics 
 #'      \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}.}
 #'  \item{beta_bs_bar_set}{A list of \eqn{\tau_n}-tightened recentered 
-#'     bootstrap estimates \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}}
+#'     bootstrap estimates \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}.}
+#'  \item{pb}{Progress bar object.}
 #'
 #' @export
 #' 
 beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs, 
                     beta_obs_hat, beta_tgt, tau, n, solver){
+  
+  #### Step 1: Initialize vectors and progress counter
+  # Initialize the vectors
   T_bs = NULL
   beta_bs_bar_set = NULL
-  # Count the increment
-  inc_progress = 100/(bs_num-1)
-  # Initialize the progress counter
+  # Initialize the progress bar
+  pb = txtProgressBar(min = 0, max = bs_num, style = 3, width = 20)
+  cat("\r")
+
   # Loop through all indices in the bootstrap
   for (i in 1:bs_num){
-    #### Step 1: Set the seed
+    #### Step 2: Set the seed
     set.seed(bs_seed + i)
-    ####  Step 2: Draw the subsample
+    ####  Step 3: Draw the subsample
     df_bs = as.data.frame(Momocs::sample_n(df, n, replace = TRUE))
     # Re-index the rows
     rownames(df_bs) = 1:nrow(df_bs)
-    ####  Step 3: Compute the bootstrap estimates
+    ####  Step 4: Compute the bootstrap estimates
     # Compute the value of beta_bs_star using the function func_obs
     beta_bs_star = func_obs(df_bs)
-    ####  Step 4: Compute the bootstrap test statistic
+    ####  Step 5: Compute the bootstrap test statistic
     beta_bs_bar = beta_bs_star - beta_obs_hat + s_star
     T_bs_i = prog_cone(A_obs, A_tgt, beta_bs_bar, beta_tgt, tau, "cone", n, 
                        solver)$objval
     T_bs = c(T_bs, T_bs_i)
     beta_bs_bar_set = cbind(beta_bs_bar_set, beta_bs_bar)
-    # Update progress bar
-    svMisc::progress((i)* inc_progress)
-    # Display completion message when the bootstrap procedure is completed
-    if (i == bs_num) cat("")
+    #### Step 6: Update progress bar
+    setTxtProgressBar(pb, i)
+    cat("\r\r Completed \r\r")
   }
   
-  #### Step 5: Return results
+  #### Step 7: Return results
   return(list(T_bs = T_bs,
-              beta_bs_bar_set = beta_bs_bar_set))
+              beta_bs_bar_set = beta_bs_bar_set,
+              pb = pb))
 }
 
 #' Computes the bootstrap test statistics with parallelization
@@ -746,7 +753,8 @@ beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs,
 #'   \item{T_bs}{A list of bootstrap test statistics 
 #'      \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}.}
 #'  \item{beta_bs_bar_set}{A list of \eqn{\tau_n}-tightened recentered 
-#'     bootstrap estimates \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}}
+#'     bootstrap estimates \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}.}
+#'  \item{pb}{Progress bar object.}
 #' 
 #' @export
 #' 
@@ -754,6 +762,7 @@ beta_bs_parallel <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt,
                              func_obs, beta_obs_hat, beta_tgt, tau, n, solver, 
                              cores){
   #### Step 1: Register the number of cores and extract information
+  options(warn=-1)
   # Register core
   doMC::registerDoMC(cores)
   # Computer dimension
@@ -761,6 +770,14 @@ beta_bs_parallel <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt,
   # Initialize data frames
   T_bs = NULL
   beta_bs_bar_set = NULL
+  # Initialize the counter
+  cl = makeSOCKcluster(8)
+  registerDoSNOW(cl)
+  # Set the counter and progress bar
+  pb = txtProgressBar(max=bs_num, style=3, width = 20) 
+  cat("\r")
+  progress = function(n) setTxtProgressBar(pb, n)
+  opts = list(progress=progress)
   
   # Comb function for using parallel programming
   comb <- function(x, ...) {
@@ -773,7 +790,8 @@ beta_bs_parallel <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt,
   
   # Parallelized for-loop below
   listans = foreach::foreach(i=1:bs_num, .multicombine = TRUE, 
-                             .combine="comb") %dopar% {
+                             .combine="comb", .options.snow=opts,
+                             .packages='linearprog') %dopar% {
     #### Step 2: Set the seed
     set.seed(bs_seed + i)
     ####  Step 3: Draw the subsample
@@ -801,9 +819,11 @@ beta_bs_parallel <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt,
                                       ncol = bs_num,
                                       byrow = FALSE))
   
+  cat("\r\r Completed \r\r")
   #### Step 8: Return results
   return(list(T_bs = T_bs,
-              beta_bs_bar_set = beta_bs_bar_set))
+              beta_bs_bar_set = beta_bs_bar_set,
+              pb = pb))
 }
 
 #' Auxiliary function to calculate the p-value
