@@ -26,5 +26,6 @@ Suggests:
     gurobi,
     cplexAPI,
     Rcplex,
-    limSolve
+    limSolve,
+    lpSolveAPI
 VignetteBuilder: knitr
