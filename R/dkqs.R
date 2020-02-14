@@ -790,14 +790,14 @@ beta_bs_parallel <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt,
   beta_bs_bar_set = NULL
   if (progress == TRUE){
     # Initialize the counter
-    cl = makeSOCKcluster(8)
-    registerDoSNOW(cl)
+    cl = PtProcess::makeSOCKcluster(8)
+    doSNOW::registerDoSNOW(cl)
     # Set the counter and progress bar
-    pb = txtProgressBar(max=bs_num, style=3, width = 20) 
+    pb = utils::txtProgressBar(max=bs_num, style=3, width = 20) 
     
     cat("\r")
     progress <- function(n){
-      setTxtProgressBar(pb, n) 
+      utils::setTxtProgressBar(pb, n) 
       if (n < bs_num){
         cat("\r\r") 
       } else {
@@ -807,6 +807,7 @@ beta_bs_parallel <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt,
     opts = list(progress=progress) 
   } else {
     pb = NULL
+    opts = NULL
   }
   
   # Comb function for using parallel programming
