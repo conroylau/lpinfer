@@ -389,7 +389,7 @@ gurobi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL){
   model$lb = lb
   
   ### Step 3: Result of the linear or quadratic program, and return result
-  params = list(OutputFlag=0)
+  params = list(OutputFlag=0, FeasibilityTol=1e-9)
   solution = gurobi::gurobi(model, params)
   return(list(objval = as.numeric(solution$objval),
               x = as.numeric(solution$x)))
