@@ -21,6 +21,8 @@ library(limSolve)
 library(foreach)
 library(doMC)
 library(parallel)
+library(PtProcess)
+library(doSNOW)
 
 ### Part 2: Data preparation
 # Read data
@@ -83,12 +85,12 @@ farg = list(df = df,
             A_tgt = A_tgt,
             func_obs = func_full_info,
             bs_seed = 1,
-            bs_num = 100,
+            bs_num = 1000,
             p_sig = p_sig,
             tau_input = tau,
             solver = "gurobi",
-            cores = 8,
-            progress = FALSE)
+            cores = 1,
+            progress = TRUE)
 
 ### Demonstration 1: Construction of confidence interval
 invertci_output = invertci(f = dkqs, 
@@ -99,11 +101,21 @@ invertci_output = invertci(f = dkqs,
                            ub0 = 1, 
                            ub1 = .6, 
                            tol = 0.001, 
-                           max_iter = 50, 
+                           max_iter = 2, 
                            df_ci = NULL, 
                            progress = TRUE)
 
 ### Demonstration 2: Use wrapper function to construct a list of 
 ### confidence intervals
-many_invertci(dkqs, farg, c(0.01, 0.02, 0.05, 0.1), 0, 0.4, 1, .6, 
-              0.00001, 50, NULL, FALSE, TRUE)
+invertci_output_many1 = invertci(f = dkqs, 
+                                 farg = farg, 
+                                 alpha = c(0.01, 0.05), 
+                                 lb0 = 0, 
+                                 lb1 = 0.4, 
+                                 ub0 = 1, 
+                                 ub1 = .6, 
+                                 tol = 0.001, 
+                                 max_iter = 50, 
+                                 df_ci = NULL, 
+                                 progress = TRUE)
+

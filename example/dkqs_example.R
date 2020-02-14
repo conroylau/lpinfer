@@ -28,6 +28,8 @@ library(limSolve)
 library(foreach)
 library(doMC)
 library(parallel)
+library(PtProcess)
+library(doSNOW)
 
 ### Part 2: Data preparation
 # Read data
