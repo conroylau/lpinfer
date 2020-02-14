@@ -3,7 +3,8 @@
 #' @description This function computes the bound of the linear program 
 #'    subject to shape constraints. This function also offers an option
 #'    to estimate the shape constraints using a two-step procedure and 
-#'    some tolerance level.
+#'    some tolerance level. \eqn{\ell^1}-norm and \eqn{\ell^2}-norm are 
+#'    supported in the estimation procedure.
 #' 
 #' @import Matrix gurobi
 #' 
@@ -70,10 +71,10 @@ estbounds <- function(df, func_obs, A_obs, A_tgt,
                                  "min", solver)
     ub = ub_shp0$objval
     lb = lb_shp0$objval
-    if (progress == TRUE){
-      cat(sprintf("True bounds subject to shape constraints: [%s, %s]\n", 
-                  lb_shp0$objval, ub_shp0$objval))      
-    }
+    # if (progress == TRUE){
+    #   cat(sprintf("True bounds subject to shape constraints: [%s, %s]\n", 
+    #               lb_shp0$objval, ub_shp0$objval))      
+    # }
     
     # Store indicator of whether the estimation procedure should be conducted
     if (is.numeric(ub) == FALSE | is.numeric(lb) == FALSE){
@@ -95,21 +96,43 @@ estbounds <- function(df, func_obs, A_obs, A_tgt,
     # Combine linear constraints 
     A1 = rbind(A_shp_eq, A_shp_ineq)
     rhs1 = rbind(beta_shp_eq, beta_shp_ineq)
-    # Combine sense of models
-    sense1 = rbind(rep("=", nrow(A_shp_eq)))
-    if (is.null(A_shp_ineq) == FALSE){
-      sense1 = rbind(sense1, rep("<=", nrow(A_shp_ineq)))
+    ## Generate the sense of models
+    if (is.null(A_shp_eq) == FALSE){
+      # Case 1: If there are equality constraints
+      sense1 = rbind(rep("=", nrow(A_shp_eq)))    
+      if (is.null(A_shp_ineq) == FALSE){
+        sense1 = rbind(sense1, rep("<=", nrow(A_shp_ineq)))
+      }
+    } else if (is.null(A_shp_ineq) == FALSE) {
+      # Case 2: If there are inequality constraints
+      sense1 = rbind(rep("<=", nrow(A_shp_ineq)))
+    } else {
+      # Case 3: If there are no equality and inequality constraints
+      sense1 = NULL
     }
     
     ## Solve model
     if (lnorm == 1){
       ## L1-norm
-      stop("Work-in-progress")
+      # Stage one of the problem
+      estbounds11 = estbounds1_L1(A_obs, beta_obs, A1, rhs1, sense1, lb_zero, 
+                                  solver)
+      # Return stop message if there is no feasible solution for stage one
+      # of the problem
+      if (is.numeric(estbounds11$objval) == FALSE){
+        stop("The equality and inequality constraints are contradictory. Please
+             ensure that the constraints are correctly specified.")
+      }
+      # Stage two of the problem
+      estbounds_ub = estbounds2_L1(estbounds11, A_tgt, A_obs, beta_obs, "max", 
+                                   kappa, solver)
+      estbounds_lb = estbounds2_L1(estbounds11, A_tgt, A_obs, beta_obs, "min", 
+                                   kappa, solver)
     } else if (lnorm == 2){
       ## L2-norm
       # Stage one of the problem
-      estbounds21 = estbounds1_L2(A_obs, beta_obs, A1, rhs1, sense1, 
-                                  lb_zero, solver)
+      estbounds21 = estbounds1_L2(A_obs, beta_obs, A1, rhs1, sense1, lb_zero, 
+                                  solver)
       # Return stop message if there is no feasible solution for stage one
       # of the problem
       if (is.numeric(estbounds21$objval) == FALSE){
@@ -121,9 +144,6 @@ estbounds <- function(df, func_obs, A_obs, A_tgt,
                                    kappa, solver)
       estbounds_lb = estbounds2_L2(estbounds21, A_tgt, A_obs, beta_obs, "min", 
                                    kappa, solver)
-    } else if (lnorm == "sup"){
-      ## sup-norm
-      stop("Work-in-progress")      
     }
     
     # Store results
@@ -131,11 +151,11 @@ estbounds <- function(df, func_obs, A_obs, A_tgt,
     lb = estbounds_lb$objval
     
     ## Print results
-    if (progress == TRUE){
-      cat(sprintf("Estimated bounds subject to shape constraints: [%s, %s]\n", 
-                  round(lb, digits = 5), 
-                  round(ub, digits = 5))) 
-    }
+    # if (progress == TRUE){
+    #   cat(sprintf("Estimated bounds subject to shape constraints: [%s, %s]\n", 
+    #               round(lb, digits = 5), 
+    #               round(ub, digits = 5))) 
+    # }
     ## Store indicator variable that the result is estimated 
     est = TRUE
   }
@@ -149,7 +169,7 @@ estbounds <- function(df, func_obs, A_obs, A_tgt,
   
   attr(output, "class") = "estbounds"
   
-  invisible(output)
+  return(output)
 }
 
 #' Computes the true bounds with shape contraints
@@ -176,8 +196,13 @@ estbounds_original <- function(A_obs, A_tgt, beta_obs, A_shp_eq,
   A_original = rbind(A_obs, A_shp_eq, A_shp_ineq)
   beta_original = rbind(beta_obs, beta_shp_eq, beta_shp_ineq)
   
-  # Sense contraints
-  sense_original = c(rep("=", nrow(A_obs)), rep("=", nrow(A_shp_eq)))
+  ## Sense contraints
+  sense_original = c(rep("=", nrow(A_obs)))
+  # Append the sense constraints if A_shp_eq is non-null
+  if (is.null(A_shp_eq) == FALSE){
+    sense_original = c(sense_original, rep("=", nrow(A_shp_eq)))
+  }
+  # Append the sense constraints if A_shp_ineq is non-null
   if (is.null(A_shp_ineq) == FALSE){
     sense_original = c(sense_original, rep("<=", nrow(A_shp_ineq)))
   }
@@ -192,16 +217,130 @@ estbounds_original <- function(A_obs, A_tgt, beta_obs, A_shp_eq,
               rhs = beta_original,
               sense = sense_original,
               modelsense = original_sense,
-              lb = lb_zero,
-              qc = NULL)
+              lb = lb_zero)
   
-
   #### Step 3: Solve the model
   ans = do.call(solver, oarg)
   
   #### Step 4: Return result
   invisible(list(objval = ans$objval,
                  x = ans$x))
+}
+
+#' Estimates the bounds with shape contraints (Stage 1 with \eqn{\ell^1}-norm)
+#' 
+#' @description This function evaluates the solution to stage 1 of the 
+#'    two-step procedure obtaining the estimated bound. \eqn{\ell^1}-norm 
+#'    is used in the objective function.
+#' 
+#' @param A1 Constraint matrix for step 1 in the linear program of bound
+#'    estimation.
+#' @param rhs1 RHS vector for step 1 in the linear program of bound
+#'    estimation.
+#' @param sense1 Sense vector for step 1 in the linear program of bound
+#'    estimation.
+#' @inheritParams dkqs
+#' 
+#' @return Returns the solution to the first step of the two-step procedure 
+#'    and argument for the linear program.
+#'  \item{objval}{Optimal value calculated from the optimizer.}
+#'  \item{x}{Optimal point calculated from the optimizer.}
+#'  \item{larg}{Arguments for the linear program.}
+#' 
+#' @export
+#' 
+estbounds1_L1 <- function(A_obs, beta_obs, A1, rhs1, sense1, lb, solver){
+  #### Step 1: Define the problem
+  # Define the augmented matrices
+  k = length(beta_obs)
+  # Introduce slack variables into the matrix
+  A1_aug = cbind(A1, matrix(rep(0, 2*k*dim(A1)[1]), nrow = dim(A1)[1]))
+  A1_slack = cbind(A_obs, -diag(k), -diag(k))
+  # Combine the constraints
+  A1_new = rbind(A1_aug, A1_slack)
+  rhs1_new = c(rhs1, beta_obs)
+  # New model sense
+  sense1_new = c(sense1, rep("=", k))
+  # New objective function
+  c = c(rep(0, dim(A_obs)[2]), rep(1, k), rep(1, k))
+  # New lower bound
+  lb_new = rep(0, length(c))
+    
+  #### Step 2: Set up argument for optimizer
+  l1_arg = list(Af = NULL,
+                bf = c,
+                nf = NULL,
+                A = A1_new,
+                rhs = rhs1_new,
+                sense = sense1_new,
+                modelsense = "min",
+                lb = lb_new)
+  
+  #### Step 3: Solve the model
+  ans = do.call(solver, l1_arg) 
+  
+  #### Step 4: Return results
+  invisible(list(objval = ans$objval, 
+                 x = ans$x,
+                 larg = l1_arg))
+}
+
+#' Estimates the bounds with shape contraints (Stage 2 with \eqn{\ell^1}-norm)
+#' 
+#' @description This function evaluates the solution to stage 2 of the 
+#'    two-step procedure obtaining the estimated bound. \eqn{\ell^1}-norm 
+#'    is used in the constraint
+#' 
+#' @param firststepsoln List of solutions to the first step problem.
+#' @inheritParams gurobi_optim
+#' @inheritParams estbounds
+#' @inheritParams dkqs
+#' 
+#' @return Returns the solution to the second step of the two-step procedure.
+#'  \item{objval}{Optimal value calculated from the optimizer.}
+#'  \item{x}{Optimal point calculated from the optimizer.}
+#' 
+#' @export
+#' 
+estbounds2_L1 <- function(firststepsoln, A_tgt, A_obs, beta_obs, modelsense, 
+                          kappa, solver){
+  
+  k = length(beta_obs)
+  
+  #### Step 1: Extract information from the first-stage solution
+  Qhat = firststepsoln$objval
+  larg = firststepsoln$larg
+  
+  #### Step 2: Construct the inequality constraint 
+  # Update the linear constraint
+  c = larg$bf
+  A_step2 = rbind(larg$A, c)
+  b_step2 = c(larg$rhs, Qhat * (1+kappa))
+  sense_step2 = c(larg$sense, "<=")
+  
+  # Append the matrices to the list
+  larg$A = A_step2
+  larg$rhs = b_step2
+  larg$sense = sense_step2
+  
+  #### Step 3: Update objective function
+  
+  # Update the objective matrix
+  A_tgt_new = cbind(A_tgt,
+                    matrix(rep(0, 2*k*dim(A_tgt)[1]), nrow = dim(A_tgt)[1]))
+  larg$Af = 0
+  larg$bf = A_tgt_new
+  larg$nf = 0
+  
+  #### Step 4: Update model sense based on max or min in step 2
+  larg$modelsense = modelsense
+  
+  #### Step 5: Solve the model
+  step2_ans = do.call(solver, larg)
+  
+  #### Step 6: Return results
+  return(list(objval = step2_ans$objval,
+              x = step2_ans$x))
 }
 
 #' Estimates the bounds with shape contraints (Stage 1 with \eqn{\ell^2}-norm)
@@ -391,8 +530,8 @@ estbounds_check <- function(df, func_obs, A_obs, A_tgt,
   } 
   
   #### Step 5: Check 'lnorm'
-  if (lnorm != 1 & lnorm != 2 & lnorm != "sup"){
-    stop("Only 1-norm, 2-norm and sup-norm is supported in this function.", 
+  if (lnorm != 1 & lnorm != 2){
+    stop("Only 1-norm and 2-norm are supported in this function.", 
          call. = FALSE)
   }
   
@@ -400,32 +539,91 @@ estbounds_check <- function(df, func_obs, A_obs, A_tgt,
   #### of the shape restriction
   # Turn the name of solver to lower case 
   solver = tolower(solver)
+  # Package recommendation messages
+  gurobi_msg = "'gurobi' (version 8.1-1 or later)"
+  cplexapi_msg = "'cplexAPI' (version 1.3.3 or later)"
+  rcplex_msg = "'Rcplex' (version 0.3-3 or later)"
+  limsolve_msg = "'limSolve' (version 1.5.6 or later)"
+  lpsolveapi_msg = "lpSolveAPI (version 5.5.2.0 or later)"
   
-  # Case 1: If no solver name is provided by the user
+  ## Case 1: If no solver name is provided by the user
   if (is.null(solver) == TRUE){
+    # If gurobi is installed, the gurobi solver will be used for L1- & L2-norm
     if (requireNamespace("gurobi", quietly = TRUE) == TRUE){
-      solver = "gurobi"
+      solver = gurobi_optim
+    } else if (lnorm == 1) {
+      # If L1-norm is used, other solvers will be checked
+      if (requireNamespace("limSolve", quietly = TRUE) == TRUE){
+        solver = limsolve_optim
+      } else if (requireNamespace("Rcplex", quietly = TRUE) == TRUE){
+        solver = rcplex_optim
+      } else if (requireNamespace("cplexAPI", quietly = TRUE) == TRUE){
+        solver = cplexapi_optim
+      } else if (requireNamespace("lpsolveAPI", quietly = TRUE) == TRUE){
+        solver = lpsolveapi_optim
+      }      
     } else {
-      stop(gsub("\\s+", " ",
-                paste0("This function is only incompatible with 'gurobi'. 
-                       Please install 'gurobi' to obtain the bounds of the 
-                       problem subject to shape restriction: gurobi 
-                       (version 8.1-1 or later).")), call. = FALSE)
+      if (lnorm == 1){
+        stop(gsub("\\s+", " ",
+                  paste0("This function is incompatible with '", solver, 
+                         "' when L1-norm is chosen in the estimation procedure. 
+                         Please install one of the following packages to solve 
+                         the linear and quadratic programs: ",
+                         gurobi_msg, "; ",
+                         cplexapi_msg, "; ",
+                         rcplex_msg, "; ",
+                         limsolve_msg, ";",
+                         lpsolveapi_msg, ".")),
+             call. = FALSE)
+      } else if (lnorm == 2){
+        stop(gsub("\\s+", " ",
+                  paste0("This function with L2-norm in the estimation 
+                         procedure is only incompatible with 'gurobi'. ", 
+                         "Please install ", guobi_msg, " to obtain the
+                       bounds of the problem subject to shape restriction.")), 
+             call. = FALSE)
+      }
     }
     if (progress == TRUE){
       cat(paste("No solver solver is suggested by the user. The solver", 
-                "'gurobi' is automatically selected.\n", sep = ""))
+                solver, "is chosen.\n", sep = ""))
     }
   } else if (solver == "gurobi"){
-    # Case 2: If the user specified the solver as 'gurobi'
+    ## Case 2a: If the user specified the solver as 'gurobi'
     solver = gurobi_optim
+  } else if (solver == "limsolve" & lnorm == 1){
+    ## Case 2b: If the user specified the solver as 'limSolve'
+    solver = limsolve_optim
+  } else if (solver == "rcplex" & lnorm == 1){
+    ## Case 2c: If the user specified the solver as 'rcplex'
+    solver = rcplex_optim
+  } else if (solver == "cplexapi" & lnorm == 1){
+    ## Case 2d: If the user specified the solver as 'cplexapi'
+    solver = cplexapi_optim
+  } else if (solver == "lpsolveapi" & lnorm == 1){
+    ## Case 2e: If the user specified the solver as 'lpsolveapi'
+    solver = lpsolveapi_optim
   } else {
-    # Case 3: If the user specified a solver that is not compatible
-    stop(gsub("\\s+", " ",
-              paste0("This function is only incompatible with ", solver, 
-                     ". Please install 'gurobi' to obtain the bounds of the 
-                     problem subject to shape restriction: gurobi 
-                     (version 8.1-1 or later).")), call. = FALSE)
+    ## Case 3: If the user specified a solver that is not compatible
+    if (lnorm == 1){
+      stop(gsub("\\s+", " ",
+                paste0("This function is incompatible with '", solver, 
+                       "' when L1-norm is chosen in the estimation procedure. 
+                       Please install one of the following packages to solve 
+                       the linear and quadratic programs: ",
+                       gurobi_msg, "; ",
+                       cplexapi_msg, "; ",
+                       rcplex_msg, "; ",
+                       limsolve_msg, ".")),
+           call. = FALSE)
+    } else if (lnorm == 2){
+      stop(gsub("\\s+", " ",
+                paste0("This function with L2-norm in the estimation procedure
+                       is only incompatible with 'gurobi'. ", 
+                       "Please install ", guobi_msg, " to obtain the
+                       bounds of the problem subject to shape restriction.")), 
+           call. = FALSE)
+    }
   }
   
   #### Step 7 Check estimate
@@ -513,7 +711,7 @@ estbounds_check_Ab <- function(A, b, Aname, bname){
     
     ## Part 4: Ensure that the number of rows of A and b are identical
     if (nrow(A) != length(b)){
-      stop(sprint("The number of rows of '%s' has to be equal to the number
+      stop(sprintf("The number of rows of '%s' has to be equal to the number
                   of rows of '%s.", Aname, bname), call. = FALSE)
     }
     
@@ -579,6 +777,61 @@ print.estbounds <- function(x, ...){
 summary.estbounds <- function(x, ...){
   #### Call theprint function
   print(x)
+}
+
+#' lpSolveAPI solver for linear programs
+#'
+#' @description This function computes the solution to the linear program
+#'    using the `\code{lpsolveAPI}' package.
+#'    
+#' @import lpSolveAPI
+#'
+#' @inheritParams gurobi_optim
+#' @inheritParams dkqs_cone
+#' @inheritParams prog_cone
+#'
+#' @returns Returns the optimal objective value and the corresponding argument
+#'   to the linear program.
+#'  \item{x}{Optimal point calculated from the linear program}
+#'  \item{larg}{Arguments for the linear program.}
+#'   
+#' @details The package `\code{lpSolveAPI}' cannot be used to solve quadratic 
+#'   programs. Hence, the argument \code{obj2} is not used in the function.
+#'
+#' @export
+#' 
+lpsolveapi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
+  ### Step 1: Obtain the coefficients of the objective function
+  objective_return = objective_function(Af, bf, nf)
+  
+  #### Step 2: Update the constraint matrices
+  # Change the lower bounds to inequality constriants
+  lb_Amat = diag(length(lb))
+  lb_bvec = lb
+  # Update constraint matrices
+  A = rbind(A, lb_Amat)
+  rhs = c(rhs, lb_bvec)
+  sense = c(sense, rep(">=", length(lb_bvec)))
+  
+  #### Step 3: LP formulation
+  # solve object
+  lprec = make.lp(nrow = nrow(A), ncol = ncol(A))
+  # Model sense
+  lp.control(lprec, sense=modelsense)
+  # Types of decision variables
+  set.type(lprec, 1:ncol(A), type=c("real"))
+  set.objfn(lprec, objective_return$obj1)
+  #Define the constraints
+  for (i in 1:nrow(A)){
+    add.constraint(lprec, A[i, ], sense[i], rhs[i])
+  }
+  
+  #### Step 4: Solve and obtain solution of LP
+  solve(lprec)
+  x = get.variables(lprec)
+  objval = get.objective(lprec)
+  return(list(objval = objval,
+              x = x))
 }
 
 
