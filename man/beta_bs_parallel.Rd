@@ -18,7 +18,8 @@ beta_bs_parallel(
   tau,
   n,
   solver,
-  cores
+  cores,
+  progress
 )
 }
 \arguments{
@@ -59,13 +60,19 @@ The solvers supported by this module are `\code{cplexAPI}',
 \item{cores}{Number of cores to be used in the parallelized for-loop. 
 Parallelized for-loop is used if \code{cores} is set to be an integer
 greater than or equal to 2.}
+
+\item{progress}{The boolean variable for whether the result messages should
+be displayed in the inference procedure. If it is set as \code{TRUE}, the 
+messages are displayed throughout the procedure. Otherwise, the messages
+will not be displayed.}
 }
 \value{
 Returns the list of estimates from bootstrap:
   \item{T_bs}{A list of bootstrap test statistics 
      \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}.}
  \item{beta_bs_bar_set}{A list of \eqn{\tau_n}-tightened recentered 
-    bootstrap estimates \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}}
+    bootstrap estimates \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}.}
+ \item{pb}{Progress bar object.}
 }
 \description{
 This function computes the bootstrap test statistics with 

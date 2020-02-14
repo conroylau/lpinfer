@@ -69,5 +69,6 @@ Returns the bounds subject to the shape constraints.
 This function computes the bound of the linear program 
    subject to shape constraints. This function also offers an option
    to estimate the shape constraints using a two-step procedure and 
-   some tolerance level.
+   some tolerance level. \eqn{\ell^1}-norm and \eqn{\ell^2}-norm are 
+   supported in the estimation procedure.
 }

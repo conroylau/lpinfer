@@ -17,7 +17,8 @@ beta_bs(
   beta_tgt,
   tau,
   n,
-  solver
+  solver,
+  progress
 )
 }
 \arguments{
@@ -54,13 +55,19 @@ value of \eqn{t} in the missing data problem) in the null hypothesis.}
 are used to obtain the solution to linear and quadratic programs. 
 The solvers supported by this module are `\code{cplexAPI}', 
 `\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
+
+\item{progress}{The boolean variable for whether the result messages should
+be displayed in the inference procedure. If it is set as \code{TRUE}, the 
+messages are displayed throughout the procedure. Otherwise, the messages
+will not be displayed.}
 }
 \value{
 Returns the list of estimates from bootstrap:
   \item{T_bs}{A list of bootstrap test statistics 
      \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}.}
  \item{beta_bs_bar_set}{A list of \eqn{\tau_n}-tightened recentered 
-    bootstrap estimates \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}}
+    bootstrap estimates \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}.}
+ \item{pb}{Progress bar object.}
 }
 \description{
 This function computes the bootstrap test statistics.
