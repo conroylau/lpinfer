@@ -50,16 +50,16 @@
 #' @export
 #' 
 dkqs <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
-                      bs_num = 100, p_sig = 2, tau_input = .5, solver = NULL,
-                      cores = 1, progress = FALSE){
+                 bs_num = 100, p_sig = 2, tau_input = .5, solver = NULL,
+                 cores = 1, progress = FALSE){
   
   #### Step 1: Obtain call, check and update the dependencies
   # Obtain call information
   call = match.call()
   # Check and update
   checkupdate = dkqs_check(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
-                                bs_num, p_sig, tau_input, solver, progress,
-                                cores)
+                           bs_num, p_sig, tau_input, solver, progress,
+                           cores)
   # Update and return the quantities returned from the function dkqs_check
   # (a) Dataframe
   df = checkupdate$df
@@ -88,7 +88,7 @@ dkqs <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   } else if (solver == "limsolve"){
     solver = limsolve_optim
   }
-
+  
   #### Step 3: Choose the value of tau
   tau_return = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "tau", n,
                          solver)
@@ -104,14 +104,14 @@ dkqs <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   #### Step 4: Compute T_n, x_star and s_star
   # Compute T_n
   T_n = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "test", n, 
-                          solver)$objval
+                  solver)$objval
   # Return and stop program if it is infeasible
   if (is.null(T_n) == TRUE){
     stop("The problem is infeasible. Choose other values of tau.")
   }
   # Compute s_star
   x_return = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "cone", n, 
-                     solver)
+                       solver)
   x_star = x_return$x
   s_star = A_obs %*% x_star
   
@@ -122,17 +122,20 @@ dkqs <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
     if (cores == 1){
       # No parallelization
       T_bs_return = beta_bs(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, 
-                            func_obs, beta_obs_hat, beta_tgt, tau, n, solver)
+                            func_obs, beta_obs_hat, beta_tgt, tau, n, solver,
+                            progress)
+      #cat("                                     \b")
     } else {
       # Parallelization
       T_bs_return = beta_bs_parallel(df, bs_seed, bs_num, J, s_star, A_obs, 
                                      A_tgt, func_obs, beta_obs_hat, beta_tgt, 
-                                     tau, n, solver, cores)  
+                                     tau, n, solver, cores, progress)  
+      #cat("                                     \b")
       # Display number of cores used
-      if (progress == TRUE){
-        cat(paste("Number of cores used in bootstrap procedure: ", cores, 
-                  ".\n", sep = ""))
-      }
+      # if (progress == TRUE){
+      #     cat(paste("Number of cores used in bootstrap procedure: ", cores, 
+      #             ".\n", sep = ""))
+      # }
     }
     # Retrive answer
     T_bs = T_bs_return$T_bs
@@ -155,18 +158,21 @@ dkqs <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   ub0 = x_return$ub0
   
   #### Step 8: Print results
-  if (progress == TRUE){  
-    cat(paste("Linear and quadratic programming solver used: ", solver_name, ".\n", 
-              sep = ""))    
-    cat(paste("-----------------------------------", "\n"))
-    cat(paste("Test statistic: ", round(T_n, digits = 5), ".\n", sep = ""))
-    cat(paste("p-value: ", p_val, ".\n", sep = ""))
-    cat(paste("Value of tau used: ", round(tau, digits = 5), ".\n", 
-              sep = ""))
-  }
-
+  # if (progress == TRUE){  
+  #   cat(paste("Linear and quadratic programming solver used: ", solver_name, ".\n", 
+  #             sep = ""))    
+  #   cat(paste("-----------------------------------", "\n"))
+  #   cat(paste("Test statistic: ", round(T_n, digits = 5), ".\n", sep = ""))
+  #   cat(paste("p-value: ", p_val, ".\n", sep = ""))
+  #   cat(paste("Value of tau used: ", round(tau, digits = 5), ".\n", 
+  #             sep = ""))
+  # }
+  
   #### Step 9: Close the progress bar that is used in the bootstrap procedure
-  close(T_bs_return$pb)
+  if (progress == TRUE){
+    #cat("\r\r                                      \b\r\r")
+    close(T_bs_return$pb) 
+  }
   
   #### Step 10: Assign the return list
   output = list(p_val = as.numeric(p_val), 
@@ -180,8 +186,9 @@ dkqs <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
                 cores = cores,
                 call = call)
   attr(output, "class") = "dkqs"
+  #attr(fit, "na.message") <- attr(m, "na.message")
   
-  invisible(output)
+  return(output)
 }
 
 #' Formulating and solving quadratic programs
@@ -221,7 +228,7 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
   #### Step 1: Obtain dimension of A_tgt
   rn = dim(A_tgt)[1]
   cn = dim(A_tgt)[2]
-
+  
   #### Step 2: Formulation of constraints
   ones = matrix(rep(1, cn), nrow = 1)
   lb = matrix(rep(0, cn), nrow = 1)
@@ -235,14 +242,14 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
                                     modelsense ="min",
                                     lb = lb))
   theta_up = do.call(solver, list(Af  = NULL, 
-                                 bf  = A_tgt, 
-                                 nf  = n, 
-                                 A   = ones, 
-                                 rhs = c(1), 
-                                 sense = "=", 
-                                 modelsense ="max",
-                                 lb = lb))
-    
+                                  bf  = A_tgt, 
+                                  nf  = n, 
+                                  A   = ones, 
+                                  rhs = c(1), 
+                                  sense = "=", 
+                                  modelsense ="max",
+                                  lb = lb))
+  
   # Obtain required set of indices
   x_fullind = 1:cn
   ind_up = which(A_tgt %in% theta_up$objval)
@@ -252,11 +259,11 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
   rhs_up = (beta_tgt - theta_down$objval) * tau / length(c(ind_0, ind_up))
   rhs_down = (theta_up$objval - beta_tgt) * tau / length(c(ind_0, ind_down))
   rhs_0 = (1 - rhs_up * length(ind_up) - rhs_down * length(ind_down)) *
-            tau / length(ind_0)
+    tau / length(ind_0)
   # RHS vector and sense for the linear or quadratic program
   lp_rhs = c(beta_tgt, 1)
   lp_sense = c("=", "=")
-
+  
   #### Step 3: Solve the QP
   # If problem == "test", this function solves linear program (4)
   # If problem == "cone", this function solves linear program (5)
@@ -271,7 +278,7 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
                                modelsense ="min",
                                lb = lb))
   } else if (problem == "cone"){
-  # Update lb
+    # Update lb
     lb_new = lb
     lb_new[ind_up] = rhs_up
     lb_new[ind_down] = rhs_down
@@ -505,15 +512,15 @@ rcplex_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
   
   ### Step 3: Solve model
   solution = Rcplex::Rcplex(cvec = t(objective_return$obj1),
-                    Amat = A, 
-                    bvec = rhs,
-                    Qmat = Qmat,
-                    lb = lb,
-                    sense = sense,
-                    ub = ub,
-                    objsense = modelsense,
-                    vtype = "C",
-                    n = 1)
+                            Amat = A, 
+                            bvec = rhs,
+                            Qmat = Qmat,
+                            lb = lb,
+                            sense = sense,
+                            ub = ub,
+                            objsense = modelsense,
+                            vtype = "C",
+                            n = 1)
   
   ### Step 3: Update and return result
   if (is.null(objective_return$obj0) == FALSE){
@@ -700,16 +707,20 @@ objective_function <- function(A, b, n){
 #' @export
 #' 
 beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs, 
-                    beta_obs_hat, beta_tgt, tau, n, solver){
+                    beta_obs_hat, beta_tgt, tau, n, solver, progress){
   
   #### Step 1: Initialize vectors and progress counter
   # Initialize the vectors
   T_bs = NULL
   beta_bs_bar_set = NULL
   # Initialize the progress bar
-  pb = txtProgressBar(min = 0, max = bs_num, style = 3, width = 20)
-  cat("\r")
-
+  if (progress == TRUE){
+    pb = txtProgressBar(min = 0, max = bs_num, style = 3, width = 20)
+    cat("\r") 
+  } else {
+    pb = NULL
+  }
+  
   # Loop through all indices in the bootstrap
   for (i in 1:bs_num){
     #### Step 2: Set the seed
@@ -728,8 +739,15 @@ beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs,
     T_bs = c(T_bs, T_bs_i)
     beta_bs_bar_set = cbind(beta_bs_bar_set, beta_bs_bar)
     #### Step 6: Update progress bar
-    setTxtProgressBar(pb, i)
-    cat("\r\r Completed \r\r")
+    if (progress == TRUE){
+      if (i != bs_num){
+        setTxtProgressBar(pb, i)
+        cat("\r\r")  
+      } else {
+        setTxtProgressBar(pb, i)
+        cat("\r\b")          
+      }
+    }
   }
   
   #### Step 7: Return results
@@ -760,7 +778,7 @@ beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs,
 #' 
 beta_bs_parallel <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, 
                              func_obs, beta_obs_hat, beta_tgt, tau, n, solver, 
-                             cores){
+                             cores, progress){
   #### Step 1: Register the number of cores and extract information
   options(warn=-1)
   # Register core
@@ -770,14 +788,26 @@ beta_bs_parallel <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt,
   # Initialize data frames
   T_bs = NULL
   beta_bs_bar_set = NULL
-  # Initialize the counter
-  cl = makeSOCKcluster(8)
-  registerDoSNOW(cl)
-  # Set the counter and progress bar
-  pb = txtProgressBar(max=bs_num, style=3, width = 20) 
-  cat("\r")
-  progress = function(n) setTxtProgressBar(pb, n)
-  opts = list(progress=progress)
+  if (progress == TRUE){
+    # Initialize the counter
+    cl = makeSOCKcluster(8)
+    registerDoSNOW(cl)
+    # Set the counter and progress bar
+    pb = txtProgressBar(max=bs_num, style=3, width = 20) 
+    
+    cat("\r")
+    progress <- function(n){
+      setTxtProgressBar(pb, n) 
+      if (n < bs_num){
+        cat("\r\r") 
+      } else {
+        cat("\r\b")     
+      }
+    }
+    opts = list(progress=progress) 
+  } else {
+    pb = NULL
+  }
   
   # Comb function for using parallel programming
   comb <- function(x, ...) {
@@ -792,24 +822,24 @@ beta_bs_parallel <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt,
   listans = foreach::foreach(i=1:bs_num, .multicombine = TRUE, 
                              .combine="comb", .options.snow=opts,
                              .packages='linearprog') %dopar% {
-    #### Step 2: Set the seed
-    set.seed(bs_seed + i)
-    ####  Step 3: Draw the subsample
-    df_bs = as.data.frame(Momocs::sample_n(df, n, replace = TRUE))
-    # Re-index the rows
-    rownames(df_bs) = 1:nrow(df_bs)
-    ####  Step 4: Compute the bootstrap estimates
-    # Compute the value of beta_bs_star using the function func_obs
-    beta_bs_star = func_obs(df_bs)
-    ####  Step 5: Compute the bootstrap test statistic
-    beta_bs_bar = beta_bs_star - beta_obs_hat + s_star
-    T_bs_i = prog_cone(A_obs, A_tgt, beta_bs_bar, beta_tgt, tau, "cone", n, 
-                       solver)$objval
-    #### Step 6: Combine the results (parallelization)
-    T_bs = data.frame(T_bs_i)
-    beta_bs_bar_set = data.frame(beta_bs_bar) 
-    
-    list(T_bs, beta_bs_bar_set)
+   #### Step 2: Set the seed
+   set.seed(bs_seed + i)
+   ####  Step 3: Draw the subsample
+   df_bs = as.data.frame(Momocs::sample_n(df, n, replace = TRUE))
+   # Re-index the rows
+   rownames(df_bs) = 1:nrow(df_bs)
+   ####  Step 4: Compute the bootstrap estimates
+   # Compute the value of beta_bs_star using the function func_obs
+   beta_bs_star = func_obs(df_bs)
+   ####  Step 5: Compute the bootstrap test statistic
+   beta_bs_bar = beta_bs_star - beta_obs_hat + s_star
+   T_bs_i = prog_cone(A_obs, A_tgt, beta_bs_bar, beta_tgt, tau, "cone", n, 
+                      solver)$objval
+   #### Step 6: Combine the results (parallelization)
+   T_bs = data.frame(T_bs_i)
+   beta_bs_bar_set = data.frame(beta_bs_bar) 
+   
+   list(T_bs, beta_bs_bar_set)
   }
   
   #### Step 7: Retrieve information from output
@@ -819,7 +849,8 @@ beta_bs_parallel <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt,
                                       ncol = bs_num,
                                       byrow = FALSE))
   
-  cat("\r\r Completed \r\r")
+  #cat("\b\r\b")  
+  
   #### Step 8: Return results
   return(list(T_bs = T_bs,
               beta_bs_bar_set = beta_bs_bar_set,
@@ -917,7 +948,7 @@ tau_constraints <- function(length_tau, coeff_tau, coeff_x, ind_x, rhs, sense,
 #' @export
 #' 
 dkqs_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
-                            bs_num, p_sig, tau_input, solver, progress, cores){
+                       bs_num, p_sig, tau_input, solver, progress, cores){
   ### Part 1. Check the dataframe
   if (class(df) %in% c("data.frame", "matrix") == TRUE){
     df = as.data.frame(df)  
@@ -952,7 +983,7 @@ dkqs_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
   # Update A_obs and A_tgt to ensure that they are both matrices
   A_obs = matrix_list[[1]]
   A_tgt = matrix_list[[2]]
-
+  
   ### Part 3. Check the function
   if (class(func_obs) != "function"){
     stop("The input of 'func_obs' has to be a function.", call. = FALSE)
@@ -965,7 +996,7 @@ dkqs_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
     } else{
       if (dim(beta_obs_hat)[2] != 1){
         stop("The output of 'func_obs' has to be a column vector", 
-        call. = FALSE)
+             call. = FALSE)
       } else if (dim(beta_obs_hat)[1] != dim(A_obs)[1]){
         stop("The number of rows in the output of 'func_obs' has to be the 
              same as the number of rows in the argument 'A_obs'.", 
@@ -989,7 +1020,7 @@ dkqs_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
     stop("The number of rows of 'A_tgt' has to be equal to the number of 
          rows of 'beta_obs'.", call. = FALSE)
   }
-
+  
   ### Part 6. Check bs_seed
   if (!(is.numeric(bs_seed) == TRUE & length(bs_seed) == 1)) {
     stop("The seed to be used in the bootstrap ('bs_seed') must be a scalar.", 
@@ -1060,8 +1091,8 @@ dkqs_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
   } else{
     # Change solver name to lower cases
     solver = tolower(solver)
-  # Case 2: If user specifies a package that is not supported, display error
-  # message and suggest appropriate solvers
+    # Case 2: If user specifies a package that is not supported, display error
+    # message and suggest appropriate solvers
     if ((solver %in% c("gurobi", "cplexapi", "rcplex", "limsolve"))
         == FALSE){
       stop(gsub("\\s+", " ",
@@ -1119,7 +1150,8 @@ dkqs_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
 #' @export
 #' 
 print.dkqs <- function(x, ...){
-  cat(sprintf("Test statistic: %s.\n", round(x$T_n, digits = 5)))  
+  cat("\r\r")
+  cat(sprintf("Test statistic: %s.             \n", round(x$T_n, digits = 5)))  
   cat(sprintf("p-value: %s.\n", round(x$p_val, digits = 5)))
   cat(sprintf("Value of tau used: %s.\n", round(x$tau, digits = 5)))
   cat(sprintf("Linear and quadratic programming solver used: %s.\n", 
