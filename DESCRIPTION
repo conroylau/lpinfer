@@ -18,7 +18,9 @@ Imports:
     parallel,
     Momocs,
     ddpcr,
-    Matrix
+    Matrix,
+    doSNOW,
+    PtProcess
 Suggests: 
     knitr,
     rmarkdown,
