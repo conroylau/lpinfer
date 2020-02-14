@@ -10,13 +10,13 @@
 ##
 ################################################################################
 
-
 ### Part 1: Load required packages
 library(modelr)
 library(gurobi)
 library(e1071)
 library(cplexAPI)
 library(Rcplex)
+library(lpSolveAPI)
 library(ddpcr)
 library(Momocs)
 library(limSolve)
@@ -97,15 +97,78 @@ farg = list(df = df,
             estimate = FALSE,
             progress = TRUE)
 
-# True bound
-est_ans1 = do.call(estbounds, farg)
+### True bounds
+est_ans1 = estbounds(df = df,
+                     A_obs = A_obs_full,
+                     A_tgt = A_tgt,
+                     func_obs = func_full_info,
+                     A_shp_eq = A_shp_eq_dkqs,
+                     A_shp_ineq = A_shp_ineq_dkqs,
+                     beta_shp_eq = beta_shp_eq_dkqs,
+                     beta_shp_ineq = beta_shp_ineq_dkqs,
+                     kappa = 1e-20,
+                     lnorm = 1,
+                     solver = "gurobi",
+                     estimate = FALSE,
+                     progress = TRUE)
 
-# Estimated bound with full-information approach
-farg$estimate = TRUE
-est_ans2 = do.call(estbounds, farg)
 
-# Estimated bound with two-moments approach
-farg$A_obs = A_obs_twom
-farg$func_obs = func_two_moment
-est_ans3 = do.call(estbounds, farg)
+## Full-information approach
+# L2-norm
+est_ans2a = estbounds(df = df,
+                       A_obs = A_obs_full,
+                       A_tgt = A_tgt,
+                       func_obs = func_full_info,
+                       A_shp_eq = A_shp_eq_dkqs,
+                       A_shp_ineq = A_shp_ineq_dkqs,
+                       beta_shp_eq = beta_shp_eq_dkqs,
+                       beta_shp_ineq = beta_shp_ineq_dkqs,
+                       kappa = 1e-20,
+                       lnorm = 2,
+                       solver = "gurobi",
+                       estimate = TRUE,
+                       progress = TRUE)
+# L1-norm
+est_ans2b = estbounds(df = df,
+                      A_obs = A_obs_full,
+                      A_tgt = A_tgt,
+                      func_obs = func_full_info,
+                      A_shp_eq = A_shp_eq_dkqs,
+                      A_shp_ineq = A_shp_ineq_dkqs,
+                      beta_shp_eq = beta_shp_eq_dkqs,
+                      beta_shp_ineq = beta_shp_ineq_dkqs,
+                      kappa = 1e-20,
+                      lnorm = 1,
+                      solver = "gurobi",
+                      estimate = TRUE,
+                      progress = TRUE)
 
+## Two-moments approach
+# L2-norm
+est_ans3a = estbounds(df = df,
+                      A_obs = A_obs_twom,
+                      A_tgt = A_tgt,
+                      func_obs = func_two_moment,
+                      A_shp_eq = A_shp_eq_dkqs,
+                      A_shp_ineq = A_shp_ineq_dkqs,
+                      beta_shp_eq = beta_shp_eq_dkqs,
+                      beta_shp_ineq = beta_shp_ineq_dkqs,
+                      kappa = 1e-20,
+                      lnorm = 2,
+                      solver = "gurobi",
+                      estimate = TRUE,
+                      progress = TRUE)
+# L1-norm
+est_ans3b = estbounds(df = df,
+                      A_obs = A_obs_twom,
+                      A_tgt = A_tgt,
+                      func_obs = func_two_moment,
+                      A_shp_eq = A_shp_eq_dkqs,
+                      A_shp_ineq = A_shp_ineq_dkqs,
+                      beta_shp_eq = beta_shp_eq_dkqs,
+                      beta_shp_ineq = beta_shp_ineq_dkqs,
+                      kappa = 1e-20,
+                      lnorm = 1,
+                      solver = "gurobi",
+                      estimate = TRUE,
+                      progress = TRUE)
