@@ -24,9 +24,9 @@ linearprog: An R Package for Inference in Linear and Quadratic Programs
 
 This package conducts inference on econometrics problems that can be
 studied by linear and quadratic programming using the cone-tightening
-procedure of Deb et al. (2018). Based on the test statistic, this package
-can compute the *p*-value, construct confidence intervals and estimate the 
-bounds subject to shape constraints. 
+procedure of Deb et al. (2018). Based on the test statistic, this
+package can compute the *p*-value, construct confidence intervals and
+estimate the bounds subject to shape constraints.
 
 ## Scope of the Vignette
 
@@ -43,9 +43,9 @@ the cone-tightening procedure and the supplemental appendix of Kamat
 devtools::install_github("conroylau/linearprog")
 ```
 
-To use `linearprog`, one of the following packages for solving linear
-and quadratic programs is required. There are four options for the
-solver:
+To use most of the functions in `linearprog`, one of the following
+packages for solving linear and quadratic programs is required. There
+are four options for the solver:
 
 1.  Gurobi and the R package `gurobi` — Gurobi can be downloaded from
     [Gurobi Optimization](https://www.gurobi.com/). A Gurobi software
@@ -77,6 +77,11 @@ solver:
 
 If no package is specified, one of the above packages will be
 automatically chosen from those that are available.
+
+The package `lpSolveAPI` is only supported in the function `estbounds`
+when the L1-norm is used. This is a free and open-source package
+available on CRAN. This can be installed directly via the
+`install.packages` command in R.
 
 ## Usage Demonstration 1: Missing Data Problem
 
@@ -366,7 +371,7 @@ follows:
 
 ``` r
 A_obs_twom = matrix(c(rep(0,J1), yp, rep(0,J1), rep(1, J1)), nrow = 2,
-                byrow = TRUE)
+             byrow = TRUE)
 A_target = matrix(c(yp, yp), nrow = 1)
 ```
 
@@ -464,13 +469,12 @@ dkqs(df = sampledata,
      tau_input = tau,
      solver = "gurobi",
      cores = 8,
-     progress = TRUE)
-#> Number of cores used in bootstrap procedure: 8.
-#> Linear and quadratic programming solver used: gurobi.
-#> ----------------------------------- 
-#> Test statistic: 0.06724.
+     progress = FALSE)
+#> Test statistic: 0.06724.             
 #> p-value: 0.253.
 #> Value of tau used: 0.08311.
+#> Linear and quadratic programming solver used: gurobi.
+#> Number of cores used: 8.
 ```
 
 Alternatively, the followings are the output when the **full information
@@ -478,24 +482,23 @@ approach** is used with the `gurobi` solver to test the hypothesis that
 `beta_tgt` is 0.375.
 
 ``` r
-dkqs_p = dkqs(df = sampledata, 
-              A_obs = A_obs_full, 
-              A_tgt = A_target, 
-              func_obs = func_full_info, 
-              beta_tgt = 0.375, 
-              bs_seed = 1,
-              bs_num = 100,
-              p_sig = 3,
-              tau_input = tau,
-              solver = "gurobi",
-              cores = 8,
-              progress = TRUE)
-#> Number of cores used in bootstrap procedure: 8.
-#> Linear and quadratic programming solver used: gurobi.
-#> ----------------------------------- 
-#> Test statistic: 0.01746.
+dkqs(df = sampledata, 
+     A_obs = A_obs_full, 
+     A_tgt = A_target, 
+     func_obs = func_full_info, 
+     beta_tgt = 0.375, 
+     bs_seed = 1,
+     bs_num = 100,
+     p_sig = 3,
+     tau_input = tau,
+     solver = "gurobi",
+     cores = 8,
+     progress = FALSE)
+#> Test statistic: 0.01746.             
 #> p-value: 0.253.
 #> Value of tau used: 0.08311.
+#> Linear and quadratic programming solver used: gurobi.
+#> Number of cores used: 8.
 ```
 
 The results from the two approach should give the same *p*-value while
@@ -517,7 +520,7 @@ dkqs_args = list(df = sampledata,
                  func_obs = func_full_info, 
                  beta_tgt = 0.375, 
                  bs_seed = 1,
-                 bs_num = 1000,
+                 bs_num = 3000,
                  p_sig = 3,
                  tau_input = tau,
                  solver = "gurobi",
@@ -527,7 +530,11 @@ dkqs_args = list(df = sampledata,
 # Run dkqs with one core
 t10 = Sys.time()
 do.call(dkqs, dkqs_args)
-
+#> Test statistic: 0.01746.             
+#> p-value: 0.228.
+#> Value of tau used: 0.08311.
+#> Linear and quadratic programming solver used: gurobi.
+#> Number of cores used: 1.
 t11 = Sys.time()
 time1 = t11 - t10
 
@@ -535,14 +542,19 @@ time1 = t11 - t10
 dkqs_args$cores = 8
 t80 = Sys.time()
 do.call(dkqs, dkqs_args)
+#> Test statistic: 0.01746.             
+#> p-value: 0.228.
+#> Value of tau used: 0.08311.
+#> Linear and quadratic programming solver used: gurobi.
+#> Number of cores used: 8.
 t81 = Sys.time()
 time8 = t81 - t80
 
 # Print the time used
 print(sprintf("Time used with 1 core: %s", time1))
-#> [1] "Time used with 1 core: 4.6271800994873"
+#> [1] "Time used with 1 core: 10.7481350898743"
 print(sprintf("Time used with 8 cores: %s", time8))
-#> [1] "Time used with 8 cores: 1.70605516433716"
+#> [1] "Time used with 8 cores: 4.23676609992981"
 ```
 
 ### Constructing Confidence Intervals
@@ -613,7 +625,7 @@ dkqs_farg = list(df = sampledata,
                  progress = FALSE)
 ```
 
-Note that the argument for the target value of beta, i.e. the value to
+Note that the argument for the target value of beta, i.e. the value to
 be tested under the null, is not required in the above argument
 assignment.
 
@@ -636,45 +648,44 @@ used to the confidence interval for the test `dkqs` with significance
 level 0.05.
 
 ``` r
-invertci_dkqs = invertci(f = dkqs, 
-                         farg = dkqs_farg, 
-                         alpha = 0.05, 
-                         lb0 = 0, 
-                         lb1 = 0.4, 
-                         ub0 = 1, 
-                         ub1 = 0.6, 
-                         tol = 0.001, 
-                         max_iter = 5, 
-                         df_ci = NULL, 
-                         progress = TRUE)
-#> < Constructing confidence interval for alpha = 0.05 >
+invertci(f = dkqs, 
+         farg = dkqs_farg, 
+         alpha = 0.05, 
+         lb0 = 0, 
+         lb1 = 0.4, 
+         ub0 = 1, 
+         ub1 = 0.6, 
+         tol = 0.001, 
+         max_iter = 5, 
+         df_ci = NULL, 
+         progress = TRUE)
+#>  < Constructing confidence interval for alpha = 0.05 >
 #> 
-#> === Computing upper bound of confidence interval ===
-#> Iteration         Lower bound     Upper bound     Test point  p-value     Reject?
-#> Left end pt.      0.60000         NA              0.60000     0.78000     FALSE  
-#> Right end pt.     NA              1.00000         1.00000     0.00000     TRUE   
-#> 1                 0.60000         1.00000         0.80000     0.00000     TRUE   
-#> 2                 0.60000         0.80000         0.70000     0.00000     TRUE   
-#> 3                 0.60000         0.70000         0.65000     0.05000     FALSE  
-#> 4                 0.65000         0.70000         0.67500     0.00000     TRUE   
-#> 5                 0.65000         0.67500         0.66250     0.00000     TRUE   
-#> >>> Reached the maximum number of iterations. Bisection method is completed.
+#>  === Computing upper bound of confidence interval ===
+#>  Iteration        Lower bound    Upper bound   Test point  p-value     Reject?
+#>  Left end pt.     0.60000        NA            0.60000     0.78000     FALSE  
+#>  Right end pt.    NA             1.00000       1.00000     0.00000     TRUE   
+#>  1                0.60000        1.00000       0.80000     0.00000     TRUE   
+#>  2                0.60000        0.80000       0.70000     0.00000     TRUE   
+#>  3                0.60000        0.70000       0.65000     0.05000     FALSE  
+#>  4                0.65000        0.70000       0.67500     0.00000     TRUE   
+#>  5                0.65000        0.67500       0.66250     0.00000     TRUE   
+#>  >>> Reached the maximum number of iterations. Bisection method is completed.
 #> 
-#> === Computing lower bound of confidence interval ===
-#> Iteration         Lower bound     Upper bound     Test point  p-value     Reject?
-#> Left end pt.      0.00000         NA              0.00000     0.00000     TRUE   
-#> Right end pt.     NA              0.40000         0.40000     0.79000     FALSE  
-#> 1                 0.00000         0.40000         0.20000     0.00000     TRUE   
-#> 2                 0.20000         0.40000         0.30000     0.00000     TRUE   
-#> 3                 0.30000         0.40000         0.35000     0.00000     TRUE   
-#> 4                 0.35000         0.40000         0.37500     0.26000     FALSE  
-#> 5                 0.35000         0.37500         0.36250     0.03000     FALSE  
-#> >>> Reached the maximum number of iterations. Bisection method is completed.
-#> -----------------------------------
-#> < Significance level: 0.05 >
-#> Tolerance level: 0.001.
-#> Total number of iterations: 10.
-#> Confidence interval: [0.356, 0.656].
+#>  === Computing lower bound of confidence interval ===
+#>  Iteration        Lower bound    Upper bound   Test point  p-value     Reject?
+#>  Left end pt.     0.00000        NA            0.00000     0.00000     TRUE   
+#>  Right end pt.    NA             0.40000       0.40000     0.79000     FALSE  
+#>  1                0.00000        0.40000       0.20000     0.00000     TRUE   
+#>  2                0.20000        0.40000       0.30000     0.00000     TRUE   
+#>  3                0.30000        0.40000       0.35000     0.00000     TRUE   
+#>  4                0.35000        0.40000       0.37500     0.26000     FALSE  
+#>  5                0.35000        0.37500       0.36250     0.03000     FALSE  
+#>  >>> Reached the maximum number of iterations. Bisection method is completed.
+#> 
+#>  < Significance level: 0.05 >
+#>  Total number of iterations: 10.
+#>  Confidence interval: [0.35625, 0.65625].
 ```
 
 The message generated at the end of the function can be re-generated by
@@ -690,103 +701,100 @@ following code produces confidence intervals for alpha equals 0.01, 0.05
 and 0.1.
 
 ``` r
-invertci_dkqs_multi = invertci(f = dkqs, 
-                               farg = dkqs_farg, 
-                               alpha = c(0.01, 0.05, 0.1), 
-                               lb0 = 0, 
-                               lb1 = 0.4, 
-                               ub0 = 1, 
-                               ub1 = 0.6, 
-                               tol = 0.001, 
-                               max_iter = 5, 
-                               df_ci = NULL, 
-                               progress = TRUE)
-#> < Constructing confidence interval for alpha = 0.01 >
+invertci(f = dkqs, 
+         farg = dkqs_farg, 
+         alpha = c(0.01, 0.05, 0.1), 
+         lb0 = 0, 
+         lb1 = 0.4, 
+         ub0 = 1, 
+         ub1 = 0.6, 
+         tol = 0.001, 
+         max_iter = 5, 
+         df_ci = NULL, 
+         progress = TRUE)
+#>  < Constructing confidence interval for alpha = 0.01 >
 #> 
-#> === Computing upper bound of confidence interval ===
-#> Iteration         Lower bound     Upper bound     Test point  p-value     Reject?
-#> Left end pt.      0.60000         NA              0.60000     0.78000     FALSE  
-#> Right end pt.     NA              1.00000         1.00000     0.00000     TRUE   
-#> 1                 0.60000         1.00000         0.80000     0.00000     TRUE   
-#> 2                 0.60000         0.80000         0.70000     0.00000     TRUE   
-#> 3                 0.60000         0.70000         0.65000     0.05000     FALSE  
-#> 4                 0.65000         0.70000         0.67500     0.00000     TRUE   
-#> 5                 0.65000         0.67500         0.66250     0.00000     TRUE   
-#> >>> Reached the maximum number of iterations. Bisection method is completed.
+#>  === Computing upper bound of confidence interval ===
+#>  Iteration        Lower bound    Upper bound   Test point  p-value     Reject?
+#>  Left end pt.     0.60000        NA            0.60000     0.78000     FALSE  
+#>  Right end pt.    NA             1.00000       1.00000     0.00000     TRUE   
+#>  1                0.60000        1.00000       0.80000     0.00000     TRUE   
+#>  2                0.60000        0.80000       0.70000     0.00000     TRUE   
+#>  3                0.60000        0.70000       0.65000     0.05000     FALSE  
+#>  4                0.65000        0.70000       0.67500     0.00000     TRUE   
+#>  5                0.65000        0.67500       0.66250     0.00000     TRUE   
+#>  >>> Reached the maximum number of iterations. Bisection method is completed.
 #> 
-#> === Computing lower bound of confidence interval ===
-#> Iteration         Lower bound     Upper bound     Test point  p-value     Reject?
-#> Left end pt.      0.00000         NA              0.00000     0.00000     TRUE   
-#> Right end pt.     NA              0.40000         0.40000     0.79000     FALSE  
-#> 1                 0.00000         0.40000         0.20000     0.00000     TRUE   
-#> 2                 0.20000         0.40000         0.30000     0.00000     TRUE   
-#> 3                 0.30000         0.40000         0.35000     0.00000     TRUE   
-#> 4                 0.35000         0.40000         0.37500     0.26000     FALSE  
-#> 5                 0.35000         0.37500         0.36250     0.03000     FALSE  
-#> >>> Reached the maximum number of iterations. Bisection method is completed.
-#> -----------------------------------
-#> < Significance level: 0.01 >
-#> Tolerance level: 0.001.
-#> Total number of iterations: 10.
-#> Confidence interval: [0.356, 0.656].
+#>  === Computing lower bound of confidence interval ===
+#>  Iteration        Lower bound    Upper bound   Test point  p-value     Reject?
+#>  Left end pt.     0.00000        NA            0.00000     0.00000     TRUE   
+#>  Right end pt.    NA             0.40000       0.40000     0.79000     FALSE  
+#>  1                0.00000        0.40000       0.20000     0.00000     TRUE   
+#>  2                0.20000        0.40000       0.30000     0.00000     TRUE   
+#>  3                0.30000        0.40000       0.35000     0.00000     TRUE   
+#>  4                0.35000        0.40000       0.37500     0.26000     FALSE  
+#>  5                0.35000        0.37500       0.36250     0.03000     FALSE  
+#>  >>> Reached the maximum number of iterations. Bisection method is completed.
 #> 
-#> < Constructing confidence interval for alpha = 0.05 >
+#>  < Constructing confidence interval for alpha = 0.05 >
 #> 
-#> === Computing upper bound of confidence interval ===
-#> Iteration         Lower bound     Upper bound     Test point  p-value     Reject?
-#> Left end pt.      0.60000         NA              0.60000     0.78000     FALSE  
-#> Right end pt.     NA              1.00000         1.00000     0.00000     TRUE   
-#> 1                 0.60000         1.00000         0.80000     0.00000     TRUE   
-#> 2                 0.60000         0.80000         0.70000     0.00000     TRUE   
-#> 3                 0.60000         0.70000         0.65000     0.05000     FALSE  
-#> 4                 0.65000         0.70000         0.67500     0.00000     TRUE   
-#> 5                 0.65000         0.67500         0.66250     0.00000     TRUE   
-#> >>> Reached the maximum number of iterations. Bisection method is completed.
+#>  === Computing upper bound of confidence interval ===
+#>  Iteration        Lower bound    Upper bound   Test point  p-value     Reject?
+#>  Left end pt.     0.60000        NA            0.60000     0.78000     FALSE  
+#>  Right end pt.    NA             1.00000       1.00000     0.00000     TRUE   
+#>  1                0.60000        1.00000       0.80000     0.00000     TRUE   
+#>  2                0.60000        0.80000       0.70000     0.00000     TRUE   
+#>  3                0.60000        0.70000       0.65000     0.05000     FALSE  
+#>  4                0.65000        0.70000       0.67500     0.00000     TRUE   
+#>  5                0.65000        0.67500       0.66250     0.00000     TRUE   
+#>  >>> Reached the maximum number of iterations. Bisection method is completed.
 #> 
-#> === Computing lower bound of confidence interval ===
-#> Iteration         Lower bound     Upper bound     Test point  p-value     Reject?
-#> Left end pt.      0.00000         NA              0.00000     0.00000     TRUE   
-#> Right end pt.     NA              0.40000         0.40000     0.79000     FALSE  
-#> 1                 0.00000         0.40000         0.20000     0.00000     TRUE   
-#> 2                 0.20000         0.40000         0.30000     0.00000     TRUE   
-#> 3                 0.30000         0.40000         0.35000     0.00000     TRUE   
-#> 4                 0.35000         0.40000         0.37500     0.26000     FALSE  
-#> 5                 0.35000         0.37500         0.36250     0.03000     FALSE  
-#> >>> Reached the maximum number of iterations. Bisection method is completed.
-#> -----------------------------------
-#> < Significance level: 0.05 >
-#> Tolerance level: 0.001.
-#> Total number of iterations: 10.
-#> Confidence interval: [0.356, 0.656].
+#>  === Computing lower bound of confidence interval ===
+#>  Iteration        Lower bound    Upper bound   Test point    p-value     Reject?
+#>  Left end pt.     0.00000        NA            0.00000       0.00000     TRUE   
+#>  Right end pt.    NA             0.40000       0.40000       0.79000     FALSE  
+#>  1                0.00000        0.40000       0.20000       0.00000     TRUE   
+#>  2                0.20000        0.40000       0.30000       0.00000     TRUE   
+#>  3                0.30000        0.40000       0.35000       0.00000     TRUE   
+#>  4                0.35000        0.40000       0.37500       0.26000     FALSE  
+#>  5                0.35000        0.37500       0.36250       0.03000     FALSE  
+#>  >>> Reached the maximum number of iterations. Bisection method is completed.
 #> 
-#> < Constructing confidence interval for alpha = 0.1 >
+#>  < Constructing confidence interval for alpha = 0.1 >
 #> 
-#> === Computing upper bound of confidence interval ===
-#> Iteration         Lower bound     Upper bound     Test point  p-value     Reject?
-#> Left end pt.      0.60000         NA              0.60000     0.78000     FALSE  
-#> Right end pt.     NA              1.00000         1.00000     0.00000     TRUE   
-#> 1                 0.60000         1.00000         0.80000     0.00000     TRUE   
-#> 2                 0.60000         0.80000         0.70000     0.00000     TRUE   
-#> 3                 0.60000         0.70000         0.65000     0.05000     FALSE  
-#> 4                 0.65000         0.70000         0.67500     0.00000     TRUE   
-#> 5                 0.65000         0.67500         0.66250     0.00000     TRUE   
-#> >>> Reached the maximum number of iterations. Bisection method is completed.
+#>  === Computing upper bound of confidence interval ===
+#>  Iteration        Lower bound    Upper bound   Test point    p-value     Reject?
+#>  Left end pt.     0.60000        NA            0.60000       0.78000     FALSE  
+#>  Right end pt.    NA             1.00000       1.00000       0.00000     TRUE   
+#>  1                0.60000        1.00000       0.80000       0.00000     TRUE   
+#>  2                0.60000        0.80000       0.70000       0.00000     TRUE   
+#>  3                0.60000        0.70000       0.65000       0.05000     FALSE  
+#>  4                0.65000        0.70000       0.67500       0.00000     TRUE   
+#>  5                0.65000        0.67500       0.66250       0.00000     TRUE   
+#>  >>> Reached the maximum number of iterations. Bisection method is completed.
 #> 
-#> === Computing lower bound of confidence interval ===
-#> Iteration         Lower bound     Upper bound     Test point  p-value     Reject?
-#> Left end pt.      0.00000         NA              0.00000     0.00000     TRUE   
-#> Right end pt.     NA              0.40000         0.40000     0.79000     FALSE  
-#> 1                 0.00000         0.40000         0.20000     0.00000     TRUE   
-#> 2                 0.20000         0.40000         0.30000     0.00000     TRUE   
-#> 3                 0.30000         0.40000         0.35000     0.00000     TRUE   
-#> 4                 0.35000         0.40000         0.37500     0.26000     FALSE  
-#> 5                 0.35000         0.37500         0.36250     0.03000     TRUE   
-#> >>> Reached the maximum number of iterations. Bisection method is completed.
-#> -----------------------------------
-#> < Significance level: 0.1 >
-#> Tolerance level: 0.001.
-#> Total number of iterations: 10.
-#> Confidence interval: [0.369, 0.656].
+#>  === Computing lower bound of confidence interval ===
+#>  Iteration        Lower bound    Upper bound   Test point    p-value     Reject?
+#>  Left end pt.     0.00000        NA            0.00000       0.00000     TRUE   
+#>  Right end pt.    NA             0.40000       0.40000       0.79000     FALSE  
+#>  1                0.00000        0.40000       0.20000       0.00000     TRUE   
+#>  2                0.20000        0.40000       0.30000       0.00000     TRUE   
+#>  3                0.30000        0.40000       0.35000       0.00000     TRUE   
+#>  4                0.35000        0.40000       0.37500       0.26000     FALSE  
+#>  5                0.35000        0.37500       0.36250       0.03000     TRUE   
+#>  >>> Reached the maximum number of iterations. Bisection method is completed.
+#> 
+#>  < Significance level: 0.01 >
+#>  Total number of iterations: 10.
+#>  Confidence interval: [0.35625, 0.65625].
+#>  --------------------------------------
+#>  < Significance level: 0.05 >
+#>  Total number of iterations: 10.
+#>  Confidence interval: [0.35625, 0.65625].
+#>  --------------------------------------
+#>  < Significance level: 0.1 >
+#>  Total number of iterations: 10.
+#>  Confidence interval: [0.36875, 0.65625].
 ```
 
 ### Constructing Bounds subject to Shape Constraints
@@ -796,44 +804,62 @@ bounds estimates subject to certain shape constraints. This is obtained
 by the `estbounds` function. The linear program for obtaining the exact
 bounds subject to shape constraints may not be necessarily feasible.
 Hence, an `estimate` option for the package is available for the user.
+The estimation can be conducted via L1-norm or L2-norm.
 
 #### Syntax
 
 The `estbounds` command has the following syntax:
 
 ``` r
-estbounds1 = estbounds(df = sampledata,
-                       func_obs = func_full_info,
-                       A_obs = A_obs_full,
-                       A_tgt = A_target,
-                       A_shp_eq = A_shp_eq_dkqs,
-                       A_shp_ineq = A_shp_ineq_dkqs,
-                       beta_shp_eq = beta_shp_eq_dkqs,
-                       beta_shp_ineq = beta_shp_ineq_dkqs,
-                       kappa = 1e-10,
-                       lnorm = 2,
-                       solver = "gurobi",
-                       estimate = FALSE,
-                       progress = TRUE)
+estbounds(df = sampledata,
+          func_obs = func_full_info,
+          A_obs = A_obs_full,
+          A_tgt = A_target,
+          A_shp_eq = A_shp_eq_dkqs,
+          A_shp_ineq = A_shp_ineq_dkqs,
+          beta_shp_eq = beta_shp_eq_dkqs,
+          beta_shp_ineq = beta_shp_ineq_dkqs,
+          kappa = 1e-10,
+          lnorm = 2,
+          solver = "gurobi",
+          estimate = FALSE,
+          progress = TRUE)
 ```
 
-where 
+where
 
-  - `A_shp_eq` refers to the matrix representing the equality shape 
-  constraints. 
-  - `A_shp_ineq` refers to the matrix representing the inequality shape 
-  constraints. 
-  - `beta_shp_eq` refers to the RHS vector in equality shape constraints. 
-  - `beta_shp_ineq` refers to the RHS vector in inequality shape constraints. 
-  - `lnorm` refers to the norm used in the optimization problem. The norms 
-  that are supported by this function are the 1-norm, 2-norm and the sup-norm. 
-  - `kappa` refers to the parameter used in the second step of the two-step 
-  procedure for obtaining the solution subject to the shape constraints. 
-  - `estimate` refers to the boolean variable that indicate whether the 
-  estimated problem should be considered.
+  - `A_shp_eq` refers to the matrix representing equality shape
+    constraints.
+  - `A_shp_ineq` refers to the matrix representing inequality shape
+    constraints.
+  - `beta_shp_eq` refers to the RHS vector in equality shape
+    constraints.
+  - `beta_shp_ineq` refers to the RHS vector in inequality shape
+    constraints.
+  - `lnorm` refers to the norm used in the optimization problem. The
+    norms that are supported by this function are L1-norm and L2-norm.
+    See <span id="norm">here</span> for more details.
+  - `kappa` refers to the parameter used in the second step of the
+    two-step procedure for obtaining the solution subject to the shape
+    constraints.
+  - `estimate` refers to the boolean variable that indicate whether the
+    estimated problem should be considered.
 
 The remaining arguments have the same definition as that has been
 defined earlier, which can be found <span id="syntax">here</span>.
+
+#### Norms
+
+In constructing the estimated bounds, users are free to choose the
+L1-norm or the L2-norm. For the estimation with L2-norm, users need to
+choose `gurobi` as the solver. For the estimation with L1-norm, users
+can choose one of the following packages as the solver:
+
+  - `gurobi`,
+  - `limSolve`,
+  - `cplexAPI`,
+  - `Rcplex`,
+  - `lpSolveAPI`.
 
 #### Specifying the Matrices for Shape Constraints
 
@@ -848,7 +874,8 @@ A_shp_eq_dkqs = matrix(rep(1, ncol(A_obs_full)), nrow = 1)
 beta_shp_eq_dkqs = c(1)
 ```
 
-If the other set of contraints is empty, set `NULL` to the matrix and vector.
+If the other set of contraints is empty, set `NULL` to the matrix and
+vector.
 
 ``` r
 A_shp_ineq_dkqs = NULL
@@ -858,42 +885,57 @@ beta_shp_ineq_dkqs = NULL
 #### Sample Output
 
 The following is a sample output the bounds are estimated with a
-tolerance level of `1e-10`.
+tolerance level of `1e-20` with L2-norm and the `gurobi` solver.
 
 ``` r
-estbounds1 = estbounds(df = sampledata,
-                       func_obs = func_full_info,
-                       A_obs = A_obs_full,
-                       A_tgt = A_target,
-                       A_shp_eq = A_shp_eq_dkqs,
-                       A_shp_ineq = A_shp_ineq_dkqs,
-                       beta_shp_eq = beta_shp_eq_dkqs,
-                       beta_shp_ineq = beta_shp_ineq_dkqs,
-                       kappa = 1e-10,
-                       lnorm = 2,
-                       solver = "gurobi",
-                       estimate = TRUE,
-                       progress = TRUE)
+estbounds(df = sampledata,
+          func_obs = func_full_info,
+          A_obs = A_obs_full,
+          A_tgt = A_target,
+          A_shp_eq = A_shp_eq_dkqs,
+          A_shp_ineq = A_shp_ineq_dkqs,
+          beta_shp_eq = beta_shp_eq_dkqs,
+          beta_shp_ineq = beta_shp_ineq_dkqs,
+          kappa = 1e-20,
+          lnorm = 2,
+          solver = "gurobi",
+          estimate = TRUE,
+          progress = TRUE)
+#> Call:
+#> estbounds(df = sampledata, func_obs = func_full_info, A_obs = A_obs_full, 
+#>     A_tgt = A_target, A_shp_eq = A_shp_eq_dkqs, A_shp_ineq = A_shp_ineq_dkqs, 
+#>     beta_shp_eq = beta_shp_eq_dkqs, beta_shp_ineq = beta_shp_ineq_dkqs, 
+#>     kappa = 1e-20, lnorm = 2, solver = "gurobi", estimate = TRUE, 
+#>     progress = TRUE)
+#> 
+#> Norm used in optimization problem: L2-norm 
 #> Estimated bounds subject to shape constraints: [0.38316, 0.63344]
 ```
 
-The following is the sample output when the actual bounds are constructed
-without estimation.
+The following is the sample output when the actual bounds are
+constructed without estimation.
 
 ``` r
-estbounds1 = estbounds(df = sampledata,
-                       func_obs = func_full_info,
-                       A_obs = A_obs_full,
-                       A_tgt = A_target,
-                       A_shp_eq = A_shp_eq_dkqs,
-                       A_shp_ineq = A_shp_ineq_dkqs,
-                       beta_shp_eq = beta_shp_eq_dkqs,
-                       beta_shp_ineq = beta_shp_ineq_dkqs,
-                       kappa = 1e-10,
-                       lnorm = 2,
-                       solver = "gurobi",
-                       estimate = FALSE,
-                       progress = TRUE)
+estbounds(df = sampledata,
+          func_obs = func_full_info,
+          A_obs = A_obs_full,
+          A_tgt = A_target,
+          A_shp_eq = A_shp_eq_dkqs,
+          A_shp_ineq = A_shp_ineq_dkqs,
+          beta_shp_eq = beta_shp_eq_dkqs,
+          beta_shp_ineq = beta_shp_ineq_dkqs,
+          kappa = 1e-10,
+          lnorm = 2,
+          solver = "gurobi",
+          estimate = FALSE,
+          progress = TRUE)
+#> Call:
+#> estbounds(df = sampledata, func_obs = func_full_info, A_obs = A_obs_full, 
+#>     A_tgt = A_target, A_shp_eq = A_shp_eq_dkqs, A_shp_ineq = A_shp_ineq_dkqs, 
+#>     beta_shp_eq = beta_shp_eq_dkqs, beta_shp_ineq = beta_shp_ineq_dkqs, 
+#>     kappa = 1e-10, lnorm = 2, solver = "gurobi", estimate = FALSE, 
+#>     progress = TRUE)
+#> 
 #> True bounds subject to shape constraints: [0.3832, 0.6332]
 ```
 
