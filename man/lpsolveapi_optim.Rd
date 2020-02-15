@@ -36,5 +36,5 @@ This function computes the solution to the linear program
 }
 \details{
 The package `\code{lpSolveAPI}' cannot be used to solve quadratic 
-  programs. Hence, the argument \code{obj2} is not used in the function.
+  programs.
 }

@@ -787,7 +787,7 @@ summary.estbounds <- function(x, ...){
 #' @import lpSolveAPI
 #'
 #' @inheritParams gurobi_optim
-#' @inheritParams dkqs_cone
+#' @inheritParams dkqs
 #' @inheritParams prog_cone
 #'
 #' @returns Returns the optimal objective value and the corresponding argument
@@ -796,7 +796,7 @@ summary.estbounds <- function(x, ...){
 #'  \item{larg}{Arguments for the linear program.}
 #'   
 #' @details The package `\code{lpSolveAPI}' cannot be used to solve quadratic 
-#'   programs. Hence, the argument \code{obj2} is not used in the function.
+#'   programs. 
 #'
 #' @export
 #' 
@@ -830,6 +830,8 @@ lpsolveapi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
   solve(lprec)
   x = get.variables(lprec)
   objval = get.objective(lprec)
+  
+  #### Step 5: Return results
   return(list(objval = objval,
               x = x))
 }
