@@ -1,29 +1,5 @@
----
-title: 'linearprog: An R Package for Inference in Linear and Quadratic Programs'
-author: ''
-output:
-  html_document:
-    keep_md: yes
-    toc: yes
-    df_print: paged
-  pdf_document:
-    toc: yes
-    df_print: paged
-  md_document:
-    variant: "markdown_strict"
-    preserve_yaml: yes
-    toc: yes
-    df_print: paged  
-  github_document:
-    keep_html: yes
-    toc: yes
-    df_print: paged
-bibliography: refs.bib
-vignette: |
-  %\VignetteIndexEntry{dkqs} 
-  %\VignetteEncoding{UTF-8} 
-  %\VignetteEngine{knitr::rmarkdown}
----
+linearprog: An R Package for Inference in Linear and Quadratic Programs
+================
 
 -   [Introduction](#introduction)
 -   [Scope of the Vignette](#scope-of-the-vignette)
