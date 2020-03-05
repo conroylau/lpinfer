@@ -2,10 +2,11 @@
 title: 'linearprog: An R Package for Inference in Linear and Quadratic Programs'
 author: ''
 output:
-  github_document:
-    keep_html: yes
+  md_document:
+    variant: "markdown_strict"
+    preserve_yaml: yes
     toc: yes
-    df_print: paged
+    df_print: paged  
   pdf_document:
     toc: yes
     df_print: paged
@@ -13,11 +14,10 @@ output:
     keep_md: yes
     toc: yes
     df_print: paged
-  md_document:
-    variant: "markdown_strict"
-    preserve_yaml: yes
+  github_document:
+    keep_html: yes
     toc: yes
-    df_print: paged  
+    df_print: paged
 bibliography: refs.bib
 vignette: |
   %\VignetteIndexEntry{dkqs} 
@@ -50,15 +50,19 @@ require(doSNOW)
 
 ## Introduction
 This package conducts inference on econometrics problems that can be 
-studied by linear and quadratic programming using the 
-cone-tightening procedure of @dkqs2018. Based on the test statistic, this
-package can compute the *p*-value, construct confidence intervals and estimate
-the bounds subject to shape constraints. 
+studied by linear and quadratic programs. Currently, this package supports 
+the following tests:
+
+1. Cone-tightening procedure by @dkqs2018
+1. Subsampling procedure
+
+This package can compute the *p*-value based on the test, construct confidence 
+intervals and estimate the bounds subject to shape constraints. 
 
 ## Scope of the Vignette
-This vignette is intended as a guide to use the `linearprog` package. Readers
-may refer to section 4.2 of @dkqs2018 for details about the cone-tightening 
-procedure and the supplemental appendix of @kamat2019.
+This vignette is intended as a guide to use the `linearprog` package. For the 
+cone-tightening procedure, readers may refer to section 4.2 of @dkqs2018 for 
+details about the procedure and the supplemental appendix of @kamat2019.
 
 ## Installation and Requirements
 `linearprog` can be installed from our GitHub repository via
@@ -101,13 +105,12 @@ The package `lpSolveAPI` is only supported in the function `estbounds`
 when the L1-norm is used. This is a free and open-source package available on
 CRAN. This can be installed directly via the `install.packages` command in R.
 
-## Usage Demonstration 1: Missing Data Problem
-### Background and Data {#data}
-One application of this `linearprog` package is to study the classical missing 
-data problem due to @manski1989, where the sharp bounds for the identified 
+## Example Data {#data}
+The classical missing data problem due to @manski1989 is used as an example
+throughout the file to demomnstrate the functions in the `linearprog` package.
+The problem is used because the sharp bounds for the identified 
 set of the expected value of the observed value can be constructed by
-linear and quadratic programming. The `linearprog` package can be used to
-construct the *p*-value and confidence interval for the missing data problem.
+linear and quadratic programs.
 
 As an illustration, the dataset below studies the missing data problem and 
 contains 1,000 simulated data with 2 columns. This dataset is included in
@@ -124,7 +127,12 @@ with step size 0.1.
 * `D` is a binary treatment where *Y*~*i*~ is observed for *D*~*i*~ = 1 and 
 not observed for *D*~*i*~ = 0.
 
-### Specifying the Functions {#functions}
+## Test 1: Cone-tightening procedure
+
+The function `dkqs` carries out the cone-tightening procedure that is
+proposed by @dkqs2018.
+
+#### Specifying the Functions {#functions}
 
 To conduct the tests in this `linearprog` package, users need to specify the
 functions to generate the observed value of beta from the dataset. This package
@@ -176,7 +184,7 @@ func_two_moment <- function(df){
 The `func_two_moment` function returns a vector with two elements that 
 corresponds to the two moments **E**[*Y*~*i*~] and **E**[*Y*~*i*~*D*~*i*~].
 
-### Specifying the Parameters
+#### Specifying the Parameters
 To conduct the inference in this package, the matrices `A_obs` and `A_tgt` have 
 to be defined in order to use the function. To construct the two matrices, the
 following parameters are needed:
@@ -207,14 +215,14 @@ formula from page 15 of the supplemental appendix of @kamat2019:
 tau = sqrt(log(N)/N)
 ```
 
-### Calculating *p*-value
+#### Calculating *p*-value
 
 The command for applying the cone-tightening procedure in `linearprog` is 
 called `dkqs`. It takes the data, parameters and the function that can
 calculate the observed value of beta and returns the *p*-value.
 
 #### Syntax  {#syntax}
-This `dkqs` command has the following syntax:
+The `dkqs` command has the following syntax:
 ```{r, syntax, eval = FALSE}
 dkqs(df = sampledata, 
      A_obs = A_obs_twom, 
@@ -340,8 +348,111 @@ print(sprintf("Time used with 1 core: %s", time1))
 print(sprintf("Time used with 8 cores: %s", time8))
 ```
 
-### Constructing Confidence Intervals 
 
+## Test 2: Subsampling
+
+The function `subsample` carries out the test using the subsampling procedure. 
+The syntax is similar to the `dkqs` function. The subsampling procedure is 
+similar to the bootstrapping procedure except that each
+subsample drawn has to have size than the original sample and the draws are
+drawn without replacement.
+
+#### Specifying the Functions
+
+Same as the `dkqs` procedure, users need to specify the functions for the 
+estimator of beta and the variance estimator. The details on how to 
+construct the function to specify the beta vector can be found 
+[here]{#function}. In addition, users need to specify the 
+function to generate the asymptotic variance of the estimator. The order of
+the matrix that represent the asymptotic variance has to be the same as the
+length of the beta vector.
+
+If the asymptotic variance is an identity matrix, then it can be specified
+as follows:
+``` {r, eval = TRUE}
+var_full_info <- function(df){
+  len = length(unique(df[,"Y"]))
+  return(diag(len))
+}
+```
+
+#### Specifying the Parameters
+
+In this procedure, we need to specify the shape constraints. They can be 
+defined as follows:
+```{r, eval = TRUE}
+A_shp_full = matrix(rep(1, ncol(A_obs_full)), nrow = 1)
+beta_shp = 1
+```
+
+
+#### Syntax
+
+The `subsample` command has the following syntax:
+
+```{r, subsample_syntax, eval = FALSE}
+subsample(df = sampledata, 
+          A_obs = A_obs_full, 
+          func_obs = func_full_info,
+          func_var = var_full_info,
+          A_shp = A_shp_full,
+          beta_shp = beta_shp,
+          A_tgt = A_target,
+          beta_tgt = 0.375,
+          bs_num = 100,
+          bs_seed = 1,
+          p_sig = 3,
+          solver = "gurobi",
+          cores = 8,
+          lnorm = 2,
+          phi = 2/3,
+          progress = FALSE)
+```
+where 
+
+* `func_var` refers to the function that generates the asymptotic variance 
+of observed beta.
+* `A_shp` refers to the matrix for the shape constraints.
+* `beta_shp` refers to the RHS vector for the shape constraints.
+* `lnorm` refers to the norm used in the objective function.
+* `phi` refers to the parameter in determining the size of the subsample.
+
+The remaining arguments have the same definition as that has been defined
+earlier, which can be found [here]{#syntax}. Similar to the `dkqs` package,
+a parallel programming option is available to increase the computational
+speed.
+
+#### Sample Output
+
+The following is a sample output of the `subsample` procedure.
+
+```{r, subsample_output, eval = TRUE}
+subsample(df = sampledata, 
+          A_obs = A_obs_full, 
+          func_obs = func_full_info,
+          func_var = var_full_info,
+          A_shp = A_shp_full,
+          beta_shp = beta_shp,
+          A_tgt = A_target,
+          beta_tgt = 0.375,
+          bs_num = 100,
+          bs_seed = 1,
+          p_sig = 3,
+          solver = "gurobi",
+          cores = 8,
+          lnorm = 2,
+          phi = 2/3,
+          progress = FALSE)
+```
+
+## Constructing Confidence Intervals
+
+Apart from conducting inference on the tests, the `linearprog` package can
+also construct confidence intervals via the `invertci` function. In this
+section, I will illustrate the use of the `invertci` function via the 
+`dkqs` test.
+
+### Constructing a Single Confidence Interval
 The command for constructing the two-sided confidence interval for a
 statistical test in the `linearprog` packge is called `invertci`. The confidence 
 interval is constructed by evaluating the *p*-value of a test and applying the 
@@ -458,9 +569,9 @@ invertci(f = dkqs,
 
 
 
-### Constructing Bounds subject to Shape Constraints
+## Constructing Bounds subject to Shape Constraints
 
-Another application of the `linearprog` package is to construct the 
+Another key application of the `linearprog` package is to construct the 
 bounds estimates subject to certain shape constraints. This is obtained by the
 `estbounds` function. The linear program for obtaining the exact bounds 
 subject to shape constraints may not be necessarily feasible. Hence, an 
@@ -535,7 +646,7 @@ beta_shp_ineq_dkqs = NULL
 
 #### Sample Output
 
-The following is a sample output the bounds are estimated with a
+The following is a sample output when the bounds are estimated with a
 tolerance level of `1e-20` with L1-norm and the `gurobi` solver.
 
 ``` {r, estbounds_est, eval = TRUE}
