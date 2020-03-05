@@ -4,7 +4,7 @@
 \alias{p_eval}
 \title{Auxiliary function to calculate the p-value}
 \usage{
-p_eval(T_bs, T_n, p_sig)
+p_eval(T_bs, T_n, p_sig, alpha = 0.05)
 }
 \arguments{
 \item{T_bs}{The test statistics obtained from bootstrap.}
