@@ -1,4 +1,4 @@
-#' Computes the \eqn{p}-value of a quadratic program
+#' Computes the \eqn{p}-value of the dkqs procedure
 #'
 #' @description This module conducts inference in quadratic programs using the 
 #'    procedure suggested by Torgovitsky (2019) that incorporates the 
@@ -42,6 +42,7 @@
 #'   \item{lb0}{Logical lower bound of the problem.}
 #'   \item{ub0}{Logical upper bound of the problem.}
 #'   \item{solver}{Solver used in solving the linear and quadratic programs.}
+#'   \item{cores}{Number of cores used.}
 #'   \item{call}{The function that has been called.}
 #' 
 #' @details If the value of the test statistic \eqn{T_n} is zero, the
@@ -151,7 +152,7 @@ dkqs <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   
   #### Step 6: Compute the p-value
   # decision = 1 refers to rejected, decision = 0 refers to not rejected
-  p_val = p_eval(T_bs, T_n, p_sig)
+  p_val = p_eval(T_bs, T_n, p_sig)$p
   
   #### Step 7: Obtain logical bounds for the function qrci
   lb0 = x_return$lb0
@@ -715,7 +716,7 @@ beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs,
   beta_bs_bar_set = NULL
   # Initialize the progress bar
   if (progress == TRUE){
-    pb = txtProgressBar(min = 0, max = bs_num, style = 3, width = 20)
+    pb = utils::txtProgressBar(min = 0, max = bs_num, style = 3, width = 20)
     cat("\r") 
   } else {
     pb = NULL
@@ -741,10 +742,10 @@ beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs,
     #### Step 6: Update progress bar
     if (progress == TRUE){
       if (i != bs_num){
-        setTxtProgressBar(pb, i)
+        utils::setTxtProgressBar(pb, i)
         cat("\r\r")  
       } else {
-        setTxtProgressBar(pb, i)
+        utils::setTxtProgressBar(pb, i)
         cat("\r\b")          
       }
     }
@@ -873,20 +874,29 @@ beta_bs_parallel <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt,
 #'
 #' @export
 #' 
-p_eval <- function(T_bs, T_n, p_sig){
+p_eval <- function(T_bs, T_n, p_sig, alpha = .05){
   # Initialization
   p_val = NULL
-  decision = 1 # decision = 1: rejected, decision = 0: not rejected
-  alpha = 0
-  while (decision != 0 & alpha <= 1){
-    T_quan = as.numeric(quantile(T_bs, probs=c(1 - alpha)))
+  decision_loop = 1 # decision = 1: rejected, decision = 0: not rejected
+  alpha_loop = 0
+  while (decision_loop != 0 & alpha_loop <= 1){
+    T_quan = as.numeric(quantile(T_bs, probs=c(1 - alpha_loop)))
     if (T_n >= T_quan){
-      decision = 0
+      decision_loop = 0
     }
-    alpha = alpha + 10^(-p_sig)
+    alpha_loop = alpha_loop + 10^(-p_sig)
   }
-  p_val = round(alpha - 10^(-p_sig), digits = p_sig)
-  return(p_val)
+  # Decision
+  T_quan = as.numeric(quantile(T_bs, probs=c(1 - alpha)))
+  if (T_n > T_quan){
+    decision = 1
+  } else {
+    decision = 0
+  }
+  # p-value
+  p_val = round(alpha_loop - 10^(-p_sig), digits = p_sig)
+  return(list(p = p_val,
+              decision = decision))
 }
 
 #' Auxiliary function to create the constraints for the linear program for tau
