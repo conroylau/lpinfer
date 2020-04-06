@@ -7,7 +7,7 @@
 #'    
 #' @import gurobi cplexAPI Rcplex Momocs limSolve foreach doMC parallel
 #'
-#' @param df The data being used in the inference.
+#' @param data The data being used in the inference.
 #' @param A_obs The "observed matrix" in the inference \eqn{A_{\mathrm{obs}}}.
 #' @param A_tgt The "target matrix" in the inference \eqn{A_{\mathrm{tgt}}}.
 #' @param func_obs The function that generates the required 
@@ -50,7 +50,7 @@
 #' 
 #' @export
 #' 
-dkqs <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
+dkqs <- function(data, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
                  R = 100, p_sig = 2, tau = .5, solver = NULL,
                  cores = 1, progress = FALSE){
   
@@ -58,12 +58,12 @@ dkqs <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   # Obtain call information
   call = match.call()
   # Check and update
-  checkupdate = dkqs_check(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
+  checkupdate = dkqs_check(data, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
                            R, p_sig, tau, solver, progress,
                            cores)
   # Update and return the quantities returned from the function dkqs_check
   # (a) Dataframe
-  df = checkupdate$df
+  data = checkupdate$data
   # (b) Matrices for linear and quadratic programs
   A_obs = checkupdate$A_obs
   A_tgt = checkupdate$A_tgt
@@ -74,8 +74,8 @@ dkqs <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   
   #### Step 2: Initialization
   # Initialization
-  n = nrow(df)
-  J = length(unique(df[,"Y"])) - 1
+  n = nrow(data)
+  J = length(unique(data[,"Y"])) - 1
   # Compute beta_obs_hat using the function defined by user
   beta_obs_hat = checkupdate$beta_obs_hat
   ### Assign the solver to be used
@@ -122,13 +122,13 @@ dkqs <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   if (T_n != 0){
     if (cores == 1){
       # No parallelization
-      T_bs_return = beta_bs(df, bs_seed, R, J, s_star, A_obs, A_tgt, 
+      T_bs_return = beta_bs(data, bs_seed, R, J, s_star, A_obs, A_tgt, 
                             func_obs, beta_obs_hat, beta_tgt, tau, n, solver,
                             progress)
       #cat("                                     \b")
     } else {
       # Parallelization
-      T_bs_return = beta_bs_parallel(df, bs_seed, R, J, s_star, A_obs, 
+      T_bs_return = beta_bs_parallel(data, bs_seed, R, J, s_star, A_obs, 
                                      A_tgt, func_obs, beta_obs_hat, beta_tgt, 
                                      tau, n, solver, cores, progress)  
       #cat("                                     \b")
@@ -160,8 +160,8 @@ dkqs <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   
   #### Step 8: Print results
   # if (progress == TRUE){  
-  #   cat(paste("Linear and quadratic programming solver used: ", solver_name, ".\n", 
-  #             sep = ""))    
+  #   cat(paste("Linear and quadratic programming solver used: ", 
+  #   solver_name, ".\n", sep = ""))    
   #   cat(paste("-----------------------------------", "\n"))
   #   cat(paste("Test statistic: ", round(T_n, digits = 5), ".\n", sep = ""))
   #   cat(paste("p-value: ", p_val, ".\n", sep = ""))
@@ -312,8 +312,8 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
     }
     # Inequality constraints for ind_down
     for (i in 1:length(ind_down)){
-      new_const = tau_constraints(len_tau, rhs_down, -1, ind_down[i]+1, 0, "<=",
-                                  lp_lhs_tau, lp_rhs_tau, lp_sense_tau)
+      new_const = tau_constraints(len_tau, rhs_down, -1, ind_down[i]+1, 0, 
+                                  "<=", lp_lhs_tau, lp_rhs_tau, lp_sense_tau)
       lp_lhs_tau = new_const$lp_lhs_tau
       lp_rhs_tau = new_const$lp_rhs_tau
       lp_sense_tau = new_const$lp_sense_tau
@@ -707,7 +707,7 @@ objective_function <- function(A, b, n){
 #'
 #' @export
 #' 
-beta_bs <- function(df, bs_seed, R, J, s_star, A_obs, A_tgt, func_obs, 
+beta_bs <- function(data, bs_seed, R, J, s_star, A_obs, A_tgt, func_obs, 
                     beta_obs_hat, beta_tgt, tau, n, solver, progress){
   
   #### Step 1: Initialize vectors and progress counter
@@ -727,7 +727,7 @@ beta_bs <- function(df, bs_seed, R, J, s_star, A_obs, A_tgt, func_obs,
     #### Step 2: Set the seed
     set.seed(bs_seed + i)
     ####  Step 3: Draw the subsample
-    df_bs = as.data.frame(Momocs::sample_n(df, n, replace = TRUE))
+    df_bs = as.data.frame(Momocs::sample_n(data, n, replace = TRUE))
     # Re-index the rows
     rownames(df_bs) = 1:nrow(df_bs)
     ####  Step 4: Compute the bootstrap estimates
@@ -777,7 +777,7 @@ beta_bs <- function(df, bs_seed, R, J, s_star, A_obs, A_tgt, func_obs,
 #' 
 #' @export
 #' 
-beta_bs_parallel <- function(df, bs_seed, R, J, s_star, A_obs, A_tgt, 
+beta_bs_parallel <- function(data, bs_seed, R, J, s_star, A_obs, A_tgt, 
                              func_obs, beta_obs_hat, beta_tgt, tau, n, solver, 
                              cores, progress){
   #### Step 1: Register the number of cores and extract information
@@ -827,7 +827,7 @@ beta_bs_parallel <- function(df, bs_seed, R, J, s_star, A_obs, A_tgt,
    #### Step 2: Set the seed
    set.seed(bs_seed + i)
    ####  Step 3: Draw the subsample
-   df_bs = as.data.frame(Momocs::sample_n(df, n, replace = TRUE))
+   df_bs = as.data.frame(Momocs::sample_n(data, n, replace = TRUE))
    # Re-index the rows
    rownames(df_bs) = 1:nrow(df_bs)
    ####  Step 4: Compute the bootstrap estimates
@@ -947,7 +947,7 @@ tau_constraints <- function(length_tau, coeff_tau, coeff_x, ind_x, rhs, sense,
 #' @inheritParams dkqs
 #' 
 #' @return Returns the list of updated parameters as follows:
-#'   \item{df}{Upated data in class \code{data.frame}}
+#'   \item{data}{Upated data in class \code{data.frame}}
 #'   \item{A_obs}{Updated "observed" matrix in class \code{matrix}.}
 #'   \item{A_tgt}{Updated "target" matrix in class \code{matrix}.}
 #'   \item{beta_obs_tgt}{Obtain \eqn{\widehat{\bm{\beta}}_{\mathrm{tgt}}} 
@@ -958,15 +958,15 @@ tau_constraints <- function(length_tau, coeff_tau, coeff_x, ind_x, rhs, sense,
 #' 
 #' @export
 #' 
-dkqs_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
+dkqs_check <- function(data, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
                        R, p_sig, tau, solver, progress, cores){
   ### Part 1. Check the dataframe
-  if (class(df) %in% c("data.frame", "matrix") == TRUE){
-    df = as.data.frame(df)  
+  if (class(data) %in% c("data.frame", "matrix") == TRUE){
+    data = as.data.frame(data)  
   } else {
     stop(gsub("\\s+", " ",
-              "The data povided 'df' must either be a data.frame, a data.table, 
-               or a matrix."), call. = FALSE)    
+              "The data povided 'data' must either be a data.frame, 
+              a data.table, or a matrix."), call. = FALSE)    
   }
   
   ### Part 2. Check the matrices A_obs and A_tgt
@@ -999,7 +999,7 @@ dkqs_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
   if (class(func_obs) != "function"){
     stop("The input of 'func_obs' has to be a function.", call. = FALSE)
   } else{
-    beta_obs_hat = func_obs(df)
+    beta_obs_hat = func_obs(data)
     beta_obs_hat = as.matrix(beta_obs_hat)
     # Check if the output is numeric
     if (is.numeric(beta_obs_hat[,1]) == FALSE){
@@ -1140,7 +1140,7 @@ dkqs_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
   }
   
   ### Step 13. Return the upated information
-  return(list(df = df, 
+  return(list(data = data, 
               A_obs = A_obs,
               A_tgt = A_tgt,
               beta_obs_hat = beta_obs_hat,

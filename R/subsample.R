@@ -26,7 +26,7 @@
 #' 
 #' @export
 #' 
-subsample <- function(df, A_obs, func_obs, func_var, 
+subsample <- function(data, A_obs, func_obs, func_var, 
                       A_shp, beta_shp, A_tgt, beta_tgt, 
                       bs_seed = 1, R = 100, p_sig = 2, solver = NULL, 
                       cores = 8, lnorm = 2, phi = 2/3, alpha = .05,
@@ -39,14 +39,14 @@ subsample <- function(df, A_obs, func_obs, func_var,
   call = match.call()
   
   ## Check and update 
-  checkupdate = subsample_check(df, A_obs, func_obs, func_var, 
+  checkupdate = subsample_check(data, A_obs, func_obs, func_var, 
                                 A_shp, beta_shp, A_tgt, beta_tgt, 
                                 bs_seed, R, p_sig, solver, cores, lnorm, 
                                 phi, progress)
   
   ## Update information obtained from check
   # Data frame
-  df = checkupdate$df
+  data = checkupdate$data
   # Matrices and vectors
   A_obs = checkupdate$A_obs
   A_shp = checkupdate$A_shp
@@ -60,23 +60,23 @@ subsample <- function(df, A_obs, func_obs, func_var,
   # Step 2: Solve for T_n
   # = = = = = =
   ## Solve the main problem with the full sample
-  Treturn = subsample_prob(df, func_obs, func_var, A_obs, A_shp, A_tgt, 
+  Treturn = subsample_prob(data, func_obs, func_var, A_obs, A_shp, A_tgt, 
                            beta_shp, beta_tgt, lnorm, solver)
   
   # = = = = = = 
   # Step 3: Subsampling procedure
   # = = = = = =  
-  n = nrow(df)
+  n = nrow(data)
   m = floor(n^(phi))
   if (cores == 1){
     # One core
-    T_subsample = subsample_onecore(df, bs_seed, R, func_obs, func_var, 
+    T_subsample = subsample_onecore(data, bs_seed, R, func_obs, func_var, 
                                     A_obs, A_shp, A_tgt, beta_shp, beta_tgt, 
                                     lnorm, solver, progress, m)
     
   } else {
     # Many cores
-    T_subsample = subsample_manycores(df, bs_seed, R, func_obs, func_var, 
+    T_subsample = subsample_manycores(data, bs_seed, R, func_obs, func_var, 
                                       A_obs, A_shp, A_tgt, beta_shp, beta_tgt, 
                                       lnorm, solver, progress, m)
   }
@@ -116,7 +116,7 @@ subsample <- function(df, A_obs, func_obs, func_var,
 
 #' Formulate and solve the subsampling problem
 #' 
-#' @description Based on the sample data given by the data frame \code{df}, 
+#' @description Based on the sample data given by the data frame \code{data}, 
 #'   this function formulates and solves linear/quadratic program in the 
 #'   subsampling procedure.
 #'   
@@ -130,21 +130,21 @@ subsample <- function(df, A_obs, func_obs, func_var,
 #'   \item{larg}{List of arguments passed to the optimizer.}
 #'   \item{beta}{The beta vector \eqn{\widehat{\bm{\beta}}_{\mathrm{obs}}}
 #'     used in the optimization problem that is calculated from the 
-#'     \code{func_obs} function with data \code{df}.}
+#'     \code{func_obs} function with data \code{data}.}
 #'   \item{omega}{The Omega matrix \eqn{\widehat{\bm{\Omega}}_n} used in the 
 #'     optimization problem that is calculated from the \code{func_obs} 
-#'     function with data \code{df}.}
+#'     function with data \code{data}.}
 #'     
 #' @export 
 #' 
-subsample_prob <- function(df, func_obs, func_var, A_obs, A_shp, A_tgt, 
+subsample_prob <- function(data, func_obs, func_var, A_obs, A_shp, A_tgt, 
                            beta_shp, beta_tgt, lnorm, solver){
   # = = = = = = 
   # Step 1: Obtain parameters from the data frame
   # = = = = = = 
-  n = nrow(df)
-  beta_obs_hat = func_obs(df)
-  omega_hat = func_var(df)
+  n = nrow(data)
+  beta_obs_hat = func_obs(data)
+  omega_hat = func_var(data)
   
   # = = = = = = 
   # Step 2: Define the inverse omega matrix
@@ -246,7 +246,7 @@ subsample_prob <- function(df, func_obs, func_var, A_obs, A_shp, A_tgt,
 #' 
 #' @export
 #' 
-subsample_onecore <- function(df, bs_seed, R, func_obs, func_var, 
+subsample_onecore <- function(data, bs_seed, R, func_obs, func_var, 
                               A_obs, A_shp, A_tgt, beta_shp, beta_tgt, 
                               lnorm, solver, progress, m){
   # = = = = = = 
@@ -270,7 +270,7 @@ subsample_onecore <- function(df, bs_seed, R, func_obs, func_var,
     ## (2.1) Set the seed
     set.seed(bs_seed + i)
     ## (2.2) Draw the subsample
-    df_sub = as.data.frame(Momocs::sample_n(df, m, replace = FALSE))
+    df_sub = as.data.frame(Momocs::sample_n(data, m, replace = FALSE))
     # Re-index the rows
     rownames(df_sub) = 1:nrow(df_sub)
     ## (2.3) Compute the bootstrap estimates
@@ -316,7 +316,7 @@ subsample_onecore <- function(df, bs_seed, R, func_obs, func_var,
 #' 
 #' @export
 #' 
-subsample_manycores <- function(df, bs_seed, R, func_obs, func_var, 
+subsample_manycores <- function(data, bs_seed, R, func_obs, func_var, 
                                 A_obs, A_shp, A_tgt, beta_shp, beta_tgt, 
                                 lnorm, solver, progress, m){
   # = = = = = = 
@@ -372,7 +372,7 @@ subsample_manycores <- function(df, bs_seed, R, func_obs, func_var,
     ## (3.1) Set the seed
     set.seed(bs_seed + i)
     ## (3.2) Draw the subsample
-    df_sub = as.data.frame(Momocs::sample_n(df, m, replace = FALSE))
+    df_sub = as.data.frame(Momocs::sample_n(data, m, replace = FALSE))
     # Re-index the rows
     rownames(df_sub) = 1:nrow(df_sub)
     ## (3.3) Compute the bootstrap estimates
@@ -391,7 +391,7 @@ subsample_manycores <- function(df, bs_seed, R, func_obs, func_var,
   # = = = = = = 
   T_sub = as.vector(unlist(listans[[1]]))
   beta_sub = data.frame(matrix(as.matrix(listans[[2]]), 
-                               nrow = length(func_obs(df)), 
+                               nrow = length(func_obs(data)), 
                                byrow = FALSE))
   
   # = = = = = = 
@@ -466,7 +466,7 @@ summary.subsample <- function(x, ...){
 #' 
 #' @return Returns the updated value of the parameters back to the function 
 #'    \code{subsample}. 
-#'   \item{df}{Upated data in class \code{data.frame}}
+#'   \item{data}{Upated data in class \code{data.frame}}
 #'   \item{A_obs}{Updated "observed" matrix in the \code{matrix} class.}
 #'   \item{beta_obs}{Obtain \eqn{\widehat{\bm{\beta}}_{\mathrm{obs}}} 
 #'      that is obtained from the function \code{func_obs}.}
@@ -483,7 +483,7 @@ summary.subsample <- function(x, ...){
 #' 
 #' @export
 #' 
-subsample_check <- function(df, A_obs, func_obs, func_var, 
+subsample_check <- function(data, A_obs, func_obs, func_var, 
                             A_shp, beta_shp, A_tgt, beta_tgt, bs_seed, R, 
                             p_sig, solver, cores, lnorm, phi, progress){
   
@@ -491,11 +491,11 @@ subsample_check <- function(df, A_obs, func_obs, func_var,
   # Step 1: Conduct the checks
   # = = = = = = 
   # Check the data frame
-  df = check_dataframe(df, "df")
+  data = check_dataframe(data, "data")
   
   # Check function and export output
-  beta_obs = check_func(func_obs, A_obs, df, "func_obs", "A_obs", "col")
-  check_func(func_var, A_obs, df, "func_var", "A_obs", "square")
+  beta_obs = check_func(func_obs, A_obs, data, "func_obs", "A_obs", "col")
+  check_func(func_var, A_obs, data, "func_var", "A_obs", "square")
   
   # Check the matrices A vs b
   shp_return = check_Ab(A_shp, beta_shp, "A_shp", "beta_shp")
@@ -523,7 +523,7 @@ subsample_check <- function(df, A_obs, func_obs, func_var,
   # = = = = = = 
   # Step 2: Return the updated objects
   # = = = = = = 
-  return(list(df = df,
+  return(list(data = data,
               A_obs = obs_return$A,
               beta_obs = obs_return$b,
               A_shp = shp_return$A,

@@ -32,7 +32,7 @@
 #' @export
 #' 
 
-estbounds <- function(df, func_obs, A_obs, A_tgt,
+estbounds <- function(data, func_obs, A_obs, A_tgt,
                       A_shp_eq, A_shp_ineq, beta_shp_eq, beta_shp_ineq,
                       kappa = 1e-5, lnorm = 2, solver = "gurobi", 
                       estimate = TRUE, progress = TRUE){
@@ -41,12 +41,12 @@ estbounds <- function(df, func_obs, A_obs, A_tgt,
   # Obtain call information
   call = match.call()
   # Check and update
-  estbounds_return = estbounds_check(df, func_obs, A_obs, A_tgt,
+  estbounds_return = estbounds_check(data, func_obs, A_obs, A_tgt,
                                      A_shp_eq, A_shp_ineq, beta_shp_eq, 
                                      beta_shp_ineq, kappa, lnorm, solver, 
                                      estimate, progress)
   # Update the input
-  df = estbounds_return$df
+  data = estbounds_return$data
   A_obs = estbounds_return$A_obs
   A_tgt = estbounds_return$A_tgt
   beta_obs = estbounds_return$beta_obs
@@ -454,7 +454,7 @@ estbounds2_L2 <- function(firststepsoln, A_tgt, A_obs, beta_obs, modelsense,
 #' @return Returns the updated value of the parameters back to the function 
 #'    \code{estbounds}. The following information are updated:
 #'    \itemize{
-#'       \item{\code{df}}
+#'       \item{\code{data}}
 #'       \item{\code{A_obs}}
 #'       \item{\code{A_tgt}}
 #'       \item{\code{beta_obs}}
@@ -467,24 +467,24 @@ estbounds2_L2 <- function(firststepsoln, A_tgt, A_obs, beta_obs, modelsense,
 #' 
 #' @export
 #' 
-estbounds_check <- function(df, func_obs, A_obs, A_tgt,
+estbounds_check <- function(data, func_obs, A_obs, A_tgt,
                             A_shp_eq, A_shp_ineq, beta_shp_eq, beta_shp_ineq,
                             kappa, lnorm, solver, estimate, progress){
 
   ### Part 1. Check the data frame
-  if (class(df) %in% c("data.frame", "matrix") == TRUE){
-    df = as.data.frame(df)  
+  if (class(data) %in% c("data.frame", "matrix") == TRUE){
+    data = as.data.frame(data)  
   } else {
     stop(gsub("\\s+", " ",
-              "The data povided 'df' must either be a data.frame, a data.table, 
-               or a matrix."), call. = FALSE)    
+              "The data povided 'data' must either be a data.frame, 
+              a data.table, or a matrix."), call. = FALSE)    
   }
   
   ### Part 2. Check the function
   if (class(func_obs) != "function"){
     stop("The input of 'func_obs' has to be a function.", call. = FALSE)
   } else{
-    beta_obs = func_obs(df)
+    beta_obs = func_obs(data)
     beta_obs = as.matrix(beta_obs)
     # Check if the output is numeric
     if (is.numeric(beta_obs[,1]) == FALSE){
@@ -637,7 +637,7 @@ estbounds_check <- function(df, func_obs, A_obs, A_tgt,
   }
   
   #### Step 9 Return the updated information
-  invisible(list(df = df,
+  invisible(list(data = data,
                  A_obs = A_obs,
                  A_tgt = A_tgt,
                  beta_obs = beta_obs,

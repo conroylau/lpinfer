@@ -5,23 +5,23 @@
 #'   returned as an object in the \code{data.frame} class. If not, an
 #'   error message is displayed.
 #' 
-#' @param df Data frame to be checked. 
+#' @param data Data frame to be checked. 
 #' @param name_var Name of the variable.
 #' 
 #' @return Returns the object in the format of \code{data.frame}.
 #'   
 #' @export
 #' 
-check_dataframe <- function(df, name_var){
-  # Check df
-  if (class(df) %in% c("data.frame", "matrix") == TRUE){
-    df = as.data.frame(df)  
+check_dataframe <- function(data, name_var){
+  # Check data
+  if (class(data) %in% c("data.frame", "matrix") == TRUE){
+    data = as.data.frame(data)  
   } else {
     stop(sprintf(paste0("The data povided '%s' must either be a data.frame, ", 
     "a data.table, or a matrix."), name_var), call. = FALSE)    
   }
-  # Return updated df
-  return(df)
+  # Return updated data
+  return(data)
 }
 
 #' Check function: positive integer
@@ -163,7 +163,7 @@ check_norm <- function(x, name_var){
 #' @param f Function to be tested
 #' @param A Matrix that will be contains dimensional information for the 
 #'    output of f
-#' @param df Data frame that will be passed to the function
+#' @param data Data frame that will be passed to the function
 #' @param name_A Name of matrix
 #' @param mat_type Type of the matrix to be checked
 #' @inheritParams check_dataframe
@@ -176,13 +176,13 @@ check_norm <- function(x, name_var){
 #' 
 #' @export
 #' 
-check_func <- function(f, A, df, name_var, name_A, mat_type){
+check_func <- function(f, A, data, name_var, name_A, mat_type){
   # Check the class of the function
   if (class(f) != "function"){
     stop(sprintf("The input of '%s' has to be a function.", name_var), 
          call. = FALSE)
   } else{
-    out = f(df)
+    out = f(data)
     out = as.matrix(out)
     # Check if the output is numeric
     if (is.numeric(out[,1]) == FALSE){
@@ -402,7 +402,7 @@ check_solver <- function(x, name_var, norm = 2){
     ## Case 6: If the user specified a solver that is not compatible
     if (lnorm == 1){
       stop(gsub("\\s+", " ",
-                paste0("This function is incompatible with '", z=x, 
+                paste0("This function is incompatible with '", x, 
                        "' when L1-norm is chosen in the estimation procedure. 
                        Please install one of the following packages to solve 
                        the linear and quadratic programs: ",
