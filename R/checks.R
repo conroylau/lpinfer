@@ -343,7 +343,7 @@ check_solver <- function(x, name_var, norm = 2){
     # If gurobi is installed, the gurobi solver will be used for L1- & L2-norm
     if (requireNamespace("gurobi", quietly = TRUE) == TRUE){
       solver = gurobi_optim
-    } else if (lnorm == 1) {
+    } else if (norm == 1) {
       # If L1-norm is used, other solvers will be checked
       if (requireNamespace("limSolve", quietly = TRUE) == TRUE){
         solver = limsolve_optim
@@ -355,7 +355,7 @@ check_solver <- function(x, name_var, norm = 2){
         solver = lpsolveapi_optim
       }      
     } else {
-      if (lnorm == 1){
+      if (norm == 1){
         stop(gsub("\\s+", " ",
                   paste0("This function is incompatible with '", x, 
                          "' when L1-norm is chosen in the estimation procedure. 
@@ -367,7 +367,7 @@ check_solver <- function(x, name_var, norm = 2){
                          limsolve_msg, ";",
                          lpsolveapi_msg, ".")),
              call. = FALSE)
-      } else if (lnorm == 2){
+      } else if (norm == 2){
         stop(gsub("\\s+", " ",
                   paste0("This function with L2-norm in the estimation 
                          procedure is only incompatible with 'gurobi'. ", 
@@ -400,7 +400,7 @@ check_solver <- function(x, name_var, norm = 2){
     solver = lpsolveapi_optim
   } else {
     ## Case 6: If the user specified a solver that is not compatible
-    if (lnorm == 1){
+    if (norm == 1){
       stop(gsub("\\s+", " ",
                 paste0("This function is incompatible with '", x, 
                        "' when L1-norm is chosen in the estimation procedure. 
@@ -411,7 +411,7 @@ check_solver <- function(x, name_var, norm = 2){
                        rcplex_msg, "; ",
                        limsolve_msg, ".")),
            call. = FALSE)
-    } else if (lnorm == 2){
+    } else if (norm == 2){
       stop(gsub("\\s+", " ",
                 paste0("This function with L2-norm in the estimation procedure
                        is only incompatible with 'gurobi'. ", 

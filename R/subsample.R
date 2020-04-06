@@ -29,7 +29,7 @@
 subsample <- function(data, A_obs, func_obs, func_var, 
                       A_shp, beta_shp, A_tgt, beta_tgt, 
                       bs_seed = 1, R = 100, p_sig = 2, solver = NULL, 
-                      cores = 8, lnorm = 2, phi = 2/3, alpha = .05,
+                      cores = 8, norm = 2, phi = 2/3, alpha = .05,
                       progress = FALSE){
   
   # = = = = = = 
@@ -41,7 +41,7 @@ subsample <- function(data, A_obs, func_obs, func_var,
   ## Check and update 
   checkupdate = subsample_check(data, A_obs, func_obs, func_var, 
                                 A_shp, beta_shp, A_tgt, beta_tgt, 
-                                bs_seed, R, p_sig, solver, cores, lnorm, 
+                                bs_seed, R, p_sig, solver, cores, norm, 
                                 phi, progress)
   
   ## Update information obtained from check
@@ -61,7 +61,7 @@ subsample <- function(data, A_obs, func_obs, func_var,
   # = = = = = =
   ## Solve the main problem with the full sample
   Treturn = subsample_prob(data, func_obs, func_var, A_obs, A_shp, A_tgt, 
-                           beta_shp, beta_tgt, lnorm, solver)
+                           beta_shp, beta_tgt, norm, solver)
   
   # = = = = = = 
   # Step 3: Subsampling procedure
@@ -72,13 +72,13 @@ subsample <- function(data, A_obs, func_obs, func_var,
     # One core
     T_subsample = subsample_onecore(data, bs_seed, R, func_obs, func_var, 
                                     A_obs, A_shp, A_tgt, beta_shp, beta_tgt, 
-                                    lnorm, solver, progress, m)
+                                    norm, solver, progress, m)
     
   } else {
     # Many cores
     T_subsample = subsample_manycores(data, bs_seed, R, func_obs, func_var, 
                                       A_obs, A_shp, A_tgt, beta_shp, beta_tgt, 
-                                      lnorm, solver, progress, m)
+                                      norm, solver, progress, m)
   }
   
   # = = = = = = 
@@ -107,7 +107,7 @@ subsample <- function(data, A_obs, func_obs, func_var,
                 solver = checkupdate$solver_name,
                 cores = cores,
                 call = call,
-                norm = lnorm)
+                norm = norm)
   
   attr(output, "class") = "subsample"
   
@@ -138,7 +138,7 @@ subsample <- function(data, A_obs, func_obs, func_var,
 #' @export 
 #' 
 subsample_prob <- function(data, func_obs, func_var, A_obs, A_shp, A_tgt, 
-                           beta_shp, beta_tgt, lnorm, solver){
+                           beta_shp, beta_tgt, norm, solver){
   # = = = = = = 
   # Step 1: Obtain parameters from the data frame
   # = = = = = = 
@@ -165,7 +165,7 @@ subsample_prob <- function(data, func_obs, func_var, A_obs, A_shp, A_tgt,
   # Model sense
   modelsense_new = "min"
   # Set the objective function and constraints
-  if (lnorm == 1){
+  if (norm == 1){
     ### L1-norm
     # Objective function - cost matrix
     c_new = c(rep(0, ncol(A_obs)), rep(1, k), rep(-1, k))
@@ -192,7 +192,7 @@ subsample_prob <- function(data, func_obs, func_var, A_obs, A_shp, A_tgt,
                  modelsense = modelsense_sense,
                  lb = lb_new)
     
-  } else if (lnorm == 2){
+  } else if (norm == 2){
     ### L2-norm
     # Constraints
     A_new = rbind(A_shp, A_tgt)
@@ -248,7 +248,7 @@ subsample_prob <- function(data, func_obs, func_var, A_obs, A_shp, A_tgt,
 #' 
 subsample_onecore <- function(data, bs_seed, R, func_obs, func_var, 
                               A_obs, A_shp, A_tgt, beta_shp, beta_tgt, 
-                              lnorm, solver, progress, m){
+                              norm, solver, progress, m){
   # = = = = = = 
   # Step 1: Initialize the vectors and the progress bar
   # = = = = = = 
@@ -277,7 +277,7 @@ subsample_onecore <- function(data, bs_seed, R, func_obs, func_var,
     # Compute the value of beta_bs_star using the function func_obs
     sub_return = subsample_prob(df_sub, func_obs, func_var, 
                                 A_obs, A_shp, A_tgt, beta_shp, beta_tgt, 
-                                lnorm, solver)
+                                norm, solver)
     T_sub = c(T_sub, sub_return$objval)
     beta_sub = cbind(beta_sub, sub_return$beta)
     ## (2.4) Update progress bar
@@ -318,7 +318,7 @@ subsample_onecore <- function(data, bs_seed, R, func_obs, func_var,
 #' 
 subsample_manycores <- function(data, bs_seed, R, func_obs, func_var, 
                                 A_obs, A_shp, A_tgt, beta_shp, beta_tgt, 
-                                lnorm, solver, progress, m){
+                                norm, solver, progress, m){
   # = = = = = = 
   # Step 1: Initialize the parallel programming package
   # = = = = = = 
@@ -379,7 +379,7 @@ subsample_manycores <- function(data, bs_seed, R, func_obs, func_var,
     # Compute the value of beta_bs_star using the function func_obs
     sub_return = subsample_prob(df_sub, func_obs, func_var, 
                                 A_obs, A_shp, A_tgt, beta_shp, beta_tgt, 
-                                lnorm, solver)
+                                norm, solver)
     T_sub = data.frame(sub_return$objval)
     beta_sub = data.frame(c(sub_return$beta))
     ## (3.4) Combine the results
@@ -485,7 +485,7 @@ summary.subsample <- function(x, ...){
 #' 
 subsample_check <- function(data, A_obs, func_obs, func_var, 
                             A_shp, beta_shp, A_tgt, beta_tgt, bs_seed, R, 
-                            p_sig, solver, cores, lnorm, phi, progress){
+                            p_sig, solver, cores, norm, phi, progress){
   
   # = = = = = = 
   # Step 1: Conduct the checks
@@ -508,8 +508,8 @@ subsample_check <- function(data, A_obs, func_obs, func_var,
   check_positiveinteger(p_sig, "p_sig")
   check_positiveinteger(cores, "cores")
   
-  # Check if lnorm is either 1 or 2
-  check_norm(lnorm, "lnorm")
+  # Check if norm is either 1 or 2
+  check_norm(norm, "norm")
   
   # Check if phi is in the range (0,1)
   check_numrange(phi, "phi", "open", 0, "open", 1)

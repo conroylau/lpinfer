@@ -12,7 +12,7 @@
 #' @param A_shp_ineq Matrix representing inequality shape constraints.
 #' @param beta_shp_eq RHS vector in equality shape constraints.
 #' @param beta_shp_ineq RHS vector in inequality shape constraints.
-#' @param lnorm Norm used in the optimization problem.
+#' @param norm Norm used in the optimization problem.
 #' @param kappa Parameter used in the second step of the two-step procedure 
 #'    for obtaining the solution subject to the shape constraints.
 #' @param estimate Boolean variable to indicate whether the estimated 
@@ -26,7 +26,7 @@
 #'   \item{est}{Indicator of whether estimation is involved in the 
 #'   estimation}
 #'   \item{call}{The function that has been called.}
-#'   \item{lnorm}{Norm used in the optimization problem.}
+#'   \item{norm}{Norm used in the optimization problem.}
 #'   
 #'    
 #' @export
@@ -34,7 +34,7 @@
 
 estbounds <- function(data, func_obs, A_obs, A_tgt,
                       A_shp_eq, A_shp_ineq, beta_shp_eq, beta_shp_ineq,
-                      kappa = 1e-5, lnorm = 2, solver = "gurobi", 
+                      kappa = 1e-5, norm = 2, solver = "gurobi", 
                       estimate = TRUE, progress = TRUE){
   
   #### Step 1: Obtain call, check and update input
@@ -43,7 +43,7 @@ estbounds <- function(data, func_obs, A_obs, A_tgt,
   # Check and update
   estbounds_return = estbounds_check(data, func_obs, A_obs, A_tgt,
                                      A_shp_eq, A_shp_ineq, beta_shp_eq, 
-                                     beta_shp_ineq, kappa, lnorm, solver, 
+                                     beta_shp_ineq, kappa, norm, solver, 
                                      estimate, progress)
   # Update the input
   data = estbounds_return$data
@@ -112,7 +112,7 @@ estbounds <- function(data, func_obs, A_obs, A_tgt,
     }
     
     ## Solve model
-    if (lnorm == 1){
+    if (norm == 1){
       ## L1-norm
       # Stage one of the problem
       estbounds11 = estbounds1_L1(A_obs, beta_obs, A1, rhs1, sense1, lb_zero, 
@@ -128,7 +128,7 @@ estbounds <- function(data, func_obs, A_obs, A_tgt,
                                    kappa, solver)
       estbounds_lb = estbounds2_L1(estbounds11, A_tgt, A_obs, beta_obs, "min", 
                                    kappa, solver)
-    } else if (lnorm == 2){
+    } else if (norm == 2){
       ## L2-norm
       # Stage one of the problem
       estbounds21 = estbounds1_L2(A_obs, beta_obs, A1, rhs1, sense1, lb_zero, 
@@ -165,7 +165,7 @@ estbounds <- function(data, func_obs, A_obs, A_tgt,
                 lb = lb,
                 est = est,
                 call = call,
-                lnorm = lnorm)
+                norm = norm)
   
   attr(output, "class") = "estbounds"
   
@@ -469,7 +469,7 @@ estbounds2_L2 <- function(firststepsoln, A_tgt, A_obs, beta_obs, modelsense,
 #' 
 estbounds_check <- function(data, func_obs, A_obs, A_tgt,
                             A_shp_eq, A_shp_ineq, beta_shp_eq, beta_shp_ineq,
-                            kappa, lnorm, solver, estimate, progress){
+                            kappa, norm, solver, estimate, progress){
 
   ### Part 1. Check the data frame
   if (class(data) %in% c("data.frame", "matrix") == TRUE){
@@ -529,8 +529,8 @@ estbounds_check <- function(data, func_obs, A_obs, A_tgt,
     stop("The argument 'kappa' must be a nonnegative scalar.", call. = FALSE)
   } 
   
-  #### Step 5: Check 'lnorm'
-  if (lnorm != 1 & lnorm != 2){
+  #### Step 5: Check 'norm'
+  if (norm != 1 & norm != 2){
     stop("Only 1-norm and 2-norm are supported in this function.", 
          call. = FALSE)
   }
@@ -551,7 +551,7 @@ estbounds_check <- function(data, func_obs, A_obs, A_tgt,
     # If gurobi is installed, the gurobi solver will be used for L1- & L2-norm
     if (requireNamespace("gurobi", quietly = TRUE) == TRUE){
       solver = gurobi_optim
-    } else if (lnorm == 1) {
+    } else if (norm == 1) {
       # If L1-norm is used, other solvers will be checked
       if (requireNamespace("limSolve", quietly = TRUE) == TRUE){
         solver = limsolve_optim
@@ -563,7 +563,7 @@ estbounds_check <- function(data, func_obs, A_obs, A_tgt,
         solver = lpsolveapi_optim
       }      
     } else {
-      if (lnorm == 1){
+      if (norm == 1){
         stop(gsub("\\s+", " ",
                   paste0("This function is incompatible with '", solver, 
                          "' when L1-norm is chosen in the estimation procedure. 
@@ -575,7 +575,7 @@ estbounds_check <- function(data, func_obs, A_obs, A_tgt,
                          limsolve_msg, ";",
                          lpsolveapi_msg, ".")),
              call. = FALSE)
-      } else if (lnorm == 2){
+      } else if (norm == 2){
         stop(gsub("\\s+", " ",
                   paste0("This function with L2-norm in the estimation 
                          procedure is only incompatible with 'gurobi'. ", 
@@ -591,21 +591,21 @@ estbounds_check <- function(data, func_obs, A_obs, A_tgt,
   } else if (solver == "gurobi"){
     ## Case 2a: If the user specified the solver as 'gurobi'
     solver = gurobi_optim
-  } else if (solver == "limsolve" & lnorm == 1){
+  } else if (solver == "limsolve" & norm == 1){
     ## Case 2b: If the user specified the solver as 'limSolve'
     solver = limsolve_optim
-  } else if (solver == "rcplex" & lnorm == 1){
+  } else if (solver == "rcplex" & norm == 1){
     ## Case 2c: If the user specified the solver as 'rcplex'
     solver = rcplex_optim
-  } else if (solver == "cplexapi" & lnorm == 1){
+  } else if (solver == "cplexapi" & norm == 1){
     ## Case 2d: If the user specified the solver as 'cplexapi'
     solver = cplexapi_optim
-  } else if (solver == "lpsolveapi" & lnorm == 1){
+  } else if (solver == "lpsolveapi" & norm == 1){
     ## Case 2e: If the user specified the solver as 'lpsolveapi'
     solver = lpsolveapi_optim
   } else {
     ## Case 3: If the user specified a solver that is not compatible
-    if (lnorm == 1){
+    if (norm == 1){
       stop(gsub("\\s+", " ",
                 paste0("This function is incompatible with '", solver, 
                        "' when L1-norm is chosen in the estimation procedure. 
@@ -616,7 +616,7 @@ estbounds_check <- function(data, func_obs, A_obs, A_tgt,
                        rcplex_msg, "; ",
                        limsolve_msg, ".")),
            call. = FALSE)
-    } else if (lnorm == 2){
+    } else if (norm == 2){
       stop(gsub("\\s+", " ",
                 paste0("This function with L2-norm in the estimation procedure
                        is only incompatible with 'gurobi'. ", 
@@ -746,10 +746,10 @@ print.estbounds <- function(x, ...){
   
   if (x$est == TRUE){
     #### Case 1: Report the estimated bounds
-    if (is.numeric(x$lnorm) == TRUE){
-      cat(sprintf("Norm used in optimization problem: L%s-norm \n", x$lnorm))
+    if (is.numeric(x$norm) == TRUE){
+      cat(sprintf("Norm used in optimization problem: L%s-norm \n", x$norm))
     } else {
-      cat(sprintf("Norm used in optimization problem: %s-norm \n", x$lnorm)) 
+      cat(sprintf("Norm used in optimization problem: %s-norm \n", x$norm)) 
     }
     cat(sprintf("Estimated bounds subject to shape constraints: [%s, %s] \n", 
                 round(x$lb, digits = 5), round(x$ub, digits = 5)))
