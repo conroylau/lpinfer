@@ -76,7 +76,7 @@ p_sig = 4
 farg = list(data = data,
             A_tgt = A_tgt,
             bs_seed = 1,
-            bs_num = 100,
+            R = 100,
             p_sig = p_sig,
             tau_input = tau,
             cores = 8,
