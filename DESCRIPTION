@@ -1,11 +1,11 @@
-Package: linearprog
+Package: lpinfer
 Type: Package
 Title: What the Package Does (Title Case)
 Version: 0.1.0
 Author: Conroy Lau
 Maintainer: The package maintainer <yourself@somewhere.net>
 Description: (Tentative description) This is a R package that 
-   conducts inference on linear programming.
+   conducts inference on linear programs.
 License: --- TBC ---
 Encoding: UTF-8
 LazyData: true
