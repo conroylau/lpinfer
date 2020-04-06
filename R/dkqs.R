@@ -15,7 +15,7 @@
 #' @param beta_tgt The value of \eqn{\hat{\beta}_{\mathrm{tgt}}} (i.e. the 
 #'    value of \eqn{t} in the missing data problem) in the null hypothesis.
 #' @param bs_seed The starting value of the seed in bootstrap.
-#' @param bs_num The total number of bootstraps \eqn{B} to be conducted.
+#' @param R The total number of bootstraps \eqn{B} to be conducted.
 #' @param p_sig The number of decimal places in the \eqn{p}-value.
 #' @param tau The value of tau chosen by the user.
 #' @param solver The name of the linear and quadratic programming solver that 
@@ -51,7 +51,7 @@
 #' @export
 #' 
 dkqs <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
-                 bs_num = 100, p_sig = 2, tau = .5, solver = NULL,
+                 R = 100, p_sig = 2, tau = .5, solver = NULL,
                  cores = 1, progress = FALSE){
   
   #### Step 1: Obtain call, check and update the dependencies
@@ -59,7 +59,7 @@ dkqs <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   call = match.call()
   # Check and update
   checkupdate = dkqs_check(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
-                           bs_num, p_sig, tau, solver, progress,
+                           R, p_sig, tau, solver, progress,
                            cores)
   # Update and return the quantities returned from the function dkqs_check
   # (a) Dataframe
@@ -122,13 +122,13 @@ dkqs <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   if (T_n != 0){
     if (cores == 1){
       # No parallelization
-      T_bs_return = beta_bs(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, 
+      T_bs_return = beta_bs(df, bs_seed, R, J, s_star, A_obs, A_tgt, 
                             func_obs, beta_obs_hat, beta_tgt, tau, n, solver,
                             progress)
       #cat("                                     \b")
     } else {
       # Parallelization
-      T_bs_return = beta_bs_parallel(df, bs_seed, bs_num, J, s_star, A_obs, 
+      T_bs_return = beta_bs_parallel(df, bs_seed, R, J, s_star, A_obs, 
                                      A_tgt, func_obs, beta_obs_hat, beta_tgt, 
                                      tau, n, solver, cores, progress)  
       #cat("                                     \b")
@@ -707,7 +707,7 @@ objective_function <- function(A, b, n){
 #'
 #' @export
 #' 
-beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs, 
+beta_bs <- function(df, bs_seed, R, J, s_star, A_obs, A_tgt, func_obs, 
                     beta_obs_hat, beta_tgt, tau, n, solver, progress){
   
   #### Step 1: Initialize vectors and progress counter
@@ -716,14 +716,14 @@ beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs,
   beta_bs_bar_set = NULL
   # Initialize the progress bar
   if (progress == TRUE){
-    pb = utils::txtProgressBar(min = 0, max = bs_num, style = 3, width = 20)
+    pb = utils::txtProgressBar(min = 0, max = R, style = 3, width = 20)
     cat("\r") 
   } else {
     pb = NULL
   }
   
   # Loop through all indices in the bootstrap
-  for (i in 1:bs_num){
+  for (i in 1:R){
     #### Step 2: Set the seed
     set.seed(bs_seed + i)
     ####  Step 3: Draw the subsample
@@ -741,7 +741,7 @@ beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs,
     beta_bs_bar_set = cbind(beta_bs_bar_set, beta_bs_bar)
     #### Step 6: Update progress bar
     if (progress == TRUE){
-      if (i != bs_num){
+      if (i != R){
         utils::setTxtProgressBar(pb, i)
         cat("\r\r")  
       } else {
@@ -777,7 +777,7 @@ beta_bs <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, func_obs,
 #' 
 #' @export
 #' 
-beta_bs_parallel <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt, 
+beta_bs_parallel <- function(df, bs_seed, R, J, s_star, A_obs, A_tgt, 
                              func_obs, beta_obs_hat, beta_tgt, tau, n, solver, 
                              cores, progress){
   #### Step 1: Register the number of cores and extract information
@@ -794,12 +794,12 @@ beta_bs_parallel <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt,
     cl = PtProcess::makeSOCKcluster(8)
     doSNOW::registerDoSNOW(cl)
     # Set the counter and progress bar
-    pb = utils::txtProgressBar(max=bs_num, style=3, width = 20) 
+    pb = utils::txtProgressBar(max=R, style=3, width = 20) 
     
     cat("\r")
     progress <- function(n){
       utils::setTxtProgressBar(pb, n) 
-      if (n < bs_num){
+      if (n < R){
         cat("\r\r") 
       } else {
         cat("\r\b")     
@@ -821,7 +821,7 @@ beta_bs_parallel <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt,
   `%dopar%` = foreach::`%dopar%`
   
   # Parallelized for-loop below
-  listans = foreach::foreach(i=1:bs_num, .multicombine = TRUE, 
+  listans = foreach::foreach(i=1:R, .multicombine = TRUE, 
                              .combine="comb", .options.snow=opts,
                              .packages='linearprog') %dopar% {
    #### Step 2: Set the seed
@@ -848,7 +848,7 @@ beta_bs_parallel <- function(df, bs_seed, bs_num, J, s_star, A_obs, A_tgt,
   T_bs = as.vector(unlist(listans[[1]]))
   beta_bs_bar_set = data.frame(matrix(as.matrix(listans[[2]]), 
                                       nrow = beta_bs_nrow, 
-                                      ncol = bs_num,
+                                      ncol = R,
                                       byrow = FALSE))
   
   #cat("\b\r\b")  
@@ -959,7 +959,7 @@ tau_constraints <- function(length_tau, coeff_tau, coeff_x, ind_x, rhs, sense,
 #' @export
 #' 
 dkqs_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
-                       bs_num, p_sig, tau, solver, progress, cores){
+                       R, p_sig, tau, solver, progress, cores){
   ### Part 1. Check the dataframe
   if (class(df) %in% c("data.frame", "matrix") == TRUE){
     df = as.data.frame(df)  
@@ -1038,10 +1038,10 @@ dkqs_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
          call. = FALSE)
   }
   
-  ### Part 7. Check bs_num
-  if ((is.numeric(bs_num) == TRUE & length(bs_num) == 1 & bs_num >= 0 &
-       bs_num%%1 == 0) == FALSE){
-    stop("The number of bootstrap ('bs_num') must be a positive integer.",
+  ### Part 7. Check R
+  if ((is.numeric(R) == TRUE & length(R) == 1 & R >= 0 &
+       R%%1 == 0) == FALSE){
+    stop("The number of bootstrap ('R') must be a positive integer.",
          call. = FALSE)
   }
   

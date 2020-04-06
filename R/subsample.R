@@ -28,7 +28,7 @@
 #' 
 subsample <- function(df, A_obs, func_obs, func_var, 
                       A_shp, beta_shp, A_tgt, beta_tgt, 
-                      bs_seed = 1, bs_num = 100, p_sig = 2, solver = NULL, 
+                      bs_seed = 1, R = 100, p_sig = 2, solver = NULL, 
                       cores = 8, lnorm = 2, phi = 2/3, alpha = .05,
                       progress = FALSE){
   
@@ -41,7 +41,7 @@ subsample <- function(df, A_obs, func_obs, func_var,
   ## Check and update 
   checkupdate = subsample_check(df, A_obs, func_obs, func_var, 
                                 A_shp, beta_shp, A_tgt, beta_tgt, 
-                                bs_seed, bs_num, p_sig, solver, cores, lnorm, 
+                                bs_seed, R, p_sig, solver, cores, lnorm, 
                                 phi, progress)
   
   ## Update information obtained from check
@@ -70,13 +70,13 @@ subsample <- function(df, A_obs, func_obs, func_var,
   m = floor(n^(phi))
   if (cores == 1){
     # One core
-    T_subsample = subsample_onecore(df, bs_seed, bs_num, func_obs, func_var, 
+    T_subsample = subsample_onecore(df, bs_seed, R, func_obs, func_var, 
                                     A_obs, A_shp, A_tgt, beta_shp, beta_tgt, 
                                     lnorm, solver, progress, m)
     
   } else {
     # Many cores
-    T_subsample = subsample_manycores(df, bs_seed, bs_num, func_obs, func_var, 
+    T_subsample = subsample_manycores(df, bs_seed, R, func_obs, func_var, 
                                       A_obs, A_shp, A_tgt, beta_shp, beta_tgt, 
                                       lnorm, solver, progress, m)
   }
@@ -246,7 +246,7 @@ subsample_prob <- function(df, func_obs, func_var, A_obs, A_shp, A_tgt,
 #' 
 #' @export
 #' 
-subsample_onecore <- function(df, bs_seed, bs_num, func_obs, func_var, 
+subsample_onecore <- function(df, bs_seed, R, func_obs, func_var, 
                               A_obs, A_shp, A_tgt, beta_shp, beta_tgt, 
                               lnorm, solver, progress, m){
   # = = = = = = 
@@ -257,7 +257,7 @@ subsample_onecore <- function(df, bs_seed, bs_num, func_obs, func_var,
   beta_sub = NULL
   # Initialize the progress bar
   if (progress == TRUE){
-    pb = utils::txtProgressBar(min = 0, max = bs_num, style = 3, width = 20)
+    pb = utils::txtProgressBar(min = 0, max = R, style = 3, width = 20)
     cat("\r") 
   } else {
     pb = NULL
@@ -266,7 +266,7 @@ subsample_onecore <- function(df, bs_seed, bs_num, func_obs, func_var,
   # = = = = = = 
   # Step 2: Conduct the subsampling procedure
   # = = = = = = 
-  for (i in 1:bs_num){
+  for (i in 1:R){
     ## (2.1) Set the seed
     set.seed(bs_seed + i)
     ## (2.2) Draw the subsample
@@ -282,7 +282,7 @@ subsample_onecore <- function(df, bs_seed, bs_num, func_obs, func_var,
     beta_sub = cbind(beta_sub, sub_return$beta)
     ## (2.4) Update progress bar
     if (progress == TRUE){
-      if (i != bs_num){
+      if (i != R){
         utils::setTxtProgressBar(pb, i)
         cat("\r\r")  
       } else {
@@ -316,7 +316,7 @@ subsample_onecore <- function(df, bs_seed, bs_num, func_obs, func_var,
 #' 
 #' @export
 #' 
-subsample_manycores <- function(df, bs_seed, bs_num, func_obs, func_var, 
+subsample_manycores <- function(df, bs_seed, R, func_obs, func_var, 
                                 A_obs, A_shp, A_tgt, beta_shp, beta_tgt, 
                                 lnorm, solver, progress, m){
   # = = = = = = 
@@ -340,12 +340,12 @@ subsample_manycores <- function(df, bs_seed, bs_num, func_obs, func_var,
     cl = PtProcess::makeSOCKcluster(8)
     doSNOW::registerDoSNOW(cl)
     # Set the counter and progress bar
-    pb = utils::txtProgressBar(max=bs_num, style=3, width = 20) 
+    pb = utils::txtProgressBar(max=R, style=3, width = 20) 
     
     cat("\r")
     progress <- function(n){
       utils::setTxtProgressBar(pb, n) 
-      if (n < bs_num){
+      if (n < R){
         cat("\r\r") 
       } else {
         cat("\r\b")     
@@ -366,7 +366,7 @@ subsample_manycores <- function(df, bs_seed, bs_num, func_obs, func_var,
   # = = = = = = 
   # Step 3: Conduct the subsampling procedure
   # = = = = = = 
-  listans = foreach::foreach(i=1:bs_num, .multicombine = TRUE, 
+  listans = foreach::foreach(i=1:R, .multicombine = TRUE, 
                              .combine="comb", .options.snow=opts,
                              .packages='linearprog') %dopar% {
     ## (3.1) Set the seed
@@ -484,7 +484,7 @@ summary.subsample <- function(x, ...){
 #' @export
 #' 
 subsample_check <- function(df, A_obs, func_obs, func_var, 
-                            A_shp, beta_shp, A_tgt, beta_tgt, bs_seed, bs_num, 
+                            A_shp, beta_shp, A_tgt, beta_tgt, bs_seed, R, 
                             p_sig, solver, cores, lnorm, phi, progress){
   
   # = = = = = = 
@@ -504,7 +504,7 @@ subsample_check <- function(df, A_obs, func_obs, func_var,
   
   # Check if the variable is a positive integer
   check_positiveinteger(bs_seed, "bs_seed")
-  check_positiveinteger(bs_num, "bs_num")
+  check_positiveinteger(R, "R")
   check_positiveinteger(p_sig, "p_sig")
   check_positiveinteger(cores, "cores")
   
