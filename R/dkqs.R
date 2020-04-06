@@ -17,7 +17,7 @@
 #' @param bs_seed The starting value of the seed in bootstrap.
 #' @param bs_num The total number of bootstraps \eqn{B} to be conducted.
 #' @param p_sig The number of decimal places in the \eqn{p}-value.
-#' @param tau_input The value of tau chosen by the user.
+#' @param tau The value of tau chosen by the user.
 #' @param solver The name of the linear and quadratic programming solver that 
 #'    are used to obtain the solution to linear and quadratic programs. 
 #'    The solvers supported by this module are `\code{cplexAPI}', 
@@ -51,7 +51,7 @@
 #' @export
 #' 
 dkqs <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
-                 bs_num = 100, p_sig = 2, tau_input = .5, solver = NULL,
+                 bs_num = 100, p_sig = 2, tau = .5, solver = NULL,
                  cores = 1, progress = FALSE){
   
   #### Step 1: Obtain call, check and update the dependencies
@@ -59,7 +59,7 @@ dkqs <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   call = match.call()
   # Check and update
   checkupdate = dkqs_check(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
-                           bs_num, p_sig, tau_input, solver, progress,
+                           bs_num, p_sig, tau, solver, progress,
                            cores)
   # Update and return the quantities returned from the function dkqs_check
   # (a) Dataframe
@@ -93,10 +93,10 @@ dkqs <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   #### Step 3: Choose the value of tau
   tau_return = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "tau", n,
                          solver)
-  if (tau_input > tau_return$objval){
+  if (tau > tau_return$objval){
     tau = tau_return$objval
-  } else if (tau_input <= tau_return$objval){
-    tau = tau_input
+  } else if (tau <= tau_return$objval){
+    tau = tau
   } else {
     # Error message when the problem is infeasible.
     stop("The problem is infeasible. Choose other values of tau.")
@@ -959,7 +959,7 @@ tau_constraints <- function(length_tau, coeff_tau, coeff_x, ind_x, rhs, sense,
 #' @export
 #' 
 dkqs_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
-                       bs_num, p_sig, tau_input, solver, progress, cores){
+                       bs_num, p_sig, tau, solver, progress, cores){
   ### Part 1. Check the dataframe
   if (class(df) %in% c("data.frame", "matrix") == TRUE){
     df = as.data.frame(df)  
@@ -1052,10 +1052,10 @@ dkqs_check <- function(df, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
          positive integer.", call. = FALSE)
   }
   
-  ### Part 9. Check tau_input
-  if ((is.numeric(tau_input) == TRUE & length(tau_input) == 1 & 
-       tau_input >= 0 & tau_input <= 1) == FALSE){
-    stop("The value of tau ('tau_input') has to be in the interval [0,1].", 
+  ### Part 9. Check tau
+  if ((is.numeric(tau) == TRUE & length(tau) == 1 & 
+       tau >= 0 & tau <= 1) == FALSE){
+    stop("The value of tau ('tau') has to be in the interval [0,1].", 
          call. = FALSE)
   }
   
