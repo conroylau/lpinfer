@@ -26,12 +26,12 @@ library(parallel)
 
 ### Part 2: Data preparation
 # Read data
-df = read.csv("./data/sampledata.csv")
+data = read.csv("./data/sampledata.csv")
 # Compute parameters required
-N = dim(df)[1]
-J = length(unique(df[,"Y"])) - 1
+N = dim(data)[1]
+J = length(unique(data[,"Y"])) - 1
 J1 = J + 1
-pi = 1 - mean(df[,"D"])
+pi = 1 - mean(data[,"D"])
 # Compute matrices required
 yp = seq(0,1,1/J)
 A_tgt = matrix(c(yp, yp), nrow = 1)
@@ -40,32 +40,32 @@ tau = sqrt(log(N)/N)
 
 ### Part 3: Define functions to compute beta_obs_hat
 # Full information approach
-func_full_info <- function(df){
+func_full_info <- function(data){
   # Initialize beta
   beta = NULL
   # Find the unique elements of Y, sorting in ascending order
-  y_list = sort(unique(df[,"Y"]))
-  # Count total number of rows of df and y_list
-  n = dim(df)[1]
+  y_list = sort(unique(data[,"Y"]))
+  # Count total number of rows of data and y_list
+  n = dim(data)[1]
   yn = length(y_list)
   # Generate each entry of beta_obs
   for (i in 1:yn){
-    beta_i = sum((df[,"Y"] == y_list[i]) * (df[,"D"] == 1))/n
+    beta_i = sum((data[,"Y"] == y_list[i]) * (data[,"D"] == 1))/n
     beta = c(beta,c(beta_i))
   }
   beta = as.matrix(beta)
   return(beta)
 }
 # Two moments approach
-func_two_moment <- function(df){
+func_two_moment <- function(data){
   # Initialize beta
   beta = matrix(c(0,0), nrow = 2)
-  # Count total number of rows of df and y_list
-  n = dim(df)[1]
+  # Count total number of rows of data and y_list
+  n = dim(data)[1]
   # Moment 1 E[YD]
-  beta[1] = sum(df[,"Y"] * df[,"D"])/n
+  beta[1] = sum(data[,"Y"] * data[,"D"])/n
   # Moment 2 E[D]
-  beta[2] = sum(df[,"D"])/n
+  beta[2] = sum(data[,"D"])/n
   return(beta)
 }
 
@@ -83,7 +83,7 @@ A_shp_ineq_dkqs = NULL
 beta_shp_ineq_dkqs = NULL
 
 # Set function arguments
-farg = list(df = df,
+farg = list(data = data,
             A_obs = A_obs_full,
             A_tgt = A_tgt,
             func_obs = func_full_info,
@@ -98,7 +98,7 @@ farg = list(df = df,
             progress = TRUE)
 
 ### True bounds
-est_ans1 = estbounds(df = df,
+est_ans1 = estbounds(data = data,
                      A_obs = A_obs_full,
                      A_tgt = A_tgt,
                      func_obs = func_full_info,
@@ -115,7 +115,7 @@ est_ans1 = estbounds(df = df,
 
 ## Full-information approach
 # L2-norm
-est_ans2a = estbounds(df = df,
+est_ans2a = estbounds(data = data,
                        A_obs = A_obs_full,
                        A_tgt = A_tgt,
                        func_obs = func_full_info,
@@ -129,7 +129,7 @@ est_ans2a = estbounds(df = df,
                        estimate = TRUE,
                        progress = TRUE)
 # L1-norm
-est_ans2b = estbounds(df = df,
+est_ans2b = estbounds(data = data,
                       A_obs = A_obs_full,
                       A_tgt = A_tgt,
                       func_obs = func_full_info,
@@ -145,7 +145,7 @@ est_ans2b = estbounds(df = df,
 
 ## Two-moments approach
 # L2-norm
-est_ans3a = estbounds(df = df,
+est_ans3a = estbounds(data = data,
                       A_obs = A_obs_twom,
                       A_tgt = A_tgt,
                       func_obs = func_two_moment,
@@ -159,7 +159,7 @@ est_ans3a = estbounds(df = df,
                       estimate = TRUE,
                       progress = TRUE)
 # L1-norm
-est_ans3b = estbounds(df = df,
+est_ans3b = estbounds(data = data,
                       A_obs = A_obs_twom,
                       A_tgt = A_tgt,
                       func_obs = func_two_moment,

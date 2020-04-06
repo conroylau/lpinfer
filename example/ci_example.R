@@ -26,10 +26,10 @@ library(doSNOW)
 
 ### Part 2: Data preparation
 # Read data
-df = read.csv("./data/sampledata.csv")
+data = read.csv("./data/sampledata.csv")
 # Compute parameters required
-N = dim(df)[1]
-J = length(unique(df[,"Y"])) - 1
+N = dim(data)[1]
+J = length(unique(data[,"Y"])) - 1
 J1 = J + 1
 
 # Compute matrices required
@@ -40,32 +40,32 @@ tau = sqrt(log(N)/N)
 
 ### Part 3: Define functions to compute beta_obs_hat
 # Full information approach
-func_full_info <- function(df){
+func_full_info <- function(data){
   # Initialize beta
   beta = NULL
   # Find the unique elements of Y, sorting in ascending order
-  y_list = sort(unique(df[,"Y"]))
-  # Count total number of rows of df and y_list
-  n = dim(df)[1]
+  y_list = sort(unique(data[,"Y"]))
+  # Count total number of rows of data and y_list
+  n = dim(data)[1]
   yn = length(y_list)
   # Generate each entry of beta_obs
   for (i in 1:yn){
-    beta_i = sum((df[,"Y"] == y_list[i]) * (df[,"D"] == 1))/n
+    beta_i = sum((data[,"Y"] == y_list[i]) * (data[,"D"] == 1))/n
     beta = c(beta,c(beta_i))
   }
   beta = as.matrix(beta)
   return(beta)
 }
 # Two moments approach
-func_two_moment <- function(df){
+func_two_moment <- function(data){
   # Initialize beta
   beta = matrix(c(0,0), nrow = 2)
-  # Count total number of rows of df and y_list
-  n = dim(df)[1]
+  # Count total number of rows of data and y_list
+  n = dim(data)[1]
   # Moment 1 E[YD]
-  beta[1] = sum(df[,"Y"] * df[,"D"])/n
+  beta[1] = sum(data[,"Y"] * data[,"D"])/n
   # Moment 2 E[D]
-  beta[2] = sum(df[,"D"])/n
+  beta[2] = sum(data[,"D"])/n
   return(beta)
 }
 
@@ -80,7 +80,7 @@ beta_tgt = .365
 p_sig = 4
 
 ### Part 6: Arguments for the dkqs function without beta_tgt
-farg = list(df = df,
+farg = list(data = data,
             A_obs = A_obs_full,
             A_tgt = A_tgt,
             func_obs = func_full_info,
