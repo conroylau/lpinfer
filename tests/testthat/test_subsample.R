@@ -16,43 +16,43 @@ library(doMC)
 ##------------------------------------------------------------------------------
 ### Full information approach
 # Beta
-func_full_info <- function(df){
+func_full_info <- function(data){
   # Initialize beta
   beta = NULL
   # Find the unique elements of Y, sorting in ascending order
-  y_list = sort(unique(df[,"Y"]))
-  # Count total number of rows of df and y_list
-  n = dim(df)[1]
+  y_list = sort(unique(data[,"Y"]))
+  # Count total number of rows of data and y_list
+  n = dim(data)[1]
   yn = length(y_list)
   # Generate each entry of beta_obs
   for (i in 1:yn){
-    beta_i = sum((df[,"Y"] == y_list[i]) * (df[,"D"] == 1))/n
+    beta_i = sum((data[,"Y"] == y_list[i]) * (data[,"D"] == 1))/n
     beta = c(beta,c(beta_i))
   }
   beta = as.matrix(beta)
   return(beta)
 }
 # Omega_hat
-var_full_info <- function(df){
-  len = length(unique(df[,"Y"]))
+var_full_info <- function(data){
+  len = length(unique(data[,"Y"]))
   return(diag(len))
 }
 
 ### Two moments approach
 # Beta
-func_two_moment <- function(df){
+func_two_moment <- function(data){
   # Initialize beta
   beta = matrix(c(0,0), nrow = 2)
-  # Count total number of rows of df and y_list
-  n = dim(df)[1]
+  # Count total number of rows of data and y_list
+  n = dim(data)[1]
   # Moment 1 E[YD]
-  beta[1] = sum(df[,"Y"] * df[,"D"])/n
+  beta[1] = sum(data[,"Y"] * data[,"D"])/n
   # Moment 2 E[D]
-  beta[2] = sum(df[,"D"])/n
+  beta[2] = sum(data[,"D"])/n
   return(beta)
 }
 # Omega_hat
-var_two_moment <- function(df){
+var_two_moment <- function(data){
   return(diag(2))
 }
 
@@ -60,7 +60,7 @@ var_two_moment <- function(df){
 ## Data preparation and declaration
 ##------------------------------------------------------------------------------
 # Read data
-df = sampledata
+data = sampledata
 # Declare parameters
 N = dim(sampledata)[1]
 J = length(unique(sampledata[,"Y"])) - 1
@@ -93,7 +93,7 @@ p_sig = 4
 phi_predefine = 2/3
 
 ### Define arguments
-farg = list(df = df,
+farg = list(data = data,
             A_tgt = A_tgt,
             bs_seed = 1,
             A_shp = A_shp_full,
