@@ -92,7 +92,7 @@ farg = list(data = data,
             beta_shp_eq = beta_shp_eq,
             beta_shp_ineq = beta_shp_ineq_dkqs,
             kappa = 1e-20,
-            lnorm = L2norm,
+            norm = L2norm,
             solver = "gurobi",
             estimate = FALSE,
             progress = TRUE)

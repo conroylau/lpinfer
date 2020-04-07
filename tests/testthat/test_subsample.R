@@ -102,7 +102,7 @@ farg = list(data = data,
             p_sig = p_sig,
             beta_tgt = beta_tgt,
             cores = 8,
-            lnorm = 2,
+            norm = 2,
             alpha = .05,
             phi = 2/3,
             progress = TRUE)
@@ -126,7 +126,7 @@ farg$solver = "limsolve"
 full_l2 = do.call(subsample, farg)
 
 ### L1 norm
-farg$lnorm = 1
+farg$norm = 1
 # Gurobi
 farg$solver = "gurobi"
 full_g1 = do.call(subsample, farg)
@@ -158,7 +158,7 @@ farg$solver = "limsolve"
 twom_l2 = do.call(subsample, farg)
 
 ### L1 norm
-farg$lnorm = 1
+farg$norm = 1
 # Gurobi
 farg$solver = "gurobi"
 twom_g1 = do.call(subsample, farg)
