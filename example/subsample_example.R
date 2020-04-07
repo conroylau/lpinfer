@@ -124,7 +124,7 @@ full_gur = subsample(data = data,
                      p_sig = 3,
                      solver = "gurobi",
                      cores = 1,
-                     lnorm = 2,
+                     norm = 2,
                      phi = phi_predefine,
                      progress = FALSE)
 
@@ -143,7 +143,7 @@ subsample(data = data,
           p_sig = 3,
           solver = "gurobi",
           cores = 8,
-          lnorm = 2,
+          norm = 2,
           phi = phi_predefine,
           progress = FALSE)
 
@@ -162,6 +162,6 @@ twom_gur = subsample(data = data,
                      p_sig = 3,
                      solver = "gurobi",
                      cores = 1,
-                     lnorm = 2,
+                     norm = 2,
                      phi = phi_predefine,
                      progress = FALSE)
