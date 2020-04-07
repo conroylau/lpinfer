@@ -138,6 +138,29 @@ check_numrange <- function(x, name_var, left_type, left, right_type, right){
 #' 
 #' @description This function checks whether the the norm used in the
 #'   problem is an L1 or L2 norm. If not, an error message is displayed.
+#'   
+#' @details The following input for \code{norm} will be interpreted as the L1-
+#'   norm:
+#'   \itemize{
+#'     \item{\code{1} (numeric)}
+#'     \item{\code{"1"} (string)}
+#'     \item{\code{"L1"}}
+#'     \item{\code{"one"}}
+#'     \item{\code{"o"}}
+#'     \item{\code{"taxicab"}}
+#'   }
+#'   The following input for \code{norm} will be interpreted as the L2-norm:
+#'   \itemize{
+#'     \item{\code{2} (numeric)}
+#'     \item{\code{"2"} (string)}
+#'     \item{\code{"L2"}}
+#'     \item{\code{"two"}}
+#'     \item{\code{"t"}}
+#'     \item{\code{"e"}}
+#'     \item{\code{"euclidean"}}
+#'   }
+#'   Note that capitalization is not an issue here as the text will be brought 
+#'   to the lower case. 
 #' 
 #' @inheritParams check_dataframe
 #' @inheritParams check_positiveinteger
@@ -147,10 +170,27 @@ check_numrange <- function(x, name_var, left_type, left, right_type, right){
 #' @export
 #' 
 check_norm <- function(x, name_var){
-  if (x != 1 & x != 2){
-    stop("Only 1-norm and 2-norm are supported in this function.", 
-         call. = FALSE)
+  # Bring the variable to lower case
+  x = tolower(x)
+  
+  if (x %in% c(1, "1", "l1", "one", "o", "taxicab")){
+    # Case 1: user provied an input that corresponds to L1-norm
+    norm = 1
+  } else if (x %in% c(2, "2", "l2", "two", "t", "e", "euclidean")){
+    # Case 1: user provied an input that corresponds to L2-norm
+    norm = 2
+  } else {
+    stop(gsub("\\s+", " ",
+         paste0("Only 1-norm and 2-norm are supported in this function. ",
+                "For 1-norm, please enter one of the followings: 1, '1', ",
+                "'l1', 'one', 'o' or 'taxicab'. For 2-norm, please enter ",
+                "one of the followings: 2, '2', 'l2', 'two', 't', 'e', ",
+                "'euclidean'.")),
+                call. = FALSE)
   }
+  
+  # Return the updated norm
+  return(norm)
 }
 
 #' Check function: function

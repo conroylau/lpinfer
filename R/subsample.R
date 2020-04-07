@@ -55,6 +55,8 @@ subsample <- function(data, A_obs, func_obs, func_var,
   beta_tgt = checkupdate$beta_tgt
   # Solver
   solver = checkupdate$solver
+  # Norm used
+  norm = checkupdate$norm
 
   # = = = = = =
   # Step 2: Solve for T_n
@@ -509,7 +511,7 @@ subsample_check <- function(data, A_obs, func_obs, func_var,
   check_positiveinteger(cores, "cores")
   
   # Check if norm is either 1 or 2
-  check_norm(norm, "norm")
+  norm_return = check_norm(norm, "norm")
   
   # Check if phi is in the range (0,1)
   check_numrange(phi, "phi", "open", 0, "open", 1)
@@ -531,5 +533,6 @@ subsample_check <- function(data, A_obs, func_obs, func_var,
               A_tgt = tgt_return$A,
               beta_tgt = tgt_return$b,
               solver = solver_return$solver,
-              solver_name = solver_return$solver_name))
+              solver_name = solver_return$solver_name,
+              norm = norm_return))
 }

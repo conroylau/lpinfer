@@ -55,6 +55,7 @@ estbounds <- function(data, func_obs, A_obs, A_tgt,
   beta_shp_eq = estbounds_return$beta_shp_eq
   beta_shp_ineq = estbounds_return$beta_shp_ineq
   solver = estbounds_return$solver
+  norm = estbounds_return$norm
   
   #### Step 2: Construct the bounds
   # Default - Boolean variable of whether the answer to the scenario 1 is 
@@ -530,11 +531,8 @@ estbounds_check <- function(data, func_obs, A_obs, A_tgt,
   } 
   
   #### Step 5: Check 'norm'
-  if (norm != 1 & norm != 2){
-    stop("Only 1-norm and 2-norm are supported in this function.", 
-         call. = FALSE)
-  }
-  
+  norm = check_norm(norm, "norm")
+    
   #### Part 6: Check solver - only 'gurobi' can be used to obtain the bounds 
   #### of the shape restriction
   # Turn the name of solver to lower case 
@@ -645,7 +643,8 @@ estbounds_check <- function(data, func_obs, A_obs, A_tgt,
                  A_shp_ineq = A_shp_ineq,
                  beta_shp_eq = beta_shp_eq,
                  beta_shp_ineq = beta_shp_ineq,
-                 solver = solver))
+                 solver = solver,
+                 norm = norm))
 }
 
 #' Check the constraint matrix and the corresponding vector
