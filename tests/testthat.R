@@ -1,4 +1,4 @@
 library(testthat)
-library(linearprog)
+library(lpinfer)
 
-test_check("linearprog")
+test_check("lpinfer")
