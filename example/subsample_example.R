@@ -107,7 +107,6 @@ beta_shp = 1
 # = = = = = = 
 # Define the parameters to be used
 beta_tgt = .375
-p_sig = 4
 phi_predefine = 2/3
 ## Full information approach
 # Example 1 - Using full information approach and gurobi solver (1 core)
@@ -121,7 +120,6 @@ full_gur = subsample(data = data,
                      beta_tgt = beta_tgt,
                      R = 100,
                      bs_seed = 1,
-                     p_sig = 3,
                      solver = "gurobi",
                      cores = 1,
                      norm = 2,
@@ -140,7 +138,6 @@ subsample(data = data,
           beta_tgt = beta_tgt,
           R = 100,
           bs_seed = 1,
-          p_sig = 3,
           solver = "gurobi",
           cores = 8,
           norm = 2,
@@ -159,7 +156,6 @@ twom_gur = subsample(data = data,
                      beta_tgt = beta_tgt,
                      R = 100,
                      bs_seed = 1,
-                     p_sig = 3,
                      solver = "gurobi",
                      cores = 1,
                      norm = 2,

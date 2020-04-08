@@ -77,7 +77,6 @@ A_obs_twom = matrix(c(rep(0,J1), yp, rep(0,J1), rep(1, J1)), nrow = 2,
 ### Part 5: Run the dkqs module to compute p-values
 # Define the value of beta_tgt and significant figures needed
 beta_tgt = .365
-p_sig = 4
 
 ### Part 6: Arguments for the dkqs function without beta_tgt
 farg = list(data = data,
@@ -86,7 +85,6 @@ farg = list(data = data,
             func_obs = func_full_info,
             bs_seed = 1,
             R = 1000,
-            p_sig = p_sig,
             tau_input = tau,
             solver = "gurobi",
             cores = 1,
