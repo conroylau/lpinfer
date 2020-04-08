@@ -845,7 +845,7 @@ beta_bs_parallel <- function(data, bs_seed, R, J, s_star, A_obs, A_tgt,
   
   #### Step 7: Retrieve information from output
   T_bs = as.vector(unlist(listans[[1]]))
-  beta_bs_bar_set = data.frame(matrix(as.matrix(listans[[2]]), 
+  beta_bs_bar_set = data.frame(matrix(unlist(listans[[2]]), 
                                       nrow = beta_bs_nrow, 
                                       ncol = R,
                                       byrow = FALSE))

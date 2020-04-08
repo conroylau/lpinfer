@@ -392,7 +392,7 @@ subsample_manycores <- function(data, bs_seed, R, func_obs, func_var,
   # Step 4: Retrieve results from output
   # = = = = = = 
   T_sub = as.vector(unlist(listans[[1]]))
-  beta_sub = data.frame(matrix(as.matrix(listans[[2]]), 
+  beta_sub = data.frame(matrix(unlist(listans[[2]]), 
                                nrow = length(func_obs(data)), 
                                byrow = FALSE))
   
