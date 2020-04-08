@@ -16,7 +16,6 @@
 #'    value of \eqn{t} in the missing data problem) in the null hypothesis.
 #' @param bs_seed The starting value of the seed in bootstrap.
 #' @param R The total number of bootstraps \eqn{B} to be conducted.
-#' @param p_sig The number of decimal places in the \eqn{p}-value.
 #' @param tau The value of tau chosen by the user.
 #' @param solver The name of the linear and quadratic programming solver that 
 #'    are used to obtain the solution to linear and quadratic programs. 
@@ -51,7 +50,7 @@
 #' @export
 #' 
 dkqs <- function(data, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
-                 R = 100, p_sig = 2, tau = .5, solver = NULL,
+                 R = 100, tau = .5, solver = NULL,
                  cores = 1, progress = FALSE){
   
   #### Step 1: Obtain call, check and update the dependencies
@@ -59,7 +58,7 @@ dkqs <- function(data, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   call = match.call()
   # Check and update
   checkupdate = dkqs_check(data, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
-                           R, p_sig, tau, solver, progress,
+                           R, tau, solver, progress,
                            cores)
   # Update and return the quantities returned from the function dkqs_check
   # (a) Dataframe
@@ -152,7 +151,7 @@ dkqs <- function(data, A_obs, A_tgt, func_obs, beta_tgt, bs_seed = 1,
   
   #### Step 6: Compute the p-value
   # decision = 1 refers to rejected, decision = 0 refers to not rejected
-  p_val = p_eval(T_bs, T_n, p_sig)$p
+  p_val = p_eval(T_bs, T_n)$p
   
   #### Step 7: Obtain logical bounds for the function qrci
   lb0 = x_return$lb0
@@ -866,35 +865,22 @@ beta_bs_parallel <- function(data, bs_seed, R, J, s_star, A_obs, A_tgt,
 #'
 #' @param T_bs The test statistics obtained from bootstrap.
 #' @param T_n The test statistics obtained from quadratic program (5).
-#' @param p_sig The number of decimal places in the \eqn{p}-value.
 #'
 #' @return Returns the \eqn{p}-value:
-#'   \item{p_val}{\eqn{p}-value that is corrected to \code{p_sig} decimal
-#'      places.}
+#'   \item{p_val}{\eqn{p}-value}
 #'
 #' @export
 #' 
-p_eval <- function(T_bs, T_n, p_sig, alpha = .05){
-  # Initialization
-  p_val = NULL
-  decision_loop = 1 # decision = 1: rejected, decision = 0: not rejected
-  alpha_loop = 0
-  while (decision_loop != 0 & alpha_loop <= 1){
-    T_quan = as.numeric(quantile(T_bs, probs=c(1 - alpha_loop)))
-    if (T_n >= T_quan){
-      decision_loop = 0
-    }
-    alpha_loop = alpha_loop + 10^(-p_sig)
-  }
-  # Decision
-  T_quan = as.numeric(quantile(T_bs, probs=c(1 - alpha)))
-  if (T_n > T_quan){
+p_eval <- function(T_bs, T_n, alpha = .05){
+  # Compute p-value
+  p_val = mean(T_bs > T_n)
+  
+  # Update decision
+  if (p_val > alpha){
     decision = 1
   } else {
     decision = 0
   }
-  # p-value
-  p_val = round(alpha_loop - 10^(-p_sig), digits = p_sig)
   return(list(p = p_val,
               decision = decision))
 }
@@ -959,7 +945,7 @@ tau_constraints <- function(length_tau, coeff_tau, coeff_x, ind_x, rhs, sense,
 #' @export
 #' 
 dkqs_check <- function(data, A_obs, A_tgt, func_obs, beta_tgt, bs_seed, 
-                       R, p_sig, tau, solver, progress, cores){
+                       R, tau, solver, progress, cores){
   ### Part 1. Check the dataframe
   if (class(data) %in% c("data.frame", "matrix") == TRUE){
     data = as.data.frame(data)  
@@ -1045,21 +1031,14 @@ dkqs_check <- function(data, A_obs, A_tgt, func_obs, beta_tgt, bs_seed,
          call. = FALSE)
   }
   
-  ### Part 8. Check p_sig
-  if ((is.numeric(p_sig) == TRUE & length(p_sig) == 1 & p_sig >= 0 & 
-       p_sig%%1 == 0) == FALSE){
-    stop("The number of decimal places in the p-value ('p_sig') has to be a
-         positive integer.", call. = FALSE)
-  }
-  
-  ### Part 9. Check tau
+  ### Part 8. Check tau
   if ((is.numeric(tau) == TRUE & length(tau) == 1 & 
        tau >= 0 & tau <= 1) == FALSE){
     stop("The value of tau ('tau') has to be in the interval [0,1].", 
          call. = FALSE)
   }
   
-  ### Part 10. Check solvers
+  ### Part 9. Check solvers
   # Check if the user supplied a name of linear or quadratic programming solver
   # that is supported by the function. If the user does not specify any linear
   # programming solver, the function will assign a linear or quadratic

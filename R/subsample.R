@@ -28,7 +28,7 @@
 #' 
 subsample <- function(data, A_obs, func_obs, func_var, 
                       A_shp, beta_shp, A_tgt, beta_tgt, 
-                      bs_seed = 1, R = 100, p_sig = 2, solver = NULL, 
+                      bs_seed = 1, R = 100, solver = NULL, 
                       cores = 8, norm = 2, phi = 2/3, alpha = .05,
                       progress = FALSE){
   
@@ -41,7 +41,7 @@ subsample <- function(data, A_obs, func_obs, func_var,
   ## Check and update 
   checkupdate = subsample_check(data, A_obs, func_obs, func_var, 
                                 A_shp, beta_shp, A_tgt, beta_tgt, 
-                                bs_seed, R, p_sig, solver, cores, norm, 
+                                bs_seed, R, solver, cores, norm, 
                                 phi, progress)
   
   ## Update information obtained from check
@@ -86,7 +86,7 @@ subsample <- function(data, A_obs, func_obs, func_var,
   # = = = = = = 
   # Step 4: Compute the p-value (using the p_eval function in dkqs)
   # = = = = = = 
-  pval_return = p_eval(T_subsample$T_sub, Treturn$objval, p_sig, alpha)
+  pval_return = p_eval(T_subsample$T_sub, Treturn$objval, alpha)
   p_val = pval_return$p
   decision = pval_return$decision
   
@@ -487,7 +487,7 @@ summary.subsample <- function(x, ...){
 #' 
 subsample_check <- function(data, A_obs, func_obs, func_var, 
                             A_shp, beta_shp, A_tgt, beta_tgt, bs_seed, R, 
-                            p_sig, solver, cores, norm, phi, progress){
+                            solver, cores, norm, phi, progress){
   
   # = = = = = = 
   # Step 1: Conduct the checks
@@ -507,7 +507,6 @@ subsample_check <- function(data, A_obs, func_obs, func_var,
   # Check if the variable is a positive integer
   check_positiveinteger(bs_seed, "bs_seed")
   check_positiveinteger(R, "R")
-  check_positiveinteger(p_sig, "p_sig")
   check_positiveinteger(cores, "cores")
   
   # Check if norm is either 1 or 2
