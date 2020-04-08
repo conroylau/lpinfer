@@ -54,7 +54,7 @@ estbounds <- function(data, func_obs, A_obs, A_tgt,
   A_shp_ineq = estbounds_return$A_shp_ineq
   beta_shp_eq = estbounds_return$beta_shp_eq
   beta_shp_ineq = estbounds_return$beta_shp_ineq
-  solver = estbounds_return$solver
+  solverf = estbounds_return$solver
   norm = estbounds_return$norm
   
   #### Step 2: Construct the bounds
@@ -66,10 +66,10 @@ estbounds <- function(data, func_obs, A_obs, A_tgt,
   if (estimate == FALSE){
     ub_shp0 = estbounds_original(A_obs, A_tgt, beta_obs, A_shp_eq, 
                                  A_shp_ineq, beta_shp_eq, beta_shp_ineq, 
-                                 "max", solver)
+                                 "max", solverf)
     lb_shp0 = estbounds_original(A_obs, A_tgt, beta_obs, A_shp_eq, 
                                  A_shp_ineq, beta_shp_eq, beta_shp_ineq, 
-                                 "min", solver)
+                                 "min", solverf)
     ub = ub_shp0$objval
     lb = lb_shp0$objval
     # if (progress == TRUE){
@@ -91,33 +91,16 @@ estbounds <- function(data, func_obs, A_obs, A_tgt,
   
   ### Scenario 2: Estimate = TRUE or scenario 1 is infeasible
   if (estimate == TRUE | bound0infe == TRUE){
-    ## Update constraints
-    # Zero lower bound
-    lb_zero = rep(0,ncol(A_tgt))
-    # Combine linear constraints 
-    A1 = rbind(A_shp_eq, A_shp_ineq)
-    rhs1 = rbind(beta_shp_eq, beta_shp_ineq)
-    ## Generate the sense of models
-    if (is.null(A_shp_eq) == FALSE){
-      # Case 1: If there are equality constraints
-      sense1 = rbind(rep("=", nrow(A_shp_eq)))    
-      if (is.null(A_shp_ineq) == FALSE){
-        sense1 = rbind(sense1, rep("<=", nrow(A_shp_ineq)))
-      }
-    } else if (is.null(A_shp_ineq) == FALSE) {
-      # Case 2: If there are inequality constraints
-      sense1 = rbind(rep("<=", nrow(A_shp_ineq)))
-    } else {
-      # Case 3: If there are no equality and inequality constraints
-      sense1 = NULL
-    }
     
     ## Solve model
     if (norm == 1){
       ## L1-norm
       # Stage one of the problem
-      estbounds11 = estbounds1_L1(A_obs, beta_obs, A1, rhs1, sense1, lb_zero, 
-                                  solver)
+      estbounds11 =  mincriterion(data, func_obs,
+                                  A_obs, A_tgt, A_shp_eq, A_shp_ineq, 
+                                  beta_tgt, beta_shp_eq, beta_shp_ineq, 
+                                  norm, solver)
+      
       # Return stop message if there is no feasible solution for stage one
       # of the problem
       if (is.numeric(estbounds11$objval) == FALSE){
@@ -126,14 +109,17 @@ estbounds <- function(data, func_obs, A_obs, A_tgt,
       }
       # Stage two of the problem
       estbounds_ub = estbounds2_L1(estbounds11, A_tgt, A_obs, beta_obs, "max", 
-                                   kappa, solver)
+                                   kappa, solverf)
       estbounds_lb = estbounds2_L1(estbounds11, A_tgt, A_obs, beta_obs, "min", 
-                                   kappa, solver)
+                                   kappa, solverf)
     } else if (norm == 2){
       ## L2-norm
       # Stage one of the problem
-      estbounds21 = estbounds1_L2(A_obs, beta_obs, A1, rhs1, sense1, lb_zero, 
-                                  solver)
+      estbounds21 =  mincriterion(data, func_obs,
+                                  A_obs, A_tgt, A_shp_eq, A_shp_ineq, 
+                                  beta_tgt, beta_shp_eq, beta_shp_ineq, 
+                                  norm, solver)
+      
       # Return stop message if there is no feasible solution for stage one
       # of the problem
       if (is.numeric(estbounds21$objval) == FALSE){
@@ -142,9 +128,9 @@ estbounds <- function(data, func_obs, A_obs, A_tgt,
       }
       # Stage two of the problem
       estbounds_ub = estbounds2_L2(estbounds21, A_tgt, A_obs, beta_obs, "max", 
-                                   kappa, solver)
+                                   kappa, solverf)
       estbounds_lb = estbounds2_L2(estbounds21, A_tgt, A_obs, beta_obs, "min", 
-                                   kappa, solver)
+                                   kappa, solverf)
     }
     
     # Store results
@@ -228,64 +214,6 @@ estbounds_original <- function(A_obs, A_tgt, beta_obs, A_shp_eq,
                  x = ans$x))
 }
 
-#' Estimates the bounds with shape contraints (Stage 1 with \eqn{\ell^1}-norm)
-#' 
-#' @description This function evaluates the solution to stage 1 of the 
-#'    two-step procedure obtaining the estimated bound. \eqn{\ell^1}-norm 
-#'    is used in the objective function.
-#' 
-#' @param A1 Constraint matrix for step 1 in the linear program of bound
-#'    estimation.
-#' @param rhs1 RHS vector for step 1 in the linear program of bound
-#'    estimation.
-#' @param sense1 Sense vector for step 1 in the linear program of bound
-#'    estimation.
-#' @inheritParams dkqs
-#' 
-#' @return Returns the solution to the first step of the two-step procedure 
-#'    and argument for the linear program.
-#'  \item{objval}{Optimal value calculated from the optimizer.}
-#'  \item{x}{Optimal point calculated from the optimizer.}
-#'  \item{larg}{Arguments for the linear program.}
-#' 
-#' @export
-#' 
-estbounds1_L1 <- function(A_obs, beta_obs, A1, rhs1, sense1, lb, solver){
-  #### Step 1: Define the problem
-  # Define the augmented matrices
-  k = length(beta_obs)
-  # Introduce slack variables into the matrix
-  A1_aug = cbind(A1, matrix(rep(0, 2*k*dim(A1)[1]), nrow = dim(A1)[1]))
-  A1_slack = cbind(A_obs, -diag(k), -diag(k))
-  # Combine the constraints
-  A1_new = rbind(A1_aug, A1_slack)
-  rhs1_new = c(rhs1, beta_obs)
-  # New model sense
-  sense1_new = c(sense1, rep("=", k))
-  # New objective function
-  c = c(rep(0, dim(A_obs)[2]), rep(1, k), rep(1, k))
-  # New lower bound
-  lb_new = rep(0, length(c))
-    
-  #### Step 2: Set up argument for optimizer
-  l1_arg = list(Af = NULL,
-                bf = c,
-                nf = NULL,
-                A = A1_new,
-                rhs = rhs1_new,
-                sense = sense1_new,
-                modelsense = "min",
-                lb = lb_new)
-  
-  #### Step 3: Solve the model
-  ans = do.call(solver, l1_arg) 
-  
-  #### Step 4: Return results
-  invisible(list(objval = ans$objval, 
-                 x = ans$x,
-                 larg = l1_arg))
-}
-
 #' Estimates the bounds with shape contraints (Stage 2 with \eqn{\ell^1}-norm)
 #' 
 #' @description This function evaluates the solution to stage 2 of the 
@@ -342,49 +270,6 @@ estbounds2_L1 <- function(firststepsoln, A_tgt, A_obs, beta_obs, modelsense,
   #### Step 6: Return results
   return(list(objval = step2_ans$objval,
               x = step2_ans$x))
-}
-
-#' Estimates the bounds with shape contraints (Stage 1 with \eqn{\ell^2}-norm)
-#' 
-#' @description This function evaluates the solution to stage 1 of the 
-#'    two-step procedure obtaining the estimated bound. \eqn{\ell^2}-norm 
-#'    is used in the objective function.
-#' 
-#' @param A1 Constraint matrix for step 1 in the linear program of bound
-#'    estimation.
-#' @param rhs1 RHS vector for step 1 in the linear program of bound
-#'    estimation.
-#' @param sense1 Sense vector for step 1 in the linear program of bound
-#'    estimation.
-#' @inheritParams dkqs
-#' 
-#' @return Returns the solution to the first step of the two-step procedure 
-#'    and argument for the linear/quadratic program.
-#'  \item{objval}{Optimal value calculated from the optimizer.}
-#'  \item{x}{Optimal point calculated from the optimizer.}
-#'  \item{larg}{Arguments for the linear/quadratic program.}
-#' 
-#' @export
-#' 
-estbounds1_L2 <- function(A_obs, beta_obs, A1, rhs1, sense1, lb, solver){
-  #### Step 1: Set up argument for optimizer
-  l2_arg = list(Af = A_obs,
-                bf = beta_obs,
-                nf = 1,
-                A = A1,
-                rhs = rhs1,
-                sense = sense1,
-                modelsense = "min",
-                lb = lb,
-                qc = NULL)
-  
-  #### Step 2: Solve the model
-  ans = do.call(solver, l2_arg) 
-  
-  #### Step 3: Return results
-  invisible(list(objval = ans$objval, 
-                 x = ans$x,
-                 larg = l2_arg))
 }
 
 #' Estimates the bounds with shape contraints (Stage 2 with \eqn{\ell^2}-norm)
@@ -471,7 +356,7 @@ estbounds2_L2 <- function(firststepsoln, A_tgt, A_obs, beta_obs, modelsense,
 estbounds_check <- function(data, func_obs, A_obs, A_tgt,
                             A_shp_eq, A_shp_ineq, beta_shp_eq, beta_shp_ineq,
                             kappa, norm, solver, estimate, progress){
-
+  
   ### Part 1. Check the data frame
   if (class(data) %in% c("data.frame", "matrix") == TRUE){
     data = as.data.frame(data)  
@@ -524,7 +409,7 @@ estbounds_check <- function(data, func_obs, A_obs, A_tgt,
   obs_return = estbounds_check_Ab(A_obs, beta_obs, "A_obs", "beta_obs")
   A_obs = obs_return$A_updated
   beta_obs = obs_return$b_updated
-
+  
   #### Step 4: Check 'kappa'
   if (!(is.numeric(kappa) == TRUE & length(kappa) == 1 & kappa >= 0)) {
     stop("The argument 'kappa' must be a nonnegative scalar.", call. = FALSE)
@@ -532,7 +417,7 @@ estbounds_check <- function(data, func_obs, A_obs, A_tgt,
   
   #### Step 5: Check 'norm'
   norm = check_norm(norm, "norm")
-    
+  
   #### Part 6: Check solver - only 'gurobi' can be used to obtain the bounds 
   #### of the shape restriction
   # Turn the name of solver to lower case 
@@ -835,5 +720,136 @@ lpsolveapi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
               x = x))
 }
 
+#' First-stage of the estimation procedure for \code{estbounds}
+#' 
+#' @description This function evaluates the solution to stage 1 of the 
+#'    two-step procedure obtaining the estimated bound. This function can
+#'    be used to evaluate both the estimation problem with the 1-norm or 
+#'    the 2-norm.
+#' 
+#' @inheritParams estbounds
+#' @inheritParams dkqs
+#' 
+#' @return Returns the solution to the first step of the two-step procedure 
+#'    and argument for the linear program.
+#'  \item{objval}{Optimal value calculated from the optimizer.}
+#'  \item{x}{Optimal point calculated from the optimizer.}
+#'  \item{larg}{Arguments for the estimation program.}
+#'  \item{norm}{Norm used in the estimation problem.}
+#'  \item{solver}{The solver used in the estimation problem}
+#'  \item{call}{The details of the function that has been called.}
+#' 
+#' @export
+#'  
+mincriterion <- function(data, func_obs, A_obs, A_tgt, A_shp_eq, A_shp_ineq, 
+                         beta_tgt, beta_shp_eq, beta_shp_ineq, norm, solver){
+  
+  #### Step 1: Obtain call information
+  call = match.call()
+  
+  #### Step 2: Obtain beta_obs and update solver
+  beta_obs = func_obs(data)
+  beta_obs = as.matrix(beta_obs)
+  solver_return = check_solver(solver, "solver", norm = norm)
+  
+  #### Step 3: Create common constraints for the problem with 1-norm and 2-norm
+  # Zero lower bound
+  lb_zero = rep(0,ncol(A_tgt))
+  # Combine linear constraints 
+  A1 = rbind(A_shp_eq, A_shp_ineq)
+  rhs1 = rbind(beta_shp_eq, beta_shp_ineq)
+  ## Generate the sense of models
+  if (is.null(A_shp_eq) == FALSE){
+    # Case 1: If there are equality constraints
+    sense1 = rbind(rep("=", nrow(A_shp_eq)))    
+    if (is.null(A_shp_ineq) == FALSE){
+      sense1 = rbind(sense1, rep("<=", nrow(A_shp_ineq)))
+    }
+  } else if (is.null(A_shp_ineq) == FALSE) {
+    # Case 2: If there are inequality constraints
+    sense1 = rbind(rep("<=", nrow(A_shp_ineq)))
+  } else {
+    # Case 3: If there are no equality and inequality constraints
+    sense1 = NULL
+  }
+  
+  #### Step 4: Set up argument for the optimizer
+  if (norm == 1){
+    # Define the augmented matrices
+    k = length(beta_obs)
+    # Introduce slack variables into the matrix
+    A1_aug = cbind(A1, matrix(rep(0, 2*k*dim(A1)[1]), nrow = dim(A1)[1]))
+    A1_slack = cbind(A_obs, -diag(k), -diag(k))
+    # Combine the constraints
+    A1_new = rbind(A1_aug, A1_slack)
+    rhs1_new = c(rhs1, beta_obs)
+    # New model sense
+    sense1_new = c(sense1, rep("=", k))
+    # New objective function
+    c = c(rep(0, dim(A_obs)[2]), rep(1, k), rep(1, k))
+    # New lower bound
+    lb_new = rep(0, length(c))
+    # 1-norm
+    optim_arg = list(Af = NULL,
+                     bf = c,
+                     nf = NULL,
+                     A = A1_new,
+                     rhs = rhs1_new,
+                     sense = sense1_new,
+                     modelsense = "min",
+                     lb = lb_new)
+    
+  } else if (norm == 2){
+    # 2-norm
+    optim_arg = list(Af = A_obs,
+                     bf = beta_obs,
+                     nf = 1,
+                     A = A1,
+                     rhs = rhs1,
+                     sense = sense1,
+                     modelsense = "min",
+                     lb = lb_zero,
+                     qc = NULL)
+  }
+  
+  #### Step 5: Solve the model
+  ans = do.call(solver_return$solver, optim_arg) 
+  
+  #### Step 6: Assign the return list and define class of output
+  output = list(objval = ans$objval, 
+                x = ans$x,
+                larg = optim_arg,
+                norm = norm,
+                solver = solver_return$solver_name,
+                call = call)
+  
+  attr(output, "class") = "mincriterion"
+  
+  return(output)
+}
 
-       
+#' Print results from \code{mincriterion}
+#' 
+#' @description This function uses the print method on the return list of the
+#'    function \code{mincriterion}.
+#'    
+#' @param x Object returned from \code{mincriterion}.
+#' @param ... Additional arguments.
+#' 
+#' @return Nothing is returned. This function prints results from 
+#'    \code{mincriterion}.
+#' 
+#' @export
+#' 
+print.mincriterion <- function(x, ...){
+  cat("Call:\n")
+  dput(x$call)
+  cat("\n")
+  
+  cat("< Results from the first stage estimation procedure >\n")
+  cat(sprintf("Minimum value: %s \n", round(x$objval)))
+  cat(sprintf("Norm used: L%s-norm \n", x$norm))
+  cat(sprintf("Solver used: %s \n", x$solver))
+  
+}
+
