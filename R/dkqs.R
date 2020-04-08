@@ -822,7 +822,7 @@ beta_bs_parallel <- function(data, bs_seed, R, J, s_star, A_obs, A_tgt,
   # Parallelized for-loop below
   listans = foreach::foreach(i=1:R, .multicombine = TRUE, 
                              .combine="comb", .options.snow=opts,
-                             .packages='linearprog') %dopar% {
+                             .packages='lpinfer') %dopar% {
    #### Step 2: Set the seed
    set.seed(bs_seed + i)
    ####  Step 3: Draw the subsample

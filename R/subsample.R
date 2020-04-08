@@ -370,7 +370,7 @@ subsample_manycores <- function(data, bs_seed, R, func_obs, func_var,
   # = = = = = = 
   listans = foreach::foreach(i=1:R, .multicombine = TRUE, 
                              .combine="comb", .options.snow=opts,
-                             .packages='linearprog') %dopar% {
+                             .packages='lpinfer') %dopar% {
     ## (3.1) Set the seed
     set.seed(bs_seed + i)
     ## (3.2) Draw the subsample
