@@ -646,7 +646,7 @@ print.estbounds <- function(x, ...){
 
 #' Summary of results from \code{estbounds}
 #' 
-#' @description This function uses the print method on the return list of the
+#' @description This function uses the summary method on the return list of the
 #'    function \code{estbounds}. This is a wrapper of the function
 #'    \code{print.estbounds}.
 #'    
@@ -842,14 +842,27 @@ mincriterion <- function(data, func_obs, A_obs, A_tgt, A_shp_eq, A_shp_ineq,
 #' @export
 #' 
 print.mincriterion <- function(x, ...){
-  cat("Call:\n")
-  dput(x$call)
-  cat("\n")
-  
-  cat("< Results from the first stage estimation procedure >\n")
   cat(sprintf("Minimum value: %s \n", round(x$objval)))
-  cat(sprintf("Norm used: L%s-norm \n", x$norm))
-  cat(sprintf("Solver used: %s \n", x$solver))
+  cat(sprintf("Norm: %s \n", x$norm))
+  cat(sprintf("Solver: %s \n", x$solver))
   
 }
 
+#' Summary of results from \code{mincriterion}
+#' 
+#' @description This function uses the summary method on the return list of the
+#'    function \code{mincriterion}. This is a wrapper of the function
+#'    \code{print.mincriterion}.
+#'    
+#' @param x Object returned from \code{mincriterion}.
+#' @param ... Additional arguments.
+#' 
+#' @return Nothing is returned. This function prints results from 
+#'    \code{mincriterion}.
+#' 
+#' @export
+#' 
+summary.mincriterion <- function(x, ...){
+  #### Call theprint function
+  print(x)
+}    
