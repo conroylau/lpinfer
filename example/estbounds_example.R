@@ -82,9 +82,58 @@ beta_shp_eq_dkqs = c(1)
 A_shp_ineq_dkqs = NULL
 beta_shp_ineq_dkqs = NULL
 
+### Part 5(a) Demonstration of first stage of the procedure
+# L2-norm and full info approach
+min1a = mincriterion(data = data,
+                     func_obs = func_full_info,
+                     A_obs = A_obs_full,
+                     A_tgt = A_tgt,
+                     A_shp_eq = A_shp_eq_dkqs,
+                     A_shp_ineq = A_shp_ineq_dkqs,
+                     beta_shp_eq = beta_shp_eq_dkqs,
+                     beta_shp_ineq = beta_shp_ineq_dkqs,
+                     norm = 2,
+                     solver = "gurobi")
+
+# L1-norm and full info approach
+min1b = mincriterion(data = data,
+                     func_obs = func_full_info,
+                     A_obs = A_obs_full,
+                     A_tgt = A_tgt,
+                     A_shp_eq = A_shp_eq_dkqs,
+                     A_shp_ineq = A_shp_ineq_dkqs,
+                     beta_shp_eq = beta_shp_eq_dkqs,
+                     beta_shp_ineq = beta_shp_ineq_dkqs,
+                     norm = 1,
+                     solver = "gurobi")
+
+# L2-norm and two moments approach
+min2a = mincriterion(data = data,
+                     func_obs = func_two_moment,
+                     A_obs = A_obs_twom,
+                     A_tgt = A_tgt,
+                     A_shp_eq = A_shp_eq_dkqs,
+                     A_shp_ineq = A_shp_ineq_dkqs,
+                     beta_shp_eq = beta_shp_eq_dkqs,
+                     beta_shp_ineq = beta_shp_ineq_dkqs,
+                     norm = 2,
+                     solver = "gurobi")
+
+# L1-norm and two moments approach
+min2b = mincriterion(data = data,
+                     func_obs = func_two_moment,
+                     A_obs = A_obs_twom,
+                     A_tgt = A_tgt,
+                     A_shp_eq = A_shp_eq_dkqs,
+                     A_shp_ineq = A_shp_ineq_dkqs,
+                     beta_shp_eq = beta_shp_eq_dkqs,
+                     beta_shp_ineq = beta_shp_ineq_dkqs,
+                     norm = 1,
+                     solver = "gurobi")
+
+### Part 5(b) Demonstration of the full procedure 
 # Set function arguments
-farg = list(data = data,
-            A_obs = A_obs_full,
+farg = list(A_obs = A_obs_full,
             A_tgt = A_tgt,
             func_obs = func_full_info,
             A_shp_eq = A_shp_eq_dkqs,
@@ -116,18 +165,18 @@ est_ans1 = estbounds(data = data,
 ## Full-information approach
 # L2-norm
 est_ans2a = estbounds(data = data,
-                       A_obs = A_obs_full,
-                       A_tgt = A_tgt,
-                       func_obs = func_full_info,
-                       A_shp_eq = A_shp_eq_dkqs,
-                       A_shp_ineq = A_shp_ineq_dkqs,
-                       beta_shp_eq = beta_shp_eq_dkqs,
-                       beta_shp_ineq = beta_shp_ineq_dkqs,
-                       kappa = 1e-20,
-                       norm = 2,
-                       solver = "gurobi",
-                       estimate = TRUE,
-                       progress = TRUE)
+                      A_obs = A_obs_full,
+                      A_tgt = A_tgt,
+                      func_obs = func_full_info,
+                      A_shp_eq = A_shp_eq_dkqs,
+                      A_shp_ineq = A_shp_ineq_dkqs,
+                      beta_shp_eq = beta_shp_eq_dkqs,
+                      beta_shp_ineq = beta_shp_ineq_dkqs,
+                      kappa = 1e-20,
+                      norm = 2,
+                      solver = "gurobi",
+                      estimate = TRUE,
+                      progress = TRUE)
 # L1-norm
 est_ans2b = estbounds(data = data,
                       A_obs = A_obs_full,
@@ -172,3 +221,5 @@ est_ans3b = estbounds(data = data,
                       solver = "gurobi",
                       estimate = TRUE,
                       progress = TRUE)
+
+
