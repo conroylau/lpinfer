@@ -70,14 +70,12 @@ A_obs_twom = matrix(c(rep(0,J1), yp, rep(0,J1), rep(1, J1)), nrow = 2,
 ##------------------------------------------------------------------------------
 # Parameters to test
 beta_tgt = .365
-p_sig = 4
 
 ### Define arguments for dkqs
 farg = list(data = data,
             A_tgt = A_tgt,
             bs_seed = 1,
             R = 100,
-            p_sig = p_sig,
             tau_input = tau,
             cores = 8,
             progress = FALSE)

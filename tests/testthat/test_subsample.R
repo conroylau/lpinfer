@@ -89,7 +89,6 @@ beta_shp = 1
 ##------------------------------------------------------------------------------
 # Parameters to test
 beta_tgt = .365
-p_sig = 4
 phi_predefine = 2/3
 
 ### Define arguments
@@ -99,7 +98,6 @@ farg = list(data = data,
             A_shp = A_shp_full,
             beta_shp = beta_shp,
             R = 100,
-            p_sig = p_sig,
             beta_tgt = beta_tgt,
             cores = 8,
             norm = 2,
