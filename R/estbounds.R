@@ -761,13 +761,13 @@ mincriterion <- function(data, func_obs, A_obs, A_tgt, A_shp_eq, A_shp_ineq,
   ## Generate the sense of models
   if (is.null(A_shp_eq) == FALSE){
     # Case 1: If there are equality constraints
-    sense1 = rbind(rep("=", nrow(A_shp_eq)))    
+    sense1 = rep("=", nrow(A_shp_eq))
     if (is.null(A_shp_ineq) == FALSE){
-      sense1 = rbind(sense1, rep("<=", nrow(A_shp_ineq)))
+      sense1 = c(sense1, rep("<=", nrow(A_shp_ineq)))
     }
   } else if (is.null(A_shp_ineq) == FALSE) {
     # Case 2: If there are inequality constraints
-    sense1 = rbind(rep("<=", nrow(A_shp_ineq)))
+    sense1 = rep("<=", nrow(A_shp_ineq))
   } else {
     # Case 3: If there are no equality and inequality constraints
     sense1 = NULL
