@@ -87,51 +87,51 @@ beta_tgt = .375
 
 ## Full information approach
 # Example 1.1a - Using full information approach and gurobi solver (1 core)
-full_gur = dkqs(data, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 100, 
+full_gur = dkqs(data, A_obs_full, A_tgt, func_full_info, beta_tgt, 100, 
                 tau, "gurobi", 1, TRUE)
 
 # Example 1.1b - Using full information approach and gurobi solver (8 cores)
-full_gur = dkqs(data, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 100, 
+full_gur = dkqs(data, A_obs_full, A_tgt, func_full_info, beta_tgt, 100, 
                 tau, "gurobi", 8, TRUE)
 
 # Example 1.2a - Using full information approach and Rcplex solver (1 core)
-full_rcp = dkqs(data, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 100,
+full_rcp = dkqs(data, A_obs_full, A_tgt, func_full_info, beta_tgt, 100,
                 tau, "Rcplex", 1, TRUE)
 
 # Example 1.2b - Using full information approach and Rcplex solver (8 cores)
-full_rcp = dkqs(data, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 100,
+full_rcp = dkqs(data, A_obs_full, A_tgt, func_full_info, beta_tgt, 100,
                 tau, "Rcplex", 8, TRUE)
 
 # Example 1.3a - Using full information approach and limSolve solver (1 core)
-full_lim = dkqs(data, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 100, 
+full_lim = dkqs(data, A_obs_full, A_tgt, func_full_info, beta_tgt, 100, 
                 tau, "limSolve", 1, TRUE)
 
 # Example 1.3b - Using full information approach and limSolve solver (8 cores)
-full_lim = dkqs(data, A_obs_full, A_tgt, func_full_info, beta_tgt, 1, 100, 
+full_lim = dkqs(data, A_obs_full, A_tgt, func_full_info, beta_tgt, 100, 
                 tau, "limSolve", 8, TRUE)
 
 ## Two moments approach
 # Example 2.1a - Using two moments approach and gurobi solver (1 core)
-full_gur = dkqs(data, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100, 
+full_gur = dkqs(data, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 100, 
                 tau, "gurobi", 1, TRUE)
 
 # Example 2.1b - Using two moments approach and gurobi solver (8 cores)
-full_gur = dkqs(data, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100, 
+full_gur = dkqs(data, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 100, 
                 tau, "gurobi", 8, TRUE)
 
 # Example 2.2a - Using two moments approach and Rcplex solver (1 core)
-full_rcp = dkqs(data, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100,
+full_rcp = dkqs(data, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 100,
                 tau, "Rcplex", 1, TRUE)
 
 # Example 2.2b - Using two moments approach and Rcplex solver (8 cores)
-full_rcp = dkqs(data, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100,
+full_rcp = dkqs(data, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 100,
                 tau, "Rcplex", 8, TRUE)
 
 # Example 2.3a - Using two moments approach and limSolve solver (1 core)
-twom_r_r = dkqs(data, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100, 
+twom_r_r = dkqs(data, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 100, 
                 tau, "limSolve", 1, TRUE)
 
 # Example 2.3b - Using two moments approach and limSolve solver (8 cores)
-twom_r_r = dkqs(data, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 1, 100, 
+twom_r_r = dkqs(data, A_obs_twom, A_tgt, func_two_moment, beta_tgt, 100, 
                 tau, "limSolve", 8, TRUE)
 
