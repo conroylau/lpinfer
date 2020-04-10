@@ -74,7 +74,6 @@ beta_tgt = .365
 ### Define arguments
 farg = list(data = data,
             A_tgt = A_tgt,
-            bs_seed = 1,
             R = 100,
             tau_input = tau,
             beta_tgt = beta_tgt,

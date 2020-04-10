@@ -94,7 +94,6 @@ phi_predefine = 2/3
 ### Define arguments
 farg = list(data = data,
             A_tgt = A_tgt,
-            bs_seed = 1,
             A_shp = A_shp_full,
             beta_shp = beta_shp,
             R = 100,
