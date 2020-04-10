@@ -20,7 +20,8 @@ Imports:
     ddpcr,
     Matrix,
     doSNOW,
-    PtProcess
+    PtProcess,
+    doRNG
 Suggests: 
     knitr,
     rmarkdown,
