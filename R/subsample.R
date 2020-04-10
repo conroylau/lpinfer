@@ -28,7 +28,7 @@
 #' 
 subsample <- function(data, A_obs, func_obs, func_var, 
                       A_shp, beta_shp, A_tgt, beta_tgt, 
-                      bs_seed = 1, R = 100, solver = NULL, 
+                      R = 100, solver = NULL, 
                       cores = 8, norm = 2, phi = 2/3, alpha = .05,
                       progress = FALSE){
   
@@ -41,7 +41,7 @@ subsample <- function(data, A_obs, func_obs, func_var,
   ## Check and update 
   checkupdate = subsample_check(data, A_obs, func_obs, func_var, 
                                 A_shp, beta_shp, A_tgt, beta_tgt, 
-                                bs_seed, R, solver, cores, norm, 
+                                R, solver, cores, norm, 
                                 phi, progress)
   
   ## Update information obtained from check
@@ -72,13 +72,13 @@ subsample <- function(data, A_obs, func_obs, func_var,
   m = floor(n^(phi))
   if (cores == 1){
     # One core
-    T_subsample = subsample_onecore(data, bs_seed, R, func_obs, func_var, 
+    T_subsample = subsample_onecore(data, R, func_obs, func_var, 
                                     A_obs, A_shp, A_tgt, beta_shp, beta_tgt, 
                                     norm, solver, progress, m)
     
   } else {
     # Many cores
-    T_subsample = subsample_manycores(data, bs_seed, R, func_obs, func_var, 
+    T_subsample = subsample_manycores(data, R, func_obs, func_var, 
                                       A_obs, A_shp, A_tgt, beta_shp, beta_tgt, 
                                       norm, solver, progress, m)
   }
@@ -248,7 +248,7 @@ subsample_prob <- function(data, func_obs, func_var, A_obs, A_shp, A_tgt,
 #' 
 #' @export
 #' 
-subsample_onecore <- function(data, bs_seed, R, func_obs, func_var, 
+subsample_onecore <- function(data, R, func_obs, func_var, 
                               A_obs, A_shp, A_tgt, beta_shp, beta_tgt, 
                               norm, solver, progress, m){
   # = = = = = = 
@@ -269,20 +269,18 @@ subsample_onecore <- function(data, bs_seed, R, func_obs, func_var,
   # Step 2: Conduct the subsampling procedure
   # = = = = = = 
   for (i in 1:R){
-    ## (2.1) Set the seed
-    set.seed(bs_seed + i)
-    ## (2.2) Draw the subsample
+    ## (2.1) Draw the subsample
     df_sub = as.data.frame(Momocs::sample_n(data, m, replace = FALSE))
     # Re-index the rows
     rownames(df_sub) = 1:nrow(df_sub)
-    ## (2.3) Compute the bootstrap estimates
+    ## (2.2) Compute the bootstrap estimates
     # Compute the value of beta_bs_star using the function func_obs
     sub_return = subsample_prob(df_sub, func_obs, func_var, 
                                 A_obs, A_shp, A_tgt, beta_shp, beta_tgt, 
                                 norm, solver)
     T_sub = c(T_sub, sub_return$objval)
     beta_sub = cbind(beta_sub, sub_return$beta)
-    ## (2.4) Update progress bar
+    ## (2.3) Update progress bar
     if (progress == TRUE){
       if (i != R){
         utils::setTxtProgressBar(pb, i)
@@ -318,15 +316,15 @@ subsample_onecore <- function(data, bs_seed, R, func_obs, func_var,
 #' 
 #' @export
 #' 
-subsample_manycores <- function(data, bs_seed, R, func_obs, func_var, 
+subsample_manycores <- function(data, R, func_obs, func_var, 
                                 A_obs, A_shp, A_tgt, beta_shp, beta_tgt, 
                                 norm, solver, progress, m){
   # = = = = = = 
   # Step 1: Initialize the parallel programming package
   # = = = = = = 
   options(warn=-1)
-  # Assign dopar
-  `%dopar%` = foreach::`%dopar%`
+  # Assign dorng
+  `%dorng%` = doRNG::`%dorng%`
   # Register core
   doMC::registerDoMC(cores)
   
@@ -368,23 +366,21 @@ subsample_manycores <- function(data, bs_seed, R, func_obs, func_var,
   # = = = = = = 
   # Step 3: Conduct the subsampling procedure
   # = = = = = = 
-  listans = foreach::foreach(i=1:R, .multicombine = TRUE, 
-                             .combine="comb", .options.snow=opts,
-                             .packages='lpinfer') %dopar% {
-    ## (3.1) Set the seed
-    set.seed(bs_seed + i)
-    ## (3.2) Draw the subsample
+  listans = foreach::foreach(i = 1:R, .multicombine = TRUE, 
+                             .combine = "comb", .options.snow = opts,
+                             .packages = "lpinfer") %dopar% {
+    ## (3.1) Draw the subsample
     df_sub = as.data.frame(Momocs::sample_n(data, m, replace = FALSE))
     # Re-index the rows
     rownames(df_sub) = 1:nrow(df_sub)
-    ## (3.3) Compute the bootstrap estimates
+    ## (3.2) Compute the bootstrap estimates
     # Compute the value of beta_bs_star using the function func_obs
     sub_return = subsample_prob(df_sub, func_obs, func_var, 
                                 A_obs, A_shp, A_tgt, beta_shp, beta_tgt, 
                                 norm, solver)
     T_sub = data.frame(sub_return$objval)
     beta_sub = data.frame(c(sub_return$beta))
-    ## (3.4) Combine the results
+    ## (3.3) Combine the results
     list(T_sub, beta_sub)
   }
   
@@ -486,7 +482,7 @@ summary.subsample <- function(x, ...){
 #' @export
 #' 
 subsample_check <- function(data, A_obs, func_obs, func_var, 
-                            A_shp, beta_shp, A_tgt, beta_tgt, bs_seed, R, 
+                            A_shp, beta_shp, A_tgt, beta_tgt, R, 
                             solver, cores, norm, phi, progress){
   
   # = = = = = = 
@@ -505,7 +501,6 @@ subsample_check <- function(data, A_obs, func_obs, func_var,
   obs_return = check_Ab(A_obs, beta_obs, "A_obs", "beta_obs")
   
   # Check if the variable is a positive integer
-  check_positiveinteger(bs_seed, "bs_seed")
   check_positiveinteger(R, "R")
   check_positiveinteger(cores, "cores")
   
