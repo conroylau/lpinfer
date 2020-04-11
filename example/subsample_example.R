@@ -110,6 +110,7 @@ beta_tgt = .375
 phi_predefine = 2/3
 ## Full information approach
 # Example 1 - Using full information approach and gurobi solver (1 core)
+set.seed(1)
 full_gur = subsample(data = data, 
                      A_obs = A_obs_full, 
                      func_obs = func_full_info,
@@ -127,6 +128,7 @@ full_gur = subsample(data = data,
 
 # Example 2 - Using the full information approach and gurobi solver and print
 # the result after the operation is completed (8 cores)
+set.seed(1)
 subsample(data = data, 
           A_obs = A_obs_full, 
           func_obs = func_full_info,
@@ -144,6 +146,7 @@ subsample(data = data,
 
 
 # Example 3 - Using two moments approach and gurobi solver (1 core)
+set.seed(1)
 twom_gur = subsample(data = data, 
                      A_obs = A_obs_twom, 
                      func_obs = func_two_moment,

@@ -15,6 +15,7 @@ library(Momocs)
 library(limSolve)
 library(foreach)
 library(doMC)
+library(doRNG)
 
 ### Part 2: Data preparation
 # Read data
@@ -70,6 +71,7 @@ beta_tgt = .365
 
 # Example 1 - Using full information approach and gurobi solver (1 core)
 t10 = Sys.time()
+set.seed(1)
 full_gur = dkqs(data, A_obs_full, A_tgt, func_full_info, beta_tgt, 3000, 
                 tau, "gurobi", 1, FALSE)
 t11 = Sys.time()
@@ -78,7 +80,8 @@ time1 = t11 - t10
 # Example 2 - Using full information approach and gurobi solver (n cores)
 cores = 8
 t80 = Sys.time()
-full_gur = dkqs(data, A_obs_full, A_tgt, func_full_info, beta_tgt, 3000, 
+set.seed(1)
+full_gur = dkqs(data, A_obs_full, A_tgt, func_full_info, beta_tgt, 50, 
                 tau, "gurobi", cores, FALSE)
 t81 = Sys.time()
 time8 = t81 - t80
