@@ -34,7 +34,7 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup, include = FALSE}
-require(linearprog)
+require(lpinfer)
 require(data.table)
 require(pander)
 require(gurobi)
