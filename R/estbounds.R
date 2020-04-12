@@ -663,63 +663,6 @@ summary.estbounds <- function(x, ...){
   print(x)
 }
 
-#' lpSolveAPI solver for linear programs
-#'
-#' @description This function computes the solution to the linear program
-#'    using the `\code{lpsolveAPI}' package.
-#'    
-#' @import lpSolveAPI
-#'
-#' @inheritParams gurobi_optim
-#' @inheritParams dkqs
-#' @inheritParams prog_cone
-#'
-#' @returns Returns the optimal objective value and the corresponding argument
-#'   to the linear program.
-#'  \item{x}{Optimal point calculated from the linear program}
-#'  \item{larg}{Arguments for the linear program.}
-#'   
-#' @details The package `\code{lpSolveAPI}' cannot be used to solve quadratic 
-#'   programs. 
-#'
-#' @export
-#' 
-lpsolveapi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
-  ### Step 1: Obtain the coefficients of the objective function
-  objective_return = objective_function(Af, bf, nf)
-  
-  #### Step 2: Update the constraint matrices
-  # Change the lower bounds to inequality constriants
-  lb_Amat = diag(length(lb))
-  lb_bvec = lb
-  # Update constraint matrices
-  A = rbind(A, lb_Amat)
-  rhs = c(rhs, lb_bvec)
-  sense = c(sense, rep(">=", length(lb_bvec)))
-  
-  #### Step 3: LP formulation
-  # solve object
-  lprec = make.lp(nrow = nrow(A), ncol = ncol(A))
-  # Model sense
-  lp.control(lprec, sense=modelsense)
-  # Types of decision variables
-  set.type(lprec, 1:ncol(A), type=c("real"))
-  set.objfn(lprec, objective_return$obj1)
-  #Define the constraints
-  for (i in 1:nrow(A)){
-    add.constraint(lprec, A[i, ], sense[i], rhs[i])
-  }
-  
-  #### Step 4: Solve and obtain solution of LP
-  solve(lprec)
-  x = get.variables(lprec)
-  objval = get.objective(lprec)
-  
-  #### Step 5: Return results
-  return(list(objval = objval,
-              x = x))
-}
-
 #' First-stage of the estimation procedure for \code{estbounds}
 #' 
 #' @description This function evaluates the solution to stage 1 of the 
