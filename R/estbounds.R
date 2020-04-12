@@ -8,10 +8,8 @@
 #' 
 #' @import Matrix gurobi
 #' 
-#' @param A_shp_eq Matrix representing equality shape constraints.
-#' @param A_shp_ineq Matrix representing inequality shape constraints.
-#' @param beta_shp_eq RHS vector in equality shape constraints.
-#' @param beta_shp_ineq RHS vector in inequality shape constraints.
+#' @param A_shp Matrix representing equality shape constraints.
+#' @param beta_shp RHS vector in equality shape constraints.
 #' @param norm Norm used in the optimization problem.
 #' @param kappa Parameter used in the second step of the two-step procedure 
 #'    for obtaining the solution subject to the shape constraints.
@@ -28,12 +26,10 @@
 #'   \item{call}{The function that has been called.}
 #'   \item{norm}{Norm used in the optimization problem.}
 #'   
-#'    
 #' @export
 #' 
 
-estbounds <- function(data, func_obs, A_obs, A_tgt,
-                      A_shp_eq, A_shp_ineq, beta_shp_eq, beta_shp_ineq,
+estbounds <- function(data, func_obs, A_obs, A_tgt, A_shp, beta_shp,
                       kappa = 1e-5, norm = 2, solver = "gurobi", 
                       estimate = TRUE, progress = TRUE){
   
@@ -41,19 +37,16 @@ estbounds <- function(data, func_obs, A_obs, A_tgt,
   # Obtain call information
   call = match.call()
   # Check and update
-  estbounds_return = estbounds_check(data, func_obs, A_obs, A_tgt,
-                                     A_shp_eq, A_shp_ineq, beta_shp_eq, 
-                                     beta_shp_ineq, kappa, norm, solver, 
+  estbounds_return = estbounds_check(data, func_obs, A_obs, A_tgt, 
+                                     A_shp, beta_shp, kappa, norm, solver, 
                                      estimate, progress)
   # Update the input
   data = estbounds_return$data
   A_obs = estbounds_return$A_obs
   A_tgt = estbounds_return$A_tgt
   beta_obs = estbounds_return$beta_obs
-  A_shp_eq = estbounds_return$A_shp_eq
-  A_shp_ineq = estbounds_return$A_shp_ineq
-  beta_shp_eq = estbounds_return$beta_shp_eq
-  beta_shp_ineq = estbounds_return$beta_shp_ineq
+  A_shp = estbounds_return$A_shp
+  beta_shp = estbounds_return$beta_shp
   solverf = estbounds_return$solver
   norm = estbounds_return$norm
   
@@ -64,11 +57,9 @@ estbounds <- function(data, func_obs, A_obs, A_tgt,
   
   ### Scenario 1: Estimate = FASLE, i.e. solve the exact problem
   if (estimate == FALSE){
-    ub_shp0 = estbounds_original(A_obs, A_tgt, beta_obs, A_shp_eq, 
-                                 A_shp_ineq, beta_shp_eq, beta_shp_ineq, 
+    ub_shp0 = estbounds_original(A_obs, A_tgt, beta_obs, A_shp, beta_shp, 
                                  "max", solverf)
-    lb_shp0 = estbounds_original(A_obs, A_tgt, beta_obs, A_shp_eq, 
-                                 A_shp_ineq, beta_shp_eq, beta_shp_ineq, 
+    lb_shp0 = estbounds_original(A_obs, A_tgt, beta_obs, A_shp, beta_shp, 
                                  "min", solverf)
     ub = ub_shp0$objval
     lb = lb_shp0$objval
@@ -96,16 +87,14 @@ estbounds <- function(data, func_obs, A_obs, A_tgt,
     if (norm == 1){
       ## L1-norm
       # Stage one of the problem
-      estbounds11 =  mincriterion(data, func_obs,
-                                  A_obs, A_tgt, A_shp_eq, A_shp_ineq, 
-                                  beta_tgt, beta_shp_eq, beta_shp_ineq, 
-                                  norm, solver)
+      estbounds11 =  mincriterion(data, func_obs, A_obs, A_tgt, A_shp, 
+                                  beta_tgt, beta_shp, norm, solver)
       
       # Return stop message if there is no feasible solution for stage one
       # of the problem
       if (is.numeric(estbounds11$objval) == FALSE){
-        stop("The equality and inequality constraints are contradictory. Please
-             ensure that the constraints are correctly specified.")
+        stop("The constraints in the estimation problem are contradictory.
+             Please ensure that the constraints are correctly specified.")
       }
       # Stage two of the problem
       estbounds_ub = estbounds2_L1(estbounds11, A_tgt, A_obs, beta_obs, "max", 
@@ -116,15 +105,14 @@ estbounds <- function(data, func_obs, A_obs, A_tgt,
       ## L2-norm
       # Stage one of the problem
       estbounds21 =  mincriterion(data, func_obs,
-                                  A_obs, A_tgt, A_shp_eq, A_shp_ineq, 
-                                  beta_tgt, beta_shp_eq, beta_shp_ineq, 
+                                  A_obs, A_tgt, A_shp, beta_tgt, beta_shp, 
                                   norm, solver)
       
       # Return stop message if there is no feasible solution for stage one
       # of the problem
       if (is.numeric(estbounds21$objval) == FALSE){
-        stop("The equality and inequality constraints are contradictory. Please
-             ensure that the constraints are correctly specified.")
+        stop("The constraints in the estimation problem are contradictory.
+             Please ensure that the constraints are correctly specified.")
       }
       # Stage two of the problem
       estbounds_ub = estbounds2_L2(estbounds21, A_tgt, A_obs, beta_obs, "max", 
@@ -175,24 +163,15 @@ estbounds <- function(data, func_obs, A_obs, A_tgt,
 #' 
 #' @export
 #' 
-estbounds_original <- function(A_obs, A_tgt, beta_obs, A_shp_eq, 
-                               A_shp_ineq, beta_shp_eq, beta_shp_ineq,
+estbounds_original <- function(A_obs, A_tgt, beta_obs, A_shp, beta_shp,
                                original_sense, solver){
   
   #### Step 1: Problem set-up
-  A_original = rbind(A_obs, A_shp_eq, A_shp_ineq)
-  beta_original = rbind(beta_obs, beta_shp_eq, beta_shp_ineq)
-  
-  ## Sense contraints
-  sense_original = c(rep("=", nrow(A_obs)))
-  # Append the sense constraints if A_shp_eq is non-null
-  if (is.null(A_shp_eq) == FALSE){
-    sense_original = c(sense_original, rep("=", nrow(A_shp_eq)))
-  }
-  # Append the sense constraints if A_shp_ineq is non-null
-  if (is.null(A_shp_ineq) == FALSE){
-    sense_original = c(sense_original, rep("<=", nrow(A_shp_ineq)))
-  }
+  # Matrices
+  A_original = rbind(A_obs, A_shp)
+  beta_original = rbind(beta_obs, beta_shp)
+  # Sense contraints
+  sense_original = c(rep("=", nrow(A_original))) 
   # Zero lower bound
   lb_zero = rep(0, ncol(A_tgt))
   
@@ -344,17 +323,15 @@ estbounds2_L2 <- function(firststepsoln, A_tgt, A_obs, beta_obs, modelsense,
 #'       \item{\code{A_obs}}
 #'       \item{\code{A_tgt}}
 #'       \item{\code{beta_obs}}
-#'       \item{\code{A_shp_eq}}
-#'       \item{\code{beta_shp_eq}}
-#'       \item{\code{A_shp_ineq}}
-#'       \item{\code{beta_shp_ineq}}
+#'       \item{\code{A_shp}}
+#'       \item{\code{beta_shp}}
 #'       \item{\code{solver}}
 #'    }
 #' 
 #' @export
 #' 
 estbounds_check <- function(data, func_obs, A_obs, A_tgt,
-                            A_shp_eq, A_shp_ineq, beta_shp_eq, beta_shp_ineq,
+                            A_shp, beta_shp,
                             kappa, norm, solver, estimate, progress){
   
   ### Part 1. Check the data frame
@@ -388,16 +365,12 @@ estbounds_check <- function(data, func_obs, A_obs, A_tgt,
   }
   
   #### Part 3. Check matrices and vectors
-  ## Check A_shp_eq and beta_shp_eq
-  eq_return = estbounds_check_Ab(A_shp_eq, beta_shp_eq, "A_shp_eq", 
-                                 "beta_shp_eq")
-  A_shp_eq = eq_return$A_updated
+  ## Check A_shp and beta_shp
+  eq_return = estbounds_check_Ab(A_shp, beta_shp, "A_shp", 
+                                 "beta_shp")
+  A_shp = eq_return$A_updated
   b_shp_eq = eq_return$b_updated
-  ## Check A_shp_ineq and beta_shp_ineq
-  ineq_return = estbounds_check_Ab(A_shp_ineq, beta_shp_ineq, "A_shp_ineq", 
-                                   "beta_shp_ineq")
-  A_shp_ineq = ineq_return$A_updated
-  b_shp_ineq = ineq_return$b_updated
+  
   ## Check A_tgt
   # Assign beta_tgt - just for the purpose of checking A_tgt using the
   # command estbounds_check_Ab. beta_tgt is not used in this module
@@ -524,10 +497,8 @@ estbounds_check <- function(data, func_obs, A_obs, A_tgt,
                  A_obs = A_obs,
                  A_tgt = A_tgt,
                  beta_obs = beta_obs,
-                 A_shp_eq = A_shp_eq,
-                 A_shp_ineq = A_shp_ineq,
-                 beta_shp_eq = beta_shp_eq,
-                 beta_shp_ineq = beta_shp_ineq,
+                 A_shp = A_shp,
+                 beta_shp = beta_shp,
                  solver = solver,
                  norm = norm))
 }
@@ -684,8 +655,8 @@ summary.estbounds <- function(x, ...){
 #' 
 #' @export
 #'  
-mincriterion <- function(data, func_obs, A_obs, A_tgt, A_shp_eq, A_shp_ineq, 
-                         beta_tgt, beta_shp_eq, beta_shp_ineq, norm, solver){
+mincriterion <- function(data, func_obs, A_obs, A_tgt, A_shp, 
+                         beta_tgt, beta_shp, norm, solver){
   
   #### Step 1: Obtain call information
   call = match.call()
@@ -698,36 +669,21 @@ mincriterion <- function(data, func_obs, A_obs, A_tgt, A_shp_eq, A_shp_ineq,
   #### Step 3: Create common constraints for the problem with 1-norm and 2-norm
   # Zero lower bound
   lb_zero = rep(0,ncol(A_tgt))
-  # Combine linear constraints 
-  A1 = rbind(A_shp_eq, A_shp_ineq)
-  rhs1 = rbind(beta_shp_eq, beta_shp_ineq)
   ## Generate the sense of models
-  if (is.null(A_shp_eq) == FALSE){
-    # Case 1: If there are equality constraints
-    sense1 = rep("=", nrow(A_shp_eq))
-    if (is.null(A_shp_ineq) == FALSE){
-      sense1 = c(sense1, rep("<=", nrow(A_shp_ineq)))
-    }
-  } else if (is.null(A_shp_ineq) == FALSE) {
-    # Case 2: If there are inequality constraints
-    sense1 = rep("<=", nrow(A_shp_ineq))
-  } else {
-    # Case 3: If there are no equality and inequality constraints
-    sense1 = NULL
-  }
+  sense0 = rep("=", nrow(A_shp))
   
   #### Step 4: Set up argument for the optimizer
   if (norm == 1){
     # Define the augmented matrices
     k = length(beta_obs)
     # Introduce slack variables into the matrix
-    A1_aug = cbind(A1, matrix(rep(0, 2*k*dim(A1)[1]), nrow = dim(A1)[1]))
-    A1_slack = cbind(A_obs, -diag(k), -diag(k))
+    A_aug = cbind(A_shp, matrix(rep(0, 2*k*nrow(A_shp)), nrow = nrow(A_shp)))
+    A_slack = cbind(A_obs, -diag(k), -diag(k))
     # Combine the constraints
-    A1_new = rbind(A1_aug, A1_slack)
-    rhs1_new = c(rhs1, beta_obs)
+    A_new = rbind(A_aug, A_slack)
+    beta_new = c(beta_shp, beta_obs)
     # New model sense
-    sense1_new = c(sense1, rep("=", k))
+    sense_new = c(sense0, rep("=", k))
     # New objective function
     c = c(rep(0, dim(A_obs)[2]), rep(1, k), rep(1, k))
     # New lower bound
@@ -736,9 +692,9 @@ mincriterion <- function(data, func_obs, A_obs, A_tgt, A_shp_eq, A_shp_ineq,
     optim_arg = list(Af = NULL,
                      bf = c,
                      nf = NULL,
-                     A = A1_new,
-                     rhs = rhs1_new,
-                     sense = sense1_new,
+                     A = A_new,
+                     rhs = beta_new,
+                     sense = sense_new,
                      modelsense = "min",
                      lb = lb_new)
     
@@ -747,9 +703,9 @@ mincriterion <- function(data, func_obs, A_obs, A_tgt, A_shp_eq, A_shp_ineq,
     optim_arg = list(Af = A_obs,
                      bf = beta_obs,
                      nf = 1,
-                     A = A1,
-                     rhs = rhs1,
-                     sense = sense1,
+                     A = A_shp,
+                     rhs = beta_shp,
+                     sense = sense0,
                      modelsense = "min",
                      lb = lb_zero,
                      qc = NULL)
