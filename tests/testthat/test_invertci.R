@@ -75,7 +75,7 @@ beta_tgt = .365
 farg = list(data = data,
             A_tgt = A_tgt,
             R = 100,
-            tau_input = tau,
+            tau = tau,
             cores = 8,
             progress = FALSE)
 

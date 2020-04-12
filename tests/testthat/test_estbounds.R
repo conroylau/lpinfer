@@ -62,8 +62,6 @@ pi = 1 - mean(sampledata[,"D"])
 # Compute matrices required
 yp = seq(0,1,1/J)
 A_tgt = matrix(c(yp, yp), nrow = 1)
-# Define the value of tau to be used
-tau = sqrt(log(N)/N)
 # Define the observed matrix for each appraoch
 A_obs_full = cbind(matrix(rep(0,J1*J1), nrow = J1), diag(1, J1))
 A_obs_twom = matrix(c(rep(0,J1), yp, rep(0,J1), rep(1, J1)), nrow = 2,
