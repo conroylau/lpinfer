@@ -70,10 +70,8 @@ A_obs_twom = matrix(c(rep(0,J1), yp, rep(0,J1), rep(1, J1)), nrow = 2,
 ##------------------------------------------------------------------------------
 ## Define shape constraints
 ##------------------------------------------------------------------------------
-beta_shp_eq_dkqs = c(1)
-A_shp_eq_dkqs = matrix(rep(1, ncol(A_obs_full)), nrow = 1)
-A_shp_ineq_dkqs = NULL
-beta_shp_ineq_dkqs = NULL
+beta_shp_dkqs = c(1)
+A_shp_dkqs = matrix(rep(1, ncol(A_obs_full)), nrow = 1)
 
 
 ##------------------------------------------------------------------------------
@@ -85,10 +83,8 @@ L2norm = 2
 farg = list(data = data,
             A_tgt = A_tgt,
             func_obs = func_full_info,
-            A_shp_eq = A_shp_eq,
-            A_shp_ineq = A_shp_ineq_dkqs,
-            beta_shp_eq = beta_shp_eq,
-            beta_shp_ineq = beta_shp_ineq_dkqs,
+            A_shp = A_shp_dkqs,
+            beta_shp = beta_shp_dkqs,
             kappa = 1e-20,
             norm = L2norm,
             solver = "gurobi",
