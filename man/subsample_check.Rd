@@ -5,7 +5,7 @@
 \title{Checks and updates the input from \code{subsample}}
 \usage{
 subsample_check(
-  df,
+  data,
   A_obs,
   func_obs,
   func_var,
@@ -13,18 +13,16 @@ subsample_check(
   beta_shp,
   A_tgt,
   beta_tgt,
-  bs_seed,
-  bs_num,
-  p_sig,
+  R,
   solver,
   cores,
-  lnorm,
+  norm,
   phi,
   progress
 )
 }
 \arguments{
-\item{df}{The data being used in the inference.}
+\item{data}{The data being used in the inference.}
 
 \item{A_obs}{The "observed matrix" in the inference \eqn{A_{\mathrm{obs}}}.}
 
@@ -39,11 +37,7 @@ matrix of the estimator \eqn{\hat{\beta}_{\mathrm{obs}}}.}
 \item{beta_tgt}{The value of \eqn{\hat{\beta}_{\mathrm{tgt}}} (i.e. the 
 value of \eqn{t} in the missing data problem) in the null hypothesis.}
 
-\item{bs_seed}{The starting value of the seed in bootstrap.}
-
-\item{bs_num}{The total number of bootstraps \eqn{B} to be conducted.}
-
-\item{p_sig}{The number of decimal places in the \eqn{p}-value.}
+\item{R}{The total number of bootstraps \eqn{B} to be conducted.}
 
 \item{solver}{The name of the linear and quadratic programming solver that 
 are used to obtain the solution to linear and quadratic programs. 
@@ -54,7 +48,7 @@ The solvers supported by this module are `\code{cplexAPI}',
 Parallelized for-loop is used if \code{cores} is set to be an integer
 greater than or equal to 2.}
 
-\item{lnorm}{Norm used in the optimization problem.}
+\item{norm}{Norm used in the optimization problem.}
 
 \item{phi}{Power for the sample. \eqn{n^\phi} represents the size
 of each subsample.}
@@ -67,7 +61,7 @@ will not be displayed.}
 \value{
 Returns the updated value of the parameters back to the function 
    \code{subsample}. 
-  \item{df}{Upated data in class \code{data.frame}}
+  \item{data}{Upated data in class \code{data.frame}}
   \item{A_obs}{Updated "observed" matrix in the \code{matrix} class.}
   \item{beta_obs}{Obtain \eqn{\widehat{\bm{\beta}}_{\mathrm{obs}}} 
      that is obtained from the function \code{func_obs}.}

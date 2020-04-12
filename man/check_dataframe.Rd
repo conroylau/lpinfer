@@ -4,10 +4,10 @@
 \alias{check_dataframe}
 \title{Check function: data frame}
 \usage{
-check_dataframe(df, name_var)
+check_dataframe(data, name_var)
 }
 \arguments{
-\item{df}{Data frame to be checked.}
+\item{data}{Data frame to be checked.}
 
 \item{name_var}{Name of the variable.}
 }

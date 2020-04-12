@@ -5,7 +5,7 @@
 \title{Estimate bounds with shape restrictions}
 \usage{
 estbounds(
-  df,
+  data,
   func_obs,
   A_obs,
   A_tgt,
@@ -14,14 +14,14 @@ estbounds(
   beta_shp_eq,
   beta_shp_ineq,
   kappa = 1e-05,
-  lnorm = 2,
+  norm = 2,
   solver = "gurobi",
   estimate = TRUE,
   progress = TRUE
 )
 }
 \arguments{
-\item{df}{The data being used in the inference.}
+\item{data}{The data being used in the inference.}
 
 \item{func_obs}{The function that generates the required 
 \eqn{\hat{\beta}_{\mathrm{obs}}}.}
@@ -41,7 +41,7 @@ estbounds(
 \item{kappa}{Parameter used in the second step of the two-step procedure 
 for obtaining the solution subject to the shape constraints.}
 
-\item{lnorm}{Norm used in the optimization problem.}
+\item{norm}{Norm used in the optimization problem.}
 
 \item{solver}{The name of the linear and quadratic programming solver that 
 are used to obtain the solution to linear and quadratic programs. 
@@ -63,7 +63,7 @@ Returns the bounds subject to the shape constraints.
   \item{est}{Indicator of whether estimation is involved in the 
   estimation}
   \item{call}{The function that has been called.}
-  \item{lnorm}{Norm used in the optimization problem.}
+  \item{norm}{Norm used in the optimization problem.}
 }
 \description{
 This function computes the bound of the linear program 

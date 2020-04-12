@@ -18,3 +18,27 @@ Nothing is returned.
 This function checks whether the the norm used in the
   problem is an L1 or L2 norm. If not, an error message is displayed.
 }
+\details{
+The following input for \code{norm} will be interpreted as the L1-
+  norm:
+  \itemize{
+    \item{\code{1} (numeric)}
+    \item{\code{"1"} (string)}
+    \item{\code{"L1"}}
+    \item{\code{"one"}}
+    \item{\code{"o"}}
+    \item{\code{"taxicab"}}
+  }
+  The following input for \code{norm} will be interpreted as the L2-norm:
+  \itemize{
+    \item{\code{2} (numeric)}
+    \item{\code{"2"} (string)}
+    \item{\code{"L2"}}
+    \item{\code{"two"}}
+    \item{\code{"t"}}
+    \item{\code{"e"}}
+    \item{\code{"euclidean"}}
+  }
+  Note that capitalization is not an issue here as the text will be brought 
+  to the lower case.
+}

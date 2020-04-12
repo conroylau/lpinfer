@@ -5,7 +5,7 @@
 \title{Formulate and solve the subsampling problem}
 \usage{
 subsample_prob(
-  df,
+  data,
   func_obs,
   func_var,
   A_obs,
@@ -13,12 +13,12 @@ subsample_prob(
   A_tgt,
   beta_shp,
   beta_tgt,
-  lnorm,
+  norm,
   solver
 )
 }
 \arguments{
-\item{df}{The data being used in the inference.}
+\item{data}{The data being used in the inference.}
 
 \item{func_obs}{The function that generates the required 
 \eqn{\hat{\beta}_{\mathrm{obs}}}.}
@@ -33,7 +33,7 @@ matrix of the estimator \eqn{\hat{\beta}_{\mathrm{obs}}}.}
 \item{beta_tgt}{The value of \eqn{\hat{\beta}_{\mathrm{tgt}}} (i.e. the 
 value of \eqn{t} in the missing data problem) in the null hypothesis.}
 
-\item{lnorm}{Norm used in the optimization problem.}
+\item{norm}{Norm used in the optimization problem.}
 
 \item{solver}{The name of the linear and quadratic programming solver that 
 are used to obtain the solution to linear and quadratic programs. 
@@ -47,13 +47,13 @@ Returns a list of output that are obtained from the optimizer:
   \item{larg}{List of arguments passed to the optimizer.}
   \item{beta}{The beta vector \eqn{\widehat{\bm{\beta}}_{\mathrm{obs}}}
     used in the optimization problem that is calculated from the 
-    \code{func_obs} function with data \code{df}.}
+    \code{func_obs} function with data \code{data}.}
   \item{omega}{The Omega matrix \eqn{\widehat{\bm{\Omega}}_n} used in the 
     optimization problem that is calculated from the \code{func_obs} 
-    function with data \code{df}.}
+    function with data \code{data}.}
 }
 \description{
-Based on the sample data given by the data frame \code{df}, 
+Based on the sample data given by the data frame \code{data}, 
   this function formulates and solves linear/quadratic program in the 
   subsampling procedure.
 }

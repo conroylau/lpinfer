@@ -5,9 +5,8 @@
 \title{Subsampling procedure without parallel programming}
 \usage{
 subsample_onecore(
-  df,
-  bs_seed,
-  bs_num,
+  data,
+  R,
   func_obs,
   func_var,
   A_obs,
@@ -15,18 +14,16 @@ subsample_onecore(
   A_tgt,
   beta_shp,
   beta_tgt,
-  lnorm,
+  norm,
   solver,
   progress,
   m
 )
 }
 \arguments{
-\item{df}{The data being used in the inference.}
+\item{data}{The data being used in the inference.}
 
-\item{bs_seed}{The starting value of the seed in bootstrap.}
-
-\item{bs_num}{The total number of bootstraps \eqn{B} to be conducted.}
+\item{R}{The total number of bootstraps \eqn{B} to be conducted.}
 
 \item{func_obs}{The function that generates the required 
 \eqn{\hat{\beta}_{\mathrm{obs}}}.}
@@ -41,7 +38,7 @@ matrix of the estimator \eqn{\hat{\beta}_{\mathrm{obs}}}.}
 \item{beta_tgt}{The value of \eqn{\hat{\beta}_{\mathrm{tgt}}} (i.e. the 
 value of \eqn{t} in the missing data problem) in the null hypothesis.}
 
-\item{lnorm}{Norm used in the optimization problem.}
+\item{norm}{Norm used in the optimization problem.}
 
 \item{solver}{The name of the linear and quadratic programming solver that 
 are used to obtain the solution to linear and quadratic programs. 

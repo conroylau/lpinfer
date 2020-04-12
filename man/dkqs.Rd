@@ -5,22 +5,20 @@
 \title{Computes the \eqn{p}-value of the dkqs procedure}
 \usage{
 dkqs(
-  df,
+  data,
   A_obs,
   A_tgt,
   func_obs,
   beta_tgt,
-  bs_seed = 1,
-  bs_num = 100,
-  p_sig = 2,
-  tau_input = 0.5,
+  R = 100,
+  tau = 0.5,
   solver = NULL,
   cores = 1,
   progress = FALSE
 )
 }
 \arguments{
-\item{df}{The data being used in the inference.}
+\item{data}{The data being used in the inference.}
 
 \item{A_obs}{The "observed matrix" in the inference \eqn{A_{\mathrm{obs}}}.}
 
@@ -32,13 +30,9 @@ dkqs(
 \item{beta_tgt}{The value of \eqn{\hat{\beta}_{\mathrm{tgt}}} (i.e. the 
 value of \eqn{t} in the missing data problem) in the null hypothesis.}
 
-\item{bs_seed}{The starting value of the seed in bootstrap.}
+\item{R}{The total number of bootstraps \eqn{B} to be conducted.}
 
-\item{bs_num}{The total number of bootstraps \eqn{B} to be conducted.}
-
-\item{p_sig}{The number of decimal places in the \eqn{p}-value.}
-
-\item{tau_input}{The value of tau chosen by the user.}
+\item{tau}{The value of tau chosen by the user.}
 
 \item{solver}{The name of the linear and quadratic programming solver that 
 are used to obtain the solution to linear and quadratic programs. 

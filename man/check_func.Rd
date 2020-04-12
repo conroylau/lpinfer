@@ -4,7 +4,7 @@
 \alias{check_func}
 \title{Check function: function}
 \usage{
-check_func(f, A, df, name_var, name_A, mat_type)
+check_func(f, A, data, name_var, name_A, mat_type)
 }
 \arguments{
 \item{f}{Function to be tested}
@@ -12,7 +12,7 @@ check_func(f, A, df, name_var, name_A, mat_type)
 \item{A}{Matrix that will be contains dimensional information for the 
 output of f}
 
-\item{df}{Data frame that will be passed to the function}
+\item{data}{Data frame that will be passed to the function}
 
 \item{name_var}{Name of the variable.}
 

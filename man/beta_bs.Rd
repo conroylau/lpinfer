@@ -5,9 +5,8 @@
 \title{Computes the bootstrap test statistics}
 \usage{
 beta_bs(
-  df,
-  bs_seed,
-  bs_num,
+  data,
+  R,
   J,
   s_star,
   A_obs,
@@ -22,11 +21,9 @@ beta_bs(
 )
 }
 \arguments{
-\item{df}{The data being used in the inference.}
+\item{data}{The data being used in the inference.}
 
-\item{bs_seed}{The starting value of the seed in bootstrap.}
-
-\item{bs_num}{The total number of bootstraps \eqn{B} to be conducted.}
+\item{R}{The total number of bootstraps \eqn{B} to be conducted.}
 
 \item{J}{The number of distinct nonzero values in vector \eqn{\bm{y}}.}
 
@@ -47,7 +44,7 @@ the function supplied by the user.}
 \item{beta_tgt}{The value of \eqn{\hat{\beta}_{\mathrm{tgt}}} (i.e. the 
 value of \eqn{t} in the missing data problem) in the null hypothesis.}
 
-\item{tau}{The value of tau to be used in the linear program.}
+\item{tau}{The value of tau chosen by the user.}
 
 \item{n}{The number of observations in the dataframe.}
 

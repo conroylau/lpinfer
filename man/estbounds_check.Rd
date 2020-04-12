@@ -5,7 +5,7 @@
 \title{Checks and updates the input of the function \code{estbounds}}
 \usage{
 estbounds_check(
-  df,
+  data,
   func_obs,
   A_obs,
   A_tgt,
@@ -14,14 +14,14 @@ estbounds_check(
   beta_shp_eq,
   beta_shp_ineq,
   kappa,
-  lnorm,
+  norm,
   solver,
   estimate,
   progress
 )
 }
 \arguments{
-\item{df}{The data being used in the inference.}
+\item{data}{The data being used in the inference.}
 
 \item{func_obs}{The function that generates the required 
 \eqn{\hat{\beta}_{\mathrm{obs}}}.}
@@ -41,7 +41,7 @@ estbounds_check(
 \item{kappa}{Parameter used in the second step of the two-step procedure 
 for obtaining the solution subject to the shape constraints.}
 
-\item{lnorm}{Norm used in the optimization problem.}
+\item{norm}{Norm used in the optimization problem.}
 
 \item{solver}{The name of the linear and quadratic programming solver that 
 are used to obtain the solution to linear and quadratic programs. 
@@ -60,7 +60,7 @@ will not be displayed.}
 Returns the updated value of the parameters back to the function 
    \code{estbounds}. The following information are updated:
    \itemize{
-      \item{\code{df}}
+      \item{\code{data}}
       \item{\code{A_obs}}
       \item{\code{A_tgt}}
       \item{\code{beta_obs}}

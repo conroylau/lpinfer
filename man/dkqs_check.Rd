@@ -5,22 +5,20 @@
 \title{Checks and updates the input}
 \usage{
 dkqs_check(
-  df,
+  data,
   A_obs,
   A_tgt,
   func_obs,
   beta_tgt,
-  bs_seed,
-  bs_num,
-  p_sig,
-  tau_input,
+  R,
+  tau,
   solver,
   progress,
   cores
 )
 }
 \arguments{
-\item{df}{The data being used in the inference.}
+\item{data}{The data being used in the inference.}
 
 \item{A_obs}{The "observed matrix" in the inference \eqn{A_{\mathrm{obs}}}.}
 
@@ -32,13 +30,9 @@ dkqs_check(
 \item{beta_tgt}{The value of \eqn{\hat{\beta}_{\mathrm{tgt}}} (i.e. the 
 value of \eqn{t} in the missing data problem) in the null hypothesis.}
 
-\item{bs_seed}{The starting value of the seed in bootstrap.}
+\item{R}{The total number of bootstraps \eqn{B} to be conducted.}
 
-\item{bs_num}{The total number of bootstraps \eqn{B} to be conducted.}
-
-\item{p_sig}{The number of decimal places in the \eqn{p}-value.}
-
-\item{tau_input}{The value of tau chosen by the user.}
+\item{tau}{The value of tau chosen by the user.}
 
 \item{solver}{The name of the linear and quadratic programming solver that 
 are used to obtain the solution to linear and quadratic programs. 
@@ -56,7 +50,7 @@ greater than or equal to 2.}
 }
 \value{
 Returns the list of updated parameters as follows:
-  \item{df}{Upated data in class \code{data.frame}}
+  \item{data}{Upated data in class \code{data.frame}}
   \item{A_obs}{Updated "observed" matrix in class \code{matrix}.}
   \item{A_tgt}{Updated "target" matrix in class \code{matrix}.}
   \item{beta_obs_tgt}{Obtain \eqn{\widehat{\bm{\beta}}_{\mathrm{tgt}}} 
