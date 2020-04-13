@@ -1,4 +1,4 @@
-linearprog: An R Package for Inference in Linear and Quadratic Programs
+lpinfer: An R Package for Inference in Linear Programs
 ================
 
 -   [Introduction](#introduction)
