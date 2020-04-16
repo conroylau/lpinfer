@@ -1,20 +1,23 @@
-#' Computes the \eqn{p}-value of the dkqs procedure
+#' Computes the \eqn{p}-value of the \code{dkqs} procedure
 #'
-#' @description This module conducts inference in quadratic programs using the 
-#'    procedure suggested by Torgovitsky (2019) that incorporates the 
-#'    cone-tightening procedure proposed by Deb, Kitamura, Quah and
-#'    Stoye (2018).
+#' @description This module conducts inference in quadratic programs using 
+#'    the procedure suggested by Torgovitsky (2019) that incorporates 
+#'    the cone-tightening procedure proposed by Deb, Kitamura, Quah
+#'    and Stoye (2018).
 #'    
-#' @import gurobi cplexAPI Rcplex Momocs limSolve foreach doMC parallel
+#' @import Momocs foreach doMC parallel
 #'
 #' @param data The data being used in the inference.
-#' @param A_obs The "observed matrix" in the inference \eqn{A_{\mathrm{obs}}}.
-#' @param A_tgt The "target matrix" in the inference \eqn{A_{\mathrm{tgt}}}.
-#' @param func_obs The function that generates the required 
-#'    \eqn{\hat{\beta}_{\mathrm{obs}}}.
-#' @param beta_tgt The value of \eqn{\hat{\beta}_{\mathrm{tgt}}} (i.e. the 
-#'    value of \eqn{t} in the missing data problem) in the null hypothesis.
-#' @param R The total number of bootstraps \eqn{B} to be conducted.
+#' @param lpmodel A list of objects that are used in inference of linear 
+#'    programming problems. The list of objects required in the \code{dkqs} 
+#'    procedure are:
+#'    \itemize{
+#'      \item{\code{A.tgt}}
+#'      \item{\code{A.obs}}
+#'      \item{\code{beta.obs}}
+#'    }
+#' @param beta.tgt Value of beta to be tested.
+#' @param R Number of bootstraps chosen by the users.
 #' @param tau The value of tau chosen by the user.
 #' @param solver The name of the linear and quadratic programming solver that 
 #'    are used to obtain the solution to linear and quadratic programs. 
@@ -23,19 +26,19 @@
 #' @param cores Number of cores to be used in the parallelized for-loop. 
 #'    Parallelized for-loop is used if \code{cores} is set to be an integer
 #'    greater than or equal to 2.
-#' @param progress The boolean variable for whether the result messages should
-#'    be displayed in the inference procedure. If it is set as \code{TRUE}, the 
-#'    messages are displayed throughout the procedure. Otherwise, the messages
-#'    will not be displayed.
+#' @param progress The boolean variable for whether the result messages 
+#'    should be displayed in the inference procedure. If it is set as 
+#'    \code{TRUE}, the messages are displayed throughout the procedure. 
+#'    Otherwise, the messages will not be displayed.
 #'    
 #' @return Returns a list of output calculated from the function:
-#'   \item{p_val}{\eqn{p}-value.}
+#'   \item{pval}{\eqn{p}-value.}
 #'   \item{tau}{The value of tau used \eqn{\tau^\ast} in the linear and 
 #'      quadratic programs.}
-#'   \item{T_n}{Test statistic \eqn{T_n}.}
-#'   \item{T_bs}{The list of bootstrap test statistics 
+#'   \item{T.n}{Test statistic \eqn{T.n}.}
+#'   \item{T.bs}{The list of bootstrap test statistics 
 #'      \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}.}
-#'   \item{beta_bs_bar}{The list of \eqn{\tau}-tightened re-centered bootstrap 
+#'   \item{beta.bs.bar}{The list of \eqn{\tau}-tightened re-centered bootstrap 
 #'      estimators \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}.}
 #'   \item{lb0}{Logical lower bound of the problem.}
 #'   \item{ub0}{Logical upper bound of the problem.}
@@ -43,165 +46,151 @@
 #'   \item{cores}{Number of cores used.}
 #'   \item{call}{The function that has been called.}
 #' 
-#' @details If the value of the test statistic \eqn{T_n} is zero, the
+#' @details If the value of the test statistic \eqn{T.n} is zero, the
 #'    bootstrap procedure will be skipped.
 #' 
 #' @export
 #' 
-dkqs <- function(data, A_obs, A_tgt, func_obs, beta_tgt, 
-                 R = 100, tau = .5, solver = NULL,
+dkqs <- function(data, lpmodel, beta.tgt, R = 100, tau = .5, solver = NULL, 
                  cores = 1, progress = FALSE){
   
-  #### Step 1: Obtain call, check and update the dependencies
+  # ---------------- #
+  # Step 1: Update call, check and update the arguments
+  # ---------------- #
   # Obtain call information
-  call = match.call()
-  # Check and update
-  checkupdate = dkqs_check(data, A_obs, A_tgt, func_obs, beta_tgt, 
-                           R, tau, solver, progress,
-                           cores)
-  # Update and return the quantities returned from the function dkqs_check
-  # (a) Dataframe
-  data = checkupdate$data
-  # (b) Matrices for linear and quadratic programs
-  A_obs = checkupdate$A_obs
-  A_tgt = checkupdate$A_tgt
-  # (c) Solver for linear and quadratic programss
-  solver = checkupdate$solver
-  # (e) Update the number of cores
-  cores = checkupdate$cores
+  call <- match.call()
   
-  #### Step 2: Initialization
-  # Initialization
-  n = nrow(data)
-  J = length(unique(data[,"Y"])) - 1
-  # Compute beta_obs_hat using the function defined by user
-  beta_obs_hat = checkupdate$beta_obs_hat
-  ### Assign the solver to be used
-  solver_name = solver
-  if (solver == "gurobi"){
-    solver = gurobi_optim
-  } else if (solver == "cplexapi"){
-    solver = cplexapi_optim
-  } else if (solver == "rcplex"){
-    solver = rcplex_optim
-  } else if (solver == "limsolve"){
-    solver = limsolve_optim
+  # Check the arguments
+  lpmodel.return <- dkqs.check(data, lpmodel, beta.tgt, R, tau, solver,
+                               cores, progress)
+  
+  # Update the arguments
+  data <- lpmodel.return$data
+  lpmodel <- lpmodel.return$lpmodel
+  solver <- lpmodel.return$solver
+  solver.name <- lpmodel.return$solver.name
+  cores <- lpmodel.return$cores
+  
+  # ---------------- #
+  # Step 2: Initialization
+  # ---------------- #
+  n <- nrow(data)
+  J <- length(unique(data$Y)) - 1
+  
+  # Initialize beta.obs
+  if (class(lpmodel$beta.obs) == "function"){
+    beta.obs.hat <- lpmodel$beta.obs(data)
+  } else if (class(lpmodel$beta.obs) == "list"){
+    beta.obs.hat <- lpmodel$beta.obs[[1]]
   }
   
-  #### Step 3: Choose the value of tau
-  tau_return = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "tau", n,
-                         solver)
-  if (tau > tau_return$objval){
-    tau = tau_return$objval
-  } else if (tau <= tau_return$objval){
-    tau = tau
+  # ---------------- #
+  # Step 3: Choose the value of tau
+  # ---------------- #
+  tau.return <- dkqs.qlp(data, lpmodel, beta.tgt, beta.obs.hat, tau, "tau", 
+                         n, solver)
+  if (tau > tau.return$objval){
+    tau <- tau.return$objval
+  } else if (tau <= tau.return$objval){
+    tau <- tau
   } else {
     # Error message when the problem is infeasible.
     stop("The problem is infeasible. Choose other values of tau.")
   }
   
-  #### Step 4: Compute T_n, x_star and s_star
-  # Compute T_n
-  T_n = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "test", n, 
-                  solver)$objval
-  # Return and stop program if it is infeasible
-  if (is.null(T_n) == TRUE){
+  # ---------------- #
+  # Step 4: Compute T.n, x.star and s.star
+  # ---------------- #
+  # Compute T.n
+  T.n <- dkqs.qlp(data, lpmodel, beta.tgt, beta.obs.hat, tau, "test", 
+                  n, solver)$objval
+  
+  # The problem is infeasible if T.n is NULL
+  if (is.null(T.n) == TRUE){
     stop("The problem is infeasible. Choose other values of tau.")
   }
-  # Compute s_star
-  x_return = prog_cone(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, "cone", n, 
-                       solver)
-  x_star = x_return$x
-  s_star = A_obs %*% x_star
   
-  #### Step 5: Compute the bootstrap estimates
-  # T_bs is the list of bootstrap test statistics used
-  # After the cores argument is updated, it must be a positive integer
-  if (T_n != 0){
+  # Compute s.star
+  x.return <- dkqs.qlp(data, lpmodel, beta.tgt, beta.obs.hat, tau, "cone", 
+                       n, solver)
+  x.star <- x.return$x
+  s.star <- lpmodel$A.obs %*% x.star
+  
+  # ---------------- #
+  # Step 5: Compute the bootstrap beta and estimates
+  # ---------------- #
+  # if (T.n != 0){
+  if (TRUE){
     if (cores == 1){
       # No parallelization
-      T_bs_return = beta_bs(data, R, J, s_star, A_obs, A_tgt, 
-                            func_obs, beta_obs_hat, beta_tgt, tau, n, solver,
-                            progress)
-      #cat("                                     \b")
+      T.bs.return <- beta.bs(data, lpmodel, beta.tgt, R, J, s.star,
+                             tau, solver, progress)
     } else {
       # Parallelization
-      T_bs_return = beta_bs_parallel(data, R, J, s_star, A_obs, 
-                                     A_tgt, func_obs, beta_obs_hat, beta_tgt, 
-                                     tau, n, solver, cores, progress)  
-      #cat("                                     \b")
-      # Display number of cores used
-      # if (progress == TRUE){
-      #     cat(paste("Number of cores used in bootstrap procedure: ", cores, 
-      #             ".\n", sep = ""))
-      # }
+      T.bs.return <- beta.bs.parallel(data, lpmodel, beta.tgt, R, J, s.star,  
+                                      tau, solver, progress)
     }
     # Retrive answer
-    T_bs = T_bs_return$T_bs
-    beta_bs_bar = T_bs_return$beta_bs_bar_set 
+    T.bs <- T.bs.return$T.bs
+    beta.bs.bar <- T.bs.return$beta.bs.bar.list
   } else {
     if (progress == TRUE){
-      cat(paste("Bootstrap is skipped because the value of the test statistic",
-                "is zero.\n"))
-      beta_bs_bar = NULL
-      T_bs_return = NULL
+      cat(paste("Bootstrap is skipped because the value of the test ",
+                "statistic is zero.\n"))
+      T.n <- 0
+      T.bs.return <- NULL
+      beta.bs.bar <- NULL
     }
   }
+  # ---------------- #
+  # Step 6: Compute p-value
+  # ---------------- #
+  p <- pval(T.bs, T.n)$p
   
-  #### Step 6: Compute the p-value
-  # decision = 1 refers to rejected, decision = 0 refers to not rejected
-  p_val = p_eval(T_bs, T_n)$p
+  # ---------------- #
+  # Step 7: Obtain logical bounds for the function invertci
+  # ---------------- #
+  lb0 <- x.return$lb0
+  ub0 <- x.return$ub0
   
-  #### Step 7: Obtain logical bounds for the function qrci
-  lb0 = x_return$lb0
-  ub0 = x_return$ub0
-  
-  #### Step 8: Print results
-  # if (progress == TRUE){  
-  #   cat(paste("Linear and quadratic programming solver used: ", 
-  #   solver_name, ".\n", sep = ""))    
-  #   cat(paste("-----------------------------------", "\n"))
-  #   cat(paste("Test statistic: ", round(T_n, digits = 5), ".\n", sep = ""))
-  #   cat(paste("p-value: ", p_val, ".\n", sep = ""))
-  #   cat(paste("Value of tau used: ", round(tau, digits = 5), ".\n", 
-  #             sep = ""))
-  # }
-  
-  #### Step 9: Close the progress bar that is used in the bootstrap procedure
+  # ---------------- #
+  # Step 8: Close the progress bar that is used in the bootstrap procedure
+  # ---------------- #
   if (progress == TRUE){
-    #cat("\r\r                                      \b\r\r")
-    close(T_bs_return$pb) 
+    close(T.bs.return$pb) 
   }
   
-  #### Step 10: Assign the return list
-  output = list(p_val = as.numeric(p_val), 
-                tau = as.numeric(tau), 
-                T_n = as.numeric(T_n), 
-                T_bs = T_bs,
-                beta_bs_bar = beta_bs_bar,
-                lb0 = lb0$objval,
-                ub0 = ub0$objval,
-                solver = solver_name,
-                cores = cores,
-                call = call)
-  attr(output, "class") = "dkqs"
-  #attr(fit, "na.message") <- attr(m, "na.message")
+  # ---------------- #
+  # Step 9: Assign the return list and return output
+  # ---------------- #
+  output <- list(pval = as.numeric(p), 
+                 tau = as.numeric(tau), 
+                 T.n = as.numeric(T.n), 
+                 T.bs = T.bs,
+                 beta.bs.bar = beta.bs.bar,
+                 lb0 = lb0$objval,
+                 ub0 = ub0$objval,
+                 solver = solver.name,
+                 cores = cores,
+                 call = call)
+  attr(output, "class") <- "dkqs"
   
+  # Return output
   return(output)
 }
 
-#' Formulating and solving quadratic programs
+#' Formulating and solving linear and quadratic programs
 #'
-#' @description This function formulates the matrices and vectors, and solves 
-#'    the quadratic programs (4) or linear programs (5) and (6) in Torgovitsky 
-#'    (2019).
+#' @description This function formulates the matrices and vectors, and  
+#'    solves the quadratic programs (4) or linear programs (5) and (6) in  
+#'    Torgovitsky (2019).
 #'
 #' @param tau The value of tau to be used in the linear program.
 #' @param problem The problem that the function will be solved.
 #' @param solver Name of the solver that solves the linear and quadratic 
 #'    programs.
-#' @param beta_obs_hat The value of \eqn{\hat{\beta}_{\mathrm{obs}}} based on
-#'    the function supplied by the user.
+#' @param beta.obs.hat The value of \eqn{\hat{\beta}_{\mathrm{obs}}} based on
+#'    that is either the value of the observed.
 #' @param n The number of observations in the dataframe.
 #' @inheritParams dkqs
 #'
@@ -212,131 +201,144 @@ dkqs <- function(data, A_obs, A_tgt, func_obs, beta_tgt,
 #' @details The argument \code{problem} must be one of the followings:
 #' \itemize{
 #'   \item{\code{test} --- this computes the quadratic program for the test 
-#'   statistic, i.e. quadratic program (4) in Torgovitsky (2019)}
-#'   \item{\code{bootstrap} --- this computes the quadratic program for the 
-#'   bootstrap test statistics, i.e. quadratic program (5) in 
-#'   Torgovitsky (2019)}
-#'   \item{\code{tau} --- this computes the value of tau based on the procedure
-#'   suggested by Kamat (2018), i.e. linear program (6) in Torgovitsky (2019)}
+#'     statistic, i.e. quadratic program (4) in Torgovitsky (2019)}
+#'   \item{\code{cone} --- this computes the quadratic program for the 
+#'     bootstrap test statistics, i.e. quadratic program (5) in 
+#'     Torgovitsky (2019)}
+#'   \item{\code{tau} --- this computes the value of tau based on the
+#'     procedure suggested by Kamat (2018), i.e. linear program (6) in 
+#'     Torgovitsky (2019)}
 #' }
 #'
 #' @export
 #' 
-prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
-                      solver){
-  #### Step 1: Obtain dimension of A_tgt
-  rn = dim(A_tgt)[1]
-  cn = dim(A_tgt)[2]
+dkqs.qlp <- function(data, lpmodel, beta.tgt, beta.obs.hat, tau, problem, n, 
+                     solver){
+  # ---------------- #
+  # Step 1: Obtain the dimension of the 
+  # ---------------- #
+  A.tgt.nr <- nrow(lpmodel$A.tgt)
+  A.tgt.nc <- ncol(lpmodel$A.tgt)
   
-  #### Step 2: Formulation of constraints
-  ones = matrix(rep(1, cn), nrow = 1)
-  lb = matrix(rep(0, cn), nrow = 1)
-  # Obtain parameters
-  theta_down = do.call(solver, list(Af  = NULL, 
-                                    bf  = A_tgt, 
-                                    nf  = n, 
-                                    A   = ones, 
-                                    rhs = c(1), 
-                                    sense = "=", 
-                                    modelsense ="min",
-                                    lb = lb))
-  theta_up = do.call(solver, list(Af  = NULL, 
-                                  bf  = A_tgt, 
-                                  nf  = n, 
-                                  A   = ones, 
-                                  rhs = c(1), 
-                                  sense = "=", 
-                                  modelsense ="max",
-                                  lb = lb))
+  # ---------------- #
+  # Step 2: Formulation of constraints
+  # ---------------- #
+  ones <- matrix(rep(1, A.tgt.nc), nrow = 1)
+  lb <- matrix(rep(0, A.tgt.nc), nrow = 1)
+  
+  # Theta parameters
+  theta.down <- do.call(solver, list(Af  = NULL,
+                                     bf  = lpmodel$A.tgt,
+                                     nf  = n,
+                                     A   = ones,
+                                     rhs = c(1),
+                                     sense = "=",
+                                     modelsense ="min",
+                                     lb = lb))
+  theta.up <- do.call(solver, list(Af  = NULL,
+                                   bf  = lpmodel$A.tgt,
+                                   nf  = n,
+                                   A   = ones,
+                                   rhs = c(1),
+                                   sense = "=",
+                                   modelsense ="max",
+                                   lb = lb))
   
   # Obtain required set of indices
-  x_fullind = 1:cn
-  ind_up = which(A_tgt %in% theta_up$objval)
-  ind_down = which(A_tgt %in% theta_down$objval)
-  ind_0 = x_fullind[-c(ind_up, ind_down)]
-  # Updated lb for certain indices
-  rhs_up = (beta_tgt - theta_down$objval) * tau / length(c(ind_0, ind_up))
-  rhs_down = (theta_up$objval - beta_tgt) * tau / length(c(ind_0, ind_down))
-  rhs_0 = (1 - rhs_up * length(ind_up) - rhs_down * length(ind_down)) *
-    tau / length(ind_0)
-  # RHS vector and sense for the linear or quadratic program
-  lp_rhs = c(beta_tgt, 1)
-  lp_sense = c("=", "=")
+  x.ind <- 1:A.tgt.nc
+  ind.up <- which(lpmodel$A.tgt %in% theta.up$objval)
+  ind.down <- which(lpmodel$A.tgt %in% theta.down$objval)
+  ind.0 <- x.ind[-c(ind.up, ind.down)]
   
-  #### Step 3: Solve the QP
-  # If problem == "test", this function solves linear program (4)
-  # If problem == "cone", this function solves linear program (5)
-  # If program == "tau", this function solves linear program (6)
+  # Updated lb for certain indices
+  rhs.up <- (beta.tgt - theta.down$objval) * tau / length(c(ind.0, ind.up))
+  rhs.down <- (theta.up$objval - beta.tgt) * tau / length(c(ind.0, ind.down))
+  rhs.0 <- (1 - rhs.up * length(ind.up) - 
+              rhs.down * length(ind.down)) * tau / length(ind.0)
+  
+  # RHS vector and sense for the linear or quadratic program
+  lp.rhs <- c(beta.tgt, 1)
+  lp.sense <- c("=", "=")
+  
+  # ---------------- #
+  # Step 3: Solve the QP
+  # - If problem == "test", this function solves LP (4)
+  # - If problem == "cone", this function solves LP (5)
+  # - If problem == "tau", this function solves LP (6)
+  # ---------------- #
   if (problem == "test"){
-    ans = do.call(solver, list(Af  = A_obs, 
-                               bf  = beta_obs_hat, 
-                               nf  = n, 
-                               A   = rbind(A_tgt, ones), 
-                               rhs = lp_rhs, 
-                               sense = lp_sense, 
-                               modelsense ="min",
-                               lb = lb))
+    ans <- do.call(solver, list(Af  = lpmodel$A.obs,
+                                bf  = beta.obs.hat,
+                                nf  = n,
+                                A   = rbind(lpmodel$A.tgt, ones),
+                                rhs = lp.rhs,
+                                sense = lp.sense,
+                                modelsense ="min",
+                                lb = lb))
   } else if (problem == "cone"){
     # Update lb
-    lb_new = lb
-    lb_new[ind_up] = rhs_up
-    lb_new[ind_down] = rhs_down
-    lb_new[ind_0] = rhs_0
-    ### Find solution using the solver
-    ans = do.call(solver, list(Af  = A_obs, 
-                               bf  = beta_obs_hat, 
-                               nf  = n, 
-                               A   = rbind(A_tgt, ones), 
-                               rhs = lp_rhs, 
-                               sense = lp_sense, 
-                               modelsense ="min",
-                               lb = lb_new))
-  } else if (problem == "tau"){
-    # Update matrix A
-    lp_lhs_tau = rbind(A_tgt, ones)
-    lp_lhs_tau = cbind(matrix(c(0,0), nrow = 2), lp_lhs_tau)
+    lb.new <- lb
+    lb.new[ind.up] <- rhs.up
+    lb.new[ind.down] <- rhs.down
+    lb.new[ind.0] <- rhs.0
+    
+    # Find the solution using the solver
+    ans <- do.call(solver, list(Af  = lpmodel$A.obs, 
+                                bf  = beta.obs.hat, 
+                                nf  = n, 
+                                A   = rbind(lpmodel$A.tgt, ones), 
+                                rhs = lp.rhs, 
+                                sense = lp.sense, 
+                                modelsense = "min",
+                                lb = lb.new))
+  } else if (problem == "tau") {
+    lp.lhs.tau <- rbind(lpmodel$A.tgt, ones)
+    lp.lhs.tau <- cbind(matrix(c(0,0), nrow = 2), lp.lhs.tau)
+    
     # Add one unit because of the additional position for tau
-    len_tau = cn + 1
-    lb_tau = rep(0, len_tau)
-    lp_rhs_tau = lp_rhs
-    lp_sense_tau = lp_sense
-    # Inequality constraints for ind_up
-    for (i in 1:length(ind_up)){
-      new_const = tau_constraints(len_tau, rhs_up, -1, ind_up[i]+1, 0, "<=",
-                                  lp_lhs_tau, lp_rhs_tau, lp_sense_tau)
-      lp_lhs_tau = new_const$lp_lhs_tau
-      lp_rhs_tau = new_const$lp_rhs_tau
-      lp_sense_tau = new_const$lp_sense_tau
+    len.tau <- A.tgt.nc + 1
+    lb.tau <- rep(0, len.tau)
+    lp.rhs.tau <- lp.rhs
+    lp.sense.tau <- lp.sense
+    # Inequality constraints for ind.up
+    for (i in 1:length(ind.up)){
+      new.const <- tau_constraints(len.tau, rhs.up, -1, ind.up[i]+1, 0, "<=",
+                                   lp.lhs.tau, lp.rhs.tau, lp.sense.tau)
+      lp.lhs.tau <- new.const$lp.lhs.tau
+      lp.rhs.tau <- new.const$lp.rhs.tau
+      lp.sense.tau <- new.const$lp.sense.tau
     }
-    # Inequality constraints for ind_down
-    for (i in 1:length(ind_down)){
-      new_const = tau_constraints(len_tau, rhs_down, -1, ind_down[i]+1, 0, 
-                                  "<=", lp_lhs_tau, lp_rhs_tau, lp_sense_tau)
-      lp_lhs_tau = new_const$lp_lhs_tau
-      lp_rhs_tau = new_const$lp_rhs_tau
-      lp_sense_tau = new_const$lp_sense_tau
+    # Inequality constraints for ind.down
+    for (i in 1:length(ind.down)){
+      new.const <- tau_constraints(len.tau, rhs.down, -1, ind.down[i]+1, 0,
+                                   "<=", lp.lhs.tau, lp.rhs.tau, lp.sense.tau)
+      lp.lhs.tau <- new.const$lp.lhs.tau
+      lp.rhs.tau <- new.const$lp.rhs.tau
+      lp.sense.tau <- new.const$lp.sense.tau
     }
-    # Inequality constraints for ind_0
-    for (i in 1:length(ind_0)){
-      new_const = tau_constraints(len_tau, rhs_0, -1, ind_0[i]+1, 0, "<=",
-                                  lp_lhs_tau, lp_rhs_tau, lp_sense_tau)
-      lp_lhs_tau = new_const$lp_lhs_tau
-      lp_rhs_tau = new_const$lp_rhs_tau
-      lp_sense_tau = new_const$lp_sense_tau
+    # Inequality constraints for ind.0
+    for (i in 1:length(ind.0)){
+      new.const <- tau_constraints(len.tau, rhs.0, -1, ind.0[i]+1, 0, "<=",
+                                   lp.lhs.tau, lp.rhs.tau, lp.sense.tau)
+      lp.lhs.tau <- new.const$lp.lhs.tau
+      lp.rhs.tau <- new.const$lp.rhs.tau
+      lp.sense.tau <- new.const$lp.sense.tau
     }
-    ans = do.call(solver, list(Af  = NULL, 
-                               bf  = c(1, rep(0, cn)), 
-                               nf  = n, 
-                               A   = lp_lhs_tau, 
-                               rhs = lp_rhs_tau, 
-                               sense = lp_sense_tau, 
-                               modelsense ="max",
-                               lb = lb_tau))
+    ans <- do.call(solver, list(Af  = NULL,
+                                bf  = c(1, rep(0, A.tgt.nc)),
+                                nf  = n,
+                                A   = lp.lhs.tau,
+                                rhs = lp.rhs.tau,
+                                sense = lp.sense.tau,
+                                modelsense = "max",
+                                lb = lb.tau))
   }
   
-  #### Step 4: Append the logical bounds to the results
-  ans$lb0 = theta_down
-  ans$ub0 = theta_up
+  # ---------------- #
+  # Step 4: Append the logical bounds to the results
+  # ---------------- #
+  ans$lb0 <- theta.down
+  ans$ub0 <- theta.up
   return(ans)
 }
 
@@ -351,48 +353,65 @@ prog_cone <- function(A_obs, A_tgt, beta_obs_hat, beta_tgt, tau, problem, n,
 #'    \eqn{\hat{s}^\ast \equiv A_{\mathrm{obs}}\hat{\bm{x}}_n^\ast} 
 #'    in the cone-tightening procedure.
 #' @inheritParams dkqs
-#' @inheritParams prog_cone
+#' @inheritParams dkqs.qlp
 #'
 #' @return Returns the list of estimates from bootstrap:
-#'   \item{T_bs}{A list of bootstrap test statistics 
+#'   \item{T.bs}{A list of bootstrap test statistics 
 #'      \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}.}
-#'  \item{beta_bs_bar_set}{A list of \eqn{\tau_n}-tightened recentered 
+#'  \item{beta.bs.bar.list}{A list of \eqn{\tau_n}-tightened recentered 
 #'     bootstrap estimates \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}.}
 #'  \item{pb}{Progress bar object.}
 #'
 #' @export
 #' 
-beta_bs <- function(data, R, J, s_star, A_obs, A_tgt, func_obs, 
-                    beta_obs_hat, beta_tgt, tau, n, solver, progress){
+beta.bs <- function(data, lpmodel, beta.tgt, R, J, s.star, tau, solver,
+                    progress){
+  # ---------------- #
+  # Step 1: Initialize the vectors and progress counters
+  # ---------------- #
+  T.bs <- NULL
+  beta.bs.bar.list <- NULL
   
-  #### Step 1: Initialize vectors and progress counter
-  # Initialize the vectors
-  T_bs = NULL
-  beta_bs_bar_set = NULL
   # Initialize the progress bar
   if (progress == TRUE){
-    pb = utils::txtProgressBar(min = 0, max = R, style = 3, width = 20)
+    pb <- utils::txtProgressBar(min = 0, max = R, style = 3, width = 20)
     cat("\r") 
   } else {
-    pb = NULL
+    pb <- NULL
   }
   
-  # Loop through all indices in the bootstrap
+  # ---------------- #
+  # Step 2: Bootstrap procedure
+  # ---------------- #
+  lpmodel.bs <- lpmodel
+  
+  # Use the for-loop to construct the bootstrap test statistic
   for (i in 1:R){
-    ####  Step 2: Draw the subsample
-    df_bs = as.data.frame(Momocs::sample_n(data, n, replace = TRUE))
-    # Re-index the rows
-    rownames(df_bs) = 1:nrow(df_bs)
-    ####  Step 3: Compute the bootstrap estimates
-    # Compute the value of beta_bs_star using the function func_obs
-    beta_bs_star = func_obs(df_bs)
-    ####  Step 4: Compute the bootstrap test statistic
-    beta_bs_bar = beta_bs_star - beta_obs_hat + s_star
-    T_bs_i = prog_cone(A_obs, A_tgt, beta_bs_bar, beta_tgt, tau, "cone", n, 
-                       solver)$objval
-    T_bs = c(T_bs, T_bs_i)
-    beta_bs_bar_set = cbind(beta_bs_bar_set, beta_bs_bar)
-    #### Step 5: Update progress bar
+    # Re-sample the data 
+    data.bs <- as.data.frame(Momocs::sample_n(data, 
+                                              nrow(data), 
+                                              replace = TRUE))
+    rownames(data.bs) <- 1:nrow(data.bs)
+    
+    # Compute the bootstrap test statistic
+    if (class(lpmodel$beta.obs) == "function"){
+      beta.obs.bs <- lpmodel$beta.obs(data.bs)
+      beta.obs <- lpmodel$beta.obs(data)
+    } else if (class(lpmodel$beta.obs) == "list") {
+      beta.obs.bs <- lpmodel$beta.obs[[i+1]]
+      beta.obs <- lpmodel$beta.obs[[1]]
+    }
+    
+    # Compute beta.bs.bar and test statistic
+    beta.bs.bar <- beta.obs.bs - beta.obs + s.star
+    T.bs.i <- dkqs.qlp(data.bs, lpmodel.bs, beta.tgt, beta.bs.bar, tau, "cone", 
+                       nrow(data), solver)$objval
+    
+    # Append results
+    T.bs <- c(T.bs, T.bs.i)
+    beta.bs.bar.list <- cbind(beta.bs.bar.list, beta.bs.bar)
+    
+    # Update progress bar
     if (progress == TRUE){
       if (i != R){
         utils::setTxtProgressBar(pb, i)
@@ -404,9 +423,11 @@ beta_bs <- function(data, R, J, s_star, A_obs, A_tgt, func_obs,
     }
   }
   
-  #### Step 6: Return results
-  return(list(T_bs = T_bs,
-              beta_bs_bar_set = beta_bs_bar_set,
+  # ---------------- #
+  # Step 3: Return results
+  # ---------------- #
+  return(list(T.bs = T.bs,
+              beta.bs.bar.list = beta.bs.bar.list,
               pb = pb))
 }
 
@@ -419,36 +440,44 @@ beta_bs <- function(data, R, J, s_star, A_obs, A_tgt, func_obs,
 #' 
 #' @inheritParams beta_bs 
 #' @inheritParams dkqs
-#' @inheritParams prog_cone
+#' @inheritParams dkqs.qlp
 #' 
 #' @return Returns the list of estimates from bootstrap:
-#'   \item{T_bs}{A list of bootstrap test statistics 
+#'   \item{T.bs}{A list of bootstrap test statistics 
 #'      \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}.}
-#'  \item{beta_bs_bar_set}{A list of \eqn{\tau_n}-tightened recentered 
+#'  \item{beta.bs.bar.set}{A list of \eqn{\tau_n}-tightened recentered 
 #'     bootstrap estimates \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}.}
 #'  \item{pb}{Progress bar object.}
 #' 
 #' @export
 #' 
-beta_bs_parallel <- function(data, R, J, s_star, A_obs, A_tgt, 
-                             func_obs, beta_obs_hat, beta_tgt, tau, n, solver, 
-                             cores, progress){
-  #### Step 1: Register the number of cores and extract information
+beta.bs.parallel <- function(data, lpmodel, beta.tgt, R, J, s.star, tau,
+                             solver, progress, cores){
+  # ---------------- #
+  # Step 1: Register the number of cores and extract information
+  # ---------------- #
   options(warn=-1)
+  
   # Register core
   doMC::registerDoMC(cores)
-  # Computer dimension
-  beta_bs_nrow = length(beta_obs_hat)
-  # Initialize data frames
-  T_bs = NULL
-  beta_bs_bar_set = NULL
+  
+  # Compute dimension
+  if (class(lpmodel$beta.obs) == "function"){
+    beta.obs.nr <- length(lpmodel$beta.obs(data))
+  } else if (class(lpmodel$beta.obs) == "list"){
+    beta.obs.nr <- lpmodel$beta.obs[[1]]
+  }
+  
+  # ---------------- #
+  # Step 2: Initialize progress bar, comb function and assign doRNG
+  # ---------------- #
   if (progress == TRUE){
     # Initialize the counter
-    cl = PtProcess::makeSOCKcluster(8)
+    cl <- PtProcess::makeSOCKcluster(8)
     doSNOW::registerDoSNOW(cl)
-    # Set the counter and progress bar
-    pb = utils::txtProgressBar(max=R, style=3, width = 20) 
     
+    # Set the counter and progress bar
+    pb <- utils::txtProgressBar(max = R, style = 3, width = 20) 
     cat("\r")
     progress <- function(n){
       utils::setTxtProgressBar(pb, n) 
@@ -458,10 +487,11 @@ beta_bs_parallel <- function(data, R, J, s_star, A_obs, A_tgt,
         cat("\r\b")     
       }
     }
-    opts = list(progress=progress) 
+    
+    opts <- list(progress = progress) 
   } else {
-    pb = NULL
-    opts = NULL
+    pb <- NULL
+    opts <- NULL
   }
   
   # Comb function for using parallel programming
@@ -471,40 +501,55 @@ beta_bs_parallel <- function(data, R, J, s_star, A_obs, A_tgt,
   }
   
   # Assign doRnG
-  `%dorng%` = doRNG::`%dorng%`
+  `%dorng%` <- doRNG::`%dorng%`
   
-  # Parallelized for-loop below
-  listans = foreach::foreach(i = 1:R, .multicombine = TRUE, 
-                             .combine = "comb", .options.snow = opts,
-                             .packages = "lpinfer") %dorng% {
-   ####  Step 2: Draw the subsample
-   df_bs = as.data.frame(Momocs::sample_n(data, n, replace = TRUE))
-   # Re-index the rows
-   rownames(df_bs) = 1:nrow(df_bs)
-   ####  Step 3: Compute the bootstrap estimates
-   # Compute the value of beta_bs_star using the function func_obs
-   beta_bs_star = func_obs(df_bs)
-   ####  Step 4: Compute the bootstrap test statistic
-   beta_bs_bar = beta_bs_star - beta_obs_hat + s_star
-   T_bs_i = prog_cone(A_obs, A_tgt, beta_bs_bar, beta_tgt, tau, "cone", n, 
-                      solver)$objval
-   #### Step 5: Combine the results (parallelization)
-   T_bs = data.frame(T_bs_i)
-   beta_bs_bar_set = data.frame(beta_bs_bar) 
+  # ---------------- #
+  # Step 3: Bootstrap procedure
+  # ---------------- #
+  listans <- foreach(i = 1:R, .multicombine = TRUE, .combine = "comb", 
+                     .options.snow = opts, .packages = "lpinfer") %dorng% {
+    lpmodel.bs <- lpmodel
    
-   list(T_bs, beta_bs_bar_set)
+    # Re-sample the data 
+    data.bs <- as.data.frame(Momocs::sample_n(data, 
+                                              nrow(data), 
+                                              replace = TRUE))
+    rownames(data.bs) <- 1:nrow(data.bs)
+   
+    # Compute the bootstrap test statistic
+    if (class(lpmodel$beta.obs) == "function"){
+      beta.obs.bs <- lpmodel$beta.obs(data.bs)
+      beta.obs <- lpmodel$beta.obs(data)
+    } else if (class(lpmodel$beta.obs) == "list") {
+      beta.obs.bs <- lpmodel$beta.obs[[i+1]]
+      beta.obs <- lpmodel$beta.obs[[1]]
+    }
+   
+    # Compute beta.bs.bar and test statistic
+    beta.bs.bar <- beta.obs.bs - beta.obs + s.star
+    T.bs.i <- dkqs.qlp(data.bs, lpmodel.bs, beta.tgt, beta.bs.bar, tau, "cone", 
+                       nrow(data), solver)$objval
+   
+    # Append results
+    T.bs <- data.frame(T.bs.i)
+    beta.bs.bar.list <- data.frame(beta.bs.bar)
+    list(T.bs, beta.bs.bar.list)
   }
   
-  #### Step 6: Retrieve information from output
-  T_bs = as.vector(unlist(listans[[1]]))
-  beta_bs_bar_set = data.frame(matrix(unlist(listans[[2]]), 
-                                      nrow = beta_bs_nrow, 
-                                      ncol = R,
-                                      byrow = FALSE))
+  # ---------------- #
+  # Step 4: Retrieve information from the output
+  # ---------------- #
+  T.bs <- as.vector(unlist(listans[[1]]))
+  beta.bs.bar.list <- data.frame(matrix(unlist(listans[[2]]), 
+                                        nrow = beta.obs.nr, 
+                                        ncol = R,
+                                        byrow = FALSE))
   
-  #### Step 8: Return results
-  return(list(T_bs = T_bs,
-              beta_bs_bar_set = beta_bs_bar_set,
+  # ---------------- #
+  # Step 5: Return results
+  # ---------------- #
+  return(list(T.bs = T.bs,
+              beta.bs.bar.list = beta.bs.bar.list,
               pb = pb))
 }
 
@@ -514,24 +559,26 @@ beta_bs_parallel <- function(data, R, J, s_star, A_obs, A_tgt,
 #'    the bootstrap estimates.
 #'
 #' @param T_bs The test statistics obtained from bootstrap.
-#' @param T_n The test statistics obtained from quadratic program (5).
+#' @param T.n The test statistics obtained from quadratic program (5).
+#' @param alpha The significance level.
 #'
 #' @return Returns the \eqn{p}-value:
-#'   \item{p_val}{\eqn{p}-value}
+#'   \item{p}{\eqn{p}-value.}
+#'   \item{decision}{Decision to reject or not.}
 #'
 #' @export
 #' 
-p_eval <- function(T_bs, T_n, alpha = .05){
+pval <- function(T.bs, T.n, alpha = .05){
   # Compute p-value
-  p_val = mean(T_bs > T_n)
+  p <- mean(T.bs > T.n)
   
   # Update decision
-  if (p_val > alpha){
-    decision = 1
+  if (p > alpha){
+    decision <- 1
   } else {
-    decision = 0
+    decision <- 0
   }
-  return(list(p = p_val,
+  return(list(p = p,
               decision = decision))
 }
 
@@ -541,37 +588,46 @@ p_eval <- function(T_bs, T_n, alpha = .05){
 #'   for computing the value of tau based on the procedure suggested by Kamat 
 #'   (2018), i.e. linear program (6) of Torgovitsky (2019).
 #'
-#' @param length_tau The number of variables in the constraint.
-#' @param coeff_tau The coefficient in front of tau in the constraint.
-#' @param coeff_x The coefficient in front of \eqn{x_i} in the constraint.
-#' @param ind_x The index of \eqn{x_i}, i.e. the value of \eqn{i}.
+#' @param length.tau The number of variables in the constraint.
+#' @param coeff.tau The coefficient in front of tau in the constraint.
+#' @param coeff.x The coefficient in front of \eqn{x_i} in the constraint.
+#' @param ind.x The index of \eqn{x_i}, i.e. the value of \eqn{i}.
 #' @param rhs The RHS vector of the new constraint.
 #' @param sense The equality or inequality symbol to be used in the new
 #'    constraint.
-#' @param lp_lhs_tau The constraint matrix to be updated.
-#' @param lp_rhs_tau The RHS vector of the linear constraints to be updated.
-#' @param lp_sense_tau The sense vector fo the linear constraints to be updated
+#' @param lp.lhs.tau The constraint matrix to be updated.
+#' @param lp.rhs.tau The RHS vector of the linear constraints to be updated.
+#' @param lp.sense.tau The sense vector fo the linear constraints to be 
+#'    updated.
 #'
 #' @return Returns the list of matrices that corresponds to the updated 
 #'   constraints:
-#'   \item{lp_lhs_tau}{Upated constraint matrix.}
-#'   \item{lp_rhs_tau}{Update RHS vector.}
-#'   \item{lp_sense_tau}{Update sense for the constraints.}
+#'   \item{lp.lhs.tau}{Upated constraint matrix.}
+#'   \item{lp.rhs.tau}{Update RHS vector.}
+#'   \item{lp.sense.tau}{Update sense for the constraints.}
 #'
 #' @export
 #' 
-tau_constraints <- function(length_tau, coeff_tau, coeff_x, ind_x, rhs, sense,
-                            lp_lhs_tau, lp_rhs_tau, lp_sense_tau){
-  temp = rep(0, length_tau)
-  temp[1] = coeff_tau
-  temp[ind_x] = coeff_x
+tau_constraints <- function(length.tau, coeff.tau, coeff.x, ind.x, rhs, sense,
+                            lp.lhs.tau, lp.rhs.tau, lp.sense.tau){
+  # ---------------- #
+  # Step 1: Create and append the new constraints
+  # ---------------- #
+  temp <- rep(0, length.tau)
+  temp[1] <- coeff.tau
+  temp[ind.x] <- coeff.x
+  
   # Update the lhs, rhs and sense of the constraints
-  lp_lhs_tau = rbind(lp_lhs_tau, c(temp))
-  lp_rhs_tau = c(lp_rhs_tau, 0)
-  lp_sense_tau = c(lp_sense_tau, sense)
-  return(list(lp_lhs_tau = lp_lhs_tau,
-              lp_rhs_tau = lp_rhs_tau,
-              lp_sense_tau = lp_sense_tau))
+  lp.lhs.tau <- rbind(lp.lhs.tau, c(temp))
+  lp.rhs.tau <- c(lp.rhs.tau, 0)
+  lp.sense.tau <- c(lp.sense.tau, sense)
+  
+  # ---------------- #
+  # Step 2: Return the list of updated constraints for the tau-problem
+  # ---------------- #
+  return(list(lp.lhs.tau = lp.lhs.tau,
+              lp.rhs.tau = lp.rhs.tau,
+              lp.sense.tau = lp.sense.tau))
 }
 
 #' Checks and updates the input
@@ -584,190 +640,53 @@ tau_constraints <- function(length_tau, coeff_tau, coeff_x, ind_x, rhs, sense,
 #' 
 #' @return Returns the list of updated parameters as follows:
 #'   \item{data}{Upated data in class \code{data.frame}}
-#'   \item{A_obs}{Updated "observed" matrix in class \code{matrix}.}
-#'   \item{A_tgt}{Updated "target" matrix in class \code{matrix}.}
-#'   \item{beta_obs_tgt}{Obtain \eqn{\widehat{\bm{\beta}}_{\mathrm{tgt}}} 
-#'      that is obtained from the function \code{func_obs}.}
+#'   \item{lpmodel}{A list of linear programming objects in this 
+#'      `\code{lpinfer}` package.}
 #'   \item{solver}{Updated name of solver in lower case.}
 #'   \item{cores}{Updated number of cores to be used in the parallelization
 #'      of the for-loop in the bootstrap procedure.}
 #' 
 #' @export
 #' 
-dkqs_check <- function(data, A_obs, A_tgt, func_obs, beta_tgt, 
-                       R, tau, solver, progress, cores){
-  ### Part 1. Check the dataframe
-  if (class(data) %in% c("data.frame", "matrix") == TRUE){
-    data = as.data.frame(data)  
-  } else {
-    stop(gsub("\\s+", " ",
-              "The data povided 'data' must either be a data.frame, 
-              a data.table, or a matrix."), call. = FALSE)    
-  }
+dkqs.check <- function(data, lpmodel, beta.tgt, R, tau, solver, cores, 
+                       progress){
+  # ---------------- #
+  # Step 1: Check the arguments
+  # ---------------- #
+  # Check data
+  data <- check.dataframe(data, "data")
   
-  ### Part 2. Check the matrices A_obs and A_tgt
-  matrix_names = c("A_obs", "A_tgt")
-  matrix_list = list(A_obs, A_tgt)
-  for (i in 1:2){
-    # Check the format of the matrices
-    if (class(matrix_list[[i]]) %in% c("data.frame", "matrix") == FALSE){
-      stop(gsub("\\s+", " ",
-                paste0("The argument '", matrix_names[i], "' must either be a 
-                data.frame, data.table, or matrix.")), call. = FALSE)   
-    } else{
-      # Ensure the variable is in matrix form
-      matrix_list[[i]] = as.matrix(matrix_list[[i]])
-      # Check whether the matrices are numeric
-      if (is.numeric(matrix_list[[i]]) == FALSE){
-        stop(paste0("The argument '", matrix_names[i], "' has to be numeric."),
-             call. = FALSE)
-      } 
-    }
-  }
-  if (dim(A_tgt)[1] != 1){
-    stop("The argument 'A_tgt' has to be a column vector", call. = FALSE)
-  }
-  # Update A_obs and A_tgt to ensure that they are both matrices
-  A_obs = matrix_list[[1]]
-  A_tgt = matrix_list[[2]]
+  # Check lpmodel 
+  lpmodel <- check.lpmodel(data = data,
+                           lpmodel = lpmodel, 
+                           name.var = "lpmodel",
+                           A.tgt.cat = 1,
+                           A.obs.cat = 1,
+                           A.shp.cat = 0,
+                           beta.obs.cat = c(2,3),
+                           beta.shp.cat = 0,
+                           R = R)
   
-  ### Part 3. Check the function
-  if (class(func_obs) != "function"){
-    stop("The input of 'func_obs' has to be a function.", call. = FALSE)
-  } else{
-    beta_obs_hat = func_obs(data)
-    beta_obs_hat = as.matrix(beta_obs_hat)
-    # Check if the output is numeric
-    if (is.numeric(beta_obs_hat[,1]) == FALSE){
-      stop("The output of 'func_obs' has to be numeric.", call. = FALSE)
-    } else{
-      if (dim(beta_obs_hat)[2] != 1){
-        stop("The output of 'func_obs' has to be a column vector", 
-             call. = FALSE)
-      } else if (dim(beta_obs_hat)[1] != dim(A_obs)[1]){
-        stop("The number of rows in the output of 'func_obs' has to be the 
-             same as the number of rows in the argument 'A_obs'.", 
-             call. = FALSE)
-      }
-    }
-  }
+  # Check solver
+  solver.return <- check.solver(solver, "solver")
+  solver <- solver.return$solver
+  solver.name <- solver.return$solver.name
   
-  ### Part 4. Check beta_tgt
-  if (!(is.numeric(beta_tgt) == TRUE & length(beta_tgt) == 1)) {
-    stop("The argument 'beta_tgt' must be a scalar.", call. = FALSE)
-  }  
+  # Check numerics 
+  check.numeric(beta.tgt, "beta.tgt")
+  check.positiveinteger(R, "R")
+  cores <- check.positiveinteger(cores, "cores")
   
-  ### Part 5. Check dimensions of A_tgt vs beta_tgt and A_obs vs beta_obs
-  if (nrow(A_obs) != length(beta_obs_hat)){
-    stop("The number of rows of 'A_obs' has to be equal to the number of
-         rows of the beta generated by the function 'func_obs'.",
-         call. = FALSE)
-  }
-  if (nrow(A_tgt) != length(beta_tgt)){
-    stop("The number of rows of 'A_tgt' has to be equal to the number of 
-         rows of 'beta_obs'.", call. = FALSE)
-  }
+  # Check Boolean 
+  check.boolean(progress, "progress")
   
-  ### Part 6. Check R
-  if ((is.numeric(R) == TRUE & length(R) == 1 & R >= 0 &
-       R%%1 == 0) == FALSE){
-    stop("The number of bootstrap ('R') must be a positive integer.",
-         call. = FALSE)
-  }
-  
-  ### Part 7. Check tau
-  if ((is.numeric(tau) == TRUE & length(tau) == 1 & 
-       tau >= 0 & tau <= 1) == FALSE){
-    stop("The value of tau ('tau') has to be in the interval [0,1].", 
-         call. = FALSE)
-  }
-  
-  ### Part 8. Check solvers
-  # Check if the user supplied a name of linear or quadratic programming solver
-  # that is supported by the function. If the user does not specify any linear
-  # programming solver, the function will assign a linear or quadratic
-  # programming solver that is supported. 
-  
-  # Intialize variable
-  solver_incomp = FALSE
-  # Package recommendation messages
-  gurobi_msg = "gurobi (version 8.1-1 or later)"
-  cplexapi_msg = "cplexAPI (version 1.3.3 or later)"
-  rcplex_msg = "Rcplex (version 0.3-3 or later)"
-  limsolve_msg = "limSolve (version 1.5.6 or later)"
-  
-  # Case 1: If no solver name is provided by the user
-  if (is.null(solver) == TRUE){
-    if (requireNamespace("gurobi", quietly = TRUE) == TRUE){
-      solver = "gurobi"
-    } else if (requireNamespace("limSolve", quietly = TRUE) == TRUE){
-      solver = "limsolve"
-    } else if (requireNamespace("Rcplex", quietly = TRUE) == TRUE){
-      solver = "rcplex"
-    } else if (requireNamespace("cplexAPI", quietly = TRUE) == TRUE){
-      solver = "cplexapi"
-    } else {
-      stop(gsub("\\s+", " ",
-                paste0("Please install one of the following packages to solve 
-                       the linear and quadratic programs: ",
-                       gurobi_msg, "; ",
-                       cplexapi_msg, "; ",
-                       rcplex_msg, "; ",
-                       limsolve_msg, ".")),
-           call. = FALSE)
-    }
-    # Display message to indicate that no solver is suggested by the user so
-    # the module chooses one for the user
-    if (progress == TRUE){
-      cat(paste("No solver solver is suggested by the user. The solver '", 
-                solver, "' is automatically selected", ".\n", sep = ""))
-    }
-  } else{
-    # Change solver name to lower cases
-    solver = tolower(solver)
-    # Case 2: If user specifies a package that is not supported, display error
-    # message and suggest appropriate solvers
-    if ((solver %in% c("gurobi", "cplexapi", "rcplex", "limsolve"))
-        == FALSE){
-      stop(gsub("\\s+", " ",
-                paste0("This function is incompatible with ", solver, 
-                       ". Please install one of the following packages to solve 
-                       the linear and quadratic programs: ",
-                       gurobi_msg, "; ",
-                       cplexapi_msg, "; ",
-                       rcplex_msg, "; ",
-                       limsolve_msg, ".")),
-           call. = FALSE)
-    }
-  }
-  
-  ### Step 9. Check progress
-  if (!(progress == TRUE | progress == FALSE)){
-    stop("The argument 'progress' has to be boolean.", call. = FALSE)
-  }
-  
-  ### Step 10. Check cores
-  # Display warning message if the number of cores specified is not a positive
-  # integer, and continue the program with no paralleization
-  if ((is.numeric(cores) == TRUE & length(cores) == 1 & cores >= 0 & 
-       cores%%1 == 0) == FALSE){
-    # Case 1: Number of cores provided is not 
-    warning(paste("The number of cores used in the parallelization ('cores')",
-                  "has to be a positive integer.\n"))
-    warning("Parallelization is not used in constructing the bootstrap.\n") 
-    cores = 1 
-  } else if (cores > parallel::detectCores()){
-    # Case 2: Number of cores provided > number of cores in the computer
-    warning(paste("The number of cores provided is greater than the number of",
-                  "cores in the computer.\n"))  
-  }
-  
-  ### Step 11. Return the upated information
-  return(list(data = data, 
-              A_obs = A_obs,
-              A_tgt = A_tgt,
-              beta_obs_hat = beta_obs_hat,
+  # ---------------- #
+  # Step 2: Return results
+  # ---------------- #
+  return(list(data = data,
+              lpmodel = lpmodel,
               solver = solver,
+              solver.name = solver.name,
               cores = cores))
 }
 
@@ -779,23 +698,31 @@ dkqs_check <- function(data, A_obs, A_tgt, func_obs, beta_tgt,
 #' @param x Object returned from \code{dkqs}.
 #' @param ... Additional arguments.
 #' 
+#' @details The following information are printed:
+#'  \itemize{
+#'     \item{Test statistic}
+#'     \item{\eqn{p}-value}
+#'     \item{\eqn{\tau}}
+#'     \item{Solver used}
+#'     \item{Number of cores used}
+#'  }
+#' 
 #' @return Print the basic set of results from \code{dkqs}.
 #' 
 #' @export
 #' 
 print.dkqs <- function(x, ...){
   cat("\r\r")
-  cat(sprintf("Test statistic: %s.             \n", round(x$T_n, digits = 5)))  
-  cat(sprintf("p-value: %s.\n", round(x$p_val, digits = 5)))
+  cat(sprintf("Test statistic: %s.             \n", round(x$T.n, digits = 5)))  
+  cat(sprintf("p-value: %s.\n", round(x$pval, digits = 5)))
   cat(sprintf("Value of tau used: %s.\n", round(x$tau, digits = 5)))
-  cat(sprintf("Linear and quadratic programming solver used: %s.\n", 
-              x$solver))
+  cat(sprintf("Solver used: %s.\n", x$solver))
   cat(sprintf("Number of cores used: %s.\n", x$cores))
 }
 
 #' Summary of results from \code{dkqs}
 #' 
-#' @description This function uses the print method on the return list of the
+#' @description This function uses the summary method on the return list of the
 #'    function \code{dkqs}. This is a wrapper of the \code{print} command.
 #'    
 #' @param x Object returned from \code{dkqs}.

@@ -3,22 +3,31 @@
 #' @description This function conducts inference and returns the 
 #'   \eqn{p}-value using the subsampling procedure.
 #' 
-#' @import gurobi cplexAPI Rcplex Momocs limSolve foreach doMC parallel Momocs
+#' @import Momocs foreach doMC parallel Momocs
 #' 
-#' @inheritParams dkqs
-#' @inheritParams estbounds
-#' @param func_var Function that generates the asymptotic variance 
+#' @param lpmodel A list of objects that are used in inference of linear 
+#'    programming problems. The list of objects required in the \code{dkqs} 
+#'    procedure are:
+#'    \itemize{
+#'      \item{\code{A.tgt}}
+#'      \item{\code{A.obs}}
+#'      \item{\code{A.shp}}
+#'      \item{\code{beta.obs}}
+#'      \item{\code{beta.shp}}
+#'    }
 #'   matrix of the estimator \eqn{\hat{\beta}_{\mathrm{obs}}}.
 #' @param phi Power for the sample. \eqn{n^\phi} represents the size
 #'   of each subsample.
 #' @param alpha Significance level.
+#' @inheritParams dkqs
+#' @inheritParams estbounds
 #' 
 #' @return Returns a list of output calculated from the function:
-#'   \item{p_val}{\eqn{p}-value.}
+#'   \item{pval}{\eqn{p}-value.}
 #'   \item{decision}{Decision of the test.}
 #'   \item{alpha}{Significance level.}
-#'   \item{T_n}{Test statistic \eqn{T_n}.}
-#'   \item{T_sub}{The list of test statistics from the subsampling procedure.}
+#'   \item{T.n}{Test statistic \eqn{T_n}.}
+#'   \item{T.sub}{The list of test statistics from the subsampling procedure.}
 #'   \item{solver}{Solver used in solving the linear and quadratic programs.}
 #'   \item{cores}{Number of cores used.}
 #'   \item{call}{The function that has been called.}
@@ -26,92 +35,79 @@
 #' 
 #' @export
 #' 
-subsample <- function(data, A_obs, func_obs, func_var, 
-                      A_shp, beta_shp, A_tgt, beta_tgt, 
-                      R = 100, solver = NULL, 
-                      cores = 8, norm = 2, phi = 2/3, alpha = .05,
+subsample <- function(data, lpmodel, beta.tgt, R = 100, solver = NULL, 
+                      cores = 8, norm = 2, phi = 2/3, alpha = .05, 
                       progress = FALSE){
   
-  # = = = = = = 
+  # ---------------- #
   # Step 1: Obtain call, check and update the dependencies
-  # = = = = = = 
-  ## Obtain the call information
-  call = match.call()
+  # ---------------- #
+  # Obtain the call information
+  call <- match.call()
   
-  ## Check and update 
-  checkupdate = subsample_check(data, A_obs, func_obs, func_var, 
-                                A_shp, beta_shp, A_tgt, beta_tgt, 
-                                R, solver, cores, norm, 
-                                phi, progress)
+  # Check the arguments
+  checkupdate <- subsample.check(data, lpmodel, beta.tgt, R, solver, cores, 
+                                 norm, phi, alpha, progress)
   
-  ## Update information obtained from check
-  # Data frame
-  data = checkupdate$data
-  # Matrices and vectors
-  A_obs = checkupdate$A_obs
-  A_shp = checkupdate$A_shp
-  A_tgt = checkupdate$A_tgt
-  beta_shp = checkupdate$beta_shp
-  beta_tgt = checkupdate$beta_tgt
-  # Solver
-  solver = checkupdate$solver
-  # Norm used
-  norm = checkupdate$norm
-
+  # Update the arguments
+  data <- checkupdate$data
+  lpmodel <- checkupdate$lpmodel
+  solver <- checkupdate$solver
+  solver.name <- checkupdate$solver.name
+  cores <- checkupdate$cores
+  norm <- checkupdate$norm
+  
   # = = = = = =
-  # Step 2: Solve for T_n
+  # Step 2: Solve for T.n
   # = = = = = =
   ## Solve the main problem with the full sample
-  Treturn = subsample_prob(data, func_obs, func_var, A_obs, A_shp, A_tgt, 
-                           beta_shp, beta_tgt, norm, solver)
-  
-  # = = = = = = 
+  Treturn <- subsample.prob(data, lpmodel, beta.tgt, norm, solver, 1)
+
+  # ---------------- #
   # Step 3: Subsampling procedure
-  # = = = = = =  
+  # ---------------- # 
   n = nrow(data)
   m = floor(n^(phi))
   if (cores == 1){
     # One core
-    T_subsample = subsample_onecore(data, R, func_obs, func_var, 
-                                    A_obs, A_shp, A_tgt, beta_shp, beta_tgt, 
-                                    norm, solver, progress, m)
+    T_subsample <- subsample.onecore(data, R, lpmodel, beta.tgt, norm, 
+                                     solver, progress, m)
     
   } else {
     # Many cores
-    T_subsample = subsample_manycores(data, R, func_obs, func_var, 
-                                      A_obs, A_shp, A_tgt, beta_shp, beta_tgt, 
-                                      norm, solver, progress, m)
+    T_subsample <- subsample.manycores(data, R, lpmodel, beta.tgt, norm,
+                                       solver, cores, progress, m)
   }
   
-  # = = = = = = 
+  # ---------------- #
   # Step 4: Compute the p-value (using the p_eval function in dkqs)
-  # = = = = = = 
-  pval_return = p_eval(T_subsample$T_sub, Treturn$objval, alpha)
-  p_val = pval_return$p
-  decision = pval_return$decision
+  # ---------------- #
+  pval_return <- pval(T_subsample$T.sub, Treturn$objval, alpha)
+  pval <- pval_return$p
+  decision <- pval_return$decision
   
-  # = = = = = = 
+  # ---------------- #
   # Step 5: Close the progress bar that is used in the subsampling procedure
-  # = = = = = = 
+  # ---------------- #
   if (progress == TRUE){
     close(T_subsample$pb) 
     cat("                                            ")
   }
   
-  # = = = = = = 
+  # ---------------- #
   # Step 6: Assign the return list
-  # = = = = = = 
-  output = list(p_val = as.numeric(p_val),
-                decision = decision,
-                alpha = alpha,
-                T_n = as.numeric(Treturn$objval),
-                T_sub = T_subsample$T_sub,
-                solver = checkupdate$solver_name,
-                cores = cores,
-                call = call,
-                norm = norm)
+  # ---------------- #
+  output <- list(pval = as.numeric(pval),
+                 decision = decision,
+                 alpha = alpha,
+                 T.n = as.numeric(Treturn$objval),
+                 T.sub = T_subsample$T_sub,
+                 solver = checkupdate$solver_name,
+                 cores = cores,
+                 call = call,
+                 norm = norm)
   
-  attr(output, "class") = "subsample"
+  attr(output, "class") <- "subsample"
   
   return(output)
 }
@@ -125,6 +121,8 @@ subsample <- function(data, A_obs, func_obs, func_var,
 #' @inheritParams dkqs
 #' @inheritParams estbounds
 #' @inheritParams subsample
+#' @param i Index that represents whether the current problem is the 
+#'   bootstrap problem or the first-step problem.
 #' 
 #' @return Returns a list of output that are obtained from the optimizer:
 #'   \item{x}{Optimal point calculated from the optimizer.}
@@ -139,96 +137,109 @@ subsample <- function(data, A_obs, func_obs, func_var,
 #'     
 #' @export 
 #' 
-subsample_prob <- function(data, func_obs, func_var, A_obs, A_shp, A_tgt, 
-                           beta_shp, beta_tgt, norm, solver){
-  # = = = = = = 
-  # Step 1: Obtain parameters from the data frame
-  # = = = = = = 
-  n = nrow(data)
-  beta_obs_hat = func_obs(data)
-  omega_hat = func_var(data)
+subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver, i){
+  # ---------------- #
+  # Step 1: Determine whether each argument is a function or a list
+  # ---------------- #
+  # beta.obs 
+  beta.obs.return <- lpmodel.beta.eval(data, lpmodel$beta.obs, i)
+  beta.obs.hat <- beta.obs.return$beta.obs
+  omega.hat <- beta.obs.return$omega
   
-  # = = = = = = 
+  # A.obs, A.shp, A.tgt, beta.shp
+  A.obs.hat <- lpmodel.eval(data, lpmodel$A.obs, i)
+  A.shp.hat <- lpmodel.eval(data, lpmodel$A.shp, i)
+  A.tgt.hat <- lpmodel.eval(data, lpmodel$A.tgt, i)
+  beta.shp.hat <- lpmodel.eval(data, lpmodel$beta.shp, i)
+  k <- length(beta.obs.hat)
+  
+  # Count the number of rows
+  n <- nrow(data)
+  
+  # ---------------- #
   # Step 2: Define the inverse omega matrix
-  # = = = = = = 
+  # ---------------- #
   # Obtain the inverse of the diagonal etnreis
-  diag_omega = diag(omega_hat)
-  g = 1/diag_omega
+  diag.omega <- diag(omega.hat)
+  g <- 1/diag.omega
   # Replace the entries by 0 for those that are equal to zero in 1/Omega
-  g[diag_omega == 0] = 0
-  G = diag(g)
+  g[diag.omega == 0] <- 0
+  G <- diag(g)
   # Create the new A and b matrices
-  GA = G %*% A_obs
-  Gb = G %*% beta_obs_hat
+  GA <- G %*% A.obs.hat
+  Gb <- G %*% beta.obs.hat
   
-  # = = = = = = 
+  # ---------------- #
   # Step 3: Form the objective function and constraints
-  # = = = = = = 
+  # ---------------- #
   # Model sense
-  modelsense_new = "min"
+  modelsense.new <- "min"
   # Set the objective function and constraints
   if (norm == 1){
     ### L1-norm
     # Objective function - cost matrix
-    c_new = c(rep(0, ncol(A_obs)), rep(1, k), rep(-1, k))
+    c.new <- c(rep(0, ncol(A.obs.hat)), rep(1, k), rep(-1, k))
     # Constraints
-    A_zero = matrix(rep(0, k^2), nrow = k)
-    A1_shp = cbind(A_shp, A_zero, A_zero)
-    A1_tgt = cbind(A_tgt, A_zero, A_zero)
-    A1_obs = cbind(GA, -diag(k), -diag(k))
-    A_new = rbind(A1_shp, A1_tgt, A1_obs)
+    A.zero.shp <- matrix(rep(0, k*nrow(A.shp.hat)), nrow = nrow(A.shp.hat))
+    A.zero.tgt <- matrix(rep(0, k*nrow(A.tgt.hat)), nrow = nrow(A.tgt.hat))
+    A1.shp <- cbind(A.shp.hat, A.zero.shp, A.zero.shp)
+    A1.tgt <- cbind(A.tgt.hat, A.zero.tgt, A.zero.tgt)
+    A1.obs <- cbind(GA, -diag(k), diag(k))
+    A.new <- rbind(A1.shp, A1.tgt, A1.obs)
+    
     # RHS vector
-    rhs_new = c(beta_shp, beta_tgt, Gb)
+    rhs.new <- c(beta.shp.hat, beta.tgt, Gb)
     # Lower bounds
-    lb_new = rep(0, length(c_new))
+    lb.new <- rep(0, length(c.new))
     # Sense
-    sense_new = rep("=", nrow(A_new))
+    sense.new <- rep("=", nrow(A.new))
     
     # Set the list to pass to the solver
-    l_arg = list(Af = NULL,
-                 bf = c_new,
-                 nf = sqrt(n),
-                 A = A_new,
-                 rhs = rhs_new,
-                 sense = sense_new,
-                 modelsense = modelsense_sense,
-                 lb = lb_new)
-    
+    l_arg <- list(Af = NULL,
+                  bf = c.new,
+                  nf = 1,
+                  A = A.new,
+                  rhs = rhs.new,
+                  sense = sense.new,
+                  modelsense = modelsense.new,
+                  lb = lb.new)
   } else if (norm == 2){
     ### L2-norm
     # Constraints
-    A_new = rbind(A_shp, A_tgt)
+    A.new <- rbind(A.shp.hat, A.tgt.hat)
     # RHS vector
-    rhs_new = c(beta_shp, beta_tgt)
+    rhs.new <- c(beta.shp.hat, beta.tgt)
     # Lower bounds
-    lb_new = rep(0, ncol(A_shp))
+    lb.new <- rep(0, ncol(A.shp.hat))
     # Sense
-    sense_new = rep("=", nrow(A_new))
+    sense.new <- rep("=", nrow(A.new))
     
     # Set the list to pass to the solver
-    l_arg = list(Af = GA,
-                 bf = Gb,
-                 nf = sqrt(n),
-                 A = A_new,
-                 rhs = rhs_new,
-                 sense = sense_new,
-                 modelsense = modelsense_new,
-                 lb = lb_new)
+    l_arg <- list(Af = GA,
+                  bf = Gb,
+                  nf = sqrt(n),
+                  A = A.new,
+                  rhs = rhs.new,
+                  sense = sense.new,
+                  modelsense = modelsense.new,
+                  lb = lb.new)
   }
   
-  # = = = = = = 
+  # ---------------- #
   # Step 4: Solve the model and return the results
-  # = = = = = = 
+  # ---------------- #
   # Solve the model
-  ans = do.call(solver, l_arg)
+  ans <- do.call(solver, l_arg)
   
   # Return the results
   invisible(list(x = ans$x,
                  objval = ans$objval,
                  larg = l_arg,
-                 beta = beta_obs_hat,
-                 omega = omega_hat))
+                 beta = beta.obs.hat,
+                 omega = omega.hat))
 }
+
+
 
 #' Subsampling procedure without parallel programming
 #' 
@@ -243,44 +254,41 @@ subsample_prob <- function(data, func_obs, func_var, A_obs, A_shp, A_tgt,
 #' 
 #' @return Returns a list of output that are obtained from the subsampling
 #'   procedure:
-#'   \item{T_sub}{List of test statistic from the subsampling procedure.}
+#'   \item{T.sub}{List of test statistic from the subsampling procedure.}
 #'   \item{pb}{Progress bar object.}
 #' 
 #' @export
 #' 
-subsample_onecore <- function(data, R, func_obs, func_var, 
-                              A_obs, A_shp, A_tgt, beta_shp, beta_tgt, 
-                              norm, solver, progress, m){
-  # = = = = = = 
+subsample.onecore <- function(data, R, lpmodel, beta.tgt, norm, solver, 
+                              progress, m){
+  # ---------------- #
   # Step 1: Initialize the vectors and the progress bar
-  # = = = = = = 
+  # ---------------- #
   # Initialize the vectors
-  T_sub = NULL
-  beta_sub = NULL
+  T.sub <- NULL
+  beta.sub <- NULL
   # Initialize the progress bar
   if (progress == TRUE){
-    pb = utils::txtProgressBar(min = 0, max = R, style = 3, width = 20)
+    pb <- utils::txtProgressBar(min = 0, max = R, style = 3, width = 20)
     cat("\r") 
   } else {
-    pb = NULL
+    pb <- NULL
   }
   
-  # = = = = = = 
+  # ---------------- #
   # Step 2: Conduct the subsampling procedure
-  # = = = = = = 
+  # ---------------- #
   for (i in 1:R){
-    ## (2.1) Draw the subsample
-    df_sub = as.data.frame(Momocs::sample_n(data, m, replace = FALSE))
-    # Re-index the rows
-    rownames(df_sub) = 1:nrow(df_sub)
-    ## (2.2) Compute the bootstrap estimates
+    # (2.1) Re-sample the data 
+    data.bs <- as.data.frame(Momocs::sample_n(data, m, eplace = TRUE))
+    rownames(data.bs) <- 1:nrow(data.bs)
+    
+    # (2.2) Compute the bootstrap estimates
     # Compute the value of beta_bs_star using the function func_obs
-    sub_return = subsample_prob(df_sub, func_obs, func_var, 
-                                A_obs, A_shp, A_tgt, beta_shp, beta_tgt, 
-                                norm, solver)
-    T_sub = c(T_sub, sub_return$objval)
-    beta_sub = cbind(beta_sub, sub_return$beta)
-    ## (2.3) Update progress bar
+    sub.return <- subsample.prob(data.bs, lpmodel, beta.tgt, norm, solver, i+1)
+    T.sub <- c(T.sub, sub.return$objval)
+    beta.sub <- cbind(beta.sub, sub.return$beta)
+    # (2.3) Update progress bar
     if (progress == TRUE){
       if (i != R){
         utils::setTxtProgressBar(pb, i)
@@ -292,10 +300,10 @@ subsample_onecore <- function(data, R, func_obs, func_var,
     }
   }
   
-  # = = = = = = 
+  # ---------------- #
   # Step 3: Return the results
-  # = = = = = = 
-  return(list(T_sub = T_sub,
+  # ---------------- #
+  return(list(T.sub = T.sub,
               pb = pb))
 }
 
@@ -307,40 +315,39 @@ subsample_onecore <- function(data, R, func_obs, func_var,
 #' @inheritParams dkqs
 #' @inheritParams estbounds
 #' @inheritParams subsample 
-#' @param m subsample_onecore
+#' @inheritParams subsample.onecore
 #' 
 #' @return Returns a list of output that are obtained from the subsampling
 #'   procedure:
-#'   \item{T_sub}{List of test statistic from the subsampling procedure.}
+#'   \item{T.sub}{List of test statistic from the subsampling procedure.}
 #'   \item{pb}{Progress bar object.}
 #' 
 #' @export
 #' 
-subsample_manycores <- function(data, R, func_obs, func_var, 
-                                A_obs, A_shp, A_tgt, beta_shp, beta_tgt, 
-                                norm, solver, progress, m){
-  # = = = = = = 
+subsample.manycores <- function(data, R, lpmodel, beta.tgt, norm, solver, 
+                                cores, progress, m){
+  # ---------------- #
   # Step 1: Initialize the parallel programming package
-  # = = = = = = 
+  # ---------------- #
   options(warn=-1)
   # Assign dorng
-  `%dorng%` = doRNG::`%dorng%`
+  `%dorng%` <- doRNG::`%dorng%`
   # Register core
   doMC::registerDoMC(cores)
   
-  # = = = = = = 
+  # ---------------- #
   # Step 2: Initialize the vectors and the progress bar
-  # = = = = = = 
+  # ---------------- #
   # Initialize the vectors
-  T_sub = NULL
-  beta_sub = NULL
+  T.sub <- NULL
+  beta_sub <- NULL
   # Initialize the progress bar
   if (progress == TRUE){
     # Initialize the counter
-    cl = PtProcess::makeSOCKcluster(8)
+    cl <- PtProcess::makeSOCKcluster(8)
     doSNOW::registerDoSNOW(cl)
     # Set the counter and progress bar
-    pb = utils::txtProgressBar(max=R, style=3, width = 20) 
+    pb <- utils::txtProgressBar(max=R, style=3, width = 20) 
     
     cat("\r")
     progress <- function(n){
@@ -351,10 +358,10 @@ subsample_manycores <- function(data, R, func_obs, func_var,
         cat("\r\b")     
       }
     }
-    opts = list(progress=progress) 
+    opts <- list(progress=progress) 
   } else {
-    pb = NULL
-    opts = NULL
+    pb <- NULL
+    opts <- NULL
   }
   
   # Comb function for using parallel programming
@@ -363,39 +370,36 @@ subsample_manycores <- function(data, R, func_obs, func_var,
                                                       function(y) y[[i]])))
   }
   
-  # = = = = = = 
+  # ---------------- #
   # Step 3: Conduct the subsampling procedure
-  # = = = = = = 
+  # ---------------- #
   listans = foreach::foreach(i = 1:R, .multicombine = TRUE, 
                              .combine = "comb", .options.snow = opts,
-                             .packages = "lpinfer") %dopar% {
-    ## (3.1) Draw the subsample
-    df_sub = as.data.frame(Momocs::sample_n(data, m, replace = FALSE))
-    # Re-index the rows
-    rownames(df_sub) = 1:nrow(df_sub)
-    ## (3.2) Compute the bootstrap estimates
-    # Compute the value of beta_bs_star using the function func_obs
-    sub_return = subsample_prob(df_sub, func_obs, func_var, 
-                                A_obs, A_shp, A_tgt, beta_shp, beta_tgt, 
-                                norm, solver)
-    T_sub = data.frame(sub_return$objval)
-    beta_sub = data.frame(c(sub_return$beta))
-    ## (3.3) Combine the results
-    list(T_sub, beta_sub)
-  }
+                             .packages = "lpinfer") %dorng% {
+   ## (3.1) Draw the subsample
+   data.bs <- as.data.frame(Momocs::sample_n(data, m, replace = FALSE))
+   rownames(data.bs) <- 1:nrow(data.bs)
+   ## (3.2) Compute the bootstrap estimates
+   # Compute the value of beta_bs_star using the function func_obs
+   sub.return <- subsample.prob(data.bs, lpmodel, beta.tgt, norm, solver, i+1)
+   T.sub <- data.frame(sub.return$objval)
+   beta.sub <- data.frame(c(sub.return$beta))
+   ## (3.3) Combine the results
+   list(T.sub, beta.sub)
+                             }
   
-  # = = = = = = 
+  # ---------------- #
   # Step 4: Retrieve results from output
-  # = = = = = = 
-  T_sub = as.vector(unlist(listans[[1]]))
-  beta_sub = data.frame(matrix(unlist(listans[[2]]), 
-                               nrow = length(func_obs(data)), 
+  # ---------------- #
+  T.sub = as.vector(unlist(listans[[1]]))
+  beta.sub = data.frame(matrix(unlist(listans[[2]]), 
+                               ncol = R, 
                                byrow = FALSE))
   
-  # = = = = = = 
+  # ---------------- #
   # Step 5: Return the results
-  # = = = = = = 
-  return(list(T_sub = T_sub,
+  # ---------------- #
+  return(list(T.sub = T.sub,
               pb = pb))
 }
 
@@ -423,8 +427,8 @@ print.subsample <- function(x, ...){
     cat(sprintf("The null hypothesis cannot be rejected at the %s level.\n\n", 
                 paste0(x$alpha*100, "%")))
   }
-  cat(sprintf("Test statistic: %s.             \n", round(x$T_n, digits = 5)))  
-  cat(sprintf("p-value: %s.\n", round(x$p_val, digits = 5)))
+  cat(sprintf("Test statistic: %s.             \n", round(x$T.n, digits = 5)))  
+  cat(sprintf("p-value: %s.\n", round(x$pval, digits = 5)))
   cat(sprintf("Linear and quadratic programming solver used: %s.\n", x$solver))
   if (x$norm == 1){
     cat(sprintf("Norm used in the optimization problem: L1-norm.\n")) 
@@ -436,8 +440,9 @@ print.subsample <- function(x, ...){
 
 #' Summary of results from \code{subsample}
 #' 
-#' @description This function uses the print method on the return list of the
-#'    function \code{subsample}. This is a wrapper of the \code{print} command.
+#' @description This function uses the summary method on the return list of 
+#'    the function \code{subsample}. This is a wrapper of the \code{print} 
+#'    command.
 #'    
 #' @param x Object returned from \code{subsample}.
 #' @param ... Additional arguments.
@@ -454,79 +459,71 @@ summary.subsample <- function(x, ...){
 #'
 #' @description This function checks and updates the input of the user. If 
 #'    there is any invalid input, this function will be terminated and 
-#'    generates appropriate error messages. This function is mainly calling
-#'    other functions in the \code{checks} files to conduct the checks and
-#'    updates.
+#'    generates appropriate error messages. This function is mainly a wrapper 
+#'    of the selected functions from the \code{checks} files to conduct the 
+#'    checks and updates.
 #'
 #' @inheritParams dkqs
 #' @inheritParams estbounds
 #' @inheritParams subsample
 #' 
-#' @return Returns the updated value of the parameters back to the function 
-#'    \code{subsample}. 
-#'   \item{data}{Upated data in class \code{data.frame}}
-#'   \item{A_obs}{Updated "observed" matrix in the \code{matrix} class.}
-#'   \item{beta_obs}{Obtain \eqn{\widehat{\bm{\beta}}_{\mathrm{obs}}} 
-#'      that is obtained from the function \code{func_obs}.}
-#'   \item{A_shp}{Updated matrix for shape constraints in the \code{matrix} 
-#'     class.}
-#'   \item{beta_shp}{Updated RHS vector for shape constraints in the 
-#'     \code{matrix} class.}
-#'   \item{A_tgt}{Updated "target" matrix in the \code{matrix} class.}
-#'   \item{beta_tgt}{Updated "target" vector in the \code{matrix} class}
-#'   \item{solver}{Name of the function that corresponds to the optimizer.}
-#'   \item{solver_name}{Updated name of solver in lower case.}
-#'   \item{cores}{Updated number of cores to be used in the parallelization
-#'      of the for-loop in the bootstrap procedure.}
-#' 
+#' @return Returns the updated parameters and objects back to the function 
+#' \code{subsample}. The following information are updated:
+#'    \itemize{
+#'       \item{\code{data}}
+#'       \item{\code{lpmodel}}
+#'       \item{\code{solver}}
+#'       \item{\code{solver.name}}
+#'       \item{\code{cores}}
+#'       \item{\code{norm}}
+#'    }
+#'    
 #' @export
 #' 
-subsample_check <- function(data, A_obs, func_obs, func_var, 
-                            A_shp, beta_shp, A_tgt, beta_tgt, R, 
-                            solver, cores, norm, phi, progress){
+subsample.check <- function(data, lpmodel, beta.tgt, R, solver, cores, 
+                            norm, phi, alpha, progress){
   
-  # = = = = = = 
+  # ---------------- #
   # Step 1: Conduct the checks
-  # = = = = = = 
+  # ---------------- #
   # Check the data frame
-  data = check_dataframe(data, "data")
+  data <- check.dataframe(data, "data")
   
-  # Check function and export output
-  beta_obs = check_func(func_obs, A_obs, data, "func_obs", "A_obs", "col")
-  check_func(func_var, A_obs, data, "func_var", "A_obs", "square")
+  # Check lpmodel 
+  lpmodel <- check.lpmodel(data = data,
+                           lpmodel = lpmodel, 
+                           name.var = "lpmodel",
+                           A.tgt.cat = c(1,2,3),
+                           A.obs.cat = c(1,2,3),
+                           A.shp.cat = c(1,2,3),
+                           beta.obs.cat = c(3,4),
+                           beta.shp.cat = c(1,2,3),
+                           R = R)
   
-  # Check the matrices A vs b
-  shp_return = check_Ab(A_shp, beta_shp, "A_shp", "beta_shp")
-  tgt_return = check_Ab(A_tgt, beta_tgt, "A_tgt", "beta_tgt")
-  obs_return = check_Ab(A_obs, beta_obs, "A_obs", "beta_obs")
+  # Check solver
+  solver.return <- check.solver(solver, "solver")
+  solver <- solver.return$solver
+  solver.name <- solver.return$solver.name
   
-  # Check if the variable is a positive integer
-  check_positiveinteger(R, "R")
-  check_positiveinteger(cores, "cores")
+  # Check numerics 
+  check.numrange(phi, "phi", "open", 0, "open", 1)
+  check.numeric(phi, "phi")
+  check.positiveinteger(R, "R")
+  cores <- check.positiveinteger(cores, "cores")
   
-  # Check if norm is either 1 or 2
-  norm_return = check_norm(norm, "norm")
+  # Check norm
+  norm <- check.norm(norm, "norm")
   
-  # Check if phi is in the range (0,1)
-  check_numrange(phi, "phi", "open", 0, "open", 1)
+  # Check Boolean 
+  check.boolean(progress, "progress")
   
-  # Check if the variable is boolean
-  check_boolean(progress, "progress")
-  
-  # Check solveresssssss
-  solver_return = check_solver(solver, "solver")
-  
-  # = = = = = = 
-  # Step 2: Return the updated objects
-  # = = = = = = 
+  # ---------------- #
+  # Step 2: Return results
+  # ---------------- #
   return(list(data = data,
-              A_obs = obs_return$A,
-              beta_obs = obs_return$b,
-              A_shp = shp_return$A,
-              beta_shp = shp_return$b,
-              A_tgt = tgt_return$A,
-              beta_tgt = tgt_return$b,
-              solver = solver_return$solver,
-              solver_name = solver_return$solver_name,
-              norm = norm_return))
+              lpmodel = lpmodel,
+              solver = solver,
+              solver.name = solver.name,
+              cores = cores,
+              norm = norm))
 }

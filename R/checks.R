@@ -6,20 +6,22 @@
 #'   error message is displayed.
 #' 
 #' @param data Data frame to be checked. 
-#' @param name_var Name of the variable.
+#' @param name.var Name of the variable.
 #' 
 #' @return Returns the object in the format of \code{data.frame}.
 #'   
 #' @export
 #' 
-check_dataframe <- function(data, name_var){
+check.dataframe <- function(data, name.var){
   # Check data
   if (class(data) %in% c("data.frame", "matrix") == TRUE){
-    data = as.data.frame(data)  
+    data <- as.data.frame(data)  
   } else {
     stop(sprintf(paste0("The data povided '%s' must either be a data.frame, ", 
-    "a data.table, or a matrix."), name_var), call. = FALSE)    
+                        "a data.table, or a matrix."), name.var), 
+         call. = FALSE)    
   }
+  
   # Return updated data
   return(data)
 }
@@ -37,11 +39,12 @@ check_dataframe <- function(data, name_var){
 #'   
 #' @export
 #' 
-check_positiveinteger <- function(x, name_var){
+check.positiveinteger <- function(x, name.var){
   if ((is.numeric(x) == TRUE & length(x) == 1 & x > 0 & x%%1 == 0) == FALSE){
     stop(sprintf("The variable '%s' has to be a positive integer.", x),
          call. = FALSE)
   }
+  return(x)
 }
 
 #' Check function: numeric
@@ -56,7 +59,7 @@ check_positiveinteger <- function(x, name_var){
 #'   
 #' @export
 #' 
-check_numeric <- function(x, name_var){
+check.numeric <- function(x, name.var){
   if ((is.numeric(x) == TRUE & length(x) == 1) == FALSE){
     stop(sprintf("The class of the variable '%s' has to be numeric.", x),
          call. = FALSE)
@@ -75,10 +78,10 @@ check_numeric <- function(x, name_var){
 #'   
 #' @export
 #' 
-check_boolean <- function(x, name_var){
+check.boolean <- function(x, name.var){
   if (!(x == TRUE | x == FALSE)){
     stop(sprintf(paste0("The variable '%s' has to be boolean variable."), 
-                 name_var), call. = FALSE)  
+                 name.var), call. = FALSE)  
   }
 }
 
@@ -87,9 +90,9 @@ check_boolean <- function(x, name_var){
 #' @description This function checks whether the variable is within a 
 #'   certain interval. If not, an error message is displayed.
 #' 
-#' @param left_type Type of the left interval (\code{open} or \code{closed})
+#' @param left.type Type of the left interval (\code{open} or \code{closed})
 #' @param left Value of lower bound
-#' @param right_type Type of the right interval (\code{open} or \code{closed})
+#' @param right.type Type of the right interval (\code{open} or \code{closed})
 #' @param right Value of the upper bound
 #' @inheritParams check_dataframe
 #' @inheritParams check_positiveinteger
@@ -98,37 +101,37 @@ check_boolean <- function(x, name_var){
 #' 
 #' @export
 #' 
-check_numrange <- function(x, name_var, left_type, left, right_type, right){
-  # = = = = = = 
+check.numrange <- function(x, name.var, left.type, left, right.type, right){
+  # ---------------- #
   # Step 1: Check if the number is numeric
-  # = = = = = = 
-  check_numeric(x, name_var)
+  # ---------------- #
+  check.numeric(x, name.var)
   
-  # = = = = = = 
+  # ---------------- #
   # Step 2: Check if the number is within the range
-  # = = = = = = 
-  if (right_type == "open" & right_type == "open"){
+  # ---------------- #
+  if (left.type == "open" & right.type == "open"){
     if ((x > left & x < right) == FALSE){
       stop(sprintf(paste0("The variable '%s' has to be inside the interval ",
-                          "(%s, %s)."), name_var, left, right), 
+                          "(%s, %s)."), name.var, left, right), 
            call. = FALSE)  
     }
-  } else if (right_type == "open" & right_type == "closed"){
+  } else if (left.type == "open" & right.type == "closed"){
     if ((x > left & x <= right) == FALSE){
       stop(sprintf(paste0("The variable '%s' has to be inside the interval ",
-                          "(%s, %s]."), name_var, left, right), 
+                          "(%s, %s]."), name.var, left, right), 
            call. = FALSE)  
     }   
-  } else if (right_type == "closed" & right_type == "open"){
+  } else if (left.type == "closed" & right.type == "open"){
     if ((x >= left & x < right) == FALSE){
       stop(sprintf(paste0("The variable '%s' has to be inside the interval ",
-                          "[%s, %s)."), name_var, left, right), 
+                          "[%s, %s)."), name.var, left, right), 
            call. = FALSE)  
     }
-  } else if (right_type == "closed" & right_type == "closed"){
+  } else if (left.type == "closed" & right.type == "closed"){
     if ((x >= left & x <= right) == FALSE){
       stop(sprintf(paste0("The variable '%s' has to be inside the interval ",
-                          "[%s, %s]."), name_var, left, right), 
+                          "[%s, %s]."), name.var, left, right), 
            call. = FALSE)  
     }
   }
@@ -169,16 +172,16 @@ check_numrange <- function(x, name_var, left_type, left, right_type, right){
 #' 
 #' @export
 #' 
-check_norm <- function(x, name_var){
+check.norm <- function(x, name.var){
   # Bring the variable to lower case
-  x = tolower(x)
+  x <- tolower(x)
   
   if (x %in% c(1, "1", "l1", "one", "o", "taxicab")){
     # Case 1: user provied an input that corresponds to L1-norm
-    norm = 1
+    norm <- 1
   } else if (x %in% c(2, "2", "l2", "two", "t", "e", "euclidean")){
     # Case 1: user provied an input that corresponds to L2-norm
-    norm = 2
+    norm <- 2
   } else {
     stop(gsub("\\s+", " ",
          paste0("Only 1-norm and 2-norm are supported in this function. ",
@@ -204,52 +207,52 @@ check_norm <- function(x, name_var){
 #' @param A Matrix that will be contains dimensional information for the 
 #'    output of f
 #' @param data Data frame that will be passed to the function
-#' @param name_A Name of matrix
-#' @param mat_type Type of the matrix to be checked
+#' @param name.A Name of matrix
+#' @param mat.type Type of the matrix to be checked
 #' @inheritParams check_dataframe
 #' @inheritParams check_positiveinteger
 #' 
 #' @return Returns the output of the function in the format of \code{numeric}
-#'   and the correct dimension. If \code{mat_type} is \code{col}, then a 
-#'   column vector is returned. If \code{mat_type} is \code{matrix}, then a
+#'   and the correct dimension. If \code{mat.type} is \code{col}, then a 
+#'   column vector is returned. If \code{mat.type} is \code{matrix}, then a
 #'   square matrix is returned.
 #' 
 #' @export
 #' 
-check_func <- function(f, A, data, name_var, name_A, mat_type){
+check.func <- function(f, A, data, name.var, name.A, mat.type){
   # Check the class of the function
   if (class(f) != "function"){
-    stop(sprintf("The input of '%s' has to be a function.", name_var), 
+    stop(sprintf("The input of '%s' has to be a function.", name.var), 
          call. = FALSE)
   } else{
-    out = f(data)
-    out = as.matrix(out)
+    out <- f(data)
+    out <- as.matrix(out)
     # Check if the output is numeric
     if (is.numeric(out[,1]) == FALSE){
-      stop(sprintf("The output of '%s' has to be numeric.", name_var),
+      stop(sprintf("The output of '%s' has to be numeric.", name.var),
            call. = FALSE)
     } else{
-      if (mat_type == "col"){
+      if (mat.type == "col"){
         # If the output has to be a column vector
         if (dim(out)[2] != 1){
           stop(sprintf("The output of '%s' has to be a column vector", 
-                       name_var), call. = FALSE)
+                       name.var), call. = FALSE)
         } else if (dim(out)[1] != dim(A)[1]){
           stop(sprintf(paste0("The number of rows in the output of '%s' has ",
                               "to be the same as the number of rows in the ",
-                              "matrix '%s'."), name_var, name_A), 
+                              "matrix '%s'."), name.var, name.A), 
                call. = FALSE)
         } 
-      } else if (mat_type == "square"){
+      } else if (mat.type == "square"){
         # If the output has to be a square matrix
         if (nrow(out) != ncol(out)){
           stop(sprintf("The output of '%s' has to be a square matrix", 
-                       name_var), call. = FALSE)
+                       name.var), call. = FALSE)
         }
         if ((nrow(out) != nrow(A)) | (ncol(out) != nrow(A))){
           stop(sprintf("The number of rows and columns of the output ",
                        "for '%s' has to be equal to the number of rows in ", 
-                       "matrix '%s'.", name_var, name_A),
+                       "matrix '%s'.", name.var, name.A),
               call. = FALSE)
         }
       }
@@ -275,11 +278,11 @@ check_func <- function(f, A, data, name_var, name_A, mat_type){
 #'    
 #' @export
 #' 
-check_Ab <- function(A, b, Aname, bname){
+check.Ab <- function(A, b, Aname, bname){
   if (is.null(A) + is.null(b) == 1){
-    # = = = = = = 
+    # ---------------- #
     # Step 1: Check that if A and b must be both NULL or both non-NULL
-    # = = = = = = 
+    # ---------------- #
     if (is.null(A) == TRUE){
       stop(sprintf("'%s' is NULL but '%s' is not NULL. Please ensure
                    that either they are both NULL or they are both
@@ -290,30 +293,29 @@ check_Ab <- function(A, b, Aname, bname){
                    valid matrices.", bname, Aname))
     }
   } else if (is.null(A) + is.null(b) == 2){
-    # = = = = = = 
+    # ---------------- #
     # Step 2: Both A and b are NULL. Nothing else to do
-    # = = = = = = 
-    #### Step 2: Both A and b are NULL. Nothing else to do
+    # ---------------- #
   } else {
-    # = = = = = = 
+    # ---------------- #
     # Step 3: Checks for the case where both A and b are non-NULL
-    # = = = = = = 
-    matrix_names = c(Aname, bname)
-    matrix_list = list(A, b)
+    # ---------------- #
+    matrix.names <- c(Aname, bname)
+    matrix.list <- list(A, b)
     for (i in 1:2){
       ## Part 1: Check the format of the matrices
-      if (class(matrix_list[[i]]) %in% 
+      if (class(matrix.list[[i]]) %in% 
           c("data.frame", "matrix", "numeric") == FALSE){
         stop(gsub("\\s+", " ",
-                  paste0("The argument '", matrix_names[i], "' must either be 
+                  paste0("The argument '", matrix.names[i], "' must either be 
                 a data.frame, data.table, or matrix.")), call. = FALSE)   
       } else{
         # Ensure the variable is in matrix form
-        matrix_list[[i]] = as.matrix(matrix_list[[i]])
+        matrix.list[[i]] <- as.matrix(matrix.list[[i]])
         
         ## Part 2: Check whether the matrices are numeric
-        if (is.numeric(matrix_list[[i]]) == FALSE){
-          stop(paste0("The argument '", matrix_names[i], 
+        if (is.numeric(matrix.list[[i]]) == FALSE){
+          stop(paste0("The argument '", matrix.names[i], 
                       "' has to be numeric."), call. = FALSE)
         } 
       }
@@ -333,17 +335,17 @@ check_Ab <- function(A, b, Aname, bname){
                   of rows of '%s.", Aname, bname), call. = FALSE)
     }
     
-    # = = = = = = 
+    # ---------------- #
     # Step 4: Update class
-    # = = = = = = 
+    # ---------------- #
     # Ensure that both A and b to ensure that they are both matrices
-    A = matrix_list[[1]]
-    b = matrix_list[[2]]
+    A <- matrix.list[[1]]
+    b <- matrix.list[[2]]
   }
   
-  # = = = = = = 
+  # ---------------- #
   # Step 5: Return results
-  # = = = = = = 
+  # ---------------- #
   return(list(A = A,
               b = b))
 }
@@ -364,35 +366,35 @@ check_Ab <- function(A, b, Aname, bname){
 #'      
 #' @export
 #' 
-check_solver <- function(x, name_var, norm = 2){
-  # = = = = = = 
+check.solver <- function(x, name.var, norm = 2){
+  # ---------------- #
   # Step 1: Preparation and hard-coded information
-  # = = = = = = 
-  x = tolower(x)
+  # ---------------- #
+  x <- tolower(x)
   # Package recommendation messages
-  gurobi_msg = "'gurobi' (version 8.1-1 or later)"
-  cplexapi_msg = "'cplexAPI' (version 1.3.3 or later)"
-  rcplex_msg = "'Rcplex' (version 0.3-3 or later)"
-  limsolve_msg = "'limSolve' (version 1.5.6 or later)"
-  lpsolveapi_msg = "lpSolveAPI (version 5.5.2.0 or later)"
+  gurobi.msg <- "'gurobi' (version 8.1-1 or later)"
+  cplexapi.msg <- "'cplexAPI' (version 1.3.3 or later)"
+  rcplex.msg <- "'Rcplex' (version 0.3-3 or later)"
+  limsolve.msg <- "'limSolve' (version 1.5.6 or later)"
+  lpsolveapi.msg <- "lpSolveAPI (version 5.5.2.0 or later)"
   
-  # = = = = = = 
+  # ---------------- #
   # Step 2a: If no solver name is provided by the user
-  # = = = = = = 
+  # ---------------- #
   if (is.null(x) == TRUE){
     # If gurobi is installed, the gurobi solver will be used for L1- & L2-norm
     if (requireNamespace("gurobi", quietly = TRUE) == TRUE){
-      solver = gurobi_optim
+      solver = gurobi.optim
     } else if (norm == 1) {
       # If L1-norm is used, other solvers will be checked
       if (requireNamespace("limSolve", quietly = TRUE) == TRUE){
-        solver = limsolve_optim
+        solver <- limsolve.optim
       } else if (requireNamespace("Rcplex", quietly = TRUE) == TRUE){
-        solver = rcplex_optim
+        solver <- rcplex.optim
       } else if (requireNamespace("cplexAPI", quietly = TRUE) == TRUE){
-        solver = cplexapi_optim
+        solver <- cplexapi.optim
       } else if (requireNamespace("lpsolveAPI", quietly = TRUE) == TRUE){
-        solver = lpsolveapi_optim
+        solver <- lpsolveapi.optim
       }      
     } else {
       if (norm == 1){
@@ -401,17 +403,17 @@ check_solver <- function(x, name_var, norm = 2){
                          "' when L1-norm is chosen in the estimation procedure. 
                          Please install one of the following packages to solve 
                          the linear and quadratic programs: ",
-                         gurobi_msg, "; ",
-                         cplexapi_msg, "; ",
-                         rcplex_msg, "; ",
-                         limsolve_msg, ";",
-                         lpsolveapi_msg, ".")),
+                         gurobi.msg, "; ",
+                         cplexapi.msg, "; ",
+                         rcplex.msg, "; ",
+                         limsolve.msg, ";",
+                         lpsolveapi.msg, ".")),
              call. = FALSE)
       } else if (norm == 2){
         stop(gsub("\\s+", " ",
                   paste0("This function with L2-norm in the estimation 
                          procedure is only incompatible with 'gurobi'. ", 
-                         "Please install ", gurobi_msg, " to obtain the
+                         "Please install ", gurobi.msg, " to obtain the
                        bounds of the problem subject to shape restriction.")), 
              call. = FALSE)
       }
@@ -421,23 +423,23 @@ check_solver <- function(x, name_var, norm = 2){
                 x, "is chosen.\n", sep = ""))
     }
   } else if (x == "gurobi"){
-    # = = = = = = 
+    # ---------------- #
     # Step 2b: If a solver name is provided by the user
-    # = = = = = = 
+    # ---------------- #
     ## Case 1: If the user specified the solver as 'gurobi'
-    solver = gurobi_optim
+    solver <- gurobi.optim
   } else if (x == "limsolve"){
     ## Case 2: If the user specified the solver as 'limSolve'
-    solver = limsolve_optim
+    solver <- limsolve.optim
   } else if (x == "rcplex"){
     ## Case 3: If the user specified the solver as 'rcplex'
-    solver = rcplex_optim
+    solver <- rcplex.optim
   } else if (x == "cplexapi"){
     ## Case 4: If the user specified the solver as 'cplexapi'
-    solver = cplexapi_optim
+    solver <- cplexapi.optim
   } else if (x == "lpsolveapi" & norm == 1){
     ## Case 5: If the user specified the solver as 'lpsolveapi'
-    solver = lpsolveapi_optim
+    solver <- lpsolveapi.optim
   } else {
     ## Case 6: If the user specified a solver that is not compatible
     if (norm == 1){
@@ -446,24 +448,348 @@ check_solver <- function(x, name_var, norm = 2){
                        "' when L1-norm is chosen in the estimation procedure. 
                        Please install one of the following packages to solve 
                        the linear and quadratic programs: ",
-                       gurobi_msg, "; ",
-                       cplexapi_msg, "; ",
-                       rcplex_msg, "; ",
-                       limsolve_msg, ".")),
+                       gurobi.msg, "; ",
+                       cplexapi.msg, "; ",
+                       rcplex.msg, "; ",
+                       limsolve.msg, ".")),
            call. = FALSE)
     } else if (norm == 2){
       stop(gsub("\\s+", " ",
                 paste0("This function with L2-norm in the estimation procedure
                        is only incompatible with 'gurobi'. ", 
-                       "Please install ", gurobi_msg, " to obtain the
+                       "Please install ", gurobi.msg, " to obtain the
                        bounds of the problem subject to shape restriction.")), 
            call. = FALSE)
     }
   }
   
-  # = = = = = = 
+  # ---------------- #
   # Step 3: Returns the function name that corresponds to the solver
-  # = = = = = = 
+  # ---------------- #
   return(list(solver = solver,
-              solver_name = x))
+              solver.name = x))
 }
+
+#' Check function: check lpmodel
+#' 
+#' @description This function checks if the object \code{lpmodel} is in the 
+#'    correct format.
+#' 
+#' @param lpmodel An \code{lpmodel} object.
+#' @param name.var Name of the \code{lpmodel} object.
+#' @param A.tgt.cat Category of the \code{A.tgt} object.
+#' @param A.obs.cat Category of the \code{A.obs} object.
+#' @param A.shp.cat Category of the \code{A.shp} object.
+#' @param beta.obs.cat Category of the \code{beta.obs} object.
+#' @param beta.shp.cat Category of the \code{beta.shp} object.
+#' @inheritParams dkqs
+#' 
+#' @details In each of the testing procedures, there are five possible 
+#' categories of the each of the object: 
+#'   \itemize{
+#'     \item{Category 0: This object is not used in the function}
+#'     \item{Category 1: A single matrix or vector}
+#'     \item{Category 2: A function that maps to a matrix or vector}
+#'     \item{Category 3: A list of matrices or vectors}
+#'     \item{Category 4: A function that maps to a vector and a matrix}
+#'   }
+#'   Each object can belong to one of more categories.
+#' 
+#' @return Returns the updated \code{lpmodel} object.
+#'    \item{lpmodel}{Updated \code{lpmodel} object.}
+#'      
+#' @export
+#' 
+check.lpmodel <- function(data, lpmodel, name.var, A.tgt.cat, A.obs.cat, 
+                          A.shp.cat, beta.obs.cat, beta.shp.cat, R){
+  # ---------------- #
+  # Step 1: Check if lpmodel is a list
+  # ---------------- #
+  if (class(lpmodel) != "list"){
+    stop(sprintf("The object '%s' has to be a list.", name.var),
+         call. = FALSE)
+  }
+
+  # ---------------- #
+  # Step 2: Check each of the objects (treat them as matrices)
+  # and check if beta.obs and beta.shp are matrices
+  # ---------------- #
+  if (A.tgt.cat != 0){
+    A.tgt.return <- check.lpobjects(data, lpmodel$A.tgt, "A.tgt", A.tgt.cat)
+  }
+  if (A.obs.cat != 0){
+    A.obs.return <- check.lpobjects(data, lpmodel$A.obs, "A.obs", A.obs.cat)
+  }
+  if (A.shp.cat != 0){
+    A.shp.return <- check.lpobjects(data, lpmodel$A.shp, "A.shp", A.shp.cat)
+  }
+  if (beta.obs.cat!= 0){
+    beta.obs.return <- check.lpobjects(data, lpmodel$beta.obs, "beta.obs", 
+                                       beta.obs.cat)
+    check.vector(beta.obs.return$sample)
+  }
+  if (beta.shp.cat!= 0){
+    beta.shp.return <- check.lpobjects(data, lpmodel$beta.shp, "beta.shp", 
+                                       beta.shp.cat)
+    check.vector(beta.shp.return$sample)
+  }
+  
+  # ---------------- #
+  # Step 3: Check whether the dimension matches
+  # ---------------- # 
+  if (A.obs.cat != 0){
+    if (nrow(A.obs.return$sample) != nrow(beta.obs.return$sample)){
+      stop(paste0("The objects 'A.obs' and 'beta.obs' in 'lpmodel' has ",
+                  "to have the same number of rows."))
+    }
+  }
+  if (A.shp.cat != 0){
+    if (nrow(A.shp.return$sample) != nrow(beta.shp.return$sample)){
+      stop(paste0("The objects 'A.shp' and 'beta.shp' in 'lpmodel' has ",
+                  "to have the same number of rows."))
+    } 
+  }
+  return(lpmodel)
+}
+
+#' Check function: check matrices and vectors in lpmodel
+#' 
+#' @description This function checks if the matrix objects in \code{lpmodel} 
+#'    are in the correct format.
+#'    
+#' @param mat The matrix object in \code{lpmodel}.
+#' @param mat.name Name of the matrix object in \code{lpmodel}.
+#' @param mat.cat Category of the matrix object.
+#' @inheritParams dkqs
+#' 
+#' @return Returns two objects:
+#'    \item{mat}{The updated object in \code{lpmodel}.}
+#'    \item{sample}{A sample object that is used to compare the dimension.}
+#' 
+#' @export
+#' 
+check.lpobjects <- function(data, mat, mat.name, mat.cat, R){
+  # Ignore if mat is null
+  if (!is.null(mat)){
+    # ---------------- #
+    # Step 1: Check error indicator
+    # ---------------- #
+    err.ind <- NULL
+    
+    # Category 1: Check if it is a single matrix
+    if (sum(mat.cat %in% 1) > 0){
+      mat.return <- check.matrix(mat, mat.name, mat.cat, FALSE)
+      if (mat.return$err.ind != 1){
+        return(list(mat = mat.return$mat.update,
+                    sample = mat.return$mat.update))
+      } else {
+        err.ind <- c(err.ind, 1)
+      }
+    }
+    
+    # Category 2: Check if it is a function
+    if (sum(mat.cat %in% 2) > 0){
+      if (class(mat) == "function"){
+        return(list(mat = mat,
+                    sample = mat(data)))
+      } else if (length(mat.cat) == 1){
+        stop(sprintf(paste0("The object '%s' in 'lpmodel' has to be a ",
+                            "function."),
+                     mat.name),
+             call. = FALSE)
+      } else {
+        err.ind <- c(err.ind, 2)
+      }
+    }
+    
+    # Category 3: Check if it is a list
+    if (sum(mat.cat %in% 3) > 0){
+      if (class(mat) == "list"){
+        # Check if the length of the list is R+1
+        if (length(mat) != (R+1)){
+          stop(sprint(paste0("The object '%s' in 'lpmodel' needs to have ",
+                             "exactly %s elements",
+                             mat.name, R+1)),
+               call. = FALSE)
+        }
+        
+        # Loop through each element of the list to check if they are matrices
+        df.dim <- data.frame(matrix(vector(), nrow = R+1))
+        for (i in 1:(R+1)){
+          mat.return <- check.matrix(check.matrix[[i]], mat.name, mat.cat, 
+                                     TRUE)
+          # Check if all objects inside the list has the same dimension
+          df.dim[i,1] <- mat.return[1]
+          df.dim[i,2] <- mat.return[2]
+          if (i > 1 & 
+              ((df.dim[i,1] != df.dim[i-1,1]) | 
+               (df.dim[i,1] != df.dim[i-1,1]))){
+            stop(sprint(paste0("The dimension of the objects inside the list ",
+                               "'%s' in 'lpmodel' need to have the same",
+                               "dimension.",
+                               mat.name)),
+                 call. = FALSE)
+          }
+        }
+        return(list(mat = mat,
+                    sample = mat.return[1]))
+      } else if (length(mat.cat) == 1){
+        stop(sprintf("The object '%s' in 'lpmodel' has to be a list.", 
+                     mat.name),
+             call. = FALSE)
+      } else {
+        err.ind <- c(err.ind, 3)
+      }
+    }
+    
+    # Category 4: Check if it is a function that produces two matrices
+    if (sum(mat.cat %in% 4) > 0){
+      if (class(mat) == "function"){
+        # Check if there are two outputs of the function
+        func.output <- mat(data)
+        if (length(func.output) != 2){
+          stop(sprintf(paste0("The output of '%s' in 'lpmodel' has to be a ", 
+                              "list of two objects (one vector and one ",
+                              "matrix)."),
+                       mat.name),
+               call. = FALSE)
+        } else {
+          out1 <- matrix(func.output[[1]])
+          out2 <- matrix(func.output[[2]])
+          
+          # Check if one of out1 and out2 if a vector and the remaining one is 
+          # a matrix
+          if ((ncol(out1) != 1 & ncol(out2) != 1)){
+            stop(sprintf(paste0("The output of '%s' in 'lpmodel' has to be a ", 
+                                "list of two objects (one vector and one ",
+                                "matrix)."),
+                         mat.name),
+                 call. = FALSE)
+          } else if (ncol(out1) == 1){
+            sample <- out1
+          } else if (ncol(out1) == 2){
+            sample <- out2
+          }
+        }
+        return(list(mat = mat,
+                    sample = sample))
+      } else if (length(mat.cat) == 1){
+        stop(sprintf(paste0("The object '%s' in 'lpmodel' has to be a ",
+                            "function that produces a list of two objects ",
+                            "(one vector and one matrix)."),
+                     mat.name),
+             call. = FALSE)
+      } else {
+        err.ind <- c(err.ind, 4)
+      }
+    }
+    
+    # Display an overall error message
+    err.msg.comb <- NULL 
+    if (err.ind == length(mat.cat)){
+      # Pick the messages to display
+      for (i in 1:length(mat.cat)){
+        if (i != 1){
+          err.msg.comb <- paste0(err.msg.comb, ", ")
+        }
+        if (mat.cat[i] == 1){
+          err.msg.comb <- paste0(err.msg.comb, "a matrix")
+        } else if (mat.cat[i] == 2){
+          err.msg.comb <- paste0(err.msg.comb, 
+                                 "a function that returns ", 
+                                 "a matrix")
+        } else if (mat.cat[i] == 3){
+          err.msg.comb <- paste0(err.msg.comb, "a list")
+        } else if (mat.cat[i] == 3){
+          err.msg.comb <- paste0(err.msg.comb, paste0("a function that ",
+                                                      "returns a matrix and ",
+                                                      "a vector"))
+        }
+      }
+      
+      # Display the error message
+      stop(sprintf(paste0("The object '%s' in 'lpmodel' has to be one of ",
+                          "the followings: ", err.msg.comb),
+                   mat.name),
+           call. = FALSE)
+    }
+  }
+}
+
+#' Check function: check matrix
+#' 
+#' @description This function checks if the matrix objects in \code{lpmodel} 
+#'    are in the correct format.
+#'    
+#' @param mat The matrix object in \code{lpmodel}.
+#' @param mat.name Name of the matrix object in \code{lpmodel}.
+#' @param inside.list Indicator variables of whether the object that is 
+#'    being checked is inside a list or not.
+#'      
+#' @export
+#' 
+check.matrix <- function(mat, mat.name, mat.cat, inside.list){
+  if (class(mat) == "data.frame" | class(mat) == "matrix" | 
+      class(mat) == "numeric"){
+    mat.update <- as.matrix(mat)
+    return(list(mat.update = mat.update,
+                err.ind = 0,
+                dim = dim(mat.update)))
+  } else if (length(mat.cat) == 1){
+    if (inside.list == FALSE){
+      stop(sprintf(paste0("The class of teh object '%s' in 'lpmodel' has to ",
+                          "be one of the followings: data.frame, matrix, or ",
+                          "numeric."),
+                   mat.name),
+           call. = FALSE)
+    } else {
+      stop(sprintf(paste0("The objects inside the list object '%s' of ",
+                          "'lpmodel' has to be either a matrix or a ",
+                          "data.frame."),
+                   mat.name),
+           call. = FALSE)
+    }
+  } else {
+    if (inside.list == FALSE) {
+      mat.update <- NULL
+      return(list(mat.update = mat.update,
+                  err.ind = 1))
+    } else {
+      stop(sprintf(paste0("The objects inside the list object '%s' of ",
+                          "'lpmodel' has to be either a matrix or a ",
+                          "data.frame."),
+                   mat.name),
+           call. = FALSE)
+    }
+  }
+}
+
+#' Check function: check vector
+#' 
+#' @description This function checks if the matrix objects in \code{lpmodel} 
+#'    are in the correct format.
+#'    
+#' @param vec The vector object in \code{lpmodel}.
+#' @param vec.name Name of the vector object in \code{lpmodel}.
+#' @param inside.list Indicator variables of whether the object that is 
+#'    being checked is inside a list or not.
+#'      
+#' @export
+#' 
+check.vector <- function(vec, vec.name, inside.list){
+  vec <- as.matrix(vec)
+  
+  if (nrow(vec) != 1 & ncol(vec) != 1){
+    if (inside.list == FALSE){
+      stop(sprintf(paste0("The object '%s' of 'lpmodel' has to be a vector."),
+                   vec.name),
+           call. = FALSE)
+    } else {
+      stop(sprintf(paste0("The object '%s' of 'lpmodel' has to be a list ",
+                          "of vectors"),
+                   vec.name),
+           call. = FALSE) 
+    }
+  }
+}
+

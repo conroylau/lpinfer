@@ -22,37 +22,37 @@
 #' 
 standard.form <- function(A, b, sense, lb = NULL, obj = NULL){
   # Obtain the matrices by the type of the inequality or equality
-  A1 = A[sense == "<=", ]
-  A2 = A[sense == ">=", ]
-  A3 = A[sense == "=", ]
+  A1 <- A[sense == "<=", ]
+  A2 <- A[sense == ">=", ]
+  A3 <- A[sense == "=", ]
   
   # Obtain the RHS vectors by the type of the inequality or equality
-  b1 = b[sense == "<="]
-  b2 = b[sense == ">="]
-  b3 = b[sense == "="]
+  b1 <- b[sense == "<="]
+  b2 <- b[sense == ">="]
+  b3 <- b[sense == "="]
   # Assign objective function
-  a = rep(1, ncol(A))
+  a <- rep(1, ncol(A))
   
   # Obtain the constraints in standard form
-  A.sf = boot::simplex(a, A1, b1, A2, b2, A3, b3, 
-                       maxi = FALSE, 
-                       n.iter = 0)$A[, 1:(ncol(A) + nrow(rbind(A1, A2)))]
+  A.sf <- boot::simplex(a, A1, b1, A2, b2, A3, b3, 
+                        maxi = FALSE, 
+                        n.iter = 0)$A[, 1:(ncol(A) + nrow(rbind(A1, A2)))]
   
   # Obtain the new RHS vector
-  b.sf = c(b1, b2, b3)
+  b.sf <- c(b1, b2, b3)
   
   if (!is.null(lb)){
     # Append the zero lower bound for the slack and surplus variables
-    lb.sf = c(lb, rep(0, nrow(rbind(A1, A2)))) 
+    lb.sf <- c(lb, rep(0, nrow(rbind(A1, A2)))) 
   } else {
-    lb.sf = NULL
+    lb.sf <- NULL
   }
   
   if (is.null(obj)){
     # Return the updated objective value
-    obj.sf = c(obj, rep(0, nrow(rbind(A1, A2)))) 
+    obj.sf <- c(obj, rep(0, nrow(rbind(A1, A2)))) 
   } else {
-    obj.sf = NULL
+    obj.sf <- NULL
   }
   
   return(list(A = A.sf,
@@ -60,5 +60,3 @@ standard.form <- function(A, b, sense, lb = NULL, obj = NULL){
               lb = lb.sf,
               obj = obj.sf))
 }
-
-

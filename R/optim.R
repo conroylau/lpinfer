@@ -3,8 +3,6 @@
 #' @description This function computes the solution to the quadratic or linear
 #'    program using the `\code{Gurobi}' package. This function can have linear
 #'    and/or quadratic constraints.
-#'    
-#' @import gurobi
 #'
 #' @param Af The matrix that is involved in the objective function.
 #' @param bf The vector that is involved in the objective function.
@@ -24,30 +22,38 @@
 #'
 #' @export
 #' 
-gurobi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL){
-  ### Step 1: Obtain the coefficients of the objective function
-  objective_return = objective_function(Af, bf, nf)
-  
-  ### Step 2: Gurobi set-up
-  model = list()
+gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL){
+  # ---------------- #
+  # Step 1: Obtain the coefficients of the objective function
+  # ---------------- #
+  objective_return <- objective.function(Af, bf, nf)
+
+  # ---------------- #
+  # Step 2: Gurobi set-up
+  # ---------------- #
+  model <- list()
   # Objective function - Quadratic / list
-  model$Q = objective_return$obj2
-  model$obj = objective_return$obj1
-  model$objcon = objective_return$obj0
+  model$Q <- objective_return$obj2
+  model$obj <- objective_return$obj1
+  model$objcon <- objective_return$obj0
+  
   # Linear constraints
-  model$A = A
-  model$rhs = rhs
+  model$A <- A
+  model$rhs <- rhs
+  
   # Quadrtaic constraints
-  model$quadcon = qc 
+  model$quadcon <- qc 
   
   # Model sense and lower bound
-  model$sense = sense 
-  model$modelsense = modelsense
-  model$lb = lb
+  model$sense <- sense 
+  model$modelsense <- modelsense
+  model$lb <- lb
   
-  ### Step 3: Result of the linear or quadratic program, and return result
-  params = list(OutputFlag=0, FeasibilityTol=1e-9)
-  solution = gurobi::gurobi(model, params)
+  # ---------------- #
+  # Step 3: Result of the linear or quadratic program, and return result
+  # ---------------- #
+  params <- list(OutputFlag=0, FeasibilityTol=1e-9)
+  solution <- gurobi::gurobi(model, params)
   return(list(objval = as.numeric(solution$objval),
               x = as.numeric(solution$x)))
 }
@@ -67,40 +73,50 @@ gurobi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL){
 #'
 #' @export
 #' 
-cplexapi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
-  ### Step 1: Obtain the coefficients of the objective function
-  objective_return = objective_function(Af, bf, nf)
+cplexapi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
+  # ---------------- #
+  # Step 1: Obtain the coefficients of the objective function
+  # ---------------- #
+  objective_return <- objective.function(Af, bf, nf)
   
-  ### Step 2: Update the notations
+  # ---------------- #
+  # Step 2: Update the notations
+  # ---------------- #
   # Model sense
-  modelsense[modelsense == "min"] = CPX_MIN
-  modelsense[modelsense == "max"] = CPX_MAX
-  # Inequality/equality signs
-  sense[sense == "<="] = "L"
-  sense[sense == ">="] = "G"
-  sense[sense == "=="] = "E"
-  sense[sense == "="] = "E"
-  # Bounds
-  lb[lb == Inf] = cplexAPI::CPX_INFBOUND
-  lb[lb == -Inf] = -cplexAPI::CPX_INFBOUND
-  ub = rep(CPX_INFBOUND, length(lb))
+  modelsense[modelsense == "min"] <- CPX_MIN
+  modelsense[modelsense == "max"] <- CPX_MAX
   
-  ### Step 3: cplexAPI environment
+  # Inequality/equality signs
+  sense[sense == "<="] <- "L"
+  sense[sense == ">="] <- "G"
+  sense[sense == "=="] <- "E"
+  sense[sense == "="] <- "E"
+  
+  # Bounds
+  lb[lb == Inf] <- cplexAPI::CPX_INFBOUND
+  lb[lb == -Inf] <- -cplexAPI::CPX_INFBOUND
+  ub <- rep(CPX_INFBOUND, length(lb))
+  
+  # ---------------- #
+  # Step 3: cplexAPI environment
+  # ---------------- #
   # Model environment
-  env = cplexAPI::openEnvCPLEX()
+  env <- cplexAPI::openEnvCPLEX()
   cplexAPI::setDblParmCPLEX(env, 1016, 1e-06)
-  prob = cplexAPI::initProbCPLEX(env)
+  prob <- cplexAPI::initProbCPLEX(env)
   cplexAPI::chgProbNameCPLEX(env, prob, "sample")
   
   # Constraint matrices
-  cnt = apply(A, MARGIN = 2, function(x) length(which(x != 0)))
-  beg = rep(0, ncol(A))
-  beg[-1] = cumsum(cnt[-length(cnt)])
-  ind = unlist(apply(A, MARGIN = 2, function(x) which(x != 0) - 1))
-  val = c(A)
-  val = val[val != 0]
+  cnt <- apply(A, MARGIN = 2, function(x) length(which(x != 0)))
+  beg <- rep(0, ncol(A))
+  beg[-1] <- cumsum(cnt[-length(cnt)])
+  ind <- unlist(apply(A, MARGIN = 2, function(x) which(x != 0) - 1))
+  val <- c(A)
+  val <- val[val != 0]
   
-  ### Step 4: Solve the problem
+  # ---------------- #
+  # Step 4: Solve the problem
+  # ---------------- #
   # A linear program is identified if obj2 == NULL
   if (is.null(obj2) == TRUE){
     # Solving linear program
@@ -119,7 +135,7 @@ cplexapi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
                                 lb,
                                 ub)
     cplexAPI::lpoptCPLEX(env, prob)
-    solution = cplexAPI::solutionCPLEX(env, prob)
+    solution <- cplexAPI::solutionCPLEX(env, prob)
   } else {
     # Solving quadratic program
     stop("This version can only solve linear programs by CPLEX at the moment. 
@@ -134,8 +150,6 @@ cplexapi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
 #'
 #' @description This function computes the solution to the linear and quadratic
 #'    programs using the `\code{Rcplex}' package.
-#'    
-#' @import Rcplex
 #'
 #' @inheritParams gurobi_optim
 #' @inheritParams dkqs
@@ -147,43 +161,53 @@ cplexapi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
 #'
 #' @export
 #' 
-rcplex_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
-  ### Step 1: Obtain the coefficients of the objective function
-  objective_return = objective_function(Af, bf, nf)
+rcplex.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
+  # ---------------- #
+  # Step 1: Obtain the coefficients of the objective function
+  # ---------------- #
+  objective_return = objective.function(Af, bf, nf)
   
-  ### Step 2: Update vectors and sense
+  # ---------------- #
+  # Step 2: Update vectors and sense
+  # ---------------- #
   # Update sense
-  sense[sense == ">="] = "G"
-  sense[sense == "<="] = "L"
-  sense[sense == "="]  = "E"
+  sense[sense == ">="] <- "G"
+  sense[sense == "<="] <- "L"
+  sense[sense == "="]  <- "E"
+  
   # Define upper bound
-  ub = rep(Inf, length(lb))
+  ub <- rep(Inf, length(lb))
+  
   # Define Q matrix
   # - Keep Qmat as NULL for linear program
   # - Multiply obj2 by 2 for Q for quadratic program to offset the 1/2 factor
   if (is.null(objective_return$obj2) == TRUE){
-    Qmat = objective_return$obj2
+    Qmat <- objective_return$obj2
   } else {
-    Qmat = 2*objective_return$obj2
+    Qmat <- 2*objective_return$obj2
   }
   
-  ### Step 3: Solve model
-  solution = Rcplex::Rcplex(cvec = t(objective_return$obj1),
-                            Amat = A, 
-                            bvec = rhs,
-                            Qmat = Qmat,
-                            lb = lb,
-                            sense = sense,
-                            ub = ub,
-                            objsense = modelsense,
-                            vtype = "C",
-                            n = 1)
+  # ---------------- #
+  # Step 3: Solve model
+  # ---------------- #
+  solution <- Rcplex::Rcplex(cvec = t(objective_return$obj1),
+                             Amat = A, 
+                             bvec = rhs,
+                             Qmat = Qmat,
+                             lb = lb,
+                             sense = sense,
+                             ub = ub,
+                             objsense = modelsense,
+                             vtype = "C",
+                             n = 1)
   
-  ### Step 3: Update and return result
+  # ---------------- #
+  # Step 4: Update and return result
+  # ---------------- #
   if (is.null(objective_return$obj0) == FALSE){
-    objval = solution$obj + objective_return$obj0
+    objval <- solution$obj + objective_return$obj0
   } else {
-    objval = solution$obj
+    objval <- solution$obj
   }
   return(list(objval = as.numeric(objval),
               x = as.numeric(solution$xopt)))
@@ -193,8 +217,6 @@ rcplex_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
 #' 
 #' @description This function computes the solution to linear and quadratic 
 #'    programs using the `\code{limSolve}' package.
-#' 
-#' @import limSolve
 #'
 #' @inheritParams gurobi_optim
 #' @inheritParams dkqs
@@ -206,70 +228,85 @@ rcplex_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
 #'   
 #' @export
 #' 
-limsolve_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
-  ### Step 1: Obtain the coefficients of the objective function
-  objective_return = objective_function(Af, bf, nf)
+limsolve.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
+  # ---------------- #
+  # Step 1: Obtain the coefficients of the objective function
+  # ---------------- #
+  objective_return <- objective.function(Af, bf, nf)
   
-  ### Step 2: Update lower bounds
+  # ---------------- #
+  # Step 2: Update lower bounds
+  # ---------------- #
   # Change the lower bounds to inequality constriants
-  lb_Amat = diag(length(lb))
-  lb_bvec = lb
-  # Update constraint matrices
-  A = rbind(A, lb_Amat)
-  rhs = c(rhs, lb_bvec)
-  sense = c(sense, rep(">=", length(lb_bvec)))
+  lb_Amat <- diag(length(lb))
+  lb_bvec <- lb
   
-  ### Step 3: Update constraints
+  # Update constraint matrices
+  A <- rbind(A, lb_Amat)
+  rhs <- c(rhs, lb_bvec)
+  sense <- c(sense, rep(">=", length(lb_bvec)))
+  
+  # ---------------- #
+  # Step 3: Update constraints
+  # ---------------- #
   # Objective function
   if (modelsense == "max"){
-    fcost = - objective_return$obj1 
+    fcost <- - objective_return$obj1 
   } else if (modelsense == "min"){
-    fcost = objective_return$obj1
+    fcost <- objective_return$obj1
   }
-  # Equality constraints
-  Emat = A[sense == "=",]
-  Fvec = rhs[sense == "="]
-  # Inequality constraint >=
-  Gmat1 = A[sense == ">=",]
-  Hvec1 = rhs[sense == ">="]   
-  # Inequality constraint <= 
-  Gmat2 = -A[sense == "<=",]
-  Hvec2 = -rhs[sense == "<="]
-  # Combine G and h matrices
-  Gmat = rbind(Gmat1, Gmat2)
-  Hvec = as.matrix(c(c(Hvec1), c(Hvec2)), ncol = 1, byrow = TRUE)
   
-  ### Step 4 - Solve the model
+  # Equality constraints
+  Emat <- A[sense == "=",]
+  Fvec <- rhs[sense == "="]
+  
+  # Inequality constraint >=
+  Gmat1 <- A[sense == ">=",]
+  Hvec1 <- rhs[sense == ">="]   
+  
+  # Inequality constraint <= 
+  Gmat2 <- -A[sense == "<=",]
+  Hvec2 <- -rhs[sense == "<="]
+  
+  # Combine G and h matrices
+  Gmat <- rbind(Gmat1, Gmat2)
+  Hvec <- as.matrix(c(c(Hvec1), c(Hvec2)), ncol = 1, byrow = TRUE)
+  
+  # ---------------- #
+  # Step 4: Solve the model
+  # ---------------- #
   # Linear solver is used if obj2 is a zero matrix (i.e. number of zeros equals 
   # the total number of elements) or NULL
   if (is.null(objective_return$obj2) == TRUE | 
       sum(objective_return$obj2 == 0) == length(objective_return$obj2)){
     ### Linear program solver
-    solution = limSolve::linp(E = Emat, F = Fvec, G = Gmat, H = Hvec, 
+    solution <- limSolve::linp(E = Emat, F = Fvec, G = Gmat, H = Hvec, 
                               Cost = fcost)
+    
     # Obtain objective function, and add back the constant term, negate the 
     # solution if it is a max problem
     if (modelsense == "max"){
-      objval = -solution$solutionNorm + objective_return$obj0      
+      objval <- -solution$solutionNorm + objective_return$obj0      
     } else if (modelsense == "min"){
-      objval = solution$solutionNorm + objective_return$obj0      
+      objval <- solution$solutionNorm + objective_return$obj0      
     }
   } else {
     if (modelsense == "min"){
       ### Quadratic program solver
       # Formulate the two matrices
-      Amat = Af * sqrt(nf)
-      Bvec = bf * sqrt(nf)
-      solution = limSolve::lsei(A = Amat, B = Bvec, E = Emat, F = Fvec, 
+      Amat <- Af * sqrt(nf)
+      Bvec <- bf * sqrt(nf)
+      solution <- limSolve::lsei(A = Amat, B = Bvec, E = Emat, F = Fvec, 
                                 G = Gmat, H = Hvec)
+      
       # Obtain objective function
-      objval = solution$solutionNorm
+      objval <- solution$solutionNorm
     } else if (modelsense == "max"){
       stop("This package cannot be used to solve max problems.")
     }
   }
   # Optimal the optimal value of x
-  x = solution$X
+  x <- solution$X
   return(list(x = as.numeric(x),
               objval = as.numeric(objval)))
 }
@@ -316,26 +353,26 @@ limsolve_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
 #'     
 #' @export
 #' 
-objective_function <- function(A, b, n){
+objective.function <- function(A, b, n){
   # If-else function to determine if it corresponds to a linear or quadratic
   # program. This is identified by whether one of A and b is null or nonzero
   # because it would be the case for linear programs that are considered in
   # this package.
   if (is.null(A) == TRUE | sum(A == 0) == length(A)){
     # Linear program coefficients with nonzero vector b
-    obj2 = NULL
-    obj1 = b
-    obj0 = 0
+    obj2 <- NULL
+    obj1 <- b
+    obj0 <- 0
   } else if (is.null(b) == TRUE | sum(b == 0) == length(b)){
     # Linear program coefficients with nonzero matrix A
-    obj2 = NULL
-    obj1 = A
-    obj0 = 0
+    obj2 <- NULL
+    obj1 <- A
+    obj0 <- 0
   } else {
     # Quadratic program coefficients
-    obj2 = t(A) %*% A * n
-    obj1 = -2 * t(A) %*% b * n
-    obj0 = t(b) %*% b * n
+    obj2 <- t(A) %*% A * n
+    obj1 <- -2 * t(A) %*% b * n
+    obj0 <- t(b) %*% b * n
   }
   # Return the above objective functions
   return(list(obj2 = obj2, obj1 = obj1, obj0 = obj0))
@@ -346,8 +383,6 @@ objective_function <- function(A, b, n){
 #' @description This function computes the solution to the linear program
 #'    using the `\code{lpsolveAPI}' package.
 #'    
-#' @import lpSolveAPI
-#'
 #' @inheritParams gurobi_optim
 #' @inheritParams dkqs
 #' @inheritParams prog_cone
@@ -362,22 +397,28 @@ objective_function <- function(A, b, n){
 #'
 #' @export
 #' 
-lpsolveapi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
-  ### Step 1: Obtain the coefficients of the objective function
-  objective_return = objective_function(Af, bf, nf)
+lpsolveapi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
+  # ---------------- #
+  # Step 1: Obtain the coefficients of the objective function
+  # ---------------- #
+  objective_return <- objective.function(Af, bf, nf)
   
-  #### Step 2: Update the constraint matrices
+  # ---------------- #
+  # Step 2: Update the constraint matrices
+  # ---------------- #
   # Change the lower bounds to inequality constriants
-  lb_Amat = diag(length(lb))
-  lb_bvec = lb
+  lb_Amat <- diag(length(lb))
+  lb_bvec <- lb
   # Update constraint matrices
-  A = rbind(A, lb_Amat)
-  rhs = c(rhs, lb_bvec)
-  sense = c(sense, rep(">=", length(lb_bvec)))
+  A <- rbind(A, lb_Amat)
+  rhs <- c(rhs, lb_bvec)
+  sense <- c(sense, rep(">=", length(lb_bvec)))
   
-  #### Step 3: LP formulation
+  # ---------------- #
+  # Step 3: LP formulation
+  # ---------------- #
   # solve object
-  lprec = make.lp(nrow = nrow(A), ncol = ncol(A))
+  lprec <- make.lp(nrow = nrow(A), ncol = ncol(A))
   # Model sense
   lp.control(lprec, sense=modelsense)
   # Types of decision variables
@@ -388,12 +429,16 @@ lpsolveapi_optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
     add.constraint(lprec, A[i, ], sense[i], rhs[i])
   }
   
-  #### Step 4: Solve and obtain solution of LP
+  # ---------------- #
+  # Step 4: Solve and obtain solution of LP
+  # ---------------- #
   solve(lprec)
-  x = get.variables(lprec)
-  objval = get.objective(lprec)
+  x <- get.variables(lprec)
+  objval <- get.objective(lprec)
   
-  #### Step 5: Return results
+  # ---------------- #
+  # Step 5: Return results
+  # ---------------- #
   return(list(objval = objval,
               x = x))
 }
