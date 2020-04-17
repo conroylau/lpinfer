@@ -15,6 +15,6 @@ summary.dkqs(x, ...)
 Print the summary of the basic set of results from \code{dkqs}.
 }
 \description{
-This function uses the print method on the return list of the
+This function uses the summary method on the return list of the
    function \code{dkqs}. This is a wrapper of the \code{print} command.
 }

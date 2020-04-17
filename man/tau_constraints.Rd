@@ -5,43 +5,44 @@
 \title{Auxiliary function to create the constraints for the linear program for tau}
 \usage{
 tau_constraints(
-  length_tau,
-  coeff_tau,
-  coeff_x,
-  ind_x,
+  length.tau,
+  coeff.tau,
+  coeff.x,
+  ind.x,
   rhs,
   sense,
-  lp_lhs_tau,
-  lp_rhs_tau,
-  lp_sense_tau
+  lp.lhs.tau,
+  lp.rhs.tau,
+  lp.sense.tau
 )
 }
 \arguments{
-\item{length_tau}{The number of variables in the constraint.}
+\item{length.tau}{The number of variables in the constraint.}
 
-\item{coeff_tau}{The coefficient in front of tau in the constraint.}
+\item{coeff.tau}{The coefficient in front of tau in the constraint.}
 
-\item{coeff_x}{The coefficient in front of \eqn{x_i} in the constraint.}
+\item{coeff.x}{The coefficient in front of \eqn{x_i} in the constraint.}
 
-\item{ind_x}{The index of \eqn{x_i}, i.e. the value of \eqn{i}.}
+\item{ind.x}{The index of \eqn{x_i}, i.e. the value of \eqn{i}.}
 
 \item{rhs}{The RHS vector of the new constraint.}
 
 \item{sense}{The equality or inequality symbol to be used in the new
 constraint.}
 
-\item{lp_lhs_tau}{The constraint matrix to be updated.}
+\item{lp.lhs.tau}{The constraint matrix to be updated.}
 
-\item{lp_rhs_tau}{The RHS vector of the linear constraints to be updated.}
+\item{lp.rhs.tau}{The RHS vector of the linear constraints to be updated.}
 
-\item{lp_sense_tau}{The sense vector fo the linear constraints to be updated}
+\item{lp.sense.tau}{The sense vector fo the linear constraints to be 
+updated.}
 }
 \value{
 Returns the list of matrices that corresponds to the updated 
   constraints:
-  \item{lp_lhs_tau}{Upated constraint matrix.}
-  \item{lp_rhs_tau}{Update RHS vector.}
-  \item{lp_sense_tau}{Update sense for the constraints.}
+  \item{lp.lhs.tau}{Upated constraint matrix.}
+  \item{lp.rhs.tau}{Update RHS vector.}
+  \item{lp.sense.tau}{Update sense for the constraints.}
 }
 \description{
 This function generates the constraints in the linear program

@@ -13,7 +13,7 @@ invertci(
   ub0 = NULL,
   ub1 = NULL,
   tol = 1e-04,
-  max_iter = 20,
+  max.iter = 20,
   df_ci = NULL,
   progress = FALSE
 )
@@ -36,7 +36,7 @@ procedure.}
 
 \item{tol}{Tolerance level in the bisection method.}
 
-\item{max_iter}{Maximum number of iterations in the bisection method.}
+\item{max.iter}{Maximum number of iterations in the bisection method.}
 
 \item{df_ci}{Data frame that consists the points and the corresponding
 \eqn{p}-values that have been tested in the previous iterations.}

@@ -15,6 +15,7 @@ summary.subsample(x, ...)
 Print the summary of the basic set of results from \code{subsample}.
 }
 \description{
-This function uses the print method on the return list of the
-   function \code{subsample}. This is a wrapper of the \code{print} command.
+This function uses the summary method on the return list of 
+   the function \code{subsample}. This is a wrapper of the \code{print} 
+   command.
 }
