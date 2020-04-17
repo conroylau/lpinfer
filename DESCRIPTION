@@ -21,7 +21,9 @@ Imports:
     Matrix,
     doSNOW,
     PtProcess,
-    doRNG
+    doRNG,
+    boot,
+    dplyr
 Suggests: 
     knitr,
     rmarkdown,
