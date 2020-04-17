@@ -280,7 +280,7 @@ subsample.onecore <- function(data, R, lpmodel, beta.tgt, norm, solver,
   # ---------------- #
   for (i in 1:R){
     # (2.1) Re-sample the data 
-    data.bs <- as.data.frame(Momocs::sample_n(data, m, eplace = TRUE))
+    data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
     rownames(data.bs) <- 1:nrow(data.bs)
     
     # (2.2) Compute the bootstrap estimates

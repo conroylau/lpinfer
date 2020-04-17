@@ -387,10 +387,7 @@ beta.bs <- function(data, lpmodel, beta.tgt, R, J, s.star, tau, solver,
   
   # Use the for-loop to construct the bootstrap test statistic
   for (i in 1:R){
-    # Re-sample the data 
-    data.bs <- as.data.frame(Momocs::sample_n(data, 
-                                              nrow(data), 
-                                              replace = TRUE))
+    data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
     rownames(data.bs) <- 1:nrow(data.bs)
     
     # Compute the bootstrap test statistic
