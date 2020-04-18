@@ -88,3 +88,89 @@ lpmodel.beta.eval <- function(data, obj, i){
   return(list(beta.obs = beta.obs.hat,
               omega = omega.hat))
 }
+
+#' Print the \code{lpmodel} object
+#' 
+#' @description This function prints objects that are contained in the 
+#'    list of \code{lpmodel}.
+#'    
+#' @param x The \code{lpmodel} object.
+#' 
+#' @return Print the summary of the objects in \code{lpmodel}.
+#' 
+#' @export
+#' 
+print.lpmodel <- function(x, ...){
+  # List of variables 
+  lpmodel.string <- c("A.obs", "A.shp", "A.tgt", "beta.obs", "beta.shp")
+  lpmodel.ind <- NULL
+  for (i in 1:length(lpmodel.string)){
+    if (!is.null(x[[lpmodel.string[i]]])){
+      lpmodel.ind <- c(lpmodel.ind, i)
+    }
+  }
+  if (length(lpmodel.ind) == 0){
+    cat("'lpmodel' object does not contain the required objects.")
+  } else {
+    cat("Object     Class \tDimension \tLength \n")
+    for (i in 1:length(lpmodel.string)){
+      if (i %in% lpmodel.ind){
+        obj <- x[[lpmodel.string[i]]]
+        # Check class of object 
+        class.tmp <- class(obj)
+        # Check length of object 
+        if (class.tmp == "list"){
+          class.tmp <- "list  "
+          length.tmp <- length(obj)
+          dimension.str <- dim(as.matrix(obj[[1]]))
+          dimension.tmp <- paste0(dimension.str[1], "x", dimension.str[2])
+        } else if (class.tmp == "function"){
+          length.tmp <- "N/A"
+          dimension.tmp <- "N/A"
+        } else if (class.tmp %in% c("data.frame", "matrix", "numeric")){
+          length.tmp <- 1
+          dimension.str <- dim(as.matrix(obj))
+          dimension.tmp <- paste0(dimension.str[1], "x", dimension.str[2])
+        } else {
+          length.tmp <- length(obj)
+          dimension.tmp <- "  "
+        }
+        # Check 
+        if (i <= 3){
+          cat(sprintf("%s      %s\t%s\t\t%s\n", 
+                      lpmodel.string[i], class.tmp, dimension.tmp, length.tmp))
+        } else {
+          cat(sprintf("%s   %s\t%s\t\t%s\n", 
+                      lpmodel.string[i], class.tmp, dimension.tmp, length.tmp)) 
+        }
+      } else {
+        if (i <= 3){
+          cat(sprintf("%s      -empty-\t-empty-\t\t-empty-\n", 
+                      lpmodel.string[i]))
+        } else {
+          cat(sprintf("%s   -empty-\t-empty-\t\t-empty-\n", 
+                      lpmodel.string[i])) 
+        }
+      }
+    }
+  }
+}
+attr(lpmodel, "class") <- "lpmodel"
+
+
+
+#' Summary of results from \code{lpmodel}
+#' 
+#' @description This function uses the summary method on the return list of the
+#'    function \code{lpmodel}. This is a wrapper of the \code{print} command.
+#'    
+#' @param x The \code{lpmodel} object.
+#' @param ... Additional arguments.
+#' 
+#' @return Print the summary of the basic set of results from \code{lpmodel}.
+#' 
+#' @export
+#' 
+summary.lpmodel <- function(x, ...){
+  print(x)
+}
