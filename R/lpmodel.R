@@ -132,7 +132,11 @@ print.lpmodel <- function(x, data = NULL, ...){
             dimension.tmp <- "N/A"           
           } else {
             tmp.obj <- obj(data)
-            length.tmp <- length(tmp.obj)
+            if (class(tmp.obj) == "list"){
+              length.tmp <- length(tmp.obj)
+            } else {
+              length.tmp <- 1
+            }
             dimension.str <- dim(as.matrix(tmp.obj))
             dimension.tmp <- paste0(dimension.str[1], "x", dimension.str[2])
           }
