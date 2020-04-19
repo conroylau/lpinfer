@@ -133,7 +133,7 @@ print.lpmodel <- function(x, data = NULL, ...){
           } else {
             tmp.obj <- obj(data)
             length.tmp <- length(tmp.obj)
-            dimension.str <- dim(as.matrix(tmp.obj[[1]]))
+            dimension.str <- dim(as.matrix(tmp.obj))
             dimension.tmp <- paste0(dimension.str[1], "x", dimension.str[2])
           }
         } else if (class.tmp %in% c("data.frame", "matrix", "numeric")){
