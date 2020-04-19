@@ -168,9 +168,40 @@ print.lpmodel <- function(x, data = NULL, ...){
     }
   }
 }
-# attr(lpmodel, "class") <- "lpmodel"
 
-
+#' Define a \code{lpmodel} object
+#' 
+#' @description This function defines the objects required in the 
+#'    \code{lpinfer} module in the \code{lpmodel} class.
+#'    
+#' @param A.obs A matrix, list or function
+#' @param A.shp A matrix, list or function
+#' @param A.tgt A matrix, list or function
+#' @param beta.obs A vector, list or function
+#' @param beta.tgt A vector, list or function
+#' 
+#' @return Returns a list of \code{lpmodel} objects in the \code{lpmodel} 
+#'    class.
+#' 
+lpmodel <- function(A.obs = NULL, A.shp = NULL, A.tgt = NULL, beta.obs = NULL, 
+                    beta.tgt = NULL){
+  # ---------------- #
+  # Step 1: Define the lpmodel objects
+  # ---------------- #
+  lpm <- list()
+  lpm$A.obs <- A.obs
+  lpm$A.shp <- A.shp
+  lpm$A.tgt <- A.tgt
+  lpm$beta.obs <- beta.obs
+  lpm$beta.tgt <- beta.tgt
+  
+  # ---------------- #
+  # Step 2: Define the class of the model
+  # ---------------- #
+  class(lpm) <- "lpmodel"
+  
+  return(lpm)
+}
 
 #' Summary of results from \code{lpmodel}
 #' 
