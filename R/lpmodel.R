@@ -100,7 +100,7 @@ lpmodel.beta.eval <- function(data, obj, i){
 #' 
 #' @export
 #' 
-print.lpmodel <- function(x, ...){
+print.lpmodel <- function(x, data = NULL, ...){
   # List of variables 
   lpmodel.string <- c("A.obs", "A.shp", "A.tgt", "beta.obs", "beta.shp")
   lpmodel.ind <- NULL
@@ -125,8 +125,17 @@ print.lpmodel <- function(x, ...){
           dimension.str <- dim(as.matrix(obj[[1]]))
           dimension.tmp <- paste0(dimension.str[1], "x", dimension.str[2])
         } else if (class.tmp == "function"){
-          length.tmp <- "N/A"
-          dimension.tmp <- "N/A"
+          # If data is not passed, print "N/A" for dimensions. Otherwise,
+          # compute the output for the output object
+          if (is.null(data)){
+            length.tmp <- "N/A"
+            dimension.tmp <- "N/A"           
+          } else {
+            tmp.obj <- obj(data)
+            length.tmp <- length(tmp.obj)
+            dimension.str <- dim(as.matrix(tmp.obj[[1]]))
+            dimension.tmp <- paste0(dimension.str[1], "x", dimension.str[2])
+          }
         } else if (class.tmp %in% c("data.frame", "matrix", "numeric")){
           length.tmp <- 1
           dimension.str <- dim(as.matrix(obj))
@@ -155,7 +164,7 @@ print.lpmodel <- function(x, ...){
     }
   }
 }
-attr(lpmodel, "class") <- "lpmodel"
+# attr(lpmodel, "class") <- "lpmodel"
 
 
 
