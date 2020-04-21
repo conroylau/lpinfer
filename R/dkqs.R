@@ -61,15 +61,15 @@ dkqs <- function(data, lpmodel, beta.tgt, R = 100, tau = .5, solver = NULL,
   call <- match.call()
   
   # Check the arguments
-  lpmodel.return <- dkqs.check(data, lpmodel, beta.tgt, R, tau, solver,
+  dkqs.return <- dkqs.check(data, lpmodel, beta.tgt, R, tau, solver,
                                cores, progress)
   
   # Update the arguments
-  data <- lpmodel.return$data
-  lpmodel <- lpmodel.return$lpmodel
-  solver <- lpmodel.return$solver
-  solver.name <- lpmodel.return$solver.name
-  cores <- lpmodel.return$cores
+  data <- dkqs.return$data
+  lpmodel <- dkqs.return$lpmodel
+  solver <- dkqs.return$solver
+  solver.name <- dkqs.return$solver.name
+  cores <- dkqs.return$cores
   
   # ---------------- #
   # Step 2: Initialization
@@ -233,7 +233,7 @@ dkqs.qlp <- function(data, lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
                                      A   = ones,
                                      rhs = c(1),
                                      sense = "=",
-                                     modelsense ="min",
+                                     modelsense = "min",
                                      lb = lb))
   theta.up <- do.call(solver, list(Af  = NULL,
                                    bf  = lpmodel$A.tgt,

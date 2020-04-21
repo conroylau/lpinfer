@@ -46,16 +46,16 @@ subsample <- function(data, lpmodel, beta.tgt, R = 100, solver = NULL,
   call <- match.call()
   
   # Check the arguments
-  checkupdate <- subsample.check(data, lpmodel, beta.tgt, R, solver, cores, 
+  subsample.return <- subsample.check(data, lpmodel, beta.tgt, R, solver, cores, 
                                  norm, phi, alpha, progress)
   
   # Update the arguments
-  data <- checkupdate$data
-  lpmodel <- checkupdate$lpmodel
-  solver <- checkupdate$solver
-  solver.name <- checkupdate$solver.name
-  cores <- checkupdate$cores
-  norm <- checkupdate$norm
+  data <- subsample.return$data
+  lpmodel <- subsample.return$lpmodel
+  solver <- subsample.return$solver
+  solver.name <- subsample.return$solver.name
+  cores <- subsample.return$cores
+  norm <- subsample.return$norm
   
   # = = = = = =
   # Step 2: Solve for T.n
@@ -102,7 +102,7 @@ subsample <- function(data, lpmodel, beta.tgt, R = 100, solver = NULL,
                  alpha = alpha,
                  T.n = as.numeric(Treturn$objval),
                  T.sub = T_subsample$T_sub,
-                 solver = checkupdate$solver_name,
+                 solver = subsample.return$solver_name,
                  cores = cores,
                  call = call,
                  norm = norm)

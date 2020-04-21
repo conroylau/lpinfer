@@ -56,14 +56,14 @@ invertci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
   call <- match.call()
   
   # Check and update
-  check_return <- invertci.check(f, farg, alpha, lb0, lb1, ub0, ub1, tol, 
+  invertci.return <- invertci.check(f, farg, alpha, lb0, lb1, ub0, ub1, tol, 
                                  max.iter, df_ci, progress)
   
   # Updates the input
-  lb0 <- check_return$lb0
-  lb1 <- check_return$lb1
-  ub0 <- check_return$ub0
-  ub1 <- check_return$ub1
+  lb0 <- invertci.return$lb0
+  lb1 <- invertci.return$lb1
+  ub0 <- invertci.return$ub0
+  ub1 <- invertci.return$ub1
   
   # Compute the number of decimal places in tol
   dp <- decimal.places(tol)
@@ -85,7 +85,7 @@ invertci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
       cat("\n")
     }
     
-    df_ci <- check_return$df_ci
+    df_ci <- invertci.return$df_ci
     termination <- NULL
     
     cat(sprintf(" < Constructing confidence interval for alpha = %s >\n", 
