@@ -73,15 +73,20 @@ lpmodel.beta.eval <- function(data, obj, i){
       omega.hat <- beta.return[[1]] 
     }
   } else if (class(obj) == "list"){
-    if (is.null(nrow(beta.return[[i]][[1]]))){
-      beta.obs.hat <- beta.return[[i]][[1]]
-      omega.hat <- beta.return[[i]][[2]]
-    } else if (nrow(beta.return[[i]][[1]] == 1)){
-      beta.obs.hat <- beta.return[[i]][[1]]
-      omega.hat <- beta.return[[i]][[2]]      
+    if (class(obj[[i]]) == "list"){
+      if (is.null(nrow(obj[[i]][[1]]))){
+        beta.obs.hat <- obj[[i]][[1]]
+        omega.hat <- obj[[i]][[2]]
+      } else if (nrow(obj[[i]][[1]] == 1)){
+        beta.obs.hat <- obj[[i]][[1]]
+        omega.hat <- obj[[i]][[2]]      
+      } else {
+        beta.obs.hat <- obj[[i]][[2]]
+        omega.hat <- obj[[i]][[1]] 
+      }
     } else {
-      beta.obs.hat <- beta.return[[i]][[2]]
-      omega.hat <- beta.return[[i]][[1]] 
+      beta.obs.hat <- obj[[i]]
+      omega.hat <- NULL
     }
   }
   
@@ -178,13 +183,13 @@ print.lpmodel <- function(x, data = NULL, ...){
 #' @param A.shp A matrix, list or function
 #' @param A.tgt A matrix, list or function
 #' @param beta.obs A vector, list or function
-#' @param beta.tgt A vector, list or function
+#' @param beta.shp A vector, list or function
 #' 
 #' @return Returns a list of \code{lpmodel} objects in the \code{lpmodel} 
 #'    class.
 #' 
 lpmodel <- function(A.obs = NULL, A.shp = NULL, A.tgt = NULL, beta.obs = NULL, 
-                    beta.tgt = NULL){
+                    beta.shp = NULL){
   # ---------------- #
   # Step 1: Define the lpmodel objects
   # ---------------- #
@@ -193,7 +198,7 @@ lpmodel <- function(A.obs = NULL, A.shp = NULL, A.tgt = NULL, beta.obs = NULL,
   lpm$A.shp <- A.shp
   lpm$A.tgt <- A.tgt
   lpm$beta.obs <- beta.obs
-  lpm$beta.tgt <- beta.tgt
+  lpm$beta.shp <- beta.shp
   
   # ---------------- #
   # Step 2: Define the class of the model
