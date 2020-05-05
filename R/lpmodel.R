@@ -187,6 +187,8 @@ print.lpmodel <- function(x, data = NULL, ...){
 #' 
 #' @return Returns a list of \code{lpmodel} objects in the \code{lpmodel} 
 #'    class.
+#'    
+#' @export
 #' 
 lpmodel <- function(A.obs = NULL, A.shp = NULL, A.tgt = NULL, beta.obs = NULL, 
                     beta.shp = NULL){

@@ -435,7 +435,7 @@ beta.bs <- function(data, lpmodel, beta.tgt, R, J, s.star, tau, solver,
 #' 
 #' @import doMC foreach
 #' 
-#' @inheritParams beta_bs 
+#' @inheritParams beta.bs 
 #' @inheritParams dkqs
 #' @inheritParams dkqs.qlp
 #' 

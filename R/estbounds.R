@@ -208,7 +208,7 @@ estbounds.original <- function(data, lpmodel, original.sense, solver){
 #'    is used in the constraint
 #' 
 #' @param firststepsoln List of solutions to the first step problem.
-#' @inheritParams gurobi_optim
+#' @inheritParams gurobi.optim
 #' @inheritParams estbounds
 #' @inheritParams dkqs
 #' 
@@ -290,7 +290,7 @@ estbounds2.L1 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
 #'    is used in the constraint
 #' 
 #' @param firststepsoln List of solutions to the first step problem.
-#' @inheritParams gurobi_optim
+#' @inheritParams gurobi.optim
 #' @inheritParams estbounds
 #' @inheritParams dkqs
 #' 

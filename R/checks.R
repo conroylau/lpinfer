@@ -33,7 +33,7 @@ check.dataframe <- function(data, name.var){
 #'   error message is displayed.
 #' 
 #' @param x Variable to be checked.
-#' @inheritParams check_dataframe
+#' @inheritParams check.dataframe
 #' 
 #' @return Nothing is returned.
 #'   
@@ -52,8 +52,8 @@ check.positiveinteger <- function(x, name.var){
 #' @description This function checks whether the class of the variable 
 #'   is \code{numeric} and has length 1.
 #' 
-#' @inheritParams check_dataframe
-#' @inheritParams check_positiveinteger
+#' @inheritParams check.dataframe
+#' @inheritParams check.positiveinteger
 #' 
 #' @return Nothing is returned.
 #'   
@@ -71,8 +71,8 @@ check.numeric <- function(x, name.var){
 #' @description This function checks whether the variable is boolean. If not, 
 #'   an error message is displayed.
 #' 
-#' @inheritParams check_dataframe
-#' @inheritParams check_positiveinteger
+#' @inheritParams check.dataframe
+#' @inheritParams check.positiveinteger
 #' 
 #' @return Nothing is returned.
 #'   
@@ -94,8 +94,8 @@ check.boolean <- function(x, name.var){
 #' @param left Value of lower bound
 #' @param right.type Type of the right interval (\code{open} or \code{closed})
 #' @param right Value of the upper bound
-#' @inheritParams check_dataframe
-#' @inheritParams check_positiveinteger
+#' @inheritParams check.dataframe
+#' @inheritParams check.positiveinteger
 #' 
 #' @return Nothing is returned.
 #' 
@@ -165,8 +165,8 @@ check.numrange <- function(x, name.var, left.type, left, right.type, right){
 #'   Note that capitalization is not an issue here as the text will be brought 
 #'   to the lower case. 
 #' 
-#' @inheritParams check_dataframe
-#' @inheritParams check_positiveinteger
+#' @inheritParams check.dataframe
+#' @inheritParams check.positiveinteger
 #' 
 #' @return Nothing is returned.
 #' 
@@ -209,8 +209,8 @@ check.norm <- function(x, name.var){
 #' @param data Data frame that will be passed to the function
 #' @param name.A Name of matrix
 #' @param mat.type Type of the matrix to be checked
-#' @inheritParams check_dataframe
-#' @inheritParams check_positiveinteger
+#' @inheritParams check.dataframe
+#' @inheritParams check.positiveinteger
 #' 
 #' @return Returns the output of the function in the format of \code{numeric}
 #'   and the correct dimension. If \code{mat.type} is \code{col}, then a 
@@ -356,8 +356,8 @@ check.Ab <- function(A, b, Aname, bname){
 #'   appropriate for the problem considered.
 #' 
 #' @param norm Norm used in the problem
-#' @inheritParams check_dataframe
-#' @inheritParams check_positiveinteger
+#' @inheritParams check.dataframe
+#' @inheritParams check.positiveinteger
 #' 
 #' @return Returns the function name that corresponds to the solver for the 
 #'   problem.
@@ -505,7 +505,7 @@ check.lpmodel <- function(data, lpmodel, name.var, A.tgt.cat, A.obs.cat,
   # ---------------- #
   # Step 1: Check if lpmodel is a list
   # ---------------- #
-  if (class(lpmodel) != "list"){
+  if (class(lpmodel) != "lpmodel"){
     stop(sprintf("The object '%s' has to be a list.", name.var),
          call. = FALSE)
   }
@@ -515,22 +515,22 @@ check.lpmodel <- function(data, lpmodel, name.var, A.tgt.cat, A.obs.cat,
   # and check if beta.obs and beta.shp are matrices
   # ---------------- #
   if (A.tgt.cat != 0){
-    A.tgt.return <- check.lpobjects(data, lpmodel$A.tgt, "A.tgt", A.tgt.cat)
+    A.tgt.return <- check.lpobjects(data, lpmodel$A.tgt, "A.tgt", A.tgt.cat, R)
   }
   if (A.obs.cat != 0){
-    A.obs.return <- check.lpobjects(data, lpmodel$A.obs, "A.obs", A.obs.cat)
+    A.obs.return <- check.lpobjects(data, lpmodel$A.obs, "A.obs", A.obs.cat, R)
   }
   if (A.shp.cat != 0){
-    A.shp.return <- check.lpobjects(data, lpmodel$A.shp, "A.shp", A.shp.cat)
+    A.shp.return <- check.lpobjects(data, lpmodel$A.shp, "A.shp", A.shp.cat, R)
   }
   if (beta.obs.cat!= 0){
     beta.obs.return <- check.lpobjects(data, lpmodel$beta.obs, "beta.obs", 
-                                       beta.obs.cat)
+                                       beta.obs.cat, R)
     check.vector(beta.obs.return$sample)
   }
   if (beta.shp.cat!= 0){
     beta.shp.return <- check.lpobjects(data, lpmodel$beta.shp, "beta.shp", 
-                                       beta.shp.cat)
+                                       beta.shp.cat, R)
     check.vector(beta.shp.return$sample)
   }
   
@@ -615,24 +615,24 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R){
         
         # Loop through each element of the list to check if they are matrices
         df.dim <- data.frame(matrix(vector(), nrow = R+1))
-        for (i in 1:(R+1)){
-          mat.return <- check.matrix(check.matrix[[i]], mat.name, mat.cat, 
-                                     TRUE)
+        for (i in 1:R){
+          mat.return <- check.matrix(mat[[i+1]], mat.name, mat.cat, TRUE)
           # Check if all objects inside the list has the same dimension
-          df.dim[i,1] <- mat.return[1]
-          df.dim[i,2] <- mat.return[2]
-          if (i > 1 & 
-              ((df.dim[i,1] != df.dim[i-1,1]) | 
-               (df.dim[i,1] != df.dim[i-1,1]))){
-            stop(sprint(paste0("The dimension of the objects inside the list ",
-                               "'%s' in 'lpmodel' need to have the same",
-                               "dimension.",
-                               mat.name)),
-                 call. = FALSE)
+          df.dim[i,1] <- mat.return$dim[1]
+          df.dim[i,2] <- mat.return$dim[2]
+          if (i > 1){
+            if ((df.dim[i,1] != df.dim[i-1,1]) | 
+               (df.dim[i,1] != df.dim[i-1,1])){
+                 stop(sprint(paste0("The dimension of the objects inside the list ",
+                                    "'%s' in 'lpmodel' need to have the same",
+                                    "dimension.",
+                                    mat.name)),
+                      call. = FALSE)
+               }
           }
         }
         return(list(mat = mat,
-                    sample = mat.return[1]))
+                    sample = mat.return[[1]]))
       } else if (length(mat.cat) == 1){
         stop(sprintf("The object '%s' in 'lpmodel' has to be a list.", 
                      mat.name),
@@ -751,6 +751,10 @@ check.matrix <- function(mat, mat.name, mat.cat, inside.list){
     }
   } else {
     if (inside.list == FALSE) {
+      mat.update <- NULL
+      return(list(mat.update = mat.update,
+                  err.ind = 1))
+    } else if (class(mat) == "list"){
       mat.update <- NULL
       return(list(mat.update = mat.update,
                   err.ind = 1))
