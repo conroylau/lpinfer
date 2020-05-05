@@ -22,6 +22,9 @@ procedure are:
   \item{\code{beta.shp}}
 }}
 
+\item{modelsense}{The indicator of whether the model is to max or min an
+objective function.}
+
 \item{kappa}{Parameter used in the second step of the two-step procedure 
 for obtaining the solution subject to the shape constraints.}
 

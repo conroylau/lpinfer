@@ -4,7 +4,18 @@
 \alias{gurobi.optim}
 \title{LP and QP solver by Gurobi}
 \usage{
-gurobi.optim(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL)
+gurobi.optim(
+  Af,
+  bf,
+  nf,
+  A,
+  rhs,
+  sense,
+  modelsense,
+  lb,
+  qc = NULL,
+  weight = diag(ncol(bf))
+)
 }
 \arguments{
 \item{Af}{The matrix that is involved in the objective function.}

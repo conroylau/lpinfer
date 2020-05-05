@@ -7,6 +7,10 @@
 check.solver(x, name.var, norm = 2)
 }
 \arguments{
+\item{x}{Variable to be checked.}
+
+\item{name.var}{Name of the variable.}
+
 \item{norm}{Norm used in the problem}
 }
 \value{

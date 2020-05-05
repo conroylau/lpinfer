@@ -14,6 +14,8 @@ output of f}
 
 \item{data}{Data frame that will be passed to the function}
 
+\item{name.var}{Name of the variable.}
+
 \item{name.A}{Name of matrix}
 
 \item{mat.type}{Type of the matrix to be checked}

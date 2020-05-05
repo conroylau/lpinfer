@@ -4,7 +4,17 @@
 \alias{cplexapi.optim}
 \title{LP and QP solver by cplexAPI}
 \usage{
-cplexapi.optim(Af, bf, nf, A, rhs, sense, modelsense, lb)
+cplexapi.optim(
+  Af,
+  bf,
+  nf,
+  A,
+  rhs,
+  sense,
+  modelsense,
+  lb,
+  weight = diag(length(b))
+)
 }
 \value{
 Returns the optimal point and optimal value.

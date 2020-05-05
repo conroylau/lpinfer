@@ -4,7 +4,35 @@
 \alias{lpsolveapi.optim}
 \title{lpSolveAPI solver for linear programs}
 \usage{
-lpsolveapi.optim(Af, bf, nf, A, rhs, sense, modelsense, lb)
+lpsolveapi.optim(
+  Af,
+  bf,
+  nf,
+  A,
+  rhs,
+  sense,
+  modelsense,
+  lb,
+  weight = diag(length(b))
+)
+}
+\arguments{
+\item{Af}{The matrix that is involved in the objective function.}
+
+\item{bf}{The vector that is involved in the objective function.}
+
+\item{nf}{The number of observations in the dataframe.}
+
+\item{A}{The constraint matrix.}
+
+\item{rhs}{The RHS vector for the linear constraints.}
+
+\item{sense}{The sense of the linear constraints.}
+
+\item{modelsense}{The indicator of whether the model is to max or min an
+objective function.}
+
+\item{lb}{The lower lound vector.}
 }
 \value{
 Returns the optimal objective value and the corresponding argument
