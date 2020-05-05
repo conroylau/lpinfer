@@ -1039,6 +1039,8 @@ rangen.bs <- function(n, omega.e, beta.n, beta.star, R, beta.n.bs,
 #'   
 #' @inheritParams fsst
 #' @inheritParams cone.n.lp
+#' @param length.lambda The length of the `\code{lambda}` vector.
+#' @param lambda.i The current value of `\code{lambda}` being considered
 #' 
 #' @return A list of bootstrap Range statistics.
 #'   \item{range.n.list}{A list of bootstrap Range statistics 
@@ -1089,8 +1091,8 @@ cone.n.bs <- function(n, omega.i, beta.n, beta.star, lpmodel, lambda,
                                          n*.4/length.lambda) 
             if (n < R){
                cat("\r\r") 
-            } else {
-               cat("\r\r")     
+            } else if ((n == R) & (length.lambda == lambda.i)){
+               cat("\r\b")     
             }
          }
          

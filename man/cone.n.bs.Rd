@@ -17,7 +17,9 @@ cone.n.bs(
   beta.star.list,
   solver,
   cores,
-  progress
+  progress,
+  length.lambda,
+  lambda.i
 )
 }
 \arguments{

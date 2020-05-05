@@ -56,7 +56,6 @@ Return a list of statistics for the `\code{fsst}` procedure:
   \item{pval}{\eqn{p}-value}
   \item{cores}{Number of cores used}
   \item{call}{Information used to call the function}
-  \item{beta.star}{The \eqn{\widehat{\bm{\beta}}^{\star}_n}}
   \item{range}{The range test statistic}
   \item{cone}{The cone test statistic}
   \item{range.n.list}{The list of bootstrap range test statistics}
