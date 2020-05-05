@@ -182,11 +182,16 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda, rho,
 
       # Compute range.n for bootstrap beta
       range.n.list <- rep(0, R)
-
+      
+      cone.n.list <- list()
       # Compute cone.n for bootstrap beta
-      cone.n.list <- cone.n.bs(n, omega.i, beta.n, beta.star, lpmodel, lambda, 
-                               1, beta.star.bs, beta.r, beta.star.list, solver,
-                               cores, progress)
+      for (i in 1:length(lambda)){
+         cone.n.temp <- cone.n.bs(n, omega.i, beta.n, beta.star, lpmodel, 
+                                  lambda[i], 1, beta.star.bs, beta.r, 
+                                  beta.star.list, solver, cores, progress)
+         cone.n.list[[i]] <- cone.n.temp
+      }
+      
    } else {
       # Compute the restricted estimator
       beta.r <- beta.r.compute(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
@@ -196,17 +201,27 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda, rho,
       range.n.list <- rangen.bs(n, omega.e, beta.n, beta.star, R, beta.n.bs, 
                                  beta.star.bs, solver, cores, progress)
 
+      cone.n.list <- list()
       # Compute cone.n for bootstrap beta
-      cone.n.list <- cone.n.bs(n, omega.i, beta.n, beta.star, lpmodel, lambda, 
-                               0, beta.star.bs, beta.r, beta.star.list, solver,
-                               cores, progress)
+      for (i in 1:length(lambda)){
+         cone.n.temp <- cone.n.bs(n, omega.i, beta.n, beta.star, lpmodel, 
+                                  lambda[i], 0, beta.star.bs, beta.r, 
+                                  beta.star.list, solver, cores, progress)
+         cone.n.list[[i]] <- cone.n.temp
+      }
    }
 
    # ---------------- #
    # Step 6: Compute decision and p-value
    # ---------------- #
-   pval.return <- fsst.pval(range.n$objval, cone.n$objval, range.n.list, 
-                            cone.n.list, R, alpha)
+   pval <- data.frame(matrix(vector(), nrow = length(lambda), ncol = 2))
+   colnames(pval) <- c("lambda", "p-value")
+   for (i in 1:length(lambda)){
+      pval.return <- fsst.pval(range.n$objval, cone.n$objval, range.n.list, 
+                               cone.n.list[[i]], R, alpha)  
+      pval[i,1] <- lambda[i]
+      pval[i,2] <- pval.return$pval
+   }
 
    # ---------------- #
    # Step 7: Close the progress bar that is used in the bootstrap procedure
@@ -219,7 +234,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda, rho,
    # Step 8: Assign the return list and return output
    # ---------------- #
    # Assign the list of objects returned
-   output <- list(pval = as.numeric(pval.return$pval), 
+   output <- list(pval = pval, 
                   cores = cores,
                   call = call,
                   range = range.n,
@@ -1199,9 +1214,18 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, lambda, rho, n,
    
    # Check numerics 
    check.numeric(beta.tgt, "beta.tgt")
-   check.numeric(lambda, "lambda")
    check.positiveinteger(R, "R")
    cores <- check.positiveinteger(cores, "cores")
+   
+   # Check lambda - can be vector of scalar
+   if (length(lambda) == 1){
+      check.numeric(lambda, "lambda")
+   } else {
+      if (class(lambda) != "numeric"){
+         stop("The class of the variable 'lambda' has to be numeric.",
+              call. = FALSE)
+      }
+   }
    
    # ---------------- #
    # Step 2: Return results
@@ -1236,7 +1260,17 @@ print.fsst <- function(x, ...){
    cat(sprintf("Test statistic: %s.             \n", round(x$test, digits = 5)))
    cat(sprintf("   - Range component: %s\n", round(x$range$objval, digits = 5)))  
    cat(sprintf("   - Cone component: %s\n", round(x$cone$objval, digits = 5)))
-   cat(sprintf("p-value: %s\n", x$pval))
+   if (nrow(x$pval) == 1){
+      cat(sprintf("p-value: %s\n", x$pval[1,2]))
+   } else {
+      cat("p-values:\n")
+      cat("     lambda\tp-value\n")
+      for (i in 1:nrow(x$pval)){
+         cat(sprintf("     %s\t%s\n", 
+                     round(x$pval[i,1], digits = 5),
+                     round(x$pval[i,2], digits = 5)))
+      }
+   }
    cat(sprintf("Solver used: %s\n", x$solver.name))
    cat(sprintf("Number of cores used: %s\n", x$cores))
 }
