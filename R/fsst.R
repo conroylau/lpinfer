@@ -188,7 +188,8 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda, rho,
       for (i in 1:length(lambda)){
          cone.n.temp <- cone.n.bs(n, omega.i, beta.n, beta.star, lpmodel, 
                                   lambda[i], 1, beta.star.bs, beta.r, 
-                                  beta.star.list, solver, cores, progress)
+                                  beta.star.list, solver, cores, progress,
+                                  length(lambda), i)
          cone.n.list[[i]] <- cone.n.temp
       }
       
@@ -206,7 +207,8 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda, rho,
       for (i in 1:length(lambda)){
          cone.n.temp <- cone.n.bs(n, omega.i, beta.n, beta.star, lpmodel, 
                                   lambda[i], 0, beta.star.bs, beta.r, 
-                                  beta.star.list, solver, cores, progress)
+                                  beta.star.list, solver, cores, progress,
+                                  length(lambda), i)
          cone.n.list[[i]] <- cone.n.temp
       }
    }
@@ -1046,7 +1048,7 @@ rangen.bs <- function(n, omega.e, beta.n, beta.star, R, beta.n.bs,
 #' 
 cone.n.bs <- function(n, omega.i, beta.n, beta.star, lpmodel, lambda,
                       indicator, beta.star.bs, beta.r, beta.star.list, 
-                      solver, cores, progress){
+                      solver, cores, progress, length.lambda, lambda.i){
    cone.n.list <- NULL
    
    if (cores == 1){
@@ -1076,15 +1078,19 @@ cone.n.bs <- function(n, omega.i, beta.n, beta.star, lpmodel, lambda,
          doSNOW::registerDoSNOW(cl)
          
          # Set the counter and progress bar
-         pb <- utils::txtProgressBar(max = R, initial = R*.6, style = 3, 
+         lambda.bar.i0 <- .4*(lambda.i-1)/length.lambda
+         pb <- utils::txtProgressBar(max = R, 
+                                     initial = R*.6 + R*lambda.bar.i0,
+                                     style = 3, 
                                      width = 20) 
          cat("\r")
          progress <- function(n){
-            utils::setTxtProgressBar(pb, (4*n+6*R)/10) 
+            utils::setTxtProgressBar(pb, R*.6 + R*lambda.bar.i0 + 
+                                         n*.4/length.lambda) 
             if (n < R){
                cat("\r\r") 
             } else {
-               cat("\r\b")     
+               cat("\r\r")     
             }
          }
          
