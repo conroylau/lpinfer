@@ -22,12 +22,13 @@
 #'
 #' @export
 #' 
-gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL){
+gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL,
+                         weight = diag(ncol(bf))){
   # ---------------- #
   # Step 1: Obtain the coefficients of the objective function
   # ---------------- #
-  objective_return <- objective.function(Af, bf, nf)
-
+  objective_return <- objective.function(Af, bf, nf, weight)
+  
   # ---------------- #
   # Step 2: Gurobi set-up
   # ---------------- #
@@ -54,6 +55,7 @@ gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL){
   # ---------------- #
   params <- list(OutputFlag=0, FeasibilityTol=1e-9)
   solution <- gurobi::gurobi(model, params)
+  
   return(list(objval = as.numeric(solution$objval),
               x = as.numeric(solution$x)))
 }
@@ -63,9 +65,8 @@ gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL){
 #' @description This function computes the solution to the quadratic and linear
 #'    programs using the `\code{cplexAPI}' package.
 #'    
-#' @inheritParams cplexAPI
 #' @inheritParams dkqs
-#' @inheritParams prog_cone
+#' @inheritParams dkqs.qlp
 #'
 #' @return Returns the optimal point and optimal value.
 #'  \item{x}{Optimal point calculated from the optimizer.}
@@ -73,11 +74,12 @@ gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL){
 #'
 #' @export
 #' 
-cplexapi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
+cplexapi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, 
+                           weight = diag(length(b))){
   # ---------------- #
   # Step 1: Obtain the coefficients of the objective function
   # ---------------- #
-  objective_return <- objective.function(Af, bf, nf)
+  objective_return <- objective.function(Af, bf, nf, weight)
   
   # ---------------- #
   # Step 2: Update the notations
@@ -151,9 +153,9 @@ cplexapi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
 #' @description This function computes the solution to the linear and quadratic
 #'    programs using the `\code{Rcplex}' package.
 #'
-#' @inheritParams gurobi_optim
+#' @inheritParams gurobi.optim
 #' @inheritParams dkqs
-#' @inheritParams prog_cone
+#' @inheritParams dkqs.qlp
 #'
 #' @return Returns the optimal point and optimal value.
 #'  \item{x}{Optimal point calculated from the optimizer.}
@@ -161,11 +163,12 @@ cplexapi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
 #'
 #' @export
 #' 
-rcplex.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
+rcplex.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, 
+                         weight = diag(length(b))){
   # ---------------- #
   # Step 1: Obtain the coefficients of the objective function
   # ---------------- #
-  objective_return = objective.function(Af, bf, nf)
+  objective_return = objective.function(Af, bf, nf, weight)
   
   # ---------------- #
   # Step 2: Update vectors and sense
@@ -218,9 +221,9 @@ rcplex.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
 #' @description This function computes the solution to linear and quadratic 
 #'    programs using the `\code{limSolve}' package.
 #'
-#' @inheritParams gurobi_optim
+#' @inheritParams gurobi.optim
 #' @inheritParams dkqs
-#' @inheritParams prog_cone
+#' @inheritParams dkqs.qlp
 #'
 #' @return Returns the optimal point and optimal value.
 #'  \item{x}{Optimal point calculated from the optimizer.}
@@ -228,11 +231,12 @@ rcplex.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
 #'   
 #' @export
 #' 
-limsolve.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
+limsolve.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, 
+                           weight = diag(length(b))){
   # ---------------- #
   # Step 1: Obtain the coefficients of the objective function
   # ---------------- #
-  objective_return <- objective.function(Af, bf, nf)
+  objective_return <- objective.function(Af, bf, nf, weight)
   
   # ---------------- #
   # Step 2: Update lower bounds
@@ -281,7 +285,7 @@ limsolve.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
       sum(objective_return$obj2 == 0) == length(objective_return$obj2)){
     ### Linear program solver
     solution <- limSolve::linp(E = Emat, F = Fvec, G = Gmat, H = Hvec, 
-                              Cost = fcost)
+                               Cost = fcost)
     
     # Obtain objective function, and add back the constant term, negate the 
     # solution if it is a max problem
@@ -297,7 +301,7 @@ limsolve.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
       Amat <- Af * sqrt(nf)
       Bvec <- bf * sqrt(nf)
       solution <- limSolve::lsei(A = Amat, B = Bvec, E = Emat, F = Fvec, 
-                                G = Gmat, H = Hvec)
+                                 G = Gmat, H = Hvec)
       
       # Obtain objective function
       objval <- solution$solutionNorm
@@ -353,7 +357,7 @@ limsolve.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
 #'     
 #' @export
 #' 
-objective.function <- function(A, b, n){
+objective.function <- function(A, b, n, weight = diag(length(b))){
   # If-else function to determine if it corresponds to a linear or quadratic
   # program. This is identified by whether one of A and b is null or nonzero
   # because it would be the case for linear programs that are considered in
@@ -370,10 +374,15 @@ objective.function <- function(A, b, n){
     obj0 <- 0
   } else {
     # Quadratic program coefficients
-    obj2 <- t(A) %*% A * n
-    obj1 <- -2 * t(A) %*% b * n
-    obj0 <- t(b) %*% b * n
+    obj2 <- as.matrix(t(A) %*% weight %*% A * n)
+    # colnames(obj2) <- NULL
+    rownames(obj2) <- 1:nrow(obj2)
+    colnames(obj2) <- 1:ncol(obj2)
+    # obj1 <- -2 * t(A) %*% weight %*% b * n
+    obj1 <- -2 * as.matrix(t(b) %*% weight %*% A * n)
+    obj0 <- t(b) %*% weight %*% b * n
   }
+  
   # Return the above objective functions
   return(list(obj2 = obj2, obj1 = obj1, obj0 = obj0))
 }
@@ -383,9 +392,9 @@ objective.function <- function(A, b, n){
 #' @description This function computes the solution to the linear program
 #'    using the `\code{lpsolveAPI}' package.
 #'    
-#' @inheritParams gurobi_optim
+#' @inheritParams gurobi.optim
 #' @inheritParams dkqs
-#' @inheritParams prog_cone
+#' @inheritParams dkqs.qlp
 #'
 #' @returns Returns the optimal objective value and the corresponding argument
 #'   to the linear program.
@@ -397,11 +406,12 @@ objective.function <- function(A, b, n){
 #'
 #' @export
 #' 
-lpsolveapi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb){
+lpsolveapi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, 
+                             weight = diag(length(b))){
   # ---------------- #
   # Step 1: Obtain the coefficients of the objective function
   # ---------------- #
-  objective_return <- objective.function(Af, bf, nf)
+  objective_return <- objective.function(Af, bf, nf, weight)
   
   # ---------------- #
   # Step 2: Update the constraint matrices
