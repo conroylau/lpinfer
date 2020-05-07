@@ -19,8 +19,9 @@
 #'   
 #' @export
 #'
-fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda, rho, 
-                 n = NULL, weight.matrix = "diag", solver, cores, progress){
+fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda,
+                 rho = 1e-4, n = NULL, weight.matrix = "diag",
+                 solver, cores, progress){
    
    # ---------------- #
    # Step 1: Update call, check and update the arguments
