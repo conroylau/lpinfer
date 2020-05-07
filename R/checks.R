@@ -17,7 +17,7 @@ check.dataframe <- function(data, name.var){
   if (class(data) %in% c("data.frame", "matrix") == TRUE){
     data <- as.data.frame(data)  
   } else {
-    stop(sprintf(paste0("The data povided '%s' must either be a data.frame, ", 
+    stop(sprintf(paste0("'%s' must either be a data.frame, ", 
                         "a data.table, or a matrix."), name.var), 
          call. = FALSE)    
   }
