@@ -184,12 +184,12 @@ check.norm <- function(x, name.var){
     norm <- 2
   } else {
     stop(gsub("\\s+", " ",
-         paste0("Only 1-norm and 2-norm are supported in this function. ",
-                "For 1-norm, please enter one of the followings: 1, '1', ",
-                "'l1', 'one', 'o' or 'taxicab'. For 2-norm, please enter ",
-                "one of the followings: 2, '2', 'l2', 'two', 't', 'e', ",
-                "'euclidean'.")),
-                call. = FALSE)
+              paste0("Only 1-norm and 2-norm are supported in this function. ",
+                     "For 1-norm, please enter one of the followings: 1, '1', ",
+                     "'l1', 'one', 'o' or 'taxicab'. For 2-norm, please enter ",
+                     "one of the followings: 2, '2', 'l2', 'two', 't', 'e', ",
+                     "'euclidean'.")),
+         call. = FALSE)
   }
   
   # Return the updated norm
@@ -253,7 +253,7 @@ check.func <- function(f, A, data, name.var, name.A, mat.type){
           stop(sprintf("The number of rows and columns of the output ",
                        "for '%s' has to be equal to the number of rows in ", 
                        "matrix '%s'.", name.var, name.A),
-              call. = FALSE)
+               call. = FALSE)
         }
       }
     }
@@ -509,7 +509,7 @@ check.lpmodel <- function(data, lpmodel, name.var, A.tgt.cat, A.obs.cat,
     stop(sprintf("The object '%s' has to be a list.", name.var),
          call. = FALSE)
   }
-
+  
   # ---------------- #
   # Step 2: Check each of the objects (treat them as matrices)
   # and check if beta.obs and beta.shp are matrices
@@ -622,13 +622,13 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R){
           df.dim[i,2] <- mat.return$dim[2]
           if (i > 1){
             if ((df.dim[i,1] != df.dim[i-1,1]) | 
-               (df.dim[i,1] != df.dim[i-1,1])){
-                 stop(sprint(paste0("The dimension of the objects inside the list ",
-                                    "'%s' in 'lpmodel' need to have the same",
-                                    "dimension.",
-                                    mat.name)),
-                      call. = FALSE)
-               }
+                (df.dim[i,1] != df.dim[i-1,1])){
+              stop(sprint(paste0("The dimension of the objects inside the list ",
+                                 "'%s' in 'lpmodel' need to have the same",
+                                 "dimension.",
+                                 mat.name)),
+                   call. = FALSE)
+            }
           }
         }
         return(list(mat = mat,
@@ -797,3 +797,21 @@ check.vector <- function(vec, vec.name, inside.list){
   }
 }
 
+#' Check function: check the number of cores
+#' 
+#' @description This function checks if the number of cores specified is a 
+#'    positive integer. If not, set it as one.
+#'    
+#' @param cores Number of cores.
+#'      
+#' @return Returns the updated number of cores.
+#'   \item{cores}{Updated number of cores}
+#'   
+#' @export
+#' 
+check.cores <- function(cores){
+  if ((is.numeric(x) == TRUE & length(x) == 1 & x > 0 & x%%1 == 0) == FALSE){
+    cores <- 1
+  } 
+  return(cores)
+}
