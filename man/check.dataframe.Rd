@@ -12,11 +12,11 @@ check.dataframe(data, name.var)
 \item{name.var}{Name of the variable.}
 }
 \value{
-Returns the object in the format of \code{data.frame}.
+Returns the object in the format of \code{matrix}.
 }
 \description{
-This function checks whether the class of the variable 
-  is \code{data.frame} or \code{matrix}. If yes, the object will be 
-  returned as an object in the \code{data.frame} class. If not, an
-  error message is displayed.
+This function checks whether the data is a \code{data.frame}
+  or \code{data.table} or \code{matrix} or \code{tibble}. If yes, the 
+  object will be returned as an object in the \code{matrix} class. If not, 
+  an error message is displayed.
 }

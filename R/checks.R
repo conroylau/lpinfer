@@ -1,24 +1,24 @@
 #' Check function: data frame
 #' 
-#' @description This function checks whether the class of the variable 
-#'   is \code{data.frame} or \code{matrix}. If yes, the object will be 
-#'   returned as an object in the \code{data.frame} class. If not, an
-#'   error message is displayed.
+#' @description This function checks whether the data is a \code{data.frame}
+#'   or \code{data.table} or \code{matrix} or \code{tibble}. If yes, the 
+#'   object will be returned as an object in the \code{matrix} class. If not, 
+#'   an error message is displayed.
 #' 
 #' @param data Data frame to be checked. 
 #' @param name.var Name of the variable.
 #' 
-#' @return Returns the object in the format of \code{data.frame}.
+#' @return Returns the object in the format of \code{matrix}.
 #'   
 #' @export
 #' 
 check.dataframe <- function(data, name.var){
   # Check data
-  if (class(data) %in% c("data.frame", "matrix") == TRUE){
-    data <- as.data.frame(data)  
+  if ((("data.frame" %in% class(data)) | ("matrix" %in% class(data))) == TRUE){
+    data <- as.matrix(data)  
   } else {
-    stop(sprintf(paste0("'%s' must either be a data.frame, ", 
-                        "a data.table, or a matrix."), name.var), 
+    stop(sprintf(paste0("The class of '%s' must be either a data.frame or a ", 
+                        "data.table or a matrix or a tibble."), name.var), 
          call. = FALSE)    
   }
   
@@ -80,7 +80,7 @@ check.numeric <- function(x, name.var){
 #' 
 check.boolean <- function(x, name.var){
   if (!(x == TRUE | x == FALSE)){
-    stop(sprintf(paste0("The variable '%s' has to be boolean variable."), 
+    stop(sprintf(paste0("The variable '%s' has to be boolean variable."),
                  name.var), call. = FALSE)  
   }
 }
