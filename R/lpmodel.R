@@ -62,32 +62,57 @@ lpmodel.eval <- function(data, obj, i){
 lpmodel.beta.eval <- function(data, obj, i){
   if (class(obj) == "function"){
     beta.return <- obj(data)
-    if (is.null(nrow(beta.return[[1]]))){
-      beta.obs.hat <- beta.return[[1]]
-      omega.hat <- beta.return[[2]]
-    } else if (nrow(beta.return[[1]] == 1)){
-      beta.obs.hat <- beta.return[[1]]
-      omega.hat <- beta.return[[2]]      
+    if (class(beta.return) == "list"){
+      if (length(beta.return) == 2){
+        if (is.null(nrow(beta.return[[1]]))){
+          beta.obs.hat <- beta.return[[1]]
+          omega.hat <- beta.return[[2]]
+        } else if (nrow(beta.return[[1]] == 1)){
+          beta.obs.hat <- beta.return[[1]]
+          omega.hat <- beta.return[[2]]      
+        } else {
+          beta.obs.hat <- beta.return[[2]]
+          omega.hat <- beta.return[[1]] 
+        }
+      } else if (length(beta.return) == 1){
+        beta.obs.hat <- beta.return[[1]]
+        omega.hat <- NULL
+      } else {
+        stop(paste0("If the output when the data is passed to the function ",
+                    "is a list, it can have at most two objects in the ",
+                    "list."))
+      }
     } else {
-      beta.obs.hat <- beta.return[[2]]
-      omega.hat <- beta.return[[1]] 
+      beta.obs.hat <- beta.return
+      omega.hat <- NULL
     }
   } else if (class(obj) == "list"){
     if (class(obj[[i]]) == "list"){
-      if (is.null(nrow(obj[[i]][[1]]))){
+      if (length(obj[[i]]) != 2){
+        stop(paste0("When the first object of the list 'beta.obs' is a ",
+                    "list, it needs to have two objects"))
+      } else if (length(obj[[i]]) == 1){
         beta.obs.hat <- obj[[i]][[1]]
-        omega.hat <- obj[[i]][[2]]
-      } else if (nrow(obj[[i]][[1]] == 1)){
-        beta.obs.hat <- obj[[i]][[1]]
-        omega.hat <- obj[[i]][[2]]      
+        omega.hat <- NULL
       } else {
-        beta.obs.hat <- obj[[i]][[2]]
-        omega.hat <- obj[[i]][[1]] 
+        if (is.null(nrow(obj[[i]][[1]]))){
+          beta.obs.hat <- obj[[i]][[1]]
+          omega.hat <- obj[[i]][[2]]
+        } else if (nrow(obj[[i]][[1]]) == 1 | ncol(obj[[i]][[1]]) == 1){
+          beta.obs.hat <- obj[[i]][[1]]
+          omega.hat <- obj[[i]][[2]]      
+        } else {
+          beta.obs.hat <- obj[[i]][[2]]
+          omega.hat <- obj[[i]][[1]] 
+        }
       }
     } else {
       beta.obs.hat <- obj[[i]]
       omega.hat <- NULL
     }
+  } else if (class(obj) == "numeric"){
+    beta.obs.hat <- obj
+    omega.hat <- NULL
   }
   
   return(list(beta.obs = beta.obs.hat,
