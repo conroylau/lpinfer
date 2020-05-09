@@ -46,6 +46,9 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda,
       n <- nrow(data)
    }
    
+   # Rearrange the lambda terms 
+   lambda <- sort(lambda, decreasing = FALSE)
+   
    # ---------------- #
    # Step 2: Obtain beta.obs, the list of bootstrap estimators and the 
    # variance estimator
@@ -230,8 +233,8 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda,
    # Step 7: Compute decision, p-value and the quantiles of the test statistics
    # ---------------- #
    # Parameters
-   quans <- c(.9, .95, .99)
-   quans.string <- c("90%", "95%", "99%")
+   quans <- c(.99, .95, .90)
+   quans.string <- c("99%", "95%", "95%")
    n.lambda <- length(lambda)
    n.quans <- length(quans)
    
@@ -240,9 +243,17 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda,
    colnames(pval) <- c("lambda", "p-value")
    
    test.quan <- data.frame(matrix(vector(), nrow = 4, ncol = (1 + n.lambda)))
-   colnames(test.quan) <- c("cone", rep("range", n.lambda))
-   rownames(test.quan) <- c("(lambda)", quans.string)
-   test.quan[1,] <- c(" ", paste0("(", lambda, ")"))
+   test.quan.colnames <- c("Range")
+   for (i in 1:n.lambda){
+      test.quan.colnames <- c(test.quan.colnames,
+                              sprintf("Cone (%s)", lambda[i]))
+   }
+   colnames(test.quan) <- test.quan.colnames
+   rownames(test.quan) <- c("Sample          ", "Bootstrap 99% CV", 
+                            "Bootstrap 95% CV", "Bootstrap 90% CV")
+   test.quan[1,1] <- round(range.n$objval, digits = 5)
+   test.quan[1,2:(n.lambda+1)] <- rep(round(cone.n$objval, digits = 5), 
+                                      n.lambda)
    
    for (i in 1:n.lambda){
       # Compute the p-values
@@ -254,27 +265,26 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda,
       # Compute the quantiles of cone - suffices to compute it once because
       # it is the same across the lambdas
       if (i == 1){
-         range.quan <- quan.stat(range.n.list, quans)
-         print(range.quan)
+         range.quan <- quan.stat(cone.n.list, quans)
          for (j in 1:n.quans){
             test.quan[j+1,1] <- range.quan[j]
          }
       }
       
       # Compute the quantiles of range
-      cone.quan <- quan.stat(cone.n.list[[i]], quans)
+      cone.quan <- quan.stat(list.n.list[[i]], quans)
       for (j in 1:n.quans){
          test.quan[j+1,1+i] <- cone.quan[j]
       }
    }
-   
+
    # Construct the table for quantiles of test statistics
-   stat.quan <- data.frame(matrix(vector(), nrow = 3, ncol = n.lambda+1))
-   colnames(stat.quan) <- c("lambda", paste(lambda))
-   stat.quan[,1] <- quans.string
-   for (i in 1:n.quans){
+   stat.quan <- data.frame(matrix(vector(), nrow = 4, ncol = n.lambda+1))
+   colnames(stat.quan) <- c("lambda ", paste(lambda))
+   stat.quan[,1] <- rownames(test.quan)
+   for (i in 1:(n.quans+1)){
       for (j in 1:n.lambda){
-         stat.quan[i,j+1] <- max(test.quan[i+1,1], test.quan[i+1,1+j])
+         stat.quan[i,j+1] <- max(test.quan[i,1], test.quan[i,1+j])
       }
    }
 
@@ -1401,30 +1411,25 @@ print.fsst <- function(x, ...){
 #' 
 summary.fsst <- function(x, ...){
    cat("\r\r")
-   cat(sprintf("Test statistic: %s.\n", round(x$test, digits = 5)))
-   cat(sprintf("   - Range component: %s\n", round(x$range$objval, digits = 5)))  
-   cat(sprintf("   - Cone component: %s\n", round(x$cone$objval, digits = 5)))
-   cat("\nQuantiles of bootstrap test statistics: \n")
+   cat("\nSample and quantiles of bootstrap test statistics: \n")
    x$stat.quan[,1] <- paste("   ", x$stat.quan[,1], "   ")
-   colnames(x$stat.quan)[1] <- "lambda "
+   colnames(x$stat.quan)[1] <- "lambda              "
    print(x$stat.quan, row.names = FALSE)
-   cat("\nQuantiles of bootstrap cone and range components: \n")
-   rownames(x$test.quan) <- paste("    ", rownames(x$test.quan))
+   
+   cat("\nSample and quantiles of bootstrap cone and range components: \n")
+   rownames(x$test.quan) <- paste("    ", rownames(x$test.quan), "   ")
    print(x$test.quan)
+   
    if (nrow(x$pval) == 1){
       cat(sprintf("\np-value: %s\n", x$pval[1,2]))
    } else {
       cat("\np-values:\n")
       df.pval <- data.frame(matrix(vector(), nrow = 1, ncol = nrow(x$pval)+1))
-      colnames(df.pval) <- c("    lambda ", x$pval$lambda)
-      df.pval[1,] <- c("    p-value", x$pval[,2])
+      colnames(df.pval) <- c("    lambda    ", x$pval$lambda)
+      df.pval[1,] <- c("    p-value   ", x$pval[,2])
       print(df.pval, row.names = FALSE)
-      # for (i in 1:nrow(x$pval)){
-      #    cat(sprintf("     %s\t%s\n", 
-      #                round(x$pval[i,1], digits = 5),
-      #                round(x$pval[i,2], digits = 5)))
-      # }
    }
+   
    cat(sprintf("\nSolver used: %s\n", x$solver.name))
    cat(sprintf("\nNumber of cores used: %s\n", x$cores))
    
@@ -1432,12 +1437,14 @@ summary.fsst <- function(x, ...){
    cat("\nRegularization parameters: \n")
    cat(sprintf("   - Input value of rho: %s\n", 
                round(x$rho, digits = 5)))
-   cat(sprintf("   - Regaularization parameter for omega.e: %s\n", 
+   cat(sprintf(paste0("   - Regularization parameter for the Range ",
+                      "studentization matrix: %s\n"), 
                round(x$rhobar.e, digits = 5)))
-   cat(sprintf("   - Regaularization parameter for omega.i: %s\n", 
+   cat(sprintf(paste0("   - Regularization parameter for the Cone ",
+                      "studentization matrix: %s\n"), 
                round(x$rhobar.i, digits = 5)))
-   cat(sprintf(paste0("\nThe asymtotic variance of observed component ",
-                      "of the 'beta.obs' vector is approximated from the %s."),
+   cat(sprintf(paste0("\nThe asymptotic variance of the observed component ",
+                      "of the 'beta vector is approximated from the %s."),
                       x$beta.var.method))
 }
 
