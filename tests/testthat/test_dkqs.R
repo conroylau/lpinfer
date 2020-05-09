@@ -6,7 +6,6 @@ library(modelr)
 library(gurobi)
 library(cplexAPI)
 library(Rcplex)
-library(Momocs)
 library(limSolve)
 library(foreach)
 library(doMC)
@@ -72,14 +71,14 @@ A_obs_twom <- matrix(c(rep(0,J1), yp, rep(0,J1), rep(1, J1)), nrow = 2,
 beta.tgt <- .365
 
 # Define the value of full information method
-lpmodel.full <- list(A.obs    = A_obs_full,
-                     A.tgt    = A_tgt,
-                     beta.obs = func_full_info)
+lpmodel.full <- lpmodel(A.obs    = A_obs_full,
+                        A.tgt    = A_tgt,
+                        beta.obs = func_full_info)
 
 # Define the value of full two moments method
-lpmodel.twom <- list(A.obs    = A_obs_twom,
-                     A.tgt    = A_tgt,
-                     beta.obs = func_two_moment)
+lpmodel.twom <- lpmodel(A.obs    = A_obs_twom,
+                        A.tgt    = A_tgt,
+                        beta.obs = func_two_moment)
 
 # Define arguments
 farg <- list(data = data,
@@ -128,7 +127,7 @@ set.seed(1)
 twom_l = do.call(dkqs, farg)
 
 # ---------------- #
-# Test 1: Test equivalence of two moments approach and full information 
+# Test 1: Test equivalence of two moments approach and full information
 # appraoch for each optimizer
 # ---------------- #
 
@@ -161,7 +160,7 @@ test_that("limSolve solver",{
 })
 
 # ---------------- #
-# Test 2: Test equivalence of results across different optimizers for each 
+# Test 2: Test equivalence of results across different optimizers for each
 # approach
 # ---------------- #
 
@@ -172,7 +171,7 @@ test_that("limSolve solver",{
 dkqs_test_output_approach <- function(dkqs_return1, dkqs_return2, dp){
   expect_equal(dkqs_return1$pval, dkqs_return2$pval)
   expect_equal(dkqs_return1$tau, dkqs_return2$tau)
-  expect_equal(round(dkqs_return1$T.n, digits = dp), 
+  expect_equal(round(dkqs_return1$T.n, digits = dp),
                round(dkqs_return2$T.n, digits = dp))
   expect_equal(dkqs_return1$lb0, dkqs_return2$lb0)
   expect_equal(dkqs_return1$ub0, dkqs_return2$ub0)
@@ -199,6 +198,3 @@ test_that("Two moments approach - Gurobi vs Rcplex",{
 test_that("Two moments approach - Rcplex vs limSolve",{
   dkqs_test_output_approach(twom_r, twom_l, dp)
 })
-
-
-

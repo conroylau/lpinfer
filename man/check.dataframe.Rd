@@ -16,7 +16,7 @@ Returns the object in the format of \code{matrix}.
 }
 \description{
 This function checks whether the data is a \code{data.frame}
-  or \code{data.table} or \code{matrix} or \code{tibble}. If yes, the 
-  object will be returned as an object in the \code{matrix} class. If not, 
+  or \code{data.table} or \code{matrix} or \code{tibble}. If yes, the
+  object will be returned as an object in the \code{matrix} class. If not,
   an error message is displayed.
 }

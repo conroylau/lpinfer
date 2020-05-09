@@ -39,10 +39,10 @@ func_full_info <- function(data){
     beta <- c(beta,c(beta_i))
   }
   beta <- as.matrix(beta)
-  # Variance 
+  # Variance
   var <- var_full_info(data)
   return(list(beta = beta,
-              var = var)) 
+              var = var))
 }
 
 ### Two moments approach
@@ -61,10 +61,10 @@ func_two_moment <- function(data){
   beta[1] <- sum(data[,"Y"] * data[,"D"])/n
   # Moment 2 E[D]
   beta[2] <- sum(data[,"D"])/n
-  # Variance 
+  # Variance
   var <- var_two_moment(data)
   return(list(beta = beta,
-              var = var)) 
+              var = var))
 }
 
 # ---------------- #
@@ -200,7 +200,7 @@ set.seed(1)
 twom_l1 <- do.call(subsample, farg)
 
 # ---------------- #
-# Test 1: Test equivalence of two moments approach and full information 
+# Test 1: Test equivalence of two moments approach and full information
 # appraoch for each optimizer with L2 norm
 # ---------------- #
 
@@ -208,8 +208,8 @@ twom_l1 <- do.call(subsample, farg)
 # subsample_return1 = function 1
 # subsample_return1 = function 2
 # dp = number of decimal places
-subsample_test_output_samesolver <- function(subsample_return1, 
-                                             subsample_return2, 
+subsample_test_output_samesolver <- function(subsample_return1,
+                                             subsample_return2,
                                              dp){
   expect_equal(subsample_return1$pval, subsample_return2$pval)
   expect_equal(subsample_return1$solver, subsample_return2$solver)
@@ -251,7 +251,7 @@ test_that("limSolve solver with L2-norm",{
 })
 
 # ---------------- #
-# Test 2: Test equivalence of results across different optimizers for each 
+# Test 2: Test equivalence of results across different optimizers for each
 # approach - L2 norm
 # ---------------- #
 
@@ -259,11 +259,11 @@ test_that("limSolve solver with L2-norm",{
 # subsample_return1 = function 1
 # subsample_return1 = function 2
 # dp = number of decimal places
-subsample_test_output_approach <- function(subsample_return1, 
-                                           subsample_return2, 
+subsample_test_output_approach <- function(subsample_return1,
+                                           subsample_return2,
                                            dp){
   expect_equal(subsample_return1$pval, subsample_return2$pval)
-  expect_equal(round(subsample_return1$T.n, digits = dp), 
+  expect_equal(round(subsample_return1$T.n, digits = dp),
                round(subsample_return2$T.n, digits = dp))
   expect_equal(subsample_return1$cores, subsample_return2$cores)
   expect_equal(subsample_return1$norm, subsample_return2$norm)
@@ -314,6 +314,3 @@ test_that("Two moments approach - Gurobi vs Rcplex with L2-norm",{
 test_that("Two moments approach - Rcplex vs limSolve with L2-norm",{
   subsample_test_output_approach(twom_r2, twom_l2, dp)
 })
-
-
-

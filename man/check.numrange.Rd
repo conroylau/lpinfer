@@ -23,6 +23,6 @@ check.numrange(x, name.var, left.type, left, right.type, right)
 Nothing is returned.
 }
 \description{
-This function checks whether the variable is within a 
+This function checks whether the variable is within a
   certain interval. If not, an error message is displayed.
 }

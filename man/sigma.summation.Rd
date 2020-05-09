@@ -11,15 +11,15 @@
 \eqn{\{\widehat{\bm{\beta}}_b\}^B_{b=1}}.}
 }
 \value{
-Returns the bootstrap estimators and the estimator of the 
+Returns the bootstrap estimators and the estimator of the
   asymptotic variance.
     \item{sigma.mat}{Estimator of the asympototic variance}
 }
 \description{
 Based on the bootstrap estimators
-  \eqn{\{\widehat{\bm{\beta}}_b\}^B_{b=1}}, this function computes the 
+  \eqn{\{\widehat{\bm{\beta}}_b\}^B_{b=1}}, this function computes the
   asympototic variance estimator of the boostrap estimator, i.e.
-    \deqn{\frac{n}{B} \sum^B_{i=1} \left(\widehat{\bm{\beta}}_b - 
-    \widehat{\bm{\beta}}\right)  \left(\widehat{\bm{\beta}}_b - 
+    \deqn{\frac{n}{B} \sum^B_{i=1} \left(\widehat{\bm{\beta}}_b -
+    \widehat{\bm{\beta}}\right)  \left(\widehat{\bm{\beta}}_b -
     \widehat{\bm{\beta}}\right)'.}
 }

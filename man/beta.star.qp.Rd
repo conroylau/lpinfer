@@ -17,8 +17,8 @@ beta.star.qp(
 \arguments{
 \item{data}{The data being used in the inference.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear 
-programming problems. The list of objects required in the \code{dkqs} 
+\item{lpmodel}{A list of objects that are used in inference of linear
+programming problems. The list of objects required in the \code{dkqs}
 procedure are:
 \itemize{
   \item{\code{A.tgt}}
@@ -33,9 +33,9 @@ procedure are:
 \item{beta.obs.hat}{Estimator of \eqn{\widehat{\bm{\beta}_{\mathrm{obs}, n}}}
 based on the given information in \code{lpmodel}.}
 
-\item{solver}{The name of the linear and quadratic programming solver that 
-are used to obtain the solution to linear and quadratic programs. 
-The solvers supported by this module are `\code{cplexAPI}', 
+\item{solver}{The name of the linear and quadratic programming solver that
+are used to obtain the solution to linear and quadratic programs.
+The solvers supported by this module are `\code{cplexAPI}',
 `\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
 }
 \value{
@@ -43,7 +43,7 @@ Returns the vector \eqn{\widehat{\bm{\beta}}_n^\star}.
   \item{beta.star}{The vector \eqn{\widehat{\bm{\beta}}_n^\star}.}
 }
 \description{
-This function computes the vector 
+This function computes the vector
   \eqn{\widehat{\bm{\beta}}_n^\star} for the case where \eqn{d<p}.
 }
 \details{
@@ -51,7 +51,7 @@ This corresponding to solving problem (3) of Torgovitsky (2020).
   Three options for \code{weight.matrix} are available:
   \itemize{
     \item{\code{identity} --- identity matrix}
-    \item{\code{diag} --- the diagonal matrix that takes the diagonal 
+    \item{\code{diag} --- the diagonal matrix that takes the diagonal
        elements of the inverse of the variance matrix}
     \item{\code{avar} --- inverse of the variance matrix}
 }

@@ -23,12 +23,12 @@ fsst.cone.bs(
 )
 }
 \arguments{
-\item{omega.i}{The matrix \eqn{\widehat{\bm{\Omega}}^i_n}, i.e. the 
-regularized matrix for 
+\item{omega.i}{The matrix \eqn{\widehat{\bm{\Omega}}^i_n}, i.e. the
+regularized matrix for
 \eqn{\widehat{\bm{\Sigma}}^{\beta^\star}_{n,\bar{\rho}}}.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear 
-programming problems. The list of objects required in the \code{dkqs} 
+\item{lpmodel}{A list of objects that are used in inference of linear
+programming problems. The list of objects required in the \code{dkqs}
 procedure are:
 \itemize{
   \item{\code{A.tgt}}
@@ -36,21 +36,21 @@ procedure are:
   \item{\code{beta.obs}}
 }}
 
-\item{indicator}{A binary variable that equals to 1 for \eqn{d \geq p} and 
+\item{indicator}{A binary variable that equals to 1 for \eqn{d \geq p} and
 equals to 0 for \eqn{d < p}.}
 
-\item{solver}{The name of the linear and quadratic programming solver that 
-are used to obtain the solution to linear and quadratic programs. 
-The solvers supported by this module are `\code{cplexAPI}', 
+\item{solver}{The name of the linear and quadratic programming solver that
+are used to obtain the solution to linear and quadratic programs.
+The solvers supported by this module are `\code{cplexAPI}',
 `\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
 
-\item{cores}{Number of cores to be used in the parallelized for-loop. 
+\item{cores}{Number of cores to be used in the parallelized for-loop.
 Parallelized for-loop is used if \code{cores} is set to be an integer
 greater than or equal to 2.}
 
-\item{progress}{The boolean variable for whether the result messages 
-should be displayed in the inference procedure. If it is set as 
-\code{TRUE}, the messages are displayed throughout the procedure. 
+\item{progress}{The boolean variable for whether the result messages
+should be displayed in the inference procedure. If it is set as
+\code{TRUE}, the messages are displayed throughout the procedure.
 Otherwise, the messages will not be displayed.}
 
 \item{length.lambda}{The length of the `\code{lambda}` vector.}
@@ -59,10 +59,10 @@ Otherwise, the messages will not be displayed.}
 }
 \value{
 A list of bootstrap Range statistics.
-  \item{range.n.list}{A list of bootstrap Range statistics 
+  \item{range.n.list}{A list of bootstrap Range statistics
     \eqn{\{\mathrm{Cone}_{n,b}\}^B_{b=1}}}
 }
 \description{
-This function computes the bootstrap components of the 
+This function computes the bootstrap components of the
   `Cone` test statistics.
 }

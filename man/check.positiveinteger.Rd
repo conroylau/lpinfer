@@ -15,7 +15,7 @@ check.positiveinteger(x, name.var)
 Nothing is returned.
 }
 \description{
-This function checks whether the class of the variable 
+This function checks whether the class of the variable
   is \code{numeric}, has length 1 and is a positive integer. If not, an
   error message is displayed.
 }

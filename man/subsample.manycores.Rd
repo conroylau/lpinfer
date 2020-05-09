@@ -21,8 +21,8 @@ subsample.manycores(
 
 \item{R}{Number of bootstraps chosen by the users.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear 
-programming problems. The list of objects required in the \code{dkqs} 
+\item{lpmodel}{A list of objects that are used in inference of linear
+programming problems. The list of objects required in the \code{dkqs}
 procedure are:
 \itemize{
   \item{\code{A.tgt}}
@@ -34,18 +34,18 @@ procedure are:
 
 \item{norm}{Norm used in the optimization problem.}
 
-\item{solver}{The name of the linear and quadratic programming solver that 
-are used to obtain the solution to linear and quadratic programs. 
-The solvers supported by this module are `\code{cplexAPI}', 
+\item{solver}{The name of the linear and quadratic programming solver that
+are used to obtain the solution to linear and quadratic programs.
+The solvers supported by this module are `\code{cplexAPI}',
 `\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
 
-\item{cores}{Number of cores to be used in the parallelized for-loop. 
+\item{cores}{Number of cores to be used in the parallelized for-loop.
 Parallelized for-loop is used if \code{cores} is set to be an integer
 greater than or equal to 2.}
 
-\item{progress}{The boolean variable for whether the result messages 
-should be displayed in the inference procedure. If it is set as 
-\code{TRUE}, the messages are displayed throughout the procedure. 
+\item{progress}{The boolean variable for whether the result messages
+should be displayed in the inference procedure. If it is set as
+\code{TRUE}, the messages are displayed throughout the procedure.
 Otherwise, the messages will not be displayed.}
 
 \item{m}{Size of each subsample.}
@@ -57,6 +57,6 @@ Returns a list of output that are obtained from the subsampling
   \item{pb}{Progress bar object.}
 }
 \description{
-This function computes the list of test statistics that are 
+This function computes the list of test statistics that are
   obtained from the subsampling procedure using parallel programming.
 }

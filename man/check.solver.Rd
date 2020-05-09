@@ -14,7 +14,7 @@ check.solver(x, name.var, norm = 2)
 \item{norm}{Norm used in the problem}
 }
 \value{
-Returns the function name that corresponds to the solver for the 
+Returns the function name that corresponds to the solver for the
   problem.
    \item{solver}{Function for the solver used.}
    \item{solver_name}{Name of the solver used in lower case.}

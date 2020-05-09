@@ -9,8 +9,8 @@ mincriterion.check(data, lpmodel, norm, solver)
 \arguments{
 \item{data}{The data being used in the inference.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear 
-programming problems. The list of objects required in the \code{dkqs} 
+\item{lpmodel}{A list of objects that are used in inference of linear
+programming problems. The list of objects required in the \code{dkqs}
 procedure are:
 \itemize{
   \item{\code{A.tgt}}
@@ -22,13 +22,13 @@ procedure are:
 
 \item{norm}{Norm used in the optimization problem.}
 
-\item{solver}{The name of the linear and quadratic programming solver that 
-are used to obtain the solution to linear and quadratic programs. 
-The solvers supported by this module are `\code{cplexAPI}', 
+\item{solver}{The name of the linear and quadratic programming solver that
+are used to obtain the solution to linear and quadratic programs.
+The solvers supported by this module are `\code{cplexAPI}',
 `\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
 }
 \value{
-Returns the updated parameters back to the function 
+Returns the updated parameters back to the function
 \code{mincriterion}. The following information are updated:
    \itemize{
       \item{\code{data}}
@@ -39,8 +39,8 @@ Returns the updated parameters back to the function
    }
 }
 \description{
-This function checks and updates the input from the user for 
-   the function \code{mincriterion}. If there is any invalid input, this  
-   function will terminate the procedure and generate appropriate error 
+This function checks and updates the input from the user for
+   the function \code{mincriterion}. If there is any invalid input, this
+   function will terminate the procedure and generate appropriate error
    messages.
 }

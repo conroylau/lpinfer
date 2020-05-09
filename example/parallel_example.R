@@ -91,7 +91,7 @@ beta_tgt <- .365
 # Example 1 - Using full information approach and gurobi solver (1 core)
 t10 <- Sys.time()
 set.seed(1)
-full_gur <- dkqs(data = data, 
+full_gur <- dkqs(data = data,
                  lpmodel = lpmodel.full,
                  beta.tgt = beta.tgt,
                  R = 5000,
@@ -107,7 +107,7 @@ time1 <- t11 - t10
 cores <- 8
 t80 <- Sys.time()
 set.seed(1)
-full_gur <- dkqs(data = data, 
+full_gur <- dkqs(data = data,
                  lpmodel = lpmodel.full,
                  beta.tgt = beta.tgt,
                  R = 5000,

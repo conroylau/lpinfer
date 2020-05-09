@@ -24,10 +24,10 @@ lpmodel(
 \item{beta.shp}{A vector, list or function}
 }
 \value{
-Returns a list of \code{lpmodel} objects in the \code{lpmodel} 
+Returns a list of \code{lpmodel} objects in the \code{lpmodel}
    class.
 }
 \description{
-This function defines the objects required in the 
+This function defines the objects required in the
    \code{lpinfer} module in the \code{lpmodel} class.
 }

@@ -7,12 +7,12 @@
 fsst.cone.lp(n, omega.i, beta.n, beta.star, lpmodel, indicator, solver)
 }
 \arguments{
-\item{omega.i}{The matrix \eqn{\widehat{\bm{\Omega}}^i_n}, i.e. the 
-regularized matrix for 
+\item{omega.i}{The matrix \eqn{\widehat{\bm{\Omega}}^i_n}, i.e. the
+regularized matrix for
 \eqn{\widehat{\bm{\Sigma}}^{\beta^\star}_{n,\bar{\rho}}}.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear 
-programming problems. The list of objects required in the \code{dkqs} 
+\item{lpmodel}{A list of objects that are used in inference of linear
+programming problems. The list of objects required in the \code{dkqs}
 procedure are:
 \itemize{
   \item{\code{A.tgt}}
@@ -20,12 +20,12 @@ procedure are:
   \item{\code{beta.obs}}
 }}
 
-\item{indicator}{A binary variable that equals to 1 for \eqn{d \geq p} and 
+\item{indicator}{A binary variable that equals to 1 for \eqn{d \geq p} and
 equals to 0 for \eqn{d < p}.}
 
-\item{solver}{The name of the linear and quadratic programming solver that 
-are used to obtain the solution to linear and quadratic programs. 
-The solvers supported by this module are `\code{cplexAPI}', 
+\item{solver}{The name of the linear and quadratic programming solver that
+are used to obtain the solution to linear and quadratic programs.
+The solvers supported by this module are `\code{cplexAPI}',
 `\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
 }
 \value{

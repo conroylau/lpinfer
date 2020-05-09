@@ -9,8 +9,8 @@ dkqs.qlp(data, lpmodel, beta.tgt, beta.obs.hat, tau, problem, n, solver)
 \arguments{
 \item{data}{The data being used in the inference.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear 
-programming problems. The list of objects required in the \code{dkqs} 
+\item{lpmodel}{A list of objects that are used in inference of linear
+programming problems. The list of objects required in the \code{dkqs}
 procedure are:
 \itemize{
   \item{\code{A.tgt}}
@@ -29,7 +29,7 @@ that is either the value of the observed.}
 
 \item{n}{The number of observations in the dataframe.}
 
-\item{solver}{Name of the solver that solves the linear and quadratic 
+\item{solver}{Name of the solver that solves the linear and quadratic
 programs.}
 }
 \value{
@@ -38,20 +38,20 @@ Returns the optimal point and optimal value.
  \item{objval}{Optimal value calculated from the optimizer.}
 }
 \description{
-This function formulates the matrices and vectors, and  
-   solves the quadratic programs (4) or linear programs (5) and (6) in  
+This function formulates the matrices and vectors, and
+   solves the quadratic programs (4) or linear programs (5) and (6) in
    Torgovitsky (2019).
 }
 \details{
 The argument \code{problem} must be one of the followings:
 \itemize{
-  \item{\code{test} --- this computes the quadratic program for the test 
+  \item{\code{test} --- this computes the quadratic program for the test
     statistic, i.e. quadratic program (4) in Torgovitsky (2019)}
-  \item{\code{cone} --- this computes the quadratic program for the 
-    bootstrap test statistics, i.e. quadratic program (5) in 
+  \item{\code{cone} --- this computes the quadratic program for the
+    bootstrap test statistics, i.e. quadratic program (5) in
     Torgovitsky (2019)}
   \item{\code{tau} --- this computes the value of tau based on the
-    procedure suggested by Kamat (2018), i.e. linear program (6) in 
+    procedure suggested by Kamat (2018), i.e. linear program (6) in
     Torgovitsky (2019)}
 }
 }

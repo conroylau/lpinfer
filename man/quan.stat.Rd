@@ -12,13 +12,13 @@ quan.stat(stat, quan = c(0.9, 0.95, 0.99))
 \item{quan}{Quantiles}
 }
 \value{
-Return the quantile of the test statistics in the order of the 
+Return the quantile of the test statistics in the order of the
   `\code{quan}` vector.
   \item{stat.quan}{Quantile of the test statistics in the order of the
   `\code{quan}` vector.}
 }
 \description{
-This function is used to evaluate the test statistics at 
-  different standard quantiles. By default, it evaluates the test 
+This function is used to evaluate the test statistics at
+  different standard quantiles. By default, it evaluates the test
   statistics at the quantiles - 90%, 95% and 99%.
 }

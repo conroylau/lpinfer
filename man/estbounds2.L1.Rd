@@ -11,8 +11,8 @@ estbounds2.L1(data, firststepsoln, lpmodel, modelsense, kappa, solver)
 
 \item{firststepsoln}{List of solutions to the first step problem.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear 
-programming problems. The list of objects required in the \code{dkqs} 
+\item{lpmodel}{A list of objects that are used in inference of linear
+programming problems. The list of objects required in the \code{dkqs}
 procedure are:
 \itemize{
   \item{\code{A.tgt}}
@@ -25,12 +25,12 @@ procedure are:
 \item{modelsense}{The indicator of whether the model is to max or min an
 objective function.}
 
-\item{kappa}{Parameter used in the second step of the two-step procedure 
+\item{kappa}{Parameter used in the second step of the two-step procedure
 for obtaining the solution subject to the shape constraints.}
 
-\item{solver}{The name of the linear and quadratic programming solver that 
-are used to obtain the solution to linear and quadratic programs. 
-The solvers supported by this module are `\code{cplexAPI}', 
+\item{solver}{The name of the linear and quadratic programming solver that
+are used to obtain the solution to linear and quadratic programs.
+The solvers supported by this module are `\code{cplexAPI}',
 `\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
 }
 \value{
@@ -39,7 +39,7 @@ Returns the solution to the second step of the two-step procedure.
  \item{x}{Optimal point calculated from the optimizer.}
 }
 \description{
-This function evaluates the solution to stage 2 of the 
-   two-step procedure obtaining the estimated bound. \eqn{\ell^1}-norm 
+This function evaluates the solution to stage 2 of the
+   two-step procedure obtaining the estimated bound. \eqn{\ell^1}-norm
    is used in the constraint
 }

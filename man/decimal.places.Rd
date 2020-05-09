@@ -14,6 +14,6 @@ Returns the number of decimal places of the number.
    \item{dp}{Number of decimal places of the number \code{x}.}
 }
 \description{
-This function returns the number of decimal places of a real 
+This function returns the number of decimal places of a real
    snumber.
 }

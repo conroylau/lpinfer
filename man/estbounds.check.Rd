@@ -9,8 +9,8 @@ estbounds.check(data, lpmodel, kappa, norm, solver, estimate, progress)
 \arguments{
 \item{data}{The data being used in the inference.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear 
-programming problems. The list of objects required in the \code{dkqs} 
+\item{lpmodel}{A list of objects that are used in inference of linear
+programming problems. The list of objects required in the \code{dkqs}
 procedure are:
 \itemize{
   \item{\code{A.tgt}}
@@ -20,26 +20,26 @@ procedure are:
   \item{\code{beta.shp}}
 }}
 
-\item{kappa}{Parameter used in the second step of the two-step procedure 
+\item{kappa}{Parameter used in the second step of the two-step procedure
 for obtaining the solution subject to the shape constraints.}
 
 \item{norm}{Norm used in the optimization problem.}
 
-\item{solver}{The name of the linear and quadratic programming solver that 
-are used to obtain the solution to linear and quadratic programs. 
-The solvers supported by this module are `\code{cplexAPI}', 
+\item{solver}{The name of the linear and quadratic programming solver that
+are used to obtain the solution to linear and quadratic programs.
+The solvers supported by this module are `\code{cplexAPI}',
 `\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
 
-\item{estimate}{Boolean variable to indicate whether the estimated 
+\item{estimate}{Boolean variable to indicate whether the estimated
 problem should be considered.}
 
-\item{progress}{The boolean variable for whether the result messages 
-should be displayed in the inference procedure. If it is set as 
-\code{TRUE}, the messages are displayed throughout the procedure. 
+\item{progress}{The boolean variable for whether the result messages
+should be displayed in the inference procedure. If it is set as
+\code{TRUE}, the messages are displayed throughout the procedure.
 Otherwise, the messages will not be displayed.}
 }
 \value{
-Returns the updated parameters and objects back to the function 
+Returns the updated parameters and objects back to the function
 \code{estbounds}. The following information are updated:
    \itemize{
       \item{\code{data}}
@@ -51,8 +51,8 @@ Returns the updated parameters and objects back to the function
    }
 }
 \description{
-This function checks and updates the input from the user for 
-   the function \code{estbounds}. If there is any invalid input, this  
-   function will terminate the procedure and generate appropriate error 
+This function checks and updates the input from the user for
+   the function \code{estbounds}. If there is any invalid input, this
+   function will terminate the procedure and generate appropriate error
    messages.
 }

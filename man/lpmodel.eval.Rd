@@ -17,7 +17,7 @@ lpmodel.eval(data, obj, i)
 Returns an object at iteration \code{i}.
 }
 \description{
-This function returns the matrix or vector depending on the 
+This function returns the matrix or vector depending on the
   class of the variable in the \code{lpmodel} object. In the design of
   the \code{lpinfer} module, objects in \code{lpmodel} can have three
   different types of classes:

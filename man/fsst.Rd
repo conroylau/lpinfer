@@ -22,8 +22,8 @@ fsst(
 \arguments{
 \item{data}{The data being used in the inference.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear 
-programming problems. The list of objects required in the \code{dkqs} 
+\item{lpmodel}{A list of objects that are used in inference of linear
+programming problems. The list of objects required in the \code{dkqs}
 procedure are:
 \itemize{
   \item{\code{A.tgt}}
@@ -35,45 +35,47 @@ procedure are:
 
 \item{R}{Number of bootstraps chosen by the users.}
 
+\item{rho}{Parameter used in the studentization of matrices}
+
 \item{weight.matrix}{The option used in the weighting matrix.}
 
-\item{solver}{The name of the linear and quadratic programming solver that 
-are used to obtain the solution to linear and quadratic programs. 
-The solvers supported by this module are `\code{cplexAPI}', 
+\item{solver}{The name of the linear and quadratic programming solver that
+are used to obtain the solution to linear and quadratic programs.
+The solvers supported by this module are `\code{cplexAPI}',
 `\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
 
-\item{cores}{Number of cores to be used in the parallelized for-loop. 
+\item{cores}{Number of cores to be used in the parallelized for-loop.
 Parallelized for-loop is used if \code{cores} is set to be an integer
 greater than or equal to 2.}
 
-\item{progress}{The boolean variable for whether the result messages 
-should be displayed in the inference procedure. If it is set as 
-\code{TRUE}, the messages are displayed throughout the procedure. 
+\item{progress}{The boolean variable for whether the result messages
+should be displayed in the inference procedure. If it is set as
+\code{TRUE}, the messages are displayed throughout the procedure.
 Otherwise, the messages will not be displayed.}
 }
 \value{
 Return a list of statistics for the `\code{fsst}` procedure:
   \item{pval}{\eqn{p}-value}
   \item{test.quan}{Table of bootstrap test statistics at different quantiles}
-  \item{stat.quan}{Table of bootstrap Cone and Range test statistics at 
+  \item{stat.quan}{Table of bootstrap Cone and Range test statistics at
     different quantiles}
   \item{cores}{Number of cores used}
   \item{call}{Information used to call the function}
   \item{range}{The range test statistic}
   \item{cone}{The cone test statistic}
   \item{test}{Test statistic used}
-  \item{range.n.list}{The list of bootstrap range test statistics}
   \item{cone.n.list}{The list of bootstrap cone test statistics}
+  \item{range.n.list}{The list of bootstrap range test statistics}
   \item{solver}{Name of the solver used}
   \item{rho}{Input value of rho}
-  \item{rhobar.e}{Regularization parameter used for the Range 
-    studentization matrix }
-  \item{rhobar.i}{Regularization parameter used for the Cone 
-    studentization matrix }
+  \item{rhobar.e}{Regularization parameter used for the Range
+    studentization matrix}
+  \item{rhobar.i}{Regularization parameter used for the Cone
+    studentization matrix}
   \item{beta.var.method}{Method used in obtaining the asymptotic variance
     of \code{beta.obs}}
 }
 \description{
-This module conducts inference in linear programs using the 
+This module conducts inference in linear programs using the
   `\code{fsst}` procedure by Fang, Santos, Shaikh and Torgovitsky (2020).
 }

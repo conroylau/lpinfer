@@ -12,8 +12,8 @@
 \item{beta.obs.hat}{Estimator of \eqn{\widehat{\bm{\beta}_{\mathrm{obs}, n}}}
 based on the given information in \code{lpmodel}.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear 
-programming problems. The list of objects required in the \code{dkqs} 
+\item{lpmodel}{A list of objects that are used in inference of linear
+programming problems. The list of objects required in the \code{dkqs}
 procedure are:
 \itemize{
   \item{\code{A.tgt}}
@@ -24,20 +24,20 @@ procedure are:
 \item{R}{Number of bootstraps chosen by the users.}
 }
 \value{
-Returns the bootstrap estimators and the estimator of the 
+Returns the bootstrap estimators and the estimator of the
   asymptotic variance.
     \item{sigma.mat}{Estimator of the asympototic variance}
     \item{beta.obs.bs}{List of bootstrap betas}
 }
 \description{
-Based on the function \code{beta.obs} from the object 
-  \code{lpmodel}, this function computes the bootstrap estimates and 
-  the asympototic variance estimator of the boostrap estimator. The 
+Based on the function \code{beta.obs} from the object
+  \code{lpmodel}, this function computes the bootstrap estimates and
+  the asympototic variance estimator of the boostrap estimator. The
   asymptotic variance estimator is computed as
-    \deqn{\frac{n}{B} \sum^B_{i=1} \left(\widehat{\bm{\beta}}_b - 
-    \widehat{\bm{\beta}}\right)  \left(\widehat{\bm{\beta}}_b - 
+    \deqn{\frac{n}{B} \sum^B_{i=1} \left(\widehat{\bm{\beta}}_b -
+    \widehat{\bm{\beta}}\right)  \left(\widehat{\bm{\beta}}_b -
     \widehat{\bm{\beta}}\right)'}
-  for some suitable estimators \eqn{\widehat{\bm{\beta}}} and the 
-  corresponding bootstrap estimators 
+  for some suitable estimators \eqn{\widehat{\bm{\beta}}} and the
+  corresponding bootstrap estimators
   \eqn{\{\widehat{\bm{\beta}}_b\}^B_{b=1}}.
 }

@@ -40,12 +40,12 @@ Returns the updated \code{lpmodel} object.
    \item{lpmodel}{Updated \code{lpmodel} object.}
 }
 \description{
-This function checks if the object \code{lpmodel} is in the 
+This function checks if the object \code{lpmodel} is in the
    correct format.
 }
 \details{
-In each of the testing procedures, there are five possible 
-categories of the each of the object: 
+In each of the testing procedures, there are five possible
+categories of the each of the object:
   \itemize{
     \item{Category 0: This object is not used in the function}
     \item{Category 1: A single matrix or vector}

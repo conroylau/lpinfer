@@ -25,7 +25,7 @@ Returns the bounds subject to the shape constraints.
   \item{obj}{Objective function}
 }
 \description{
-This function is mainly a wrapper of the \code{simplex} 
-   function from the \code{boot} package. It returns the standard form 
+This function is mainly a wrapper of the \code{simplex}
+   function from the \code{boot} package. It returns the standard form
    of the constraints matrix in a linear program.
 }

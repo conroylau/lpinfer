@@ -39,6 +39,6 @@ The following input for \code{norm} will be interpreted as the L1-
     \item{\code{"e"}}
     \item{\code{"euclidean"}}
   }
-  Note that capitalization is not an issue here as the text will be brought 
+  Note that capitalization is not an issue here as the text will be brought
   to the lower case.
 }

@@ -15,6 +15,6 @@ check.boolean(x, name.var)
 Nothing is returned.
 }
 \description{
-This function checks whether the variable is boolean. If not, 
+This function checks whether the variable is boolean. If not,
   an error message is displayed.
 }

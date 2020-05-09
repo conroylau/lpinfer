@@ -20,8 +20,8 @@ beta.bs.parallel(
 \arguments{
 \item{data}{The data being used in the inference.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear 
-programming problems. The list of objects required in the \code{dkqs} 
+\item{lpmodel}{A list of objects that are used in inference of linear
+programming problems. The list of objects required in the \code{dkqs}
 procedure are:
 \itemize{
   \item{\code{A.tgt}}
@@ -37,29 +37,29 @@ procedure are:
 
 \item{tau}{The value of tau chosen by the user.}
 
-\item{solver}{The name of the linear and quadratic programming solver that 
-are used to obtain the solution to linear and quadratic programs. 
-The solvers supported by this module are `\code{cplexAPI}', 
+\item{solver}{The name of the linear and quadratic programming solver that
+are used to obtain the solution to linear and quadratic programs.
+The solvers supported by this module are `\code{cplexAPI}',
 `\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
 
-\item{progress}{The boolean variable for whether the result messages 
-should be displayed in the inference procedure. If it is set as 
-\code{TRUE}, the messages are displayed throughout the procedure. 
+\item{progress}{The boolean variable for whether the result messages
+should be displayed in the inference procedure. If it is set as
+\code{TRUE}, the messages are displayed throughout the procedure.
 Otherwise, the messages will not be displayed.}
 
-\item{cores}{Number of cores to be used in the parallelized for-loop. 
+\item{cores}{Number of cores to be used in the parallelized for-loop.
 Parallelized for-loop is used if \code{cores} is set to be an integer
 greater than or equal to 2.}
 }
 \value{
 Returns the list of estimates from bootstrap:
-  \item{T.bs}{A list of bootstrap test statistics 
+  \item{T.bs}{A list of bootstrap test statistics
      \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}.}
- \item{beta.bs.bar.set}{A list of \eqn{\tau_n}-tightened recentered 
+ \item{beta.bs.bar.set}{A list of \eqn{\tau_n}-tightened recentered
     bootstrap estimates \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}.}
  \item{pb}{Progress bar object.}
 }
 \description{
-This function computes the bootstrap test statistics with 
+This function computes the bootstrap test statistics with
    parallelized for-loops.
 }

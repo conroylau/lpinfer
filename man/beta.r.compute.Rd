@@ -17,8 +17,8 @@ beta.r.compute(
 )
 }
 \arguments{
-\item{lpmodel}{A list of objects that are used in inference of linear 
-programming problems. The list of objects required in the \code{dkqs} 
+\item{lpmodel}{A list of objects that are used in inference of linear
+programming problems. The list of objects required in the \code{dkqs}
 procedure are:
 \itemize{
   \item{\code{A.tgt}}
@@ -28,16 +28,16 @@ procedure are:
 
 \item{beta.tgt}{Value of beta to be tested.}
 
-\item{omega.i}{The matrix \eqn{\widehat{\bm{\Omega}}^i_n}, i.e. the 
-regularized matrix for 
+\item{omega.i}{The matrix \eqn{\widehat{\bm{\Omega}}^i_n}, i.e. the
+regularized matrix for
 \eqn{\widehat{\bm{\Sigma}}^{\beta^\star}_{n,\bar{\rho}}}.}
 
-\item{indicator}{A binary variable that equals to 1 for \eqn{d \geq p} and 
+\item{indicator}{A binary variable that equals to 1 for \eqn{d \geq p} and
 equals to 0 for \eqn{d < p}.}
 
-\item{solver}{The name of the linear and quadratic programming solver that 
-are used to obtain the solution to linear and quadratic programs. 
-The solvers supported by this module are `\code{cplexAPI}', 
+\item{solver}{The name of the linear and quadratic programming solver that
+are used to obtain the solution to linear and quadratic programs.
+The solvers supported by this module are `\code{cplexAPI}',
 `\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
 }
 \value{
@@ -46,6 +46,6 @@ Returns the optimal point and optimal value.
  \item{objval}{Optimal value calculated from the optimizer.}
 }
 \description{
-This function computes the restricted estimator 
+This function computes the restricted estimator
   \eqn{\widehat{\bm{\beta}}^r_n}.
 }

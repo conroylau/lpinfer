@@ -14,6 +14,6 @@ Returns the updated number of cores.
   \item{cores}{Updated number of cores}
 }
 \description{
-This function checks if the number of cores specified is a 
+This function checks if the number of cores specified is a
    positive integer. If not, set it as one.
 }

@@ -9,8 +9,8 @@ estbounds.original(data, lpmodel, original.sense, solver)
 \arguments{
 \item{data}{The data being used in the inference.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear 
-programming problems. The list of objects required in the \code{dkqs} 
+\item{lpmodel}{A list of objects that are used in inference of linear
+programming problems. The list of objects required in the \code{dkqs}
 procedure are:
 \itemize{
   \item{\code{A.tgt}}
@@ -20,9 +20,9 @@ procedure are:
 
 \item{original.sense}{Sense of the contraints to compute the true bound.}
 
-\item{solver}{The name of the linear and quadratic programming solver that 
-are used to obtain the solution to linear and quadratic programs. 
-The solvers supported by this module are `\code{cplexAPI}', 
+\item{solver}{The name of the linear and quadratic programming solver that
+are used to obtain the solution to linear and quadratic programs.
+The solvers supported by this module are `\code{cplexAPI}',
 `\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
 }
 \value{
@@ -31,6 +31,6 @@ Returns the solution to the linear program.
  \item{x}{Optimal point calculated from the optimizer.}
 }
 \description{
-The function computes the true bound subject to the shape 
+The function computes the true bound subject to the shape
    constraints without approximation.
 }

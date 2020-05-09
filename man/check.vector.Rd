@@ -11,10 +11,10 @@ check.vector(vec, vec.name, inside.list)
 
 \item{vec.name}{Name of the vector object in \code{lpmodel}.}
 
-\item{inside.list}{Indicator variables of whether the object that is 
+\item{inside.list}{Indicator variables of whether the object that is
 being checked is inside a list or not.}
 }
 \description{
-This function checks if the matrix objects in \code{lpmodel} 
+This function checks if the matrix objects in \code{lpmodel}
    are in the correct format.
 }

@@ -13,6 +13,6 @@ print.lpmodel(x, data = NULL, ...)
 Print the summary of the objects in \code{lpmodel}.
 }
 \description{
-This function prints objects that are contained in the 
+This function prints objects that are contained in the
    list of \code{lpmodel}.
 }

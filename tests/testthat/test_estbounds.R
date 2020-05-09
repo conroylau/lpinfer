@@ -155,7 +155,7 @@ test_that("Full info vs Two moments for true bounds",{
 })
 
 # ---------------- #
-# Test 2: Test whether the output from estimated bounds are same as the 
+# Test 2: Test whether the output from estimated bounds are same as the
 # true bounds corrected 3 decimal places
 # ---------------- #
 # Function to test the output with same solver with different approach
@@ -182,4 +182,3 @@ test_that("Estimated bounds vs true bounds for kappa = 1e-10",{
 test_that("Estimated bounds vs true bounds for kappa = 1e-30",{
   estbounds_test_2(bd_full_true, bd_full_est30, 3)
 })
-

@@ -9,8 +9,8 @@ subsample.prob(data, lpmodel, beta.tgt, norm, solver, i)
 \arguments{
 \item{data}{The data being used in the inference.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear 
-programming problems. The list of objects required in the \code{dkqs} 
+\item{lpmodel}{A list of objects that are used in inference of linear
+programming problems. The list of objects required in the \code{dkqs}
 procedure are:
 \itemize{
   \item{\code{A.tgt}}
@@ -22,12 +22,12 @@ procedure are:
 
 \item{norm}{Norm used in the optimization problem.}
 
-\item{solver}{The name of the linear and quadratic programming solver that 
-are used to obtain the solution to linear and quadratic programs. 
-The solvers supported by this module are `\code{cplexAPI}', 
+\item{solver}{The name of the linear and quadratic programming solver that
+are used to obtain the solution to linear and quadratic programs.
+The solvers supported by this module are `\code{cplexAPI}',
 `\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
 
-\item{i}{Index that represents whether the current problem is the 
+\item{i}{Index that represents whether the current problem is the
 bootstrap problem or the first-step problem.}
 }
 \value{
@@ -36,14 +36,14 @@ Returns a list of output that are obtained from the optimizer:
   \item{objval}{Optimal value calculated from the optimizer.}
   \item{larg}{List of arguments passed to the optimizer.}
   \item{beta}{The beta vector \eqn{\widehat{\bm{\beta}}_{\mathrm{obs}}}
-    used in the optimization problem that is calculated from the 
+    used in the optimization problem that is calculated from the
     \code{func_obs} function with data \code{data}.}
-  \item{omega}{The Omega matrix \eqn{\widehat{\bm{\Omega}}_n} used in the 
-    optimization problem that is calculated from the \code{func_obs} 
+  \item{omega}{The Omega matrix \eqn{\widehat{\bm{\Omega}}_n} used in the
+    optimization problem that is calculated from the \code{func_obs}
     function with data \code{data}.}
 }
 \description{
-Based on the sample data given by the data frame \code{data}, 
-  this function formulates and solves linear/quadratic program in the 
+Based on the sample data given by the data frame \code{data},
+  this function formulates and solves linear/quadratic program in the
   subsampling procedure.
 }

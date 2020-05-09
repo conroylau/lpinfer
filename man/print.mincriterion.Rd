@@ -12,7 +12,7 @@ print.mincriterion(x, ...)
 \item{...}{Additional arguments.}
 }
 \value{
-Nothing is returned. This function prints results from 
+Nothing is returned. This function prints results from
    \code{mincriterion}.
 }
 \description{

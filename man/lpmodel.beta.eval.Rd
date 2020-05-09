@@ -14,14 +14,14 @@ lpmodel.beta.eval(data, obj, i)
 \item{i}{Index}
 }
 \value{
-Returns the point estimate and the asymptotic variane of the 
+Returns the point estimate and the asymptotic variane of the
    \code{beta.obs} object.
    \item{beta.obs}{Point estimate of \eqn{\widehat{\bm{\beta}}_{\rm obs}}}
-   \item{beta.obs}{Asymptotic variance of 
+   \item{beta.obs}{Asymptotic variance of
       \eqn{\widehat{\bm{\beta}}_{\rm obs}}}
 }
 \description{
-This function returns the matrix or vector depending on the 
+This function returns the matrix or vector depending on the
   class of the variable in the \code{lpmodel} object. In the design of
   the \code{lpinfer} module, objects in \code{lpmodel} can have three
   different types of classes:

@@ -23,6 +23,6 @@ Returns two objects:
    \item{sample}{A sample object that is used to compare the dimension.}
 }
 \description{
-This function checks if the matrix objects in \code{lpmodel} 
+This function checks if the matrix objects in \code{lpmodel}
    are in the correct format.
 }

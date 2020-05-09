@@ -7,13 +7,13 @@
 fsst.range.lp(n, omega.e, beta.n, beta.star, solver)
 }
 \arguments{
-\item{omega.e}{The matrix \eqn{\widehat{\bm{\Omega}}^e_n}, i.e. the 
-regularized matrix for 
+\item{omega.e}{The matrix \eqn{\widehat{\bm{\Omega}}^e_n}, i.e. the
+regularized matrix for
 \eqn{\widehat{\bm{\Sigma}}^{\beta^\star}_{n,\bar{\rho}}}.}
 
-\item{solver}{The name of the linear and quadratic programming solver that 
-are used to obtain the solution to linear and quadratic programs. 
-The solvers supported by this module are `\code{cplexAPI}', 
+\item{solver}{The name of the linear and quadratic programming solver that
+are used to obtain the solution to linear and quadratic programs.
+The solvers supported by this module are `\code{cplexAPI}',
 `\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
 }
 \value{

@@ -9,14 +9,14 @@ ci.bisection(f, farg, alpha, b0, b1, tol, max.iter, df_ci, progress, type, dp)
 \arguments{
 \item{f}{Function that represents a testing procedure.}
 
-\item{farg}{List of arguments to be passed to the function of testing 
+\item{farg}{List of arguments to be passed to the function of testing
 procedure.}
 
 \item{alpha}{Significance level of the test.}
 
 \item{b0}{Logical lower or upper bound for the confidence interval.}
 
-\item{b1}{Maximum possible lower bound or minimum possible upper bound for 
+\item{b1}{Maximum possible lower bound or minimum possible upper bound for
 the confidence interval.}
 
 \item{tol}{Tolerance level in the bisection method.}
@@ -27,29 +27,29 @@ the confidence interval.}
 \eqn{p}-values that have been tested in the previous iterations.}
 
 \item{progress}{The boolean variable for whether the result messages should
-be displayed in the procedure of constructing confidence interval. If 
-it is set as \code{TRUE}, the messages are displayed throughout the 
+be displayed in the procedure of constructing confidence interval. If
+it is set as \code{TRUE}, the messages are displayed throughout the
 procedure. Otherwise, the messages will not be displayed.}
 
-\item{type}{Type of the confidence interval. Set \code{type} as 1 for the 
-upper bound of the confidence interval and set \code{type} as -1 for the 
+\item{type}{Type of the confidence interval. Set \code{type} as 1 for the
+upper bound of the confidence interval and set \code{type} as -1 for the
 lower bound of the confidence interval.}
 
 \item{dp}{Number of decimal places to be displayed for the \eqn{p}-values
-and confidence intervals in the messages if \code{progress} is set 
+and confidence intervals in the messages if \code{progress} is set
 as \code{TRUE}.}
 }
 \value{
-Return the solution of the bisection method and the updated 
+Return the solution of the bisection method and the updated
    data frame.
    \item{soln}{Solution to the bisection method.}
-   \item{df_ci}{Data frame that consists of the points and the 
-      corresponding \eqn{p}-values that have been tested in constructing the 
-      confidence intervals.}   
-   \item{df_bis}{Data frame storing the information for the bisection 
+   \item{df_ci}{Data frame that consists of the points and the
+      corresponding \eqn{p}-values that have been tested in constructing the
+      confidence intervals.}
+   \item{df_bis}{Data frame storing the information for the bisection
       method in each iteration.}
 }
 \description{
-This function constructs the two-sided confidence interval 
+This function constructs the two-sided confidence interval
    of a given testing procedure using the bisection method.
 }

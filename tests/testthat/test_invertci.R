@@ -86,7 +86,7 @@ lpmodel.twom <- list(A.obs    = A_obs_twom,
                      beta.obs = func_two_moment)
 
 # Define arguments for dkqs
-farg <- list(data = data, 
+farg <- list(data = data,
              lpmodel = lpmodel.full,
              R = 100,
              tau = tau,
@@ -133,14 +133,14 @@ farg_l_twom <- farg
 # Construct arguments for constructing confidence interval
 # ---------------- #
 invertci_arg <- list(f = dkqs,
-                     alpha = 0.05, 
-                     lb0 = 0, 
-                     lb1 = .4, 
-                     ub0 = 1, 
-                     ub1 = .6, 
-                     tol = 0.001, 
-                     max.iter = 5, 
-                     df_ci = NULL, 
+                     alpha = 0.05,
+                     lb0 = 0,
+                     lb1 = .4,
+                     ub0 = 1,
+                     ub1 = .6,
+                     tol = 0.001,
+                     max.iter = 5,
+                     df_ci = NULL,
                      progress = TRUE)
 
 # ---------------- #
@@ -177,7 +177,7 @@ invertci_arg$farg <- farg_l_twom
 invertci_l_twom <- do.call(invertci, invertci_arg)
 
 # ---------------- #
-# Test 1: Test equivalence of two moments approach and full information 
+# Test 1: Test equivalence of two moments approach and full information
 # appraoch for each optimizer
 # ---------------- #
 dp <- 5
@@ -211,10 +211,10 @@ test_that("limSolve solver",{
 })
 
 # ---------------- #
-# Test 2: Test equivalence of results across different optimizers for each 
+# Test 2: Test equivalence of results across different optimizers for each
 # approach
 # ---------------- #
-# 
+#
 # Full information approach
 test_that("Full information approach - Gurobi vs Rcplex",{
   ci_test(invertci_g_full, invertci_r_full, dp)
@@ -232,6 +232,3 @@ test_that("Two moments approach - Gurobi vs Rcplex",{
 test_that("Two moments approach - Rcplex vs limSolve",{
   ci_test(invertci_r_twom, invertci_l_twom, dp)
 })
-
-
-

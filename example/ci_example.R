@@ -1,9 +1,9 @@
 ## ========================================================================= ##
 ##
 ##  Example file for invertci function
-##  
+##
 ##  This is an example code for applying the R module invertci on the missing
-##  data problem using the sample data by Torgovitsky (2019). This file 
+##  data problem using the sample data by Torgovitsky (2019). This file
 ##  illustrates how the module can be used to obtain the confidence interval
 ##  for the cone-tightening procedure problem.
 ##
@@ -99,7 +99,7 @@ lpmodel.full <- list(A.obs    = A_obs_full,
                      beta.obs = func_full_info)
 
 # Define the argument of the functions
-farg <- list(data = data, 
+farg <- list(data = data,
              lpmodel = lpmodel.full,
              R = 100,
              tau = tau,
@@ -109,30 +109,29 @@ farg <- list(data = data,
 
 # Demonstration 1: Construction of confidence interval
 set.seed(1)
-invertci_output <- invertci(f = dkqs, 
-                            farg = farg, 
-                            alpha = 0.05, 
-                            lb0 = 0, 
-                            lb1 = .4, 
-                            ub0 = 1, 
-                            ub1 = .6, 
-                            tol = 0.001, 
-                            max.iter = 5, 
-                            df_ci = NULL, 
+invertci_output <- invertci(f = dkqs,
+                            farg = farg,
+                            alpha = 0.05,
+                            lb0 = 0,
+                            lb1 = .4,
+                            ub0 = 1,
+                            ub1 = .6,
+                            tol = 0.001,
+                            max.iter = 5,
+                            df_ci = NULL,
                             progress = TRUE)
 
-# Demonstration 2: Use wrapper function to construct a list of confidence 
+# Demonstration 2: Use wrapper function to construct a list of confidence
 # intervals
 set.seed(1)
-invertci_output_many1 <- invertci(f = dkqs, 
-                                  farg = farg, 
-                                  alpha = c(0.01, 0.05), 
-                                  lb0 = 0, 
-                                  lb1 = .4, 
-                                  ub0 = 1, 
-                                  ub1 = .6, 
-                                  tol = 0.001, 
-                                  max.iter = 50, 
-                                  df_ci = NULL, 
+invertci_output_many1 <- invertci(f = dkqs,
+                                  farg = farg,
+                                  alpha = c(0.01, 0.05),
+                                  lb0 = 0,
+                                  lb1 = .4,
+                                  ub0 = 1,
+                                  ub1 = .6,
+                                  tol = 0.001,
+                                  max.iter = 50,
+                                  df_ci = NULL,
                                   progress = TRUE)
-

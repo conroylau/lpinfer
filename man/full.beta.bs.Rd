@@ -7,8 +7,8 @@
 full.beta.bs(lpmodel, beta.tgt, beta.obs.bs, R)
 }
 \arguments{
-\item{lpmodel}{A list of objects that are used in inference of linear 
-programming problems. The list of objects required in the \code{dkqs} 
+\item{lpmodel}{A list of objects that are used in inference of linear
+programming problems. The list of objects required in the \code{dkqs}
 procedure are:
 \itemize{
   \item{\code{A.tgt}}
@@ -24,7 +24,7 @@ procedure are:
 }
 \value{
 List of full beta vectors
-  \item{beta.bs}{List of full beta vector 
+  \item{beta.bs}{List of full beta vector
   \eqn{\{\widehat{\bm{\beta}_{n,b}}}\}^B_{b=1}}
 }
 \description{

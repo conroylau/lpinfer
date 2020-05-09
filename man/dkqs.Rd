@@ -18,8 +18,8 @@ dkqs(
 \arguments{
 \item{data}{The data being used in the inference.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear 
-programming problems. The list of objects required in the \code{dkqs} 
+\item{lpmodel}{A list of objects that are used in inference of linear
+programming problems. The list of objects required in the \code{dkqs}
 procedure are:
 \itemize{
   \item{\code{A.tgt}}
@@ -33,29 +33,29 @@ procedure are:
 
 \item{tau}{The value of tau chosen by the user.}
 
-\item{solver}{The name of the linear and quadratic programming solver that 
-are used to obtain the solution to linear and quadratic programs. 
-The solvers supported by this module are `\code{cplexAPI}', 
+\item{solver}{The name of the linear and quadratic programming solver that
+are used to obtain the solution to linear and quadratic programs.
+The solvers supported by this module are `\code{cplexAPI}',
 `\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
 
-\item{cores}{Number of cores to be used in the parallelized for-loop. 
+\item{cores}{Number of cores to be used in the parallelized for-loop.
 Parallelized for-loop is used if \code{cores} is set to be an integer
 greater than or equal to 2.}
 
-\item{progress}{The boolean variable for whether the result messages 
-should be displayed in the inference procedure. If it is set as 
-\code{TRUE}, the messages are displayed throughout the procedure. 
+\item{progress}{The boolean variable for whether the result messages
+should be displayed in the inference procedure. If it is set as
+\code{TRUE}, the messages are displayed throughout the procedure.
 Otherwise, the messages will not be displayed.}
 }
 \value{
 Returns a list of output calculated from the function:
   \item{pval}{\eqn{p}-value.}
-  \item{tau}{The value of tau used \eqn{\tau^\ast} in the linear and 
+  \item{tau}{The value of tau used \eqn{\tau^\ast} in the linear and
      quadratic programs.}
   \item{T.n}{Test statistic \eqn{T.n}.}
-  \item{T.bs}{The list of bootstrap test statistics 
+  \item{T.bs}{The list of bootstrap test statistics
      \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}.}
-  \item{beta.bs.bar}{The list of \eqn{\tau}-tightened re-centered bootstrap 
+  \item{beta.bs.bar}{The list of \eqn{\tau}-tightened re-centered bootstrap
      estimators \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}.}
   \item{lb0}{Logical lower bound of the problem.}
   \item{ub0}{Logical upper bound of the problem.}
@@ -64,8 +64,8 @@ Returns a list of output calculated from the function:
   \item{call}{The function that has been called.}
 }
 \description{
-This module conducts inference in quadratic programs using 
-   the procedure suggested by Torgovitsky (2019) that incorporates 
+This module conducts inference in quadratic programs using
+   the procedure suggested by Torgovitsky (2019) that incorporates
    the cone-tightening procedure proposed by Deb, Kitamura, Quah
    and Stoye (2018).
 }

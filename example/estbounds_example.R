@@ -1,16 +1,16 @@
 ## ========================================================================= ##
 ##
 ##  Example file for the estbounds function
-##  
+##
 ##  This is an example code for applying the R module estbounds on the missing
-##  data problem using the sample data by Torgovitsky (2019). This file 
-##  illustrates how the module can be used to obtain the upper and lower bounds 
+##  data problem using the sample data by Torgovitsky (2019). This file
+##  illustrates how the module can be used to obtain the upper and lower bounds
 ##  subject to the shape constraints. Currently, only the Gurobi optimzer
 ##  is supported to compute the bounds.
 ##
 ## ========================================================================= ##
 
-# ---------------- # 
+# ---------------- #
 # Part 1: Load required packages
 # ---------------- #
 library(modelr)
@@ -52,14 +52,14 @@ tau <- sqrt(log(N)/N)
 func_full_info <- function(data){
   # Initialize beta
   beta <- NULL
-  
+
   # Find the unique elements of Y, sorting in ascending order
   y_list <- sort(unique(data[,"Y"]))
-  
+
   # Count total number of rows of data and y_list
   n <- dim(data)[1]
   yn <- length(y_list)
-  
+
   # Generate each entry of beta_obs
   for (i in 1:yn){
     beta_i <- sum((data[,"Y"] == y_list[i]) * (data[,"D"] == 1))/n
@@ -73,13 +73,13 @@ func_full_info <- function(data){
 func_two_moment <- function(data){
   # Initialize beta
   beta <- matrix(c(0,0), nrow = 2)
-  
+
   # Count total number of rows of data and y_list
   n <- dim(data)[1]
-  
+
   # Moment 1 E[YD]
   beta[1] <- sum(data[,"Y"] * data[,"D"])/n
-  
+
   # Moment 2 E[D]
   beta[2] <- sum(data[,"D"])/n
   return(beta)
@@ -185,5 +185,3 @@ est_ans3b <- estbounds(data = data,
                        solver = "gurobi",
                        estimate = TRUE,
                        progress = TRUE)
-
-

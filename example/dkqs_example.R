@@ -1,12 +1,12 @@
 ## ========================================================================= ##
 ##
 ##  Example file for dkqs function
-##  
+##
 ##  This is an example code for applying the R module dkqs on the missing
-##  data problem using the sample data by Torgovitsky (2019). This file 
-##  illustrates how the module can be used to obtain the p-values using the 
+##  data problem using the sample data by Torgovitsky (2019). This file
+##  illustrates how the module can be used to obtain the p-values using the
 ##  full-information and two moments approach, and different solvers in R that
-##  can solve both linear and quadratic programs. Currently, the solvers 
+##  can solve both linear and quadratic programs. Currently, the solvers
 ##  supported are as follows:
 ##
 ##    - gurobi
@@ -112,7 +112,7 @@ lpmodel.twom <- list(A.obs    = A_obs_twom,
 ### Full information approach
 # Example 1.1a - Using full information approach and gurobi solver (1 core)
 set.seed(1)
-full_gur <- dkqs(data = data, 
+full_gur <- dkqs(data = data,
                  lpmodel = lpmodel.full,
                  beta.tgt = beta.tgt,
                  R = 100,
@@ -123,7 +123,7 @@ full_gur <- dkqs(data = data,
 
 # Example 1.1b - Using full information approach and gurobi solver (8 cores)
 set.seed(1)
-full_gur <- dkqs(data = data, 
+full_gur <- dkqs(data = data,
                  lpmodel = lpmodel.full,
                  beta.tgt = beta.tgt,
                  R = 100,
@@ -134,7 +134,7 @@ full_gur <- dkqs(data = data,
 
 # Example 2.1a - Using full information approach and Rcplex solver (1 core)
 set.seed(1)
-full_rcp <- dkqs(data = data, 
+full_rcp <- dkqs(data = data,
                  lpmodel = lpmodel.full,
                  beta.tgt = beta.tgt,
                  R = 100,
@@ -145,7 +145,7 @@ full_rcp <- dkqs(data = data,
 
 # Example 1.2b - Using full information approach and Rcplex solver (8 cores)
 set.seed(1)
-full_rcp <- dkqs(data = data, 
+full_rcp <- dkqs(data = data,
                  lpmodel = lpmodel.full,
                  beta.tgt = beta.tgt,
                  R = 100,
@@ -156,7 +156,7 @@ full_rcp <- dkqs(data = data,
 
 # Example 1.3a - Using full information approach and limSolve solver (1 core)
 set.seed(1)
-full_lim <- dkqs(data = data, 
+full_lim <- dkqs(data = data,
                  lpmodel = lpmodel.full,
                  beta.tgt = beta.tgt,
                  R = 100,
@@ -167,7 +167,7 @@ full_lim <- dkqs(data = data,
 
 # Example 1.3b - Using full information approach and limSolve solver (8 cores)
 set.seed(1)
-full_lim <- dkqs(data = data, 
+full_lim <- dkqs(data = data,
                  lpmodel = lpmodel.full,
                  beta.tgt = beta.tgt,
                  R = 100,
@@ -179,7 +179,7 @@ full_lim <- dkqs(data = data,
 ### Two moments approach
 # Example 2.1a - Using two moments approach and gurobi solver (1 core)
 set.seed(1)
-twom_gur <- dkqs(data = data, 
+twom_gur <- dkqs(data = data,
                  lpmodel = lpmodel.twom,
                  beta.tgt = beta.tgt,
                  R = 100,
@@ -190,7 +190,7 @@ twom_gur <- dkqs(data = data,
 
 # Example 2.1b - Using two moments approach and gurobi solver (8 cores)
 set.seed(1)
-twom_gur <- dkqs(data = data, 
+twom_gur <- dkqs(data = data,
                  lpmodel = lpmodel.twom,
                  beta.tgt = beta.tgt,
                  R = 100,
@@ -201,7 +201,7 @@ twom_gur <- dkqs(data = data,
 
 # Example 2.2a - Using two moments approach and Rcplex solver (1 core)
 set.seed(1)
-twom_rcp <- dkqs(data = data, 
+twom_rcp <- dkqs(data = data,
                  lpmodel = lpmodel.twom,
                  beta.tgt = beta.tgt,
                  R = 100,
@@ -212,7 +212,7 @@ twom_rcp <- dkqs(data = data,
 
 # Example 2.2b - Using two moments approach and Rcplex solver (8 cores)
 set.seed(1)
-twom_rcp <- dkqs(data = data, 
+twom_rcp <- dkqs(data = data,
                  lpmodel = lpmodel.twom,
                  beta.tgt = beta.tgt,
                  R = 100,
@@ -223,7 +223,7 @@ twom_rcp <- dkqs(data = data,
 
 # Example 2.3a - Using two moments approach and limSolve solver (1 core)
 set.seed(1)
-twom_lim <- dkqs(data = data, 
+twom_lim <- dkqs(data = data,
                  lpmodel = lpmodel.twom,
                  beta.tgt = beta.tgt,
                  R = 100,
@@ -234,7 +234,7 @@ twom_lim <- dkqs(data = data,
 
 # Example 2.3b - Using two moments approach and limSolve solver (8 cores)
 set.seed(1)
-twom_lim <- dkqs(data = data, 
+twom_lim <- dkqs(data = data,
                  lpmodel = lpmodel.twom,
                  beta.tgt = beta.tgt,
                  R = 100,
@@ -242,4 +242,3 @@ twom_lim <- dkqs(data = data,
                  solver = "limSolve",
                  cores = 8,
                  progress = TRUE)
-

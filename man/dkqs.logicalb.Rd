@@ -9,7 +9,7 @@ dkqs.logicalb(f, farg)
 \arguments{
 \item{f}{Function that represents a testing procedure.}
 
-\item{farg}{List of arguments to be passed to the function of testing 
+\item{farg}{List of arguments to be passed to the function of testing
 procedure.}
 }
 \value{

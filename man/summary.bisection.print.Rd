@@ -14,6 +14,6 @@ Nothing is returned in this function.
 }
 \description{
 This function is used to display the message when constructing
-   the bounds and used in \code{summary.invertci} to print the results in 
+   the bounds and used in \code{summary.invertci} to print the results in
    each step of the bisection method.
 }

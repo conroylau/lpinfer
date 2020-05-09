@@ -11,18 +11,18 @@ ci.inout(pval, alpha, type)
 
 \item{alpha}{Significance level of the test.}
 
-\item{type}{Type of the confidence interval. Set \code{type} as 1 for the 
-upper bound of the confidence interval and set \code{type} as -1 for the 
+\item{type}{Type of the confidence interval. Set \code{type} as 1 for the
+upper bound of the confidence interval and set \code{type} as -1 for the
 lower bound of the confidence interval.}
 }
 \value{
-Returns whether the part of the interval to be selected in the 
+Returns whether the part of the interval to be selected in the
    next iteration of the bisection method.
    \item{part}{Left or right segment of the interval.}
 }
 \description{
-This function determines whether the bisection method is going 
-   to be updated by choosing the left segment or the right segment of the 
-   interval as the updated interval for the next iteration in the bisection 
+This function determines whether the bisection method is going
+   to be updated by choosing the left segment or the right segment of the
+   interval as the updated interval for the next iteration in the bisection
    method.
 }

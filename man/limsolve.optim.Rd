@@ -40,6 +40,6 @@ Returns the optimal point and optimal value.
  \item{objval}{Optimal value calculated from the optimizer.}
 }
 \description{
-This function computes the solution to linear and quadratic 
+This function computes the solution to linear and quadratic
    programs using the `\code{limSolve}' package.
 }

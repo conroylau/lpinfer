@@ -45,6 +45,6 @@ This function computes the solution to the linear program
    using the `\code{lpsolveAPI}' package.
 }
 \details{
-The package `\code{lpSolveAPI}' cannot be used to solve quadratic 
+The package `\code{lpSolveAPI}' cannot be used to solve quadratic
   programs.
 }

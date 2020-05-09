@@ -9,7 +9,7 @@ bisec.eval(f, farg, pt, df_ci)
 \arguments{
 \item{f}{Function that represents a testing procedure.}
 
-\item{farg}{List of arguments to be passed to the function of testing 
+\item{farg}{List of arguments to be passed to the function of testing
 procedure.}
 
 \item{pt}{Point to be evaluated in the bisection method.}
@@ -21,12 +21,12 @@ procedure.}
 Returns the \eqn{p}-value of the point considered and an updated
    data frame that contains the points and the \eqn{p}-values.
    \item{pval}{\eqn{p}-value of the point.}
-   \item{df_ci}{Updated data frame that consists of the points that have been 
+   \item{df_ci}{Updated data frame that consists of the points that have been
       tested in constructing the confidence intervals.}
 }
 \description{
-This function checks if the \eqn{p}-value for the point 
-   considered has already been evaluated in previous iterations or provided 
-   by the user. The function will compute the \eqn{p}-value if it has been 
+This function checks if the \eqn{p}-value for the point
+   considered has already been evaluated in previous iterations or provided
+   by the user. The function will compute the \eqn{p}-value if it has been
    evaluated. Otherwise, it will use the previous data.
 }

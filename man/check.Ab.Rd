@@ -21,6 +21,6 @@ Returns the updated matrix and vector or print stop message.
    \item{b_updated}{Updated rhs vector.}
 }
 \description{
-This function checks the constraint matrix \eqn{\bm{A}} and 
+This function checks the constraint matrix \eqn{\bm{A}} and
    the corresponding vector \eqn{\bm{\beta}}.
 }

@@ -21,7 +21,7 @@ invertci.check(
 \arguments{
 \item{f}{Function that represents a testing procedure.}
 
-\item{farg}{List of arguments to be passed to the function of testing 
+\item{farg}{List of arguments to be passed to the function of testing
 procedure.}
 
 \item{alpha}{Significance level of the test.}
@@ -42,12 +42,12 @@ procedure.}
 \eqn{p}-values that have been tested in the previous iterations.}
 
 \item{progress}{The boolean variable for whether the result messages should
-be displayed in the procedure of constructing confidence interval. If 
-it is set as \code{TRUE}, the messages are displayed throughout the 
+be displayed in the procedure of constructing confidence interval. If
+it is set as \code{TRUE}, the messages are displayed throughout the
 procedure. Otherwise, the messages will not be displayed.}
 }
 \value{
-Returns the updated parameters back to the function 
+Returns the updated parameters back to the function
 \code{subsample}. The following information are updated:
    \itemize{
       \item{\code{df_ci}}
@@ -58,7 +58,7 @@ Returns the updated parameters back to the function
    }
 }
 \description{
-This function checks and updates the input from the user for 
-   the function \code{invertci}. If there is any invalid input, this function 
+This function checks and updates the input from the user for
+   the function \code{invertci}. If there is any invalid input, this function
    will terminate the procedure and generate appropriate error messages.
 }

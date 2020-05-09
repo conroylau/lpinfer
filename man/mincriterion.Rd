@@ -9,8 +9,8 @@ mincriterion(data, lpmodel, norm, solver)
 \arguments{
 \item{data}{The data being used in the inference.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear 
-programming problems. The list of objects required in the \code{dkqs} 
+\item{lpmodel}{A list of objects that are used in inference of linear
+programming problems. The list of objects required in the \code{dkqs}
 procedure are:
 \itemize{
   \item{\code{A.tgt}}
@@ -22,13 +22,13 @@ procedure are:
 
 \item{norm}{Norm used in the optimization problem.}
 
-\item{solver}{The name of the linear and quadratic programming solver that 
-are used to obtain the solution to linear and quadratic programs. 
-The solvers supported by this module are `\code{cplexAPI}', 
+\item{solver}{The name of the linear and quadratic programming solver that
+are used to obtain the solution to linear and quadratic programs.
+The solvers supported by this module are `\code{cplexAPI}',
 `\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
 }
 \value{
-Returns the solution to the first step of the two-step procedure 
+Returns the solution to the first step of the two-step procedure
    and argument for the linear program.
  \item{objval}{Optimal value calculated from the optimizer.}
  \item{x}{Optimal point calculated from the optimizer.}
@@ -38,8 +38,8 @@ Returns the solution to the first step of the two-step procedure
  \item{call}{The details of the function that has been called.}
 }
 \description{
-This function evaluates the solution to stage 1 of the 
+This function evaluates the solution to stage 1 of the
    two-step procedure obtaining the estimated bound. This function can
-   be used to evaluate both the estimation problem with the 1-norm or 
+   be used to evaluate both the estimation problem with the 1-norm or
    the 2-norm.
 }

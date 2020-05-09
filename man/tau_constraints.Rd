@@ -34,11 +34,11 @@ constraint.}
 
 \item{lp.rhs.tau}{The RHS vector of the linear constraints to be updated.}
 
-\item{lp.sense.tau}{The sense vector fo the linear constraints to be 
+\item{lp.sense.tau}{The sense vector fo the linear constraints to be
 updated.}
 }
 \value{
-Returns the list of matrices that corresponds to the updated 
+Returns the list of matrices that corresponds to the updated
   constraints:
   \item{lp.lhs.tau}{Upated constraint matrix.}
   \item{lp.rhs.tau}{Update RHS vector.}
@@ -46,6 +46,6 @@ Returns the list of matrices that corresponds to the updated
 }
 \description{
 This function generates the constraints in the linear program
-  for computing the value of tau based on the procedure suggested by Kamat 
+  for computing the value of tau based on the procedure suggested by Kamat
   (2018), i.e. linear program (6) of Torgovitsky (2019).
 }

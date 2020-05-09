@@ -11,10 +11,10 @@ fsst.pval(range.n, cone.n, range.n.list, cone.n.list, R, alpha = 0.05)
 
 \item{cone.n}{The point estimate for the `Cone` test statistics.}
 
-\item{range.n.list}{The bootstrap test estimates for the `Range` test 
+\item{range.n.list}{The bootstrap test estimates for the `Range` test
 statistics.}
 
-\item{cone.n.list}{The bootstrap test estimates for the `Cone` test 
+\item{cone.n.list}{The bootstrap test estimates for the `Cone` test
 statistics.}
 
 \item{R}{Number of bootstraps chosen by the users.}

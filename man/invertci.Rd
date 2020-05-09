@@ -21,7 +21,7 @@ invertci(
 \arguments{
 \item{f}{Function that represents a testing procedure.}
 
-\item{farg}{List of arguments to be passed to the function of testing 
+\item{farg}{List of arguments to be passed to the function of testing
 procedure.}
 
 \item{alpha}{Significance level of the test.}
@@ -42,23 +42,23 @@ procedure.}
 \eqn{p}-values that have been tested in the previous iterations.}
 
 \item{progress}{The boolean variable for whether the result messages should
-be displayed in the procedure of constructing confidence interval. If 
-it is set as \code{TRUE}, the messages are displayed throughout the 
+be displayed in the procedure of constructing confidence interval. If
+it is set as \code{TRUE}, the messages are displayed throughout the
 procedure. Otherwise, the messages will not be displayed.}
 }
 \value{
-Returns the confidence interval and a data frame that contains the 
+Returns the confidence interval and a data frame that contains the
    points being tested in the procedure.
    \item{up}{Upper bound of the confidence interval.}
    \item{low}{Lower bound of the confidence interval.}
    \item{df_ci}{data frame that consists of the points and the corresponding
-      \eqn{p}-values that have been tested in constructing the confidence 
+      \eqn{p}-values that have been tested in constructing the confidence
       intervals.}
-   \item{df_ub}{Data frame storing the information for the bisection 
-      method in each iteration when evaluating the upper bound of the 
+   \item{df_ub}{Data frame storing the information for the bisection
+      method in each iteration when evaluating the upper bound of the
       confidence interval.}
-   \item{df_lb}{Data frame storing the information for the bisection 
-      method in each iteration when evaluating the lower bound of the 
+   \item{df_lb}{Data frame storing the information for the bisection
+      method in each iteration when evaluating the lower bound of the
       confidence interval.}
    \item{tol}{Tolerance level in the bisection method.}
    \item{iter}{Total number of iterations taken.}
@@ -69,7 +69,7 @@ This function constructs the confidence interval using the
    bisection method.
 }
 \details{
-The number of decimal places displayed in the messages (if 
+The number of decimal places displayed in the messages (if
    \code{progress} is set as \code{TRUE}) is equal to the number of decimal
    places in the variable \code{tol}.
 }

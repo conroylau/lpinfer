@@ -15,6 +15,6 @@ check.numeric(x, name.var)
 Nothing is returned.
 }
 \description{
-This function checks whether the class of the variable 
+This function checks whether the class of the variable
   is \code{numeric} and has length 1.
 }

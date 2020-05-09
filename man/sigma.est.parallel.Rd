@@ -12,8 +12,8 @@
 \item{beta.obs.hat}{Estimator of \eqn{\widehat{\bm{\beta}_{\mathrm{obs}, n}}}
 based on the given information in \code{lpmodel}.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear 
-programming problems. The list of objects required in the \code{dkqs} 
+\item{lpmodel}{A list of objects that are used in inference of linear
+programming problems. The list of objects required in the \code{dkqs}
 procedure are:
 \itemize{
   \item{\code{A.tgt}}
@@ -23,31 +23,31 @@ procedure are:
 
 \item{R}{Number of bootstraps chosen by the users.}
 
-\item{cores}{Number of cores to be used in the parallelized for-loop. 
+\item{cores}{Number of cores to be used in the parallelized for-loop.
 Parallelized for-loop is used if \code{cores} is set to be an integer
 greater than or equal to 2.}
 
-\item{progress}{The boolean variable for whether the result messages 
-should be displayed in the inference procedure. If it is set as 
-\code{TRUE}, the messages are displayed throughout the procedure. 
+\item{progress}{The boolean variable for whether the result messages
+should be displayed in the inference procedure. If it is set as
+\code{TRUE}, the messages are displayed throughout the procedure.
 Otherwise, the messages will not be displayed.}
 }
 \value{
-Returns the bootstrap estimators and the estimator of the 
+Returns the bootstrap estimators and the estimator of the
   asymptotic variance.
     \item{sigma.mat}{Estimator of the asympototic variance}
     \item{beta.obs.bs}{List of bootstrap betas}
     \item{pb}{Progress bar object}
 }
 \description{
-Based on the function \code{beta.obs} from the object 
-  \code{lpmodel}, this function computes the bootstrap estimates and 
-  the asympototic variance estimator of the boostrap estimator. The 
+Based on the function \code{beta.obs} from the object
+  \code{lpmodel}, this function computes the bootstrap estimates and
+  the asympototic variance estimator of the boostrap estimator. The
   asymptotic variance estimator is computed as
-    \deqn{\frac{n}{B} \sum^B_{i=1} \left(\widehat{\bm{\beta}}_b - 
-    \widehat{\bm{\beta}}\right)  \left(\widehat{\bm{\beta}}_b - 
+    \deqn{\frac{n}{B} \sum^B_{i=1} \left(\widehat{\bm{\beta}}_b -
+    \widehat{\bm{\beta}}\right)  \left(\widehat{\bm{\beta}}_b -
     \widehat{\bm{\beta}}\right)'}
-  for some suitable estimators \eqn{\widehat{\bm{\beta}}} and the 
-  corresponding bootstrap estimators 
+  for some suitable estimators \eqn{\widehat{\bm{\beta}}} and the
+  corresponding bootstrap estimators
   \eqn{\{\widehat{\bm{\beta}}_b\}^B_{b=1}}.
 }
