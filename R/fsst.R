@@ -60,8 +60,10 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda,
    ### 2(b) Estimate sigma.beta.obs and store the boostrap estimates
    # If the user provided bootstrap estimates of beta, use it to compute sigma
    if (class(lpmodel$beta.obs) == "list"){
+      beta.var.method <- "list"
       if (is.null(sigma.beta.obs)){
          sigma.beta.obs <- sigma.summation(n, lpmodel$beta.obs) 
+         beta.var.method <- "bootstrapped values of the input list"
       }
       beta.obs.bs <- lpmodel$beta.obs[2:(R+1)]
       beta.n.bs <- list()
@@ -69,10 +71,12 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda,
          beta.n.bs[[i]] <- c(beta.obs.bs[[i]], beta.shp.hat, beta.tgt)
       }
    } else {
+      beta.var.method <- "function"
       if (cores == 1){
          if (is.null(sigma.beta.obs)){
             sigma.return <- sigma.est(n, data, beta.obs.hat, lpmodel, R)
             sigma.beta.obs <- sigma.return$sigma.hat
+            beta.var.method <- "bootstrapped 'beta.obs' from the function."
          }
          beta.obs.bs <- sigma.return$beta.obs.bs
          beta.n.bs <- full.beta.bs(lpmodel, beta.tgt, beta.obs.bs, R)
@@ -81,6 +85,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda,
             sigma.return <- sigma.est.parallel(n, data, beta.obs.hat, lpmodel,
                                                R, cores, progress)
             sigma.beta.obs <- sigma.return$sigma.hat
+            beta.var.method <- "bootstrapped 'beta.obs' from the function."
          }
          beta.obs.bs <- sigma.return$beta.obs.bs
          beta.n.bs <- full.beta.bs(lpmodel, beta.tgt, beta.obs.bs, R)
@@ -155,15 +160,16 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda,
    }
    
    # Compute the matrix square root
-   rho.bar <- base::norm(sigma.star, type = "f") * rho
-   omega.i <- expm::sqrtm(sigma.star + rho.bar * diag(nrow(sigma.star)))
+   rhobar.i <- base::norm(sigma.star, type = "f") * rho
+   omega.i <- expm::sqrtm(sigma.star + rhobar.i * diag(nrow(sigma.star)))
    
    if (d >= p){
+      rhobar.e <- NA
       omega.e <- sigma.star.diff
    } else {
-      rho.sup <- base::norm(sigma.star.diff, type = "f") * rho
-      omega.e <- expm::sqrtm(sigma.star.diff + rho.sup * 
-                                diag(nrow(sigma.star)))
+      rhobar.e <- base::norm(sigma.star.diff, type = "f") * rho
+      omega.e <- expm::sqrtm(sigma.star.diff + rhobar.e * 
+                             diag(nrow(sigma.star)))
    }
 
    # ---------------- #
@@ -221,15 +227,55 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda,
    }
 
    # ---------------- #
-   # Step 7: Compute decision and p-value
+   # Step 7: Compute decision, p-value and the quantiles of the test statistics
    # ---------------- #
-   pval <- data.frame(matrix(vector(), nrow = length(lambda), ncol = 2))
+   # Parameters
+   quans <- c(.9, .95, .99)
+   quans.string <- c("90%", "95%", "99%")
+   n.lambda <- length(lambda)
+   n.quans <- length(quans)
+   
+   # Initialize the data frames
+   pval <- data.frame(matrix(vector(), nrow = n.lambda, ncol = 2))
    colnames(pval) <- c("lambda", "p-value")
-   for (i in 1:length(lambda)){
+   
+   test.quan <- data.frame(matrix(vector(), nrow = 4, ncol = (1 + n.lambda)))
+   colnames(test.quan) <- c("cone", rep("range", n.lambda))
+   rownames(test.quan) <- c("(lambda)", quans.string)
+   test.quan[1,] <- c(" ", paste0("(", lambda, ")"))
+   
+   for (i in 1:n.lambda){
+      # Compute the p-values
       pval.return <- fsst.pval(range.n$objval, cone.n$objval, range.n.list, 
                                cone.n.list[[i]], R, alpha)  
       pval[i,1] <- lambda[i]
       pval[i,2] <- pval.return$pval
+      
+      # Compute the quantiles of cone - suffices to compute it once because
+      # it is the same across the lambdas
+      if (i == 1){
+         range.quan <- quan.stat(range.n.list, quans)
+         print(range.quan)
+         for (j in 1:n.quans){
+            test.quan[j+1,1] <- range.quan[j]
+         }
+      }
+      
+      # Compute the quantiles of range
+      cone.quan <- quan.stat(cone.n.list[[i]], quans)
+      for (j in 1:n.quans){
+         test.quan[j+1,1+i] <- cone.quan[j]
+      }
+   }
+   
+   # Construct the table for quantiles of test statistics
+   stat.quan <- data.frame(matrix(vector(), nrow = 3, ncol = n.lambda+1))
+   colnames(stat.quan) <- c("lambda", paste(lambda))
+   stat.quan[,1] <- quans.string
+   for (i in 1:n.quans){
+      for (j in 1:n.lambda){
+         stat.quan[i,j+1] <- max(test.quan[i+1,1], test.quan[i+1,1+j])
+      }
    }
 
    # ---------------- #
@@ -244,6 +290,8 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda,
    # ---------------- #
    # Assign the list of objects returned
    output <- list(pval = pval, 
+                  test.quan = test.quan,
+                  stat.quan = stat.quan,
                   cores = cores,
                   call = call,
                   range = range.n,
@@ -251,7 +299,11 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda,
                   test = max(range.n$objval, cone.n$objval),
                   cone.n.list = cone.n.list,
                   range.n.list = range.n.list,
-                  solver = solver.name)
+                  solver = solver.name,
+                  rho = rho,
+                  rhobar.e = rhobar.e,
+                  rhobar.i = rhobar.i,
+                  beta.var.method = beta.var.method)
    
    # Assign class
    attr(output, "class") <- "fsst"
@@ -406,6 +458,8 @@ sigma.est.parallel <- function(data, beta.obs.hat, lpmode, R, cores,
        data.bs <- as.data.frame(Momocs::sample_n(data, 
                                                  nrow(data), 
                                                  replace = TRUE))
+       data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
+       
        rownames(data.bs) <- 1:nrow(data.bs)
        
        # Compute the bootstrap test statistic
@@ -1181,6 +1235,42 @@ fsst.pval <- function(range.n, cone.n, range.n.list, cone.n.list, R,
                decision = decision))
 }
 
+#' Function that computes the basic quantiles 
+#' 
+#' @description This function is used to evaluate the test statistics at 
+#'   different standard quantiles. By default, it evaluates the test 
+#'   statistics at the quantiles - 90%, 95% and 99%.
+#' 
+#' @param stat Test statistics
+#' @param quan Quantiles
+#' 
+#' @return Return the quantile of the test statistics in the order of the 
+#'   `\code{quan}` vector.
+#'   \item{stat.quan}{Quantile of the test statistics in the order of the
+#'   `\code{quan}` vector.}
+#'   
+#' @export
+#' 
+quan.stat <- function(stat, quan = c(.9, .95, .99)){
+   # ---------------- #
+   # Step 1: Compute the basic parameters and initialize
+   # ---------------- #
+   n.stat <- length(stat)
+   stat.order <- sort(stat)
+   n.quan <- length(quan)
+   stat.quan <- c()
+   
+   # ---------------- #
+   # Step 2: Compute the quantiles via a for-loop
+   # ---------------- #
+   for (i in 1:n.quan){
+      temp <- round(stat.order[pracma::ceil(quan[i]*n.stat)], digits = 5)
+      stat.quan <- c(stat.quan, temp)
+   }
+   
+   return(stat.quan)
+}
+
 #' Checks and updates the input
 #'
 #' @description This function checks and updates the input of the user. If 
@@ -1238,7 +1328,7 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, lambda, rho, n,
    # ---------------- #
    check.numeric(beta.tgt, "beta.tgt")
    check.positiveinteger(R, "R")
-   cores <- check.cores(cores, "cores")
+   cores <- check.cores(cores)
    
    # ---------------- #
    # Step 5: Check lambda
@@ -1271,24 +1361,15 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, lambda, rho, n,
 #' @param x Object returned from \code{fsst}.
 #' @param ... Additional arguments.
 #' 
-#' @details The following information are printed
-#'   \itemize{
-#'     \item{Test statistic (Max of Cone and Range)}
-#'     \item{Test statistic (Cone)}
-#'     \item{Test statistic (Range)}
-#'     \item{\eqn{p}-value}
-#'     \item{Solver used}
-#'     \item{Number of cores used}
-#'   }
+#' @details The p-value is printed
+#' 
+#' @return Nothing is returned
 #'    
 #' @export
 #'    
 print.fsst <- function(x, ...){
    cat("\r\r")
-   cat(sprintf("Test statistic: %s.             \n", round(x$test, digits = 5)))
-   cat(sprintf("   - Range component: %s\n", round(x$range$objval, digits = 5)))  
-   cat(sprintf("   - Cone component: %s\n", round(x$cone$objval, digits = 5)))
-   if (nrow(x$pval) == 1){
+  if (nrow(x$pval) == 1){
       cat(sprintf("p-value: %s\n", x$pval[1,2]))
    } else {
       cat("p-values:\n")
@@ -1299,8 +1380,6 @@ print.fsst <- function(x, ...){
                      round(x$pval[i,2], digits = 5)))
       }
    }
-   cat(sprintf("Solver used: %s\n", x$solver.name))
-   cat(sprintf("Number of cores used: %s\n", x$cores))
 }
 
 #' Summary of results from \code{fsst}
@@ -1311,10 +1390,59 @@ print.fsst <- function(x, ...){
 #' @param x Object returned from \code{fsst}.
 #' @param ... Additional arguments.
 #' 
-#' @return Print the summary of the basic set of results from \code{fsst}.
+#' @details The following information are printed
+#'   \itemize{
+#'     \item{Test statistic (Max of Cone and Range)}
+#'     \item{Test statistic (Cone)}
+#'     \item{Test statistic (Range)}
+#'     \item{\eqn{p}-value}
+#'     \item{Solver used}
+#'     \item{Number of cores used}
+#' 
+#' @return Nothing is returned
 #' 
 #' @export
 #' 
 summary.fsst <- function(x, ...){
-   print(x)
+   cat("\r\r")
+   cat(sprintf("Test statistic: %s.\n", round(x$test, digits = 5)))
+   cat(sprintf("   - Range component: %s\n", round(x$range$objval, digits = 5)))  
+   cat(sprintf("   - Cone component: %s\n", round(x$cone$objval, digits = 5)))
+   cat("\nQuantiles of bootstrap test statistics: \n")
+   x$stat.quan[,1] <- paste("   ", x$stat.quan[,1], "   ")
+   colnames(x$stat.quan)[1] <- "lambda "
+   print(x$stat.quan, row.names = FALSE)
+   cat("\nQuantiles of bootstrap cone and range components: \n")
+   rownames(x$test.quan) <- paste("    ", rownames(x$test.quan))
+   print(x$test.quan)
+   if (nrow(x$pval) == 1){
+      cat(sprintf("\np-value: %s\n", x$pval[1,2]))
+   } else {
+      cat("\np-values:\n")
+      df.pval <- data.frame(matrix(vector(), nrow = 1, ncol = nrow(x$pval)+1))
+      colnames(df.pval) <- c("    lambda ", x$pval$lambda)
+      df.pval[1,] <- c("    p-value", x$pval[,2])
+      print(df.pval, row.names = FALSE)
+      # for (i in 1:nrow(x$pval)){
+      #    cat(sprintf("     %s\t%s\n", 
+      #                round(x$pval[i,1], digits = 5),
+      #                round(x$pval[i,2], digits = 5)))
+      # }
+   }
+   cat(sprintf("\nSolver used: %s\n", x$solver.name))
+   cat(sprintf("\nNumber of cores used: %s\n", x$cores))
+   
+   # Regularization parameters
+   cat("\nRegularization parameters: \n")
+   cat(sprintf("   - Input value of rho: %s\n", 
+               round(x$rho, digits = 5)))
+   cat(sprintf("   - Regaularization parameter for omega.e: %s\n", 
+               round(x$rhobar.e, digits = 5)))
+   cat(sprintf("   - Regaularization parameter for omega.i: %s\n", 
+               round(x$rhobar.i, digits = 5)))
+   cat(sprintf(paste0("\nThe asymtotic variance of observed component ",
+                      "of the 'beta.obs' vector is approximated from the %s."),
+                      x$beta.var.method))
 }
+
+
