@@ -54,14 +54,24 @@ Otherwise, the messages will not be displayed.}
 \value{
 Return a list of statistics for the `\code{fsst}` procedure:
   \item{pval}{\eqn{p}-value}
+  \item{test.quan}{Table of bootstrap test statistics at different quantiles}
+  \item{stat.quan}{Table of bootstrap Cone and Range test statistics at 
+    different quantiles}
   \item{cores}{Number of cores used}
   \item{call}{Information used to call the function}
   \item{range}{The range test statistic}
   \item{cone}{The cone test statistic}
+  \item{test}{Test statistic used}
   \item{range.n.list}{The list of bootstrap range test statistics}
   \item{cone.n.list}{The list of bootstrap cone test statistics}
   \item{solver}{Name of the solver used}
-  \item{test}{Test statistic used}
+  \item{rho}{Input value of rho}
+  \item{rhobar.e}{Regularization parameter used for the Range 
+    studentization matrix }
+  \item{rhobar.i}{Regularization parameter used for the Cone 
+    studentization matrix }
+  \item{beta.var.method}{Method used in obtaining the asymptotic variance
+    of \code{beta.obs}}
 }
 \description{
 This module conducts inference in linear programs using the 
