@@ -11,18 +11,13 @@ print.fsst(x, ...)
 
 \item{...}{Additional arguments.}
 }
+\value{
+Nothing is returned
+}
 \description{
 This function uses the print method on the return list of the
    function \code{fsst}.
 }
 \details{
-The following information are printed
-  \itemize{
-    \item{Test statistic (Max of Cone and Range)}
-    \item{Test statistic (Cone)}
-    \item{Test statistic (Range)}
-    \item{\eqn{p}-value}
-    \item{Solver used}
-    \item{Number of cores used}
-  }
+The p-value is printed
 }

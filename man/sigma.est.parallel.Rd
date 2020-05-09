@@ -4,13 +4,22 @@
 \alias{sigma.est.parallel}
 \title{Computing bootstrap and variance estimators with parallel programming}
 \usage{
-\method{sigma}{est.parallel}(data, beta.obs.hat, lpmode, R, cores, progress)
+\method{sigma}{est.parallel}(data, beta.obs.hat, lpmodel, R, cores, progress)
 }
 \arguments{
 \item{data}{The data being used in the inference.}
 
 \item{beta.obs.hat}{Estimator of \eqn{\widehat{\bm{\beta}_{\mathrm{obs}, n}}}
 based on the given information in \code{lpmodel}.}
+
+\item{lpmodel}{A list of objects that are used in inference of linear 
+programming problems. The list of objects required in the \code{dkqs} 
+procedure are:
+\itemize{
+  \item{\code{A.tgt}}
+  \item{\code{A.obs}}
+  \item{\code{beta.obs}}
+}}
 
 \item{R}{Number of bootstraps chosen by the users.}
 

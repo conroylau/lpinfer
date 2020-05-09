@@ -12,9 +12,12 @@ summary.fsst(x, ...)
 \item{...}{Additional arguments.}
 }
 \value{
-Print the summary of the basic set of results from \code{fsst}.
+Nothing is returned
 }
 \description{
 This function uses the summary method on the return list of the
    function \code{fsst}. This is a wrapper of the \code{print} command.
+}
+\details{
+
 }

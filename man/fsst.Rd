@@ -11,7 +11,7 @@ fsst(
   R,
   alpha = 0.05,
   lambda,
-  rho,
+  rho = 1e-04,
   n = NULL,
   weight.matrix = "diag",
   solver,
