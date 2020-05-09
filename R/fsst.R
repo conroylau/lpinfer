@@ -455,9 +455,6 @@ sigma.est.parallel <- function(data, beta.obs.hat, lpmode, R, cores,
        lpmodel.bs <- lpmodel
        
        # Re-sample the data 
-       data.bs <- as.data.frame(Momocs::sample_n(data, 
-                                                 nrow(data), 
-                                                 replace = TRUE))
        data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
        
        rownames(data.bs) <- 1:nrow(data.bs)

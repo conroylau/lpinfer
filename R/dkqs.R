@@ -5,7 +5,7 @@
 #'    the cone-tightening procedure proposed by Deb, Kitamura, Quah
 #'    and Stoye (2018).
 #'    
-#' @import Momocs foreach doMC parallel
+#' @import foreach doMC parallel
 #'
 #' @param data The data being used in the inference.
 #' @param lpmodel A list of objects that are used in inference of linear 
@@ -508,9 +508,7 @@ beta.bs.parallel <- function(data, lpmodel, beta.tgt, R, J, s.star, tau,
     lpmodel.bs <- lpmodel
    
     # Re-sample the data 
-    data.bs <- as.data.frame(Momocs::sample_n(data, 
-                                              nrow(data), 
-                                              replace = TRUE))
+    data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
     rownames(data.bs) <- 1:nrow(data.bs)
    
     # Compute the bootstrap test statistic

@@ -3,7 +3,7 @@
 #' @description This function conducts inference and returns the 
 #'   \eqn{p}-value using the subsampling procedure.
 #' 
-#' @import Momocs foreach doMC parallel Momocs
+#' @import foreach doMC parallel
 #' 
 #' @param lpmodel A list of objects that are used in inference of linear 
 #'    programming problems. The list of objects required in the \code{dkqs} 
@@ -377,7 +377,7 @@ subsample.manycores <- function(data, R, lpmodel, beta.tgt, norm, solver,
                              .combine = "comb", .options.snow = opts,
                              .packages = "lpinfer") %dorng% {
    ## (3.1) Draw the subsample
-   data.bs <- as.data.frame(Momocs::sample_n(data, m, replace = FALSE))
+   data.bs <- as.data.frame(data[sample(1:nrow(data), replace = FALSE),])
    rownames(data.bs) <- 1:nrow(data.bs)
    ## (3.2) Compute the bootstrap estimates
    # Compute the value of beta_bs_star using the function func_obs
