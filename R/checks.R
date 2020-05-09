@@ -809,7 +809,7 @@ check.vector <- function(vec, vec.name, inside.list){
 #'   
 #' @export
 #' 
-check.cores <- function(cores){
+check.cores <- function(x){
   if ((is.numeric(x) == TRUE & length(x) == 1 & x > 0 & x%%1 == 0) == FALSE){
     cores <- 1
   } 
