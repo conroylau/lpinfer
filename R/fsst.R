@@ -82,7 +82,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda,
          beta.n.bs <- full.beta.bs(lpmodel, beta.tgt, beta.obs.bs, R)
       } else {
          if (is.null(sigma.beta.obs)){
-            sigma.return <- sigma.est.parallel(n, data, beta.obs.hat, lpmodel,
+            sigma.return <- sigma.est.parallel(data, beta.obs.hat, lpmodel,
                                                R, cores, progress)
             sigma.beta.obs <- sigma.return$sigma.hat
             beta.var.method <- "bootstrapped 'beta.obs' from the function."
@@ -391,8 +391,7 @@ sigma.est <- function(n, data, beta.obs.hat, lpmodel, R){
 #' 
 #' @export
 #' 
-sigma.est.parallel <- function(data, beta.obs.hat, lpmode, R, cores,
-                               progress){
+sigma.est.parallel <- function(data, beta.obs.hat, lpmodel, R, cores, progress){
    # ---------------- #
    # Step 1: Register the number of cores and extract information
    # ---------------- #
