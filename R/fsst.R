@@ -4,7 +4,7 @@
 #'   `\code{fsst}` procedure by Fang, Santos, Shaikh and Torgovitsky (2020).
 #'
 #' @inheritParams dkqs
-#' @lambda lambda Parameter used in the cone bootstrap sattistics
+#' @param lambda Parameter used in the cone bootstrap sattistics
 #' @param rho Parameter used in the studentization of matrices
 #' @param weight.matrix The option used in the weighting matrix.
 #'
@@ -491,7 +491,7 @@ sigma.est.parallel <- function(data, beta.obs.hat, lpmodel, R, cores, progress){
 
 #' Construct the full beta vector
 #'
-#' @descripton This function concatenate the \code{beta.obs}, \code{beta.shp}
+#' @description This function concatenate the \code{beta.obs}, \code{beta.shp}
 #'   and \code{beta.tgt} components to form the full \code{beta} vector.
 #'
 #' @inheritParams fsst
@@ -1316,11 +1316,13 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, lambda, rho, n,
    lpmodel <- check.lpmodel(data = data,
                             lpmodel = lpmodel,
                             name.var = "lpmodel",
-                            A.tgt.cat = 1,
-                            A.obs.cat = 1,
-                            A.shp.cat = 1,
-                            beta.obs.cat = c(2,3),
-                            beta.shp.cat = 1,
+                            A.tgt.cat = "matrix",
+                            A.obs.cat = "matrix",
+                            A.shp.cat = "not_used",
+                            beta.obs.cat = c("function_mat", 
+                                             "list",
+                                             "function_obs_var"),
+                            beta.shp.cat = "not_used",
                             R = R)
 
    # ---------------- #
@@ -1407,7 +1409,7 @@ print.fsst <- function(x, ...){
 #'     \item{Test statistic (Range)}
 #'     \item{\eqn{p}-value}
 #'     \item{Solver used}
-#'     \item{Number of cores used}
+#'     \item{Number of cores used}}
 #'
 #' @return Nothing is returned
 #'

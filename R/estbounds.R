@@ -391,11 +391,13 @@ estbounds.check <- function(data, lpmodel, kappa, norm, solver, estimate,
   lpmodel <- check.lpmodel(data = data,
                            lpmodel = lpmodel,
                            name.var = "lpmodel",
-                           A.tgt.cat = 1,
-                           A.obs.cat = 1,
-                           A.shp.cat = 1,
-                           beta.obs.cat = c(2,3),
-                           beta.shp.cat = 1,
+                           A.tgt.cat = "matrix",
+                           A.obs.cat = "matrix",
+                           A.shp.cat = "matrix",
+                           beta.obs.cat = c("function_mat", 
+                                            "list",
+                                            "function_obs_var"),
+                           beta.shp.cat = "matrix",
                            R = 1)
 
   # Check solver
@@ -628,11 +630,13 @@ mincriterion.check <- function(data, lpmodel, norm, solver){
   lpmodel <- check.lpmodel(data = data,
                            lpmodel = lpmodel,
                            name.var = "lpmodel",
-                           A.tgt.cat = 1,
-                           A.obs.cat = 1,
-                           A.shp.cat = 1,
-                           beta.obs.cat = c(2,3),
-                           beta.shp.cat = 1,
+                           A.tgt.cat = "matrix",
+                           A.obs.cat = "matrix",
+                           A.shp.cat = "matrix",
+                           beta.obs.cat = c("function_mat", 
+                                            "list",
+                                            "function_obs_var"),
+                           beta.shp.cat = "matrix",
                            R = 1)
 
   # Check solver

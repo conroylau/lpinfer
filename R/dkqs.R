@@ -664,11 +664,13 @@ dkqs.check <- function(data, lpmodel, beta.tgt, R, tau, solver, cores,
   lpmodel <- check.lpmodel(data = data,
                            lpmodel = lpmodel,
                            name.var = "lpmodel",
-                           A.tgt.cat = 1,
-                           A.obs.cat = 1,
-                           A.shp.cat = 0,
-                           beta.obs.cat = c(2,3),
-                           beta.shp.cat = 0,
+                           A.tgt.cat = "matrix",
+                           A.obs.cat = "matrix",
+                           A.shp.cat = "not_used",
+                           beta.obs.cat = c("function_mat", 
+                                            "list",
+                                            "function_obs_var"),
+                           beta.shp.cat = "not_used",
                            R = R)
 
   # Check solver

@@ -493,11 +493,11 @@ subsample.check <- function(data, lpmodel, beta.tgt, R, solver, cores,
   lpmodel <- check.lpmodel(data = data,
                            lpmodel = lpmodel,
                            name.var = "lpmodel",
-                           A.tgt.cat = c(1,2,3),
-                           A.obs.cat = c(1,2,3),
-                           A.shp.cat = c(1,2,3),
-                           beta.obs.cat = c(3,4),
-                           beta.shp.cat = c(1,2,3),
+                           A.tgt.cat = c("matrix", "function_mat", "list"),
+                           A.obs.cat = c("matrix", "function_mat", "list"),
+                           A.shp.cat = c("matrix", "function_mat", "list"),
+                           beta.obs.cat = c("list", "function_obs_var"),
+                           beta.shp.cat = c("matrix", "function_mat", "list"),
                            R = R)
 
   # Check solver
