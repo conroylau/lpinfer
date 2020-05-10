@@ -477,11 +477,18 @@ check.solver <- function(x, name.var, norm = 2){
 #' @details In each of the testing procedures, there are five possible
 #' categories of the each of the object:
 #'   \itemize{
-#'     \item{Category 0: This object is not used in the function}
-#'     \item{Category 1: A single matrix or vector}
-#'     \item{Category 2: A function that maps to a matrix or vector}
-#'     \item{Category 3: A list of matrices or vectors}
-#'     \item{Category 4: A function that maps to a vector and a matrix}
+#'     \item{Category '\code{not_used}': This refers to the case where the 
+#'       object is not used in the function}
+#'     \item{Category '\code{matrix}': This refers to the case where the
+#'       object has to be a matrix}
+#'     \item{Category '\code{function_mat}': This refers to the case where 
+#'       the object has to be a function that produces a matrix.}
+#'     \item{Category '\code{list}': This refers to the case where the
+#'       object is a list}
+#'     \item{Category '\code{function_obs_var}': This refers to the case 
+#'       where the object is a function that produces a list that contains 
+#'       a vector and a matrix. This is typically the case for \code{beta.obs}
+#'       that the function produces an estimator and the asymptotic variance.}
 #'   }
 #'   Each object can belong to one of more categories.
 #'
@@ -504,36 +511,36 @@ check.lpmodel <- function(data, lpmodel, name.var, A.tgt.cat, A.obs.cat,
   # Step 2: Check each of the objects (treat them as matrices)
   # and check if beta.obs and beta.shp are matrices
   # ---------------- #
-  if (A.tgt.cat != 0){
+  if (!("not_used" %in% A.tgt.cat)){
     A.tgt.return <- check.lpobjects(data, lpmodel$A.tgt, "A.tgt", A.tgt.cat, R)
   }
-  if (A.obs.cat != 0){
+  if (!("not_used" %in% A.obs.cat)){
     A.obs.return <- check.lpobjects(data, lpmodel$A.obs, "A.obs", A.obs.cat, R)
   }
-  if (A.shp.cat != 0){
+  if (!("not_used" %in% A.shp.cat)){
     A.shp.return <- check.lpobjects(data, lpmodel$A.shp, "A.shp", A.shp.cat, R)
   }
-  if (beta.obs.cat!= 0){
+  if (!("not_used" %in% beta.obs.cat)){
     beta.obs.return <- check.lpobjects(data, lpmodel$beta.obs, "beta.obs",
                                        beta.obs.cat, R)
-    check.vector(beta.obs.return$sample)
+    check.vector(beta.obs.return$sample, "beta.obs", FALSE)
   }
-  if (beta.shp.cat!= 0){
+  if (!("not_used" %in% beta.shp.cat)){
     beta.shp.return <- check.lpobjects(data, lpmodel$beta.shp, "beta.shp",
                                        beta.shp.cat, R)
-    check.vector(beta.shp.return$sample)
+    check.vector(beta.shp.return$sample, "beta.shp", FALSE)
   }
 
   # ---------------- #
   # Step 3: Check whether the dimension matches
   # ---------------- #
-  if (A.obs.cat != 0){
+  if (!("not_used" %in% A.obs.cat)){
     if (nrow(A.obs.return$sample) != nrow(beta.obs.return$sample)){
       stop(paste0("The objects 'A.obs' and 'beta.obs' in 'lpmodel' has ",
                   "to have the same number of rows."))
     }
   }
-  if (A.shp.cat != 0){
+  if (!("not_used" %in% A.shp.cat)){
     if (nrow(A.shp.return$sample) != nrow(beta.shp.return$sample)){
       stop(paste0("The objects 'A.shp' and 'beta.shp' in 'lpmodel' has ",
                   "to have the same number of rows."))
@@ -551,6 +558,9 @@ check.lpmodel <- function(data, lpmodel, name.var, A.tgt.cat, A.obs.cat,
 #' @param mat.name Name of the matrix object in \code{lpmodel}.
 #' @param mat.cat Category of the matrix object.
 #' @inheritParams dkqs
+#' 
+#' @details See the details for the function `\code{check.lpmodel}` for the 
+#'   details on the strings for each category.
 #'
 #' @return Returns two objects:
 #'    \item{mat}{The updated object in \code{lpmodel}.}
@@ -567,7 +577,7 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R){
     err.ind <- NULL
 
     # Category 1: Check if it is a single matrix
-    if (sum(mat.cat %in% 1) > 0){
+    if ("matrix" %in% mat.cat) {
       mat.return <- check.matrix(mat, mat.name, mat.cat, FALSE)
       if (mat.return$err.ind != 1){
         return(list(mat = mat.return$mat.update,
@@ -578,7 +588,7 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R){
     }
 
     # Category 2: Check if it is a function
-    if (sum(mat.cat %in% 2) > 0){
+    if ("function_mat" %in% mat.cat) {
       if (class(mat) == "function"){
         return(list(mat = mat,
                     sample = mat(data)))
@@ -593,13 +603,13 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R){
     }
 
     # Category 3: Check if it is a list
-    if (sum(mat.cat %in% 3) > 0){
+    if ("list" %in% mat.cat) {
       if (class(mat) == "list"){
         # Check if the length of the list is R+1
         if (length(mat) != (R+1)){
-          stop(sprint(paste0("The object '%s' in 'lpmodel' needs to have ",
-                             "exactly %s elements",
-                             mat.name, R+1)),
+          stop(sprintf(paste0("The object '%s' in 'lpmodel' needs to have ",
+                              "exactly %s elements",
+                              mat.name, R+1)),
                call. = FALSE)
         }
 
@@ -613,10 +623,10 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R){
           if (i > 1){
             if ((df.dim[i,1] != df.dim[i-1,1]) |
                 (df.dim[i,1] != df.dim[i-1,1])){
-              stop(sprint(paste0("The dimension of the objects inside the list ",
-                                 "'%s' in 'lpmodel' need to have the same",
-                                 "dimension.",
-                                 mat.name)),
+              stop(sprintf(paste0("The dimension of the objects inside the list ",
+                                  "'%s' in 'lpmodel' need to have the same",
+                                  "dimension.",
+                                  mat.name)),
                    call. = FALSE)
             }
           }
@@ -633,7 +643,7 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R){
     }
 
     # Category 4: Check if it is a function that produces two matrices
-    if (sum(mat.cat %in% 4) > 0){
+    if ("function_obs_var" %in% mat.cat) {
       if (class(mat) == "function"){
         # Check if there are two outputs of the function
         func.output <- mat(data)

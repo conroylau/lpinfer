@@ -47,11 +47,18 @@ This function checks if the object \code{lpmodel} is in the
 In each of the testing procedures, there are five possible
 categories of the each of the object:
   \itemize{
-    \item{Category 0: This object is not used in the function}
-    \item{Category 1: A single matrix or vector}
-    \item{Category 2: A function that maps to a matrix or vector}
-    \item{Category 3: A list of matrices or vectors}
-    \item{Category 4: A function that maps to a vector and a matrix}
+    \item{Category '\code{not_used}': This refers to the case where the 
+      object is not used in the function}
+    \item{Category '\code{matrix}': This refers to the case where the
+      object has to be a matrix}
+    \item{Category '\code{function_mat}': This refers to the case where 
+      the object has to be a function that produces a matrix.}
+    \item{Category '\code{list}': This refers to the case where the
+      object is a list}
+    \item{Category '\code{function_obs_var}': This refers to the case 
+      where the object is a function that produces a list that contains 
+      a vector and a matrix. This is typically the case for \code{beta.obs}
+      that the function produces an estimator and the asymptotic variance.}
   }
   Each object can belong to one of more categories.
 }
