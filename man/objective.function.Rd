@@ -5,7 +5,7 @@
 \title{Auxiliary function to return the coefficient terms of the objective
 functions}
 \usage{
-objective.function(A, b, n, weight = diag(length(b)))
+objective.function(A, b, n, weight = NULL)
 }
 \arguments{
 \item{A}{The matrix \eqn{\bm{A}},}

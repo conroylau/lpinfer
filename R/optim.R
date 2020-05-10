@@ -23,7 +23,7 @@
 #' @export
 #'
 gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL,
-                         weight = diag(ncol(bf))){
+                         weight = NULL){
   # ---------------- #
   # Step 1: Obtain the coefficients of the objective function
   # ---------------- #
@@ -75,7 +75,7 @@ gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL,
 #' @export
 #'
 cplexapi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
-                           weight = diag(length(b))){
+                           weight = NULL){
   # ---------------- #
   # Step 1: Obtain the coefficients of the objective function
   # ---------------- #
@@ -164,7 +164,7 @@ cplexapi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
 #' @export
 #'
 rcplex.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
-                         weight = diag(length(b))){
+                         weight = NULL){
   # ---------------- #
   # Step 1: Obtain the coefficients of the objective function
   # ---------------- #
@@ -232,7 +232,7 @@ rcplex.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
 #' @export
 #'
 limsolve.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
-                           weight = diag(length(b))){
+                           weight = NULL){
   # ---------------- #
   # Step 1: Obtain the coefficients of the objective function
   # ---------------- #
@@ -357,7 +357,7 @@ limsolve.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
 #'
 #' @export
 #'
-objective.function <- function(A, b, n, weight = diag(length(b))){
+objective.function <- function(A, b, n, weight = NULL){
   # If-else function to determine if it corresponds to a linear or quadratic
   # program. This is identified by whether one of A and b is null or nonzero
   # because it would be the case for linear programs that are considered in
@@ -373,6 +373,9 @@ objective.function <- function(A, b, n, weight = diag(length(b))){
     obj1 <- A
     obj0 <- 0
   } else {
+    if (is.null(weight)){
+      weight <- diag(nrow(b))
+    }
     # Quadratic program coefficients
     obj2 <- as.matrix(t(A) %*% weight %*% A * n)
     # colnames(obj2) <- NULL

@@ -14,7 +14,7 @@ gurobi.optim(
   modelsense,
   lb,
   qc = NULL,
-  weight = diag(ncol(bf))
+  weight = NULL
 )
 }
 \arguments{

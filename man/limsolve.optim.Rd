@@ -4,17 +4,7 @@
 \alias{limsolve.optim}
 \title{LP and QP solver by limSolve}
 \usage{
-limsolve.optim(
-  Af,
-  bf,
-  nf,
-  A,
-  rhs,
-  sense,
-  modelsense,
-  lb,
-  weight = diag(length(b))
-)
+limsolve.optim(Af, bf, nf, A, rhs, sense, modelsense, lb, weight = NULL)
 }
 \arguments{
 \item{Af}{The matrix that is involved in the objective function.}

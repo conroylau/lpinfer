@@ -4,17 +4,7 @@
 \alias{rcplex.optim}
 \title{LP and QP solver by Rcplex}
 \usage{
-rcplex.optim(
-  Af,
-  bf,
-  nf,
-  A,
-  rhs,
-  sense,
-  modelsense,
-  lb,
-  weight = diag(length(b))
-)
+rcplex.optim(Af, bf, nf, A, rhs, sense, modelsense, lb, weight = NULL)
 }
 \arguments{
 \item{Af}{The matrix that is involved in the objective function.}
