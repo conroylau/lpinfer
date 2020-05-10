@@ -2,7 +2,7 @@
 % Please edit documentation in R/checks.R
 \name{check.lpmodel}
 \alias{check.lpmodel}
-\title{Check function: check lpmodel}
+\title{Check function: check \code{lpmodel}}
 \usage{
 check.lpmodel(
   data,
@@ -45,20 +45,20 @@ This function checks if the object \code{lpmodel} is in the
 }
 \details{
 In each of the testing procedures, there are five possible
-categories of the each of the object:
-  \itemize{
-    \item{Category '\code{not_used}': This refers to the case where the 
-      object is not used in the function}
-    \item{Category '\code{matrix}': This refers to the case where the
-      object has to be a matrix}
-    \item{Category '\code{function_mat}': This refers to the case where 
-      the object has to be a function that produces a matrix.}
-    \item{Category '\code{list}': This refers to the case where the
-      object is a list}
-    \item{Category '\code{function_obs_var}': This refers to the case 
-      where the object is a function that produces a list that contains 
-      a vector and a matrix. This is typically the case for \code{beta.obs}
-      that the function produces an estimator and the asymptotic variance.}
-  }
-  Each object can belong to one of more categories.
+categories for the each of the object:
+\itemize{
+  \item{\code{not_used}: This refers to the case where the object is not 
+   used in the function.}
+  \item{\code{matrix}: This refers to the case where the object has to be 
+   a matrix.}
+ \item{\code{function_mat}: This refers to the case where 
+   the object has to be a function that produces a matrix.}
+ \item{\code{list}: This refers to the case where the object is a list.}
+ \item{\code{function_obs_var}: This refers to the case where 
+   the object is a function that produces a list that contains a matrix 
+   and a vector. This is typically the case for \code{beta.obs} when
+   the testing procedure requires both the observed value of \code{beta.obs}
+   and the estimator of the asymptotic variance.}
+}
+ Each object can belong to one of more categories.
 }
