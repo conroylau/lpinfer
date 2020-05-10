@@ -10,9 +10,8 @@
 #'
 #' @return Return a list of statistics for the `\code{fsst}` procedure:
 #'   \item{pval}{\eqn{p}-value}
-#'   \item{test.quan}{Table of bootstrap test statistics at different quantiles}
-#'   \item{stat.quan}{Table of bootstrap Cone and Range test statistics at
-#'     different quantiles}
+#'   \item{cv.table}{Table of sample and bootstrap Cone and Range test
+#'     statistics}
 #'   \item{cores}{Number of cores used}
 #'   \item{call}{Information used to call the function}
 #'   \item{range}{The range test statistic}
@@ -20,7 +19,7 @@
 #'   \item{test}{Test statistic used}
 #'   \item{cone.n.list}{The list of bootstrap cone test statistics}
 #'   \item{range.n.list}{The list of bootstrap range test statistics}
-#'   \item{solver}{Name of the solver used}
+#'   \item{solver.name}{Name of the solver used}
 #'   \item{rho}{Input value of rho}
 #'   \item{rhobar.e}{Regularization parameter used for the Range
 #'     studentization matrix}
@@ -246,57 +245,48 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda,
    # ---------------- #
    # Parameters
    quans <- c(.99, .95, .90)
-   quans.string <- c("99%", "95%", "95%")
    n.lambda <- length(lambda)
-   n.quans <- length(quans)
 
    # Initialize the data frames
-   pval <- data.frame(matrix(vector(), nrow = n.lambda, ncol = 2))
-   colnames(pval) <- c("lambda", "p-value")
-
-   test.quan <- data.frame(matrix(vector(), nrow = 4, ncol = (1 + n.lambda)))
-   test.quan.colnames <- c("Range")
-   for (i in 1:n.lambda){
-      test.quan.colnames <- c(test.quan.colnames,
-                              sprintf("Cone (%s)", lambda[i]))
-   }
-   colnames(test.quan) <- test.quan.colnames
-   rownames(test.quan) <- c("Sample          ", "Bootstrap 99% CV",
-                            "Bootstrap 95% CV", "Bootstrap 90% CV")
-   test.quan[1,1] <- round(range.n$objval, digits = 5)
-   test.quan[1,2:(n.lambda+1)] <- rep(round(cone.n$objval, digits = 5),
-                                      n.lambda)
+   df.pval <- data.frame(matrix(vector(), nrow = n.lambda, ncol = 2))
+   colnames(df.pval) <- c("lambda", "p-value")
 
    for (i in 1:n.lambda){
       # Compute the p-values
       pval.return <- fsst.pval(range.n$objval, cone.n$objval, range.n.list,
                                cone.n.list[[i]], R, alpha)
-      pval[i,1] <- lambda[i]
-      pval[i,2] <- pval.return$pval
-
-      # Compute the quantiles of cone - suffices to compute it once because
-      # it is the same across the lambdas
-      if (i == 1){
-         range.quan <- quan.stat(cone.n.list, quans)
-         for (j in 1:n.quans){
-            test.quan[j+1,1] <- range.quan[j]
-         }
-      }
-
-      # Compute the quantiles of range
-      cone.quan <- quan.stat(list.n.list[[i]], quans)
-      for (j in 1:n.quans){
-         test.quan[j+1,1+i] <- cone.quan[j]
-      }
+      df.pval[i,1] <- lambda[i]
+      df.pval[i,2] <- pval.return$pval
    }
 
-   # Construct the table for quantiles of test statistics
-   stat.quan <- data.frame(matrix(vector(), nrow = 4, ncol = n.lambda+1))
-   colnames(stat.quan) <- c("lambda ", paste(lambda))
-   stat.quan[,1] <- rownames(test.quan)
-   for (i in 1:(n.quans+1)){
-      for (j in 1:n.lambda){
-         stat.quan[i,j+1] <- max(test.quan[i,1], test.quan[i,1+j])
+   # Fill in the Cone components
+   cv.table <- data.frame(matrix(vector(), nrow = 12, ncol = (n.lambda+2)))
+   colnames(cv.table) <- c("", "lambda", lambda)
+   # cv.table[1,] <- c("", "lambda", lambda)
+   cv.table[,1] <- c("Test statistic", rep("", 3), "Cone", rep("", 3),
+                     "Range", rep("", 3))
+   cv.table[,2] <- rep(c("Sample", "Bootstrap 99% CV", "Bootstrap 95% CV",
+                         "Bootstrap 90% CV"), 3)
+
+   # Fill in the Range components
+   range.list <- quan.stat(range.n.list, quans)
+   cv.table[9,3] <- round(range.n$objval, digits = 5)
+   for (j in 1:3){
+      cv.table[9 + j,3] <- round(range.list[j], digits = 5)
+   }
+
+   # Fill in the Cone and Test statistics component
+   for (i in 1:n.lambda){
+      # Fill in the Cone test statistics
+      cone.list <- quan.stat(cone.n.list[[i]], quans)
+      cv.table[5, i+2] <- round(cone.n$objval, digits = 5)
+      for (j in 1:3){
+         cv.table[j+5,i+2] <- round(cone.list[j], digits = 5)
+      }
+
+      # Fill in the test statistics
+      for (j in 1:4){
+         cv.table[j,i+2] <- max(cv.table[j+4,i+2], cv.table[j+8,3])
       }
    }
 
@@ -311,9 +301,8 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda,
    # Step 9: Assign the return list and return output
    # ---------------- #
    # Assign the list of objects returned
-   output <- list(pval = pval,
-                  test.quan = test.quan,
-                  stat.quan = stat.quan,
+   output <- list(pval = df.pval,
+                  cv.table = cv.table,
                   cores = cores,
                   call = call,
                   range = range.n,
@@ -321,7 +310,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda,
                   test = max(range.n$objval, cone.n$objval),
                   cone.n.list = cone.n.list,
                   range.n.list = range.n.list,
-                  solver = solver.name,
+                  solver.name = solver.name,
                   rho = rho,
                   rhobar.e = rhobar.e,
                   rhobar.i = rhobar.i,
@@ -1281,8 +1270,8 @@ quan.stat <- function(stat, quan = c(.9, .95, .99)){
    # ---------------- #
    # Step 2: Compute the quantiles via a for-loop
    # ---------------- #
-   for (i in 1:n.quan){
-      temp <- round(stat.order[pracma::ceil(quan[i]*n.stat)], digits = 5)
+   for (i in 1:n.quan) {
+      temp <- stat.order[pracma::ceil(quan[i]*n.stat)]
       stat.quan <- c(stat.quan, temp)
    }
 
@@ -1318,7 +1307,7 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, lambda, rho, n,
    if (is.null(n)){
       data <- check.dataframe(data)
    } else {
-      check.positiveinteger(n)
+      check.positiveinteger(n, "n")
    }
 
    # ---------------- #
@@ -1371,6 +1360,8 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, lambda, rho, n,
                data = data))
 }
 
+
+
 #' Print results from \code{fsst}
 #'
 #' @description This function uses the print method on the return list of the
@@ -1387,15 +1378,16 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, lambda, rho, n,
 #'
 print.fsst <- function(x, ...){
    cat("\r\r")
-   if (nrow(x$pval) == 1){
-      cat(sprintf("p-value: %s\n", x$pval[1,2]))
+   df.pval <- x$pval
+   if (nrow(df.pval) == 1){
+      cat(sprintf("p-value: %s\n", df.pval[1,2]))
    } else {
       cat("p-values:\n")
       cat("     lambda\tp-value\n")
-      for (i in 1:nrow(x$pval)){
+      for (i in 1:nrow(df.pval)){
          cat(sprintf("     %s\t%s\n",
-                     round(x$pval[i,1], digits = 5),
-                     round(x$pval[i,2], digits = 5)))
+                     round(df.pval[i,1], digits = 5),
+                     round(df.pval[i,2], digits = 5)))
       }
    }
 }
@@ -1423,26 +1415,32 @@ print.fsst <- function(x, ...){
 #'
 summary.fsst <- function(x, ...){
    cat("\r\r")
+   # Print the sample and bootstrap test statistics
    cat("\nSample and quantiles of bootstrap test statistics: \n")
-   x$stat.quan[,1] <- paste("   ", x$stat.quan[,1], "   ")
-   colnames(x$stat.quan)[1] <- "lambda              "
-   print(x$stat.quan, row.names = FALSE)
+   cv.tab <- x$cv.table
+   cv.tab[is.na(cv.tab)] <- ""
+   cv.tab[,1] <- paste0("   ", cv.tab[,1], " ")
+   cv.tab[,2] <- paste0(cv.tab[,2], "  ")
+   colnames(cv.tab)[2] <- paste0(colnames(cv.tab)[2], "  ")
+   print(cv.tab, row.names = FALSE)
 
-   cat("\nSample and quantiles of bootstrap cone and range components: \n")
-   rownames(x$test.quan) <- paste("    ", rownames(x$test.quan), "   ")
-   print(x$test.quan)
-
-   if (nrow(x$pval) == 1){
-      cat(sprintf("\np-value: %s\n", x$pval[1,2]))
+   # Print the p-values
+   df.pval <- x$pval
+   n.pval <- nrow(df.pval)
+   if (n.pval == 1){
+      cat(sprintf("\np-value: %s\n", df.pval[1,2]))
    } else {
       cat("\np-values:\n")
-      df.pval <- data.frame(matrix(vector(), nrow = 1, ncol = nrow(x$pval)+1))
-      colnames(df.pval) <- c("    lambda    ", x$pval$lambda)
-      df.pval[1,] <- c("    p-value   ", x$pval[,2])
-      print(df.pval, row.names = FALSE)
+      df.pval.2 <- data.frame(matrix(vector(), nrow = 1, ncol = n.pval+1))
+      colnames(df.pval.2) <- c("    lambda    ", df.pval$lambda)
+      df.pval.2[1,] <- c("    p-value   ", df.pval[,2])
+      print(df.pval.2, row.names = FALSE)
    }
 
+   # Print solver
    cat(sprintf("\nSolver used: %s\n", x$solver.name))
+
+   # Print cores
    cat(sprintf("\nNumber of cores used: %s\n", x$cores))
 
    # Regularization parameters
@@ -1456,6 +1454,6 @@ summary.fsst <- function(x, ...){
                       "studentization matrix: %s\n"),
                round(x$rhobar.i, digits = 5)))
    cat(sprintf(paste0("\nThe asymptotic variance of the observed component ",
-                      "of the 'beta vector is approximated from the %s."),
+                      "of the beta vector is approximated from the %s."),
                x$beta.var.method))
 }

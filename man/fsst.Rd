@@ -56,9 +56,8 @@ Otherwise, the messages will not be displayed.}
 \value{
 Return a list of statistics for the `\code{fsst}` procedure:
   \item{pval}{\eqn{p}-value}
-  \item{test.quan}{Table of bootstrap test statistics at different quantiles}
-  \item{stat.quan}{Table of bootstrap Cone and Range test statistics at
-    different quantiles}
+  \item{cv.table}{Table of sample and bootstrap Cone and Range test
+    statistics}
   \item{cores}{Number of cores used}
   \item{call}{Information used to call the function}
   \item{range}{The range test statistic}
@@ -66,7 +65,7 @@ Return a list of statistics for the `\code{fsst}` procedure:
   \item{test}{Test statistic used}
   \item{cone.n.list}{The list of bootstrap cone test statistics}
   \item{range.n.list}{The list of bootstrap range test statistics}
-  \item{solver}{Name of the solver used}
+  \item{solver.name}{Name of the solver used}
   \item{rho}{Input value of rho}
   \item{rhobar.e}{Regularization parameter used for the Range
     studentization matrix}
