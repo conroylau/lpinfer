@@ -8,8 +8,6 @@ check.positiveinteger(x, name.var)
 }
 \arguments{
 \item{x}{Variable to be checked.}
-
-\item{name.var}{Name of the variable.}
 }
 \value{
 Nothing is returned.

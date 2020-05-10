@@ -9,8 +9,6 @@ check.numrange(x, name.var, left.type, left, right.type, right)
 \arguments{
 \item{x}{Variable to be checked.}
 
-\item{name.var}{Name of the variable.}
-
 \item{left.type}{Type of the left interval (\code{open} or \code{closed})}
 
 \item{left}{Value of lower bound}

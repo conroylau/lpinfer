@@ -4,19 +4,14 @@
 \alias{check.dataframe}
 \title{Check function: data frame}
 \usage{
-check.dataframe(data, name.var)
+check.dataframe(data)
 }
 \arguments{
 \item{data}{Data frame to be checked.}
-
-\item{name.var}{Name of the variable.}
 }
 \value{
-Returns the object in the format of \code{matrix}.
+Returns the object as a \code{matrix}.
 }
 \description{
-This function checks whether the data is a \code{data.frame}
-  or \code{data.table} or \code{matrix} or \code{tibble}. If yes, the
-  object will be returned as an object in the \code{matrix} class. If not,
-  an error message is displayed.
+This function force the data input as a \code{matrix}.
 }

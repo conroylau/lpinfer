@@ -1316,7 +1316,7 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, lambda, rho, n,
    # ---------------- #
    # Check data
    if (is.null(n)){
-      data <- check.dataframe(data, "data")
+      data <- check.dataframe(data)
    } else {
       check.positiveinteger(n)
    }

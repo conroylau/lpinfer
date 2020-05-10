@@ -487,7 +487,7 @@ subsample.check <- function(data, lpmodel, beta.tgt, R, solver, cores,
   # Step 1: Conduct the checks
   # ---------------- #
   # Check the data frame
-  data <- check.dataframe(data, "data")
+  data <- check.dataframe(data)
 
   # Check lpmodel
   lpmodel <- check.lpmodel(data = data,

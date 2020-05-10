@@ -649,7 +649,7 @@ dkqs.check <- function(data, lpmodel, beta.tgt, R, tau, solver, cores,
   # Step 1: Check the arguments
   # ---------------- #
   # Check data
-  data <- check.dataframe(data, "data")
+  data <- check.dataframe(data)
 
   # Check lpmodel
   lpmodel <- check.lpmodel(data = data,

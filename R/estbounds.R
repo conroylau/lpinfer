@@ -622,7 +622,7 @@ mincriterion.check <- function(data, lpmodel, norm, solver){
   # Step 1: Check the arguments
   # ---------------- #
   # Check data
-  data <- check.dataframe(data, "data")
+  data <- check.dataframe(data)
 
   # Check lpmodel
   lpmodel <- check.lpmodel(data = data,
