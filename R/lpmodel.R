@@ -54,8 +54,7 @@ lpmodel.eval <- function(data, obj, i){
 #' @return Returns the point estimate and the asymptotic variane of the
 #'    \code{beta.obs} object.
 #'    \item{beta.obs}{Point estimate of \eqn{\widehat{\bm{\beta}}_{\rm obs}}}
-#'    \item{beta.obs}{Asymptotic variance of
-#'       \eqn{\widehat{\bm{\beta}}_{\rm obs}}}
+#'    \item{omega}{Asymptotic variance of \eqn{\widehat{\bm{\beta}}_{\rm obs}}}
 #'
 #' @export
 #'
