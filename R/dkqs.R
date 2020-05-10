@@ -75,15 +75,23 @@ dkqs <- function(data, lpmodel, beta.tgt, R = 100, tau = .5, solver = NULL,
   # Step 2: Initialization
   # ---------------- #
   n <- nrow(data)
-  J <- length(unique(data$Y)) - 1
+  # Choose whether the data frame has "Y" or "y" as the column name for the 
+  # outcomes
+  if ("y" %in% colnames(data)) {
+    coly <- "y"
+  } else if  ("Y" %in% colnames(data)) {
+    coly <- "Y"
+  } else {
+    stop(paste0("'data' needs to have a column called 'y' or 'Y' to ",
+                "represent the outcomes."))
+  }
+  J <- length(unique(data[,coly])) - 1
 
   # Initialize beta.obs
-  if (class(lpmodel$beta.obs) == "function"){
-    beta.obs.hat <- lpmodel$beta.obs(data)
-  } else if (class(lpmodel$beta.obs) == "list"){
-    beta.obs.hat <- lpmodel$beta.obs[[1]]
-  }
-
+  
+  beta.obs.return <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)
+  beta.obs.hat <- beta.obs.return[[1]]
+    
   # ---------------- #
   # Step 3: Choose the value of tau
   # ---------------- #
@@ -223,6 +231,7 @@ dkqs.qlp <- function(data, lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
   # ---------------- #
   # Step 2: Formulation of constraints
   # ---------------- #
+
   ones <- matrix(rep(1, A.tgt.nc), nrow = 1)
   lb <- matrix(rep(0, A.tgt.nc), nrow = 1)
 
