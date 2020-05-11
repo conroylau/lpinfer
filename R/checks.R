@@ -523,7 +523,6 @@ check.lpmodel <- function(data, lpmodel, name.var, A.tgt.cat, A.obs.cat,
   if (!("not_used" %in% beta.obs.cat)){
     beta.obs.return <- check.lpobjects(data, lpmodel$beta.obs, "beta.obs",
                                        beta.obs.cat, R)
-    print(beta.obs.return)
     check.vector(beta.obs.return$sample, "beta.obs", FALSE)
   }
   if (!("not_used" %in% beta.shp.cat)){
