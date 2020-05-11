@@ -62,7 +62,7 @@ dkqs <- function(data, lpmodel, beta.tgt, R = 100, tau = .5, solver = NULL,
 
   # Check the arguments
   dkqs.return <- dkqs.check(data, lpmodel, beta.tgt, R, tau, solver,
-                               cores, progress)
+                            cores, progress)
 
   # Update the arguments
   data <- dkqs.return$data
@@ -324,7 +324,7 @@ dkqs.qlp <- function(data, lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
         lp.lhs.tau <- new.const$lp.lhs.tau
         lp.rhs.tau <- new.const$lp.rhs.tau
         lp.sense.tau <- new.const$lp.sense.tau
-      } 
+      }
     }
     # Inequality constraints for ind.down
     if (length(ind.down) != 0) {
@@ -335,7 +335,7 @@ dkqs.qlp <- function(data, lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
         lp.lhs.tau <- new.const$lp.lhs.tau
         lp.rhs.tau <- new.const$lp.rhs.tau
         lp.sense.tau <- new.const$lp.sense.tau
-      } 
+      }
     }
     if (length(ind.0) != 0) {
       # Inequality constraints for ind.0
@@ -345,7 +345,7 @@ dkqs.qlp <- function(data, lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
         lp.lhs.tau <- new.const$lp.lhs.tau
         lp.rhs.tau <- new.const$lp.rhs.tau
         lp.sense.tau <- new.const$lp.sense.tau
-      } 
+      }
     }
     ans <- do.call(solver, list(Af  = NULL,
                                 bf  = c(1, rep(0, A.tgt.nc)),
@@ -524,39 +524,47 @@ beta.bs.parallel <- function(data, lpmodel, beta.tgt, R, J, s.star, tau,
   `%dorng%` <- doRNG::`%dorng%`
 
   # ---------------- #
-  # Step 3: Bootstrap procedure
+  # Step 3: Compute bootstrap estimators
   # ---------------- #
-  listans <- foreach::foreach(i = 1:R, .multicombine = TRUE, .combine = "comb",
-                     .options.snow = opts, 
-                     .packages = c("lpinfer", "doRNG")) %dorng% {
-     lpmodel.bs <- lpmodel
+  # Initialize the bootstrap list here
+  beta.bs.list <- list()
 
-    # Re-sample the data
-    data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
-    rownames(data.bs) <- 1:nrow(data.bs)
+  # Set the estimator of beta.obs
+  beta.bs.list[[1]] <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
 
-    # Compute the bootstrap test statistic
-    if (class(lpmodel$beta.obs) == "function"){
-      beta.obs.bs <- lpmodel.beta.eval(data.bs, lpmodel$beta.obs, 1)[[1]]
-      beta.obs <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
+  # Compute the bootstrap estimators
+  for (i in 1:R) {
+    if (class(lpmodel$beta.obs) == "function") {
+      data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
+      rownames(data.bs) <- 1:nrow(data.bs)
+      beta.obs.return <- lpmodel.beta.eval(data.bs, lpmodel$beta.obs, 1)
+      beta.bs.list[[i + 1]] <- beta.obs.return[[1]]
     } else if (class(lpmodel$beta.obs) == "list") {
-      beta.obs.bs <- lpmodel.beta.eval(data, lpmodel$beta.obs, i + 1)[[1]]
-      beta.obs <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
+      beta.bs.list[[i + 1]] <- lpmodel.beta.eval(data,
+                                                 lpmodel$beta.obs, i + 1)[[1]]
     }
-
-    # Compute beta.bs.bar and test statistic
-    beta.bs.bar <- beta.obs.bs - beta.obs + s.star
-    T.bs.i <- dkqs.qlp(data.bs, lpmodel.bs, beta.tgt, beta.bs.bar, tau, "cone",
-                       nrow(data), solver)$objval
-
-    # Append results
-    T.bs <- data.frame(T.bs.i)
-    beta.bs.bar.list <- data.frame(beta.bs.bar)
-    list(T.bs, beta.bs.bar.list)
   }
 
   # ---------------- #
-  # Step 4: Retrieve information from the output
+  # Step 4: Bootstrap procedure
+  # ---------------- #
+  listans <- foreach::foreach(i = 1:R, .multicombine = TRUE, .combine = "comb",
+                              .options.snow = opts,
+                              .packages = c("lpinfer", "doRNG")) %dorng% {
+
+                                # Compute beta.bs.bar and test statistic
+                                beta.bs.bar <- beta.bs.list[[i + 1]] - beta.bs.list[[1]] + s.star
+                                T.bs.i <- dkqs.qlp(data.bs, lpmodel, beta.tgt, beta.bs.bar, tau, "cone",
+                                                   nrow(data), solver)$objval
+
+                                # Append results
+                                T.bs <- data.frame(T.bs.i)
+                                beta.bs.bar.list <- data.frame(beta.bs.bar)
+                                list(T.bs, beta.bs.bar.list)
+                              }
+
+  # ---------------- #
+  # Step 5: Retrieve information from the output
   # ---------------- #
   T.bs <- as.vector(unlist(listans[[1]]))
   beta.bs.bar.list <- data.frame(matrix(unlist(listans[[2]]),
@@ -565,7 +573,7 @@ beta.bs.parallel <- function(data, lpmodel, beta.tgt, R, J, s.star, tau,
                                         byrow = FALSE))
 
   # ---------------- #
-  # Step 5: Return results
+  # Step 6: Return results
   # ---------------- #
   return(list(T.bs = T.bs,
               beta.bs.bar.list = beta.bs.bar.list,
