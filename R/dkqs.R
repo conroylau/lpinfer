@@ -316,28 +316,34 @@ dkqs.qlp <- function(data, lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
     lp.rhs.tau <- lp.rhs
     lp.sense.tau <- lp.sense
     # Inequality constraints for ind.up
-    for (i in 1:length(ind.up)){
-      new.const <- tau_constraints(len.tau, rhs.up, -1, ind.up[i]+1, 0, "<=",
-                                   lp.lhs.tau, lp.rhs.tau, lp.sense.tau)
-      lp.lhs.tau <- new.const$lp.lhs.tau
-      lp.rhs.tau <- new.const$lp.rhs.tau
-      lp.sense.tau <- new.const$lp.sense.tau
+    if (length(ind.up) != 0) {
+      for (i in 1:length(ind.up)) {
+        new.const <- tau_constraints(len.tau, rhs.up, -1, ind.up[i]+1, 0, "<=",
+                                     lp.lhs.tau, lp.rhs.tau, lp.sense.tau)
+        lp.lhs.tau <- new.const$lp.lhs.tau
+        lp.rhs.tau <- new.const$lp.rhs.tau
+        lp.sense.tau <- new.const$lp.sense.tau
+      } 
     }
     # Inequality constraints for ind.down
-    for (i in 1:length(ind.down)){
-      new.const <- tau_constraints(len.tau, rhs.down, -1, ind.down[i]+1, 0,
-                                   "<=", lp.lhs.tau, lp.rhs.tau, lp.sense.tau)
-      lp.lhs.tau <- new.const$lp.lhs.tau
-      lp.rhs.tau <- new.const$lp.rhs.tau
-      lp.sense.tau <- new.const$lp.sense.tau
+    if (length(ind.down) != 0) {
+      for (i in 1:length(ind.down)) {
+        new.const <- tau_constraints(len.tau, rhs.down, -1, ind.down[i] + 1, 0,
+                                     "<=", lp.lhs.tau, lp.rhs.tau, lp.sense.tau)
+        lp.lhs.tau <- new.const$lp.lhs.tau
+        lp.rhs.tau <- new.const$lp.rhs.tau
+        lp.sense.tau <- new.const$lp.sense.tau
+      } 
     }
-    # Inequality constraints for ind.0
-    for (i in 1:length(ind.0)){
-      new.const <- tau_constraints(len.tau, rhs.0, -1, ind.0[i]+1, 0, "<=",
-                                   lp.lhs.tau, lp.rhs.tau, lp.sense.tau)
-      lp.lhs.tau <- new.const$lp.lhs.tau
-      lp.rhs.tau <- new.const$lp.rhs.tau
-      lp.sense.tau <- new.const$lp.sense.tau
+    if (length(ind.0) != 0) {
+      # Inequality constraints for ind.0
+      for (i in 1:length(ind.0)) {
+        new.const <- tau_constraints(len.tau, rhs.0, -1, ind.0[i] + 1, 0, "<=",
+                                     lp.lhs.tau, lp.rhs.tau, lp.sense.tau)
+        lp.lhs.tau <- new.const$lp.lhs.tau
+        lp.rhs.tau <- new.const$lp.rhs.tau
+        lp.sense.tau <- new.const$lp.sense.tau
+      } 
     }
     ans <- do.call(solver, list(Af  = NULL,
                                 bf  = c(1, rep(0, A.tgt.nc)),
