@@ -374,8 +374,9 @@ objective.function <- function(A, b, n, weight = NULL){
     obj0 <- 0
   } else {
     if (is.null(weight)){
-      weight <- diag(nrow(b))
+      weight <- diag(length(b))
     }
+
     # Quadratic program coefficients
     obj2 <- as.matrix(t(A) %*% weight %*% A * n)
     # colnames(obj2) <- NULL
