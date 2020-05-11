@@ -456,7 +456,7 @@ beta.bs <- function(data, lpmodel, beta.tgt, R, J, s.star, tau, solver,
 #' @description This function computes the bootstrap test statistics with
 #'    parallelized for-loops.
 #'
-#' @import doMC foreach
+#' @import doMC foreach doRNG
 #'
 #' @inheritParams beta.bs
 #' @inheritParams dkqs
@@ -526,8 +526,9 @@ beta.bs.parallel <- function(data, lpmodel, beta.tgt, R, J, s.star, tau,
   # ---------------- #
   # Step 3: Bootstrap procedure
   # ---------------- #
-  listans <- foreach(i = 1:R, .multicombine = TRUE, .combine = "comb",
-                     .options.snow = opts, .packages = "lpinfer") %dorng% {
+  listans <- foreach::foreach(i = 1:R, .multicombine = TRUE, .combine = "comb",
+                     .options.snow = opts, 
+                     .packages = c("lpinfer", "doRNG")) %dorng% {
      lpmodel.bs <- lpmodel
 
     # Re-sample the data
