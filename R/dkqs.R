@@ -318,8 +318,9 @@ dkqs.qlp <- function(data, lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
     # Inequality constraints for ind.up
     if (length(ind.up) != 0) {
       for (i in 1:length(ind.up)) {
-        new.const <- tau_constraints(len.tau, rhs.up, -1, ind.up[i]+1, 0, "<=",
-                                     lp.lhs.tau, lp.rhs.tau, lp.sense.tau)
+        new.const <- tau_constraints(len.tau, rhs.up, -1, ind.up[i] + 1, 0,
+                                     "<=", lp.lhs.tau, lp.rhs.tau,
+                                     lp.sense.tau)
         lp.lhs.tau <- new.const$lp.lhs.tau
         lp.rhs.tau <- new.const$lp.rhs.tau
         lp.sense.tau <- new.const$lp.sense.tau
@@ -329,7 +330,8 @@ dkqs.qlp <- function(data, lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
     if (length(ind.down) != 0) {
       for (i in 1:length(ind.down)) {
         new.const <- tau_constraints(len.tau, rhs.down, -1, ind.down[i] + 1, 0,
-                                     "<=", lp.lhs.tau, lp.rhs.tau, lp.sense.tau)
+                                     "<=", lp.lhs.tau, lp.rhs.tau,
+                                     lp.sense.tau)
         lp.lhs.tau <- new.const$lp.lhs.tau
         lp.rhs.tau <- new.const$lp.rhs.tau
         lp.sense.tau <- new.const$lp.sense.tau
@@ -413,11 +415,11 @@ beta.bs <- function(data, lpmodel, beta.tgt, R, J, s.star, tau, solver,
 
     # Compute the bootstrap test statistic
     if (class(lpmodel$beta.obs) == "function"){
-      beta.obs.bs <- lpmodel$beta.obs(data.bs)
-      beta.obs <- lpmodel$beta.obs(data)
+      beta.obs.bs <- lpmodel.beta.eval(data.bs, lpmodel$beta.obs, 1)[[1]]
+      beta.obs <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
     } else if (class(lpmodel$beta.obs) == "list") {
-      beta.obs.bs <- lpmodel$beta.obs[[i+1]]
-      beta.obs <- lpmodel$beta.obs[[1]]
+      beta.obs.bs <- lpmodel.beta.eval(data, lpmodel$beta.obs, i + 1)[[1]]
+      beta.obs <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
     }
 
     # Compute beta.bs.bar and test statistic
@@ -526,7 +528,7 @@ beta.bs.parallel <- function(data, lpmodel, beta.tgt, R, J, s.star, tau,
   # ---------------- #
   listans <- foreach(i = 1:R, .multicombine = TRUE, .combine = "comb",
                      .options.snow = opts, .packages = "lpinfer") %dorng% {
-    lpmodel.bs <- lpmodel
+     lpmodel.bs <- lpmodel
 
     # Re-sample the data
     data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
@@ -534,11 +536,11 @@ beta.bs.parallel <- function(data, lpmodel, beta.tgt, R, J, s.star, tau,
 
     # Compute the bootstrap test statistic
     if (class(lpmodel$beta.obs) == "function"){
-      beta.obs.bs <- lpmodel$beta.obs(data.bs)
-      beta.obs <- lpmodel$beta.obs(data)
+      beta.obs.bs <- lpmodel.beta.eval(data.bs, lpmodel$beta.obs, 1)[[1]]
+      beta.obs <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
     } else if (class(lpmodel$beta.obs) == "list") {
-      beta.obs.bs <- lpmodel$beta.obs[[i+1]]
-      beta.obs <- lpmodel$beta.obs[[1]]
+      beta.obs.bs <- lpmodel.beta.eval(data, lpmodel$beta.obs, i + 1)[[1]]
+      beta.obs <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
     }
 
     # Compute beta.bs.bar and test statistic
