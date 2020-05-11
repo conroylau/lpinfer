@@ -477,15 +477,15 @@ check.solver <- function(x, name.var, norm = 2){
 #' @details In each of the testing procedures, there are five possible
 #' categories for the each of the object:
 #' \itemize{
-#'   \item{\code{not_used}: This refers to the case where the object is not 
+#'   \item{\code{not_used}: This refers to the case where the object is not
 #'    used in the function.}
-#'   \item{\code{matrix}: This refers to the case where the object has to be 
+#'   \item{\code{matrix}: This refers to the case where the object has to be
 #'    a matrix.}
-#'  \item{\code{function_mat}: This refers to the case where 
+#'  \item{\code{function_mat}: This refers to the case where
 #'    the object has to be a function that produces a matrix.}
 #'  \item{\code{list}: This refers to the case where the object is a list.}
-#'  \item{\code{function_obs_var}: This refers to the case where 
-#'    the object is a function that produces a list that contains a matrix 
+#'  \item{\code{function_obs_var}: This refers to the case where
+#'    the object is a function that produces a list that contains a matrix
 #'    and a vector. This is typically the case for \code{beta.obs} when
 #'    the testing procedure requires both the observed value of \code{beta.obs}
 #'    and the estimator of the asymptotic variance.}
@@ -523,6 +523,7 @@ check.lpmodel <- function(data, lpmodel, name.var, A.tgt.cat, A.obs.cat,
   if (!("not_used" %in% beta.obs.cat)){
     beta.obs.return <- check.lpobjects(data, lpmodel$beta.obs, "beta.obs",
                                        beta.obs.cat, R)
+    print(beta.obs.return)
     check.vector(beta.obs.return$sample, "beta.obs", FALSE)
   }
   if (!("not_used" %in% beta.shp.cat)){
@@ -535,13 +536,13 @@ check.lpmodel <- function(data, lpmodel, name.var, A.tgt.cat, A.obs.cat,
   # Step 3: Check whether the dimension matches
   # ---------------- #
   if (!("not_used" %in% A.obs.cat)){
-    if (nrow(A.obs.return$sample) != nrow(beta.obs.return$sample)){
+    if (nrow(A.obs.return$sample) != NROW(beta.obs.return$sample)){
       stop(paste0("The objects 'A.obs' and 'beta.obs' in 'lpmodel' has ",
                   "to have the same number of rows."))
     }
   }
   if (!("not_used" %in% A.shp.cat)){
-    if (nrow(A.shp.return$sample) != nrow(beta.shp.return$sample)){
+    if (nrow(A.shp.return$sample) != NROW(beta.shp.return$sample)){
       stop(paste0("The objects 'A.shp' and 'beta.shp' in 'lpmodel' has ",
                   "to have the same number of rows."))
     }
@@ -558,8 +559,8 @@ check.lpmodel <- function(data, lpmodel, name.var, A.tgt.cat, A.obs.cat,
 #' @param mat.name Name of the matrix object in \code{lpmodel}.
 #' @param mat.cat Category of the matrix object.
 #' @inheritParams dkqs
-#' 
-#' @details See the details for the function `\code{check.lpmodel}` for the 
+#'
+#' @details See the details for the function `\code{check.lpmodel}` for the
 #'   details on the strings for each category.
 #'
 #' @return Returns two objects:
@@ -590,8 +591,9 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R){
     # Category 2: Check if it is a function
     if ("function_mat" %in% mat.cat) {
       if (class(mat) == "function"){
+        sample.return <- lpmodel.beta.eval(data, mat, 1)
         return(list(mat = mat,
-                    sample = mat(data)))
+                    sample = sample.return$beta.obs))
       } else if (length(mat.cat) == 1){
         stop(sprintf(paste0("The object '%s' in 'lpmodel' has to be a ",
                             "function."),
