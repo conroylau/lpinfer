@@ -75,7 +75,7 @@ dkqs <- function(data, lpmodel, beta.tgt, R = 100, tau = .5, solver = NULL,
   # Step 2: Initialization
   # ---------------- #
   n <- nrow(data)
-  # Choose whether the data frame has "Y" or "y" as the column name for the 
+  # Choose whether the data frame has "Y" or "y" as the column name for the
   # outcomes
   if ("y" %in% colnames(data)) {
     coly <- "y"
@@ -88,10 +88,10 @@ dkqs <- function(data, lpmodel, beta.tgt, R = 100, tau = .5, solver = NULL,
   J <- length(unique(data[,coly])) - 1
 
   # Initialize beta.obs
-  
+
   beta.obs.return <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)
   beta.obs.hat <- beta.obs.return[[1]]
-    
+
   # ---------------- #
   # Step 3: Choose the value of tau
   # ---------------- #
@@ -225,8 +225,14 @@ dkqs.qlp <- function(data, lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
   # ---------------- #
   # Step 1: Obtain the dimension of the
   # ---------------- #
-  A.tgt.nr <- nrow(lpmodel$A.tgt)
-  A.tgt.nc <- ncol(lpmodel$A.tgt)
+  A.tgt.dim <- dim(lpmodel$A.tgt)
+  if (is.null(A.tgt.dim)) {
+    A.tgt.nr <- 1
+    A.tgt.nc <- length(lpmodel$A.tgt)
+  } else {
+    A.tgt.nr <- A.tgt.dim[1]
+    A.tgt.nc <- A.tgt.dim[2]
+  }
 
   # ---------------- #
   # Step 2: Formulation of constraints
@@ -667,7 +673,7 @@ dkqs.check <- function(data, lpmodel, beta.tgt, R, tau, solver, cores,
                            A.tgt.cat = "matrix",
                            A.obs.cat = "matrix",
                            A.shp.cat = "not_used",
-                           beta.obs.cat = c("function_mat", 
+                           beta.obs.cat = c("function_mat",
                                             "list",
                                             "function_obs_var"),
                            beta.shp.cat = "not_used",
