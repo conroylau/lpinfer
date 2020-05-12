@@ -76,14 +76,14 @@ A_obs_twom <- matrix(c(rep(0,J1), yp, rep(0,J1), rep(1, J1)), nrow = 2,
 beta_tgt <- .375
 
 # Define the value of full information method
-lpmodel.full <- list(A.obs    = A_obs_full,
-                     A.tgt    = A_tgt,
-                     beta.obs = func_full_info)
+lpmodel.full <- lpmodel(A.obs    = A_obs_full,
+                        A.tgt    = A_tgt,
+                        beta.obs = func_full_info)
 
 # Define the value of full two moments method
-lpmodel.twom <- list(A.obs    = A_obs_twom,
-                     A.tgt    = A_tgt,
-                     beta.obs = func_two_moment)
+lpmodel.twom <- lpmodel(A.obs    = A_obs_twom,
+                        A.tgt    = A_tgt,
+                        beta.obs = func_two_moment)
 
 # Define arguments for dkqs
 farg <- list(data = data,

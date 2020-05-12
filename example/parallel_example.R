@@ -81,9 +81,9 @@ A_obs_full <- cbind(matrix(rep(0,J1*J1), nrow = J1), diag(1, J1))
 # Part 5: Run the dkqs module to compute p-values
 # ---------------- #
 # Define the value of full information method
-lpmodel.full <- list(A.obs    = A_obs_full,
-                     A.tgt    = A_tgt,
-                     beta.obs = func_full_info)
+lpmodel.full <- lpmodel(A.obs    = A_obs_full,
+                        A.tgt    = A_tgt,
+                        beta.obs = func_full_info)
 
 # Define the value of beta_tgt and significant figures needed
 beta_tgt <- .365

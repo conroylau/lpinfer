@@ -103,18 +103,18 @@ beta_shp_dkqs <- c(1)
 # Part 6: Define lpmodel
 # ---------------- #
 # Full info approach
-lpmodel.full <- list(A.obs = A_obs_full,
-                     A.tgt = A_tgt,
-                     A.shp = A_shp_dkqs,
-                     beta.shp = beta_shp_dkqs,
-                     beta.obs = func_full_info)
+lpmodel.full <- lpmodel(A.obs = A_obs_full,
+                        A.tgt = A_tgt,
+                        A.shp = A_shp_dkqs,
+                        beta.shp = beta_shp_dkqs,
+                        beta.obs = func_full_info)
 
 # Two moments approach
-lpmodel.twom <- list(A.obs = A_obs_twom,
-                     A.tgt = A_tgt,
-                     A.shp = A_shp_dkqs,
-                     beta.shp = beta_shp_dkqs,
-                     beta.obs = func_two_moment)
+lpmodel.twom <- lpmodel(A.obs = A_obs_twom,
+                        A.tgt = A_tgt,
+                        A.shp = A_shp_dkqs,
+                        beta.shp = beta_shp_dkqs,
+                        beta.obs = func_two_moment)
 
 # ---------------- #
 # Step 7: Demonstrate the use of mincriterion

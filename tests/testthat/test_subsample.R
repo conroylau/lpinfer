@@ -103,17 +103,17 @@ beta.tgt <- .365
 phi_predefine <- 2/3
 
 # Define the lpmodels
-lpmodel.full <- list(A.obs    = A_obs_full,
-                     A.tgt    = A_tgt,
-                     A.shp    = A_shp_full,
-                     beta.obs = func_full_info,
-                     beta.shp = beta_shp)
+lpmodel.full <- lpmodel(A.obs    = A_obs_full,
+                        A.tgt    = A_tgt,
+                        A.shp    = A_shp_full,
+                        beta.obs = func_full_info,
+                        beta.shp = beta_shp)
 
-lpmodel.twom <- list(A.obs    = A_obs_twom,
-                     A.tgt    = A_tgt,
-                     A.shp    = A_shp_full,
-                     beta.obs = func_two_moment,
-                     beta.shp = beta_shp)
+lpmodel.twom <- lpmodel(A.obs    = A_obs_twom,
+                        A.tgt    = A_tgt,
+                        A.shp    = A_shp_full,
+                        beta.obs = func_two_moment,
+                        beta.shp = beta_shp)
 
 ### Define arguments
 farg <- list(data = data,

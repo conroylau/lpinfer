@@ -83,18 +83,18 @@ A_shp_dkqs <- matrix(rep(1, ncol(A_obs_full)), nrow = 1)
 L2norm <- 2
 
 # Define the value of full information method
-lpmodel.full <- list(A.obs    = A_obs_full,
-                     A.tgt    = A_tgt,
-                     A.shp    = A_shp_dkqs,
-                     beta.obs = func_full_info,
-                     beta.shp = beta_shp_dkqs)
+lpmodel.full <- lpmodel(A.obs    = A_obs_full,
+                        A.tgt    = A_tgt,
+                        A.shp    = A_shp_dkqs,
+                        beta.obs = func_full_info,
+                        beta.shp = beta_shp_dkqs)
 
 # Define the value of full two moments method
-lpmodel.twom <- list(A.obs    = A_obs_twom,
-                     A.tgt    = A_tgt,
-                     A.shp    = A_shp_dkqs,
-                     beta.obs = func_two_moment,
-                     beta.shp = beta_shp_dkqs)
+lpmodel.twom <- lpmodel(A.obs    = A_obs_twom,
+                        A.tgt    = A_tgt,
+                        A.shp    = A_shp_dkqs,
+                        beta.obs = func_two_moment,
+                        beta.shp = beta_shp_dkqs)
 
 # Define arguments
 farg <- list(data = data,

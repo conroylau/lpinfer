@@ -94,9 +94,9 @@ beta_tgt <- .365
 # Part 6: Arguments for the dkqs function without beta_tgt
 # ---------------- #
 # Define the value of full information method
-lpmodel.full <- list(A.obs    = A_obs_full,
-                     A.tgt    = A_tgt,
-                     beta.obs = func_full_info)
+lpmodel.full <- lpmodel(A.obs    = A_obs_full,
+                        A.tgt    = A_tgt,
+                        beta.obs = func_full_info)
 
 # Define the argument of the functions
 farg <- list(data = data,
