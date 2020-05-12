@@ -4,11 +4,9 @@
 \alias{dkqs.qlp}
 \title{Formulating and solving linear and quadratic programs}
 \usage{
-dkqs.qlp(data, lpmodel, beta.tgt, beta.obs.hat, tau, problem, n, solver)
+dkqs.qlp(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n, solver)
 }
 \arguments{
-\item{data}{The data being used in the inference.}
-
 \item{lpmodel}{A list of objects that are used in inference of linear
 programming problems. The list of objects required in the \code{dkqs}
 procedure are:

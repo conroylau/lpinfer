@@ -95,7 +95,7 @@ dkqs <- function(data, lpmodel, beta.tgt, R = 100, tau = .5, solver = NULL,
   # ---------------- #
   # Step 3: Choose the value of tau
   # ---------------- #
-  tau.return <- dkqs.qlp(data, lpmodel, beta.tgt, beta.obs.hat, tau, "tau",
+  tau.return <- dkqs.qlp(lpmodel, beta.tgt, beta.obs.hat, tau, "tau",
                          n, solver)
   if (tau > tau.return$objval){
     tau <- tau.return$objval
@@ -110,7 +110,7 @@ dkqs <- function(data, lpmodel, beta.tgt, R = 100, tau = .5, solver = NULL,
   # Step 4: Compute T.n, x.star and s.star
   # ---------------- #
   # Compute T.n
-  T.n <- dkqs.qlp(data, lpmodel, beta.tgt, beta.obs.hat, tau, "test",
+  T.n <- dkqs.qlp(lpmodel, beta.tgt, beta.obs.hat, tau, "test",
                   n, solver)$objval
 
   # The problem is infeasible if T.n is NULL
@@ -119,7 +119,7 @@ dkqs <- function(data, lpmodel, beta.tgt, R = 100, tau = .5, solver = NULL,
   }
 
   # Compute s.star
-  x.return <- dkqs.qlp(data, lpmodel, beta.tgt, beta.obs.hat, tau, "cone",
+  x.return <- dkqs.qlp(lpmodel, beta.tgt, beta.obs.hat, tau, "cone",
                        n, solver)
   x.star <- x.return$x
   s.star <- lpmodel$A.obs %*% x.star
@@ -220,7 +220,7 @@ dkqs <- function(data, lpmodel, beta.tgt, R = 100, tau = .5, solver = NULL,
 #'
 #' @export
 #'
-dkqs.qlp <- function(data, lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
+dkqs.qlp <- function(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n, 
                      solver){
   # ---------------- #
   # Step 1: Obtain the dimension of the
@@ -424,7 +424,7 @@ beta.bs <- function(data, lpmodel, beta.tgt, R, J, s.star, tau, solver,
 
     # Compute beta.bs.bar and test statistic
     beta.bs.bar <- beta.obs.bs - beta.obs + s.star
-    T.bs.i <- dkqs.qlp(data.bs, lpmodel.bs, beta.tgt, beta.bs.bar, tau, "cone",
+    T.bs.i <- dkqs.qlp(lpmodel.bs, beta.tgt, beta.bs.bar, tau, "cone",
                        nrow(data), solver)$objval
 
     # Append results
@@ -552,16 +552,16 @@ beta.bs.parallel <- function(data, lpmodel, beta.tgt, R, J, s.star, tau,
                               .options.snow = opts,
                               .packages = c("lpinfer", "doRNG")) %dorng% {
 
-                                # Compute beta.bs.bar and test statistic
-                                beta.bs.bar <- beta.bs.list[[i + 1]] - beta.bs.list[[1]] + s.star
-                                T.bs.i <- dkqs.qlp(data.bs, lpmodel, beta.tgt, beta.bs.bar, tau, "cone",
-                                                   nrow(data), solver)$objval
-
-                                # Append results
-                                T.bs <- data.frame(T.bs.i)
-                                beta.bs.bar.list <- data.frame(beta.bs.bar)
-                                list(T.bs, beta.bs.bar.list)
-                              }
+      # Compute beta.bs.bar and test statistic
+      beta.bs.bar <- beta.bs.list[[i + 1]] - beta.bs.list[[1]] + s.star
+      T.bs.i <- dkqs.qlp(lpmodel, beta.tgt, beta.bs.bar, tau, "cone",
+                         nrow(data), solver)$objval
+  
+      # Append results
+      T.bs <- data.frame(T.bs.i)
+      beta.bs.bar.list <- data.frame(beta.bs.bar)
+      list(T.bs, beta.bs.bar.list)
+    }
 
   # ---------------- #
   # Step 5: Retrieve information from the output
