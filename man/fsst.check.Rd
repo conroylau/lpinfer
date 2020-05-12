@@ -34,6 +34,8 @@ procedure are:
 
 \item{R}{Number of bootstraps chosen by the users.}
 
+\item{lambda}{Parameter used in the cone bootstrap sattistics}
+
 \item{rho}{Parameter used in the studentization of matrices}
 
 \item{weight.matrix}{The option used in the weighting matrix.}

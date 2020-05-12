@@ -28,5 +28,6 @@ List of full beta vectors
   \eqn{\{\widehat{\bm{\beta}_{n,b}}}\}^B_{b=1}}
 }
 \description{
-Construct the full beta vector
+This function concatenate the \code{beta.obs}, \code{beta.shp}
+  and \code{beta.tgt} components to form the full \code{beta} vector.
 }

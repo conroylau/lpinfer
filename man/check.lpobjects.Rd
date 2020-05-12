@@ -27,6 +27,6 @@ This function checks if the matrix objects in \code{lpmodel}
    are in the correct format.
 }
 \details{
-See the details for the function `\code{check.lpmodel}` for the 
+See the details for the function `\code{check.lpmodel}` for the
   details on the strings for each category.
 }

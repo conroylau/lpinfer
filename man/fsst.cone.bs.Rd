@@ -36,6 +36,8 @@ procedure are:
   \item{\code{beta.obs}}
 }}
 
+\item{lambda}{Parameter used in the cone bootstrap sattistics}
+
 \item{indicator}{A binary variable that equals to 1 for \eqn{d \geq p} and
 equals to 0 for \eqn{d < p}.}
 
