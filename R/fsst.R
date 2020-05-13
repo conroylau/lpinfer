@@ -314,7 +314,9 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda,
                   rho = rho,
                   rhobar.e = rhobar.e,
                   rhobar.i = rhobar.i,
-                  beta.var.method = beta.var.method)
+                  beta.var.method = beta.var.method,
+                  omega.e = omega.e,
+                  omega.i = omega.i)
 
    # Assign class
    attr(output, "class") <- "fsst"
