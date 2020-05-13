@@ -16,6 +16,41 @@ check.dataframe <- function(data){
   return(data)
 }
 
+#' Check function: passing data to function
+#'
+#' @description This function checks whether there will be any error if a
+#'   \code{data.frame} is being passed to a user-defined function.
+#'
+#' @param data The data object in the class \code{data.frame}.
+#' @param f User-defined function in \code{lpmodel}.
+#' @param lpmodel.comp Name of the \code{lpmodel} object.
+#'
+#' @details An error message will be displayed it is .
+#'
+#' @return Nothing is returned.
+#'
+#' @export
+#'
+check.datafunction <- function(data, f, lpmodel.comp){
+  tryCatch(
+    expr = {
+      f(data)
+    },
+    error = function(e) {
+      stop(sprintf(paste0("The funciton defined in the '%s' component ",
+                          "for 'lpmodel' needs to accept data of clas s",
+                          "'data.frame'."), lpmodel.comp))
+    },
+    warning = function(w) {
+      stop(sprintf(paste0("The funciton defined in the '%s' component ",
+                          "for 'lpmodel' needs to accept data of class ",
+                          "'data.frame'."), lpmodel.comp))
+    },
+    finally = {
+    }
+  )
+}
+
 #' Check function: positive integer
 #'
 #' @description This function checks whether the class of the variable
