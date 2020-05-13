@@ -854,13 +854,13 @@ check.vector <- function(vec, vec.name, inside.list){
 #' @param cores Number of cores.
 #'
 #' @return Returns the updated number of cores.
-#'   \item{cores}{Updated number of cores}
+#'   \item{x}{Updated number of cores}
 #'
 #' @export
 #'
 check.cores <- function(x){
   if ((is.numeric(x) == TRUE & length(x) == 1 & x > 0 & x%%1 == 0) == FALSE){
-    cores <- 1
+    x <- 1
   }
-  return(cores)
+  return(x)
 }
