@@ -238,7 +238,6 @@ estbounds.original <- function(data, lpmodel, original.sense, solver){
 #'
 estbounds2.L1 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
                           solver){
-
   # ---------------- #
   # Step 1: Initialization
   # ---------------- #
@@ -591,7 +590,7 @@ mincriterion <- function(data, lpmodel, norm, solver){
     }
     A.aug <- cbind(A.shp.mat, matrix(rep(0, 2*k*A.shp.nr),
                                          nrow = A.shp.nr))
-    A.slack <- cbind(lpmodel$A.obs, -diag(k), -diag(k))
+    A.slack <- cbind(lpmodel$A.obs, -diag(k), diag(k))
     # Combine the constraints
     A.new <- rbind(A.aug, A.slack)
     beta.new <- c(lpmodel$beta.shp, beta.obs.hat)
