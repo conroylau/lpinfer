@@ -30,7 +30,7 @@
 #'
 #' @export
 #'
-fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda,
+fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda = .5,
                  rho = 1e-4, n = NULL, weight.matrix = "diag",
                  solver, cores, progress){
 
