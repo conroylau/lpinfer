@@ -1,16 +1,16 @@
-#' Check function: data frame
+#' Check function: data
 #'
-#' @description This function force the data input as a \code{matrix}.
+#' @description This function force the data input as a \code{data.frame}.
 #'
-#' @param data Data frame to be checked.
+#' @param data A \code{data} object to be checked.
 #'
-#' @return Returns the object as a \code{matrix}.
+#' @return Returns the object as a \code{data.frame}.
 #'
 #' @export
 #'
 check.dataframe <- function(data){
   # Check data
-  data <- as.matrix(data)
+  data <- as.data.frame(data)
 
   # Return updated data
   return(data)
@@ -591,6 +591,11 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R){
     if ("function_mat" %in% mat.cat) {
       if (class(mat) == "function"){
         sample.return <- lpmodel.beta.eval(data, mat, 1)
+
+        # Check whether the function can accept 'data' in the 'data.frame'
+        # format
+        check.datafunction(data, mat, mat.name)
+
         return(list(mat = mat,
                     sample = sample.return$beta.obs))
       } else if (length(mat.cat) == 1){
@@ -646,6 +651,10 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R){
     # Category 4: Check if it is a function that produces two matrices
     if ("function_obs_var" %in% mat.cat) {
       if (class(mat) == "function"){
+        # Check whether the function can accept 'data' in the 'data.frame'
+        # format
+        check.datafunction(data, mat, mat.name)
+
         # Check if there are two outputs of the function
         func.output <- mat(data)
         if (length(func.output) != 2){
