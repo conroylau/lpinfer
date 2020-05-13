@@ -27,6 +27,9 @@ lpmodel.eval <- function(data, obj, i){
   } else if (class(obj) == "list"){
     obj.eval <- obj[[i]]
   } else {
+    if (!is.matrix(obj)) {
+      obj <- matrix(obj, nrow = 1)
+    }
     obj.eval <- obj
   }
 
