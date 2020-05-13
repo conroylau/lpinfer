@@ -161,27 +161,45 @@ estbounds.original <- function(data, lpmodel, original.sense, solver){
   # ---------------- #
   # Step 1: Problem set-up
   # ---------------- #
+  # Ensure A.tgt is matrix
+  if (!is.matrix(lpmodel$A.tgt)) {
+    A.tgt.matrix <- matrix(lpmodel$A.tgt, nrow = 1)
+  } else {
+    A.tgt.matrix <- lpmodel$A.tgt
+  }
+  A.tgt.nc <- ncol(A.tgt.matrix)
+
+  # Ensure A.shp is matrix
+  if (!is.matrix(lpmodel$A.shp)) {
+    A.shp.matrix <- matrix(lpmodel$A.shp, nrow = 1)
+  } else {
+    A.shp.matrix <- lpmodel$A.shp
+  }
+
   # Matrices
-  A.original <- rbind(lpmodel$A.obs, lpmodel$A.shp)
+  A.original <- rbind(lpmodel$A.obs, A.shp.matrix)
+  if (!is.matrix(A.original)) {
+    A.original <- matrix(A.original, nrow = 1)
+  }
 
   # Check if beta_obs is a function, then compute the
   if (class(lpmodel$beta.obs) == "function"){
-    beta.obs.hat <- lpmodel$beta.obs(data)
+    beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   } else if (class(lpmodel$beta.obs) == "numeric" |
              class(lpmodel$beta.obs) == "matrix"){
     beta.obs.hat <- lpmodel$beta.obs
   }
-  beta.original <- rbind(beta.obs.hat, lpmodel$beta.shp)
+  beta.original <- c(beta.obs.hat, lpmodel$beta.shp)
   # Sense contraints
   sense.original <- c(rep("=", nrow(A.original)))
   # Zero lower bound
-  lb.zero <- rep(0, ncol(lpmodel$A.tgt))
+  lb.zero <- rep(0, A.tgt.nc)
 
   # ---------------- #
   # Step 2: Formulate the argument for optimization
   # ---------------- #
   oarg <- list(Af = NULL,
-               bf = lpmodel$A.tgt,
+               bf = A.tgt.matrix,
                nf = NULL,
                A = A.original,
                rhs = beta.original,
@@ -226,7 +244,7 @@ estbounds2.L1 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
   # ---------------- #
   # Check if beta_obs is a function, then compute the
   if (class(lpmodel$beta.obs) == "function"){
-    beta.obs.hat <- lpmodel$beta.obs(data)
+    beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   } else if (class(lpmodel$beta.obs) == "numeric" |
              class(lpmodel$beta.obs) == "matrix"){
     beta.obs.hat <- lpmodel$beta.obs
@@ -240,12 +258,23 @@ estbounds2.L1 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
   Qhat <- firststepsoln$objval
   larg <- firststepsoln$larg
 
+  # Ensure A.tgt is matrix
+  if (!is.matrix(lpmodel$A.tgt)) {
+    A.tgt.matrix <- matrix(lpmodel$A.tgt, nrow = 1)
+  } else {
+    A.tgt.matrix <- lpmodel$A.tgt
+  }
+  A.tgt.nr <- nrow(A.tgt.matrix)
+
   # ---------------- #
   # Step 3: Construct the inequality constraint
   # ---------------- #
   # Update the linear constraint
   c <- larg$bf
   A.step2 <- rbind(larg$A, c)
+  if (!is.matrix(A.step2)) {
+    A.step2 <- matrix(A.step2, nrow = 1)
+  }
   b.step2 <- c(larg$rhs, Qhat * (1+kappa))
   sense.step2 <- c(larg$sense, "<=")
 
@@ -258,10 +287,8 @@ estbounds2.L1 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
   # Step 4: Update objective function
   # ---------------- #
   # Update the objective matrix
-  A.tgt.new <- cbind(lpmodel$A.tgt,
-                     matrix(rep(0,
-                                2*k*nrow(lpmodel$A.tgt)),
-                            nrow = nrow(lpmodel$A.tgt)))
+  A.tgt.new <- cbind(A.tgt.matrix,
+                     matrix(rep(0, 2*k*A.tgt.nr), nrow = A.tgt.nr))
   larg$Af <- 0
   larg$bf <- A.tgt.new
   larg$nf <- 0
@@ -312,7 +339,7 @@ estbounds2.L2 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
   # Step 2: Construct the quadratic inequality constraint
   # ---------------- #
   if (class(lpmodel$beta.obs) == "function"){
-    beta.obs.hat <- lpmodel$beta.obs(data)
+    beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   } else if (class(lpmodel$beta.obs) == "numeric" |
              class(lpmodel$beta.obs) == "matrix"){
     beta.obs.hat <- lpmodel$beta.obs
@@ -394,7 +421,7 @@ estbounds.check <- function(data, lpmodel, kappa, norm, solver, estimate,
                            A.tgt.cat = "matrix",
                            A.obs.cat = "matrix",
                            A.shp.cat = "matrix",
-                           beta.obs.cat = c("function_mat", 
+                           beta.obs.cat = c("function_mat",
                                             "list",
                                             "function_obs_var"),
                            beta.shp.cat = "matrix",
@@ -518,9 +545,25 @@ mincriterion <- function(data, lpmodel, norm, solver){
   # ---------------- #
   # Step 2: Obtain beta_obs and update solver
   # ---------------- #
+  # Count the dimension of matrices
+  A.tgt.dim <- dim(lpmodel$A.tgt)
+  if (is.null(A.tgt.dim)) {
+    A.tgt.nc <- length(lpmodel$A.tgt)
+  } else {
+    A.tgt.nc <- A.tgt.dim[2]
+  }
+
+  # Count the dimension of matrices
+  A.shp.dim <- dim(lpmodel$A.shp)
+  if (is.null(A.shp.dim)) {
+    A.shp.nr <- 1
+  } else {
+    A.shp.nr <- A.shp.dim[1]
+  }
+
   # Check if beta_obs is a function, then compute the
   if (class(lpmodel$beta.obs) == "function"){
-    beta.obs.hat <- lpmodel$beta.obs(data)
+    beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   } else if (class(lpmodel$beta.obs) == "numeric" |
              class(lpmodel$beta.obs) == "matrix"){
     beta.obs.hat <- lpmodel$beta.obs
@@ -530,9 +573,9 @@ mincriterion <- function(data, lpmodel, norm, solver){
   # Step 3: Create common constraints for the problem with 1-norm and 2-norm
   # ---------------- #
   # Zero lower bound
-  lb.zero <- rep(0,ncol(lpmodel$A.tgt))
+  lb.zero <- rep(0, A.tgt.nc)
   # Generate the sense of models
-  sense0 <- rep("=", nrow(lpmodel$A.shp))
+  sense0 <- rep("=", A.shp.nr)
 
   # ---------------- #
   # Step 4: Set up argument for the optimizer
@@ -541,8 +584,13 @@ mincriterion <- function(data, lpmodel, norm, solver){
     # Define the augmented matrices
     k <- length(beta.obs.hat)
     # Introduce slack variables into the matrix
-    A.aug <- cbind(lpmodel$A.shp, matrix(rep(0, 2*k*nrow(lpmodel$A.shp)),
-                                         nrow = nrow(lpmodel$A.shp)))
+    if (!is.matrix(lpmodel$A.shp)) {
+      A.shp.mat <- matrix(lpmodel$A.shp, nrow = 1)
+    } else {
+      A.shp.mat <- lpmodel$A.shp
+    }
+    A.aug <- cbind(A.shp.mat, matrix(rep(0, 2*k*A.shp.nr),
+                                         nrow = A.shp.nr))
     A.slack <- cbind(lpmodel$A.obs, -diag(k), -diag(k))
     # Combine the constraints
     A.new <- rbind(A.aug, A.slack)
@@ -564,11 +612,16 @@ mincriterion <- function(data, lpmodel, norm, solver){
                       lb = lb.new)
 
   } else if (norm == 2){
+    if (!is.matrix(lpmodel$A.shp)) {
+      A.shp.new <- matrix(lpmodel$A.shp, nrow = 1)
+    } else {
+      A.shp.new <- lpmodel$A.shp
+    }
     # 2-norm
     optim.arg <- list(Af = lpmodel$A.obs,
                       bf = beta.obs.hat,
                       nf = 1,
-                      A = lpmodel$A.shp,
+                      A = A.shp.new,
                       rhs = lpmodel$beta.shp,
                       sense = sense0,
                       modelsense = "min",
@@ -633,7 +686,7 @@ mincriterion.check <- function(data, lpmodel, norm, solver){
                            A.tgt.cat = "matrix",
                            A.obs.cat = "matrix",
                            A.shp.cat = "matrix",
-                           beta.obs.cat = c("function_mat", 
+                           beta.obs.cat = c("function_mat",
                                             "list",
                                             "function_obs_var"),
                            beta.shp.cat = "matrix",
