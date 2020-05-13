@@ -776,7 +776,11 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R){
 check.matrix <- function(mat, mat.name, mat.cat, inside.list){
   if (class(mat) == "data.frame" | class(mat) == "matrix" |
       class(mat) == "numeric"){
-    mat.update <- as.matrix(mat)
+    if (is.null(dim(mat))) {
+      mat.update <- matrix(mat, nrow = 1)
+    } else {
+      mat.update <- as.matrix(mat) 
+    }
     return(list(mat.update = mat.update,
                 err.ind = 0,
                 dim = dim(mat.update)))
