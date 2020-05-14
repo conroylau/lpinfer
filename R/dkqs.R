@@ -88,16 +88,14 @@ dkqs <- function(data, lpmodel, beta.tgt, R = 100, tau = NULL, solver = NULL,
   J <- length(unique(data[,coly])) - 1
 
   # Initialize beta.obs
-
   beta.obs.return <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)
   beta.obs.hat <- beta.obs.return[[1]]
 
   # ---------------- #
   # Step 3: Choose the value of tau
   # ---------------- #
-  tau.return <- dkqs.qlp(lpmodel, beta.tgt, beta.obs.hat, tau, "tau",
+  tau.return <- dkqs.qlp(lpmodel, beta.tgt, beta.obs.hat, 1, "tau",
                          n, solver)
-  print(tau.return$objval)
   if (is.null(tau)) {
     tau <- tau.return$objval
   } else {
