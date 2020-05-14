@@ -136,7 +136,7 @@ dkqs <- function(data, lpmodel, beta.tgt, R = 100, tau = .5, solver = NULL,
     } else {
       # Parallelization
       T.bs.return <- beta.bs.parallel(data, lpmodel, beta.tgt, R, J, s.star,
-                                      tau, solver, progress)
+                                      tau, solver, progress, cores)
     }
     # Retrive answer
     T.bs <- T.bs.return$T.bs
