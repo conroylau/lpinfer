@@ -87,17 +87,17 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda = .5,
    } else {
       beta.var.method <- "function"
       if (cores == 1){
+         sigma.return <- sigma.est(n, data, beta.obs.hat, lpmodel, R)
          if (is.null(sigma.beta.obs)){
-            sigma.return <- sigma.est(n, data, beta.obs.hat, lpmodel, R)
             sigma.beta.obs <- sigma.return$sigma.hat
             beta.var.method <- "bootstrapped 'beta.obs' from the function."
          }
          beta.obs.bs <- sigma.return$beta.obs.bs
          beta.n.bs <- full.beta.bs(lpmodel, beta.tgt, beta.obs.bs, R)
       } else {
+         sigma.return <- sigma.est.parallel(data, beta.obs.hat, lpmodel,
+                                            R, cores, progress)
          if (is.null(sigma.beta.obs)){
-            sigma.return <- sigma.est.parallel(data, beta.obs.hat, lpmodel,
-                                               R, cores, progress)
             sigma.beta.obs <- sigma.return$sigma.hat
             beta.var.method <- "bootstrapped 'beta.obs' from the function."
          }
@@ -119,7 +119,11 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda = .5,
    # Step 3: Estimate beta.star
    # ---------------- #
    p <- length(beta.n)
-   d <- ncol(lpmodel$A.tgt)
+   if (!is.matrix(lpmodel$A.tgt)) {
+      d <- length(lpmodel$A.tgt)
+   } else {
+      d <- ncol(lpmodel$A.tgt)
+   }
    if (d >= p){
       beta.star <- beta.n
 
@@ -214,7 +218,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda = .5,
       # Compute cone.n for bootstrap beta
       for (i in 1:length(lambda)){
          cone.n.temp <- fsst.cone.bs(n, omega.i, beta.n, beta.star, lpmodel,
-                                     lambda[i], 1, beta.star.bs, beta.r,
+                                     R, lambda[i], 1, beta.star.bs, beta.r,
                                      beta.star.list, solver, cores, progress,
                                      length(lambda), i)
          cone.n.list[[i]] <- cone.n.temp
@@ -233,7 +237,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda = .5,
       # Compute cone.n for bootstrap beta
       for (i in 1:length(lambda)){
          cone.n.temp <- fsst.cone.bs(n, omega.i, beta.n, beta.star, lpmodel,
-                                     lambda[i], 0, beta.star.bs, beta.r,
+                                     R, lambda[i], 0, beta.star.bs, beta.r,
                                      beta.star.list, solver, cores, progress,
                                      length(lambda), i)
          cone.n.list[[i]] <- cone.n.temp
@@ -357,6 +361,7 @@ sigma.est <- function(n, data, beta.obs.hat, lpmodel, R){
    sigma.sum <- matrix(rep(0, length(beta.obs.hat)^2),
                        nrow = length(beta.obs.hat))
    beta.obs.bs <- list()
+
    for (i in 1:R){
       # ---------------- #
       # Step 2: Obtain the bootstrap beta
@@ -364,8 +369,12 @@ sigma.est <- function(n, data, beta.obs.hat, lpmodel, R){
       # Obtain the bootstrap  beta
       data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
       rownames(data.bs) <- 1:nrow(data.bs)
-      beta.obs.bs[[i]] <- lpmodel$beta.obs(data.bs)
-      beta.product <- (beta.obs.bs[[i]] - beta.obs.hat)
+      beta.obs.bs[[i]] <- lpmodel.beta.eval(data.bs, lpmodel$beta.obs, 1)[[1]]
+      beta.product <- beta.obs.bs[[i]] - beta.obs.hat
+
+      if (!is.matrix(beta.product)) {
+         beta.product <- matrix(beta.product, nrow = 1)
+      }
 
       # ---------------- #
       # Step 3: Compute the matrix product
@@ -464,11 +473,8 @@ sigma.est.parallel <- function(data, beta.obs.hat, lpmodel, R, cores, progress){
                       .options.snow = opts,
                       .packages = "lpinfer") %dorng% {
 
-                         lpmodel.bs <- lpmodel
-
                          # Re-sample the data
                          data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
-
                          rownames(data.bs) <- 1:nrow(data.bs)
 
                          # Compute the bootstrap test statistic
@@ -649,9 +655,9 @@ sigma.summation.parallel <- function(n, beta.bs.list, cores, progress,
 
       beta.diff <- as.matrix(beta.bs.list[[i+1]] - beta.obs.hat)
       if (nrow(beta.diff) == 1){
-        listans <- t(beta.diff) %*% (beta.diff)
+         listans <- t(beta.diff) %*% (beta.diff)
       } else {
-        listans <- (beta.diff) %*% t(beta.diff)
+         listans <- (beta.diff) %*% t(beta.diff)
       }
       listans <- as.matrix(listans, nrow = p)
       list(x=listans)
@@ -709,19 +715,24 @@ beta.star.qp <- function(data, lpmodel, beta.tgt, weight.matrix, beta.obs.hat,
    # ---------------- #
    # Step 2: Solve the quadratic program
    # ---------------- #
+   # Define the A matrices
+   A.obs.hat <- lpmodel.eval(data, lpmodel$A.obs, 1)
+   A.shp.hat <- lpmodel.eval(data, lpmodel$A.shp, 1)
+   A.tgt.hat <- lpmodel.eval(data, lpmodel$A.tgt, 1)
+
    # Define the parameters
-   d <- ncol(as.matrix(lpmodel$A.tgt))
+   d <- ncol(A.tgt.hat)
 
    # Constraints matrix
-   A.mat1 <- as.matrix(lpmodel$A.shp)
-   A.mat2 <- as.matrix(lpmodel$A.tgt)
+   A.mat1 <- A.shp.hat
+   A.mat2 <- A.tgt.hat
    A.mat <- as.matrix(rbind(A.mat1, A.mat2))
 
    # RHS matrix
    b <- as.matrix(cbind(lpmodel$beta.shp, c(beta.tgt)))
 
    # Objective function
-   A.obj <- as.matrix(cbind(lpmodel$A.obs))
+   A.obj <- A.obs.hat
 
    # Assign the optimization argument
    optim.arg <- list(Af = as.matrix(A.obj),
@@ -945,7 +956,11 @@ beta.r.compute <- function(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
    # ---------------- #
    # Construct the zero matrices and vectors and a vector of ones
    p <- length(beta.n)
-   q <- nrow(beta.obs.hat)
+   if (!is.matrix(beta.obs.hat)) {
+      q <- length(beta.obs.hat)
+   } else {
+      q <- nrow(beta.obs.hat)
+   }
    d <- ncol(lpmodel$A.obs)
    ones.1p <- rep(1, p)
    ones.p1 <- matrix(ones.1p, nrow = p)
@@ -1088,7 +1103,7 @@ fsst.range.bs <- function(n, omega.e, beta.n, beta.star, R, beta.n.bs,
           # ---------------- #
           beta.bs.1 <- beta.n.bs[[i]] - beta.n
           beta.bs.2 <- beta.star.bs[[i]] - beta.star
-
+   
           # ---------------- #
           # Step 2: Solve the linear program and extract the solution
           # ---------------- #
@@ -1119,7 +1134,7 @@ fsst.range.bs <- function(n, omega.e, beta.n, beta.star, R, beta.n.bs,
 #'
 #' @export
 #'
-fsst.cone.bs <- function(n, omega.i, beta.n, beta.star, lpmodel, lambda,
+fsst.cone.bs <- function(n, omega.i, beta.n, beta.star, lpmodel, R, lambda,
                          indicator, beta.star.bs, beta.r, beta.star.list,
                          solver, cores, progress, length.lambda, lambda.i){
    cone.n.list <- NULL
@@ -1321,7 +1336,7 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, lambda, rho, n,
                             A.tgt.cat = "matrix",
                             A.obs.cat = "matrix",
                             A.shp.cat = "not_used",
-                            beta.obs.cat = c("function_mat", 
+                            beta.obs.cat = c("function_mat",
                                              "list",
                                              "function_obs_var"),
                             beta.shp.cat = "not_used",
