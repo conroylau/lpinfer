@@ -9,7 +9,7 @@ dkqs(
   lpmodel,
   beta.tgt,
   R = 100,
-  tau = 0.5,
+  tau = NULL,
   solver = NULL,
   cores = 1,
   progress = FALSE

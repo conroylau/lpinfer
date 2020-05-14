@@ -51,7 +51,7 @@
 #'
 #' @export
 #'
-dkqs <- function(data, lpmodel, beta.tgt, R = 100, tau = .5, solver = NULL,
+dkqs <- function(data, lpmodel, beta.tgt, R = 100, tau = NULL, solver = NULL,
                  cores = 1, progress = FALSE){
 
   # ---------------- #
@@ -97,13 +97,18 @@ dkqs <- function(data, lpmodel, beta.tgt, R = 100, tau = .5, solver = NULL,
   # ---------------- #
   tau.return <- dkqs.qlp(lpmodel, beta.tgt, beta.obs.hat, tau, "tau",
                          n, solver)
-  if (tau > tau.return$objval){
+  print(tau.return$objval)
+  if (is.null(tau)) {
     tau <- tau.return$objval
-  } else if (tau <= tau.return$objval){
-    tau <- tau
   } else {
-    # Error message when the problem is infeasible.
-    stop("The problem is infeasible. Choose other values of tau.")
+    if (tau > tau.return$objval) {
+      tau <- tau.return$objval
+    } else if (tau <= tau.return$objval) {
+      tau <- tau
+    } else {
+      # Error message when the problem is infeasible.
+      stop("The problem is infeasible. Choose other values of tau.")
+    } 
   }
 
   # ---------------- #
