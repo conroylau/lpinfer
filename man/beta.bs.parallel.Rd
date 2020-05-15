@@ -14,7 +14,9 @@ beta.bs.parallel(
   tau,
   solver,
   progress,
-  cores
+  cores,
+  tau.i,
+  n.tau
 )
 }
 \arguments{

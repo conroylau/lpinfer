@@ -10,7 +10,7 @@ fsst(
   beta.tgt,
   R,
   alpha = 0.05,
-  lambda,
+  lambda = 0.5,
   rho = 1e-04,
   n = NULL,
   weight.matrix = "diag",

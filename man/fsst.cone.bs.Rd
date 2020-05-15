@@ -10,6 +10,7 @@ fsst.cone.bs(
   beta.n,
   beta.star,
   lpmodel,
+  R,
   lambda,
   indicator,
   beta.star.bs,
@@ -35,6 +36,8 @@ procedure are:
   \item{\code{A.obs}}
   \item{\code{beta.obs}}
 }}
+
+\item{R}{Number of bootstraps chosen by the users.}
 
 \item{lambda}{Parameter used in the cone bootstrap sattistics}
 

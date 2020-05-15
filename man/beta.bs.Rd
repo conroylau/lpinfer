@@ -4,7 +4,19 @@
 \alias{beta.bs}
 \title{Computes the bootstrap test statistics}
 \usage{
-beta.bs(data, lpmodel, beta.tgt, R, J, s.star, tau, solver, progress)
+beta.bs(
+  data,
+  lpmodel,
+  beta.tgt,
+  R,
+  J,
+  s.star,
+  tau,
+  solver,
+  progress,
+  tau.i,
+  n.tau
+)
 }
 \arguments{
 \item{data}{The data being used in the inference.}

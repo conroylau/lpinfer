@@ -49,16 +49,16 @@ Otherwise, the messages will not be displayed.}
 }
 \value{
 Returns a list of output calculated from the function:
-  \item{pval}{\eqn{p}-value.}
-  \item{tau}{The value of tau used \eqn{\tau^\ast} in the linear and
-     quadratic programs.}
+  \item{pval}{A table of \eqn{p}-values for each \eqn{\tau}.}
+  \item{tau.feasible}{The list of \eqn{\tau}s that are feasible.}
+  \item{tau.ineffective}{The list of \eqn{\tau}s that are infeasible.}
   \item{T.n}{Test statistic \eqn{T.n}.}
   \item{T.bs}{The list of bootstrap test statistics
-     \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}.}
+     \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}} for each \eqn{\tau}.}
   \item{beta.bs.bar}{The list of \eqn{\tau}-tightened re-centered bootstrap
      estimators \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}.}
-  \item{lb0}{Logical lower bound of the problem.}
-  \item{ub0}{Logical upper bound of the problem.}
+  \item{lb0}{Logical lower bound of the problem for each \eqn{\tau}.}
+  \item{ub0}{Logical upper bound of the problem for each \eqn{\tau}.}
   \item{solver}{Solver used in solving the linear and quadratic programs.}
   \item{cores}{Number of cores used.}
   \item{call}{The function that has been called.}
