@@ -31,6 +31,7 @@
 #'   \item{solver}{Solver used in solving the linear and quadratic programs.}
 #'   \item{cores}{Number of cores used.}
 #'   \item{call}{The function that has been called.}
+#'   \item{phi}{The \eqn{\phi} parameter used.}
 #'   \item{norm}{Norm used.}
 #'
 #' @export
@@ -106,6 +107,7 @@ subsample <- function(data, lpmodel, beta.tgt, R = 100, solver = NULL,
                  solver = solver.name,
                  cores = cores,
                  call = call,
+                 phi = phi,
                  norm = norm)
 
   attr(output, "class") <- "subsample"
@@ -430,48 +432,39 @@ subsample.manycores <- function(data, R, lpmodel, beta.tgt, norm, solver,
 #' @param x Object returned from \code{subsample}.
 #' @param ... Additional arguments.
 #'
-#' @return Print the basic set of results from \code{subsample}.
+#' @return Nothing is returned.
 #'
 #' @export
 #'
 print.subsample <- function(x, ...){
   cat("\r\r")
-  cat("Call:\n")
-  dput(x$call)
-  cat("\n")
-  if (x$decision == 1){
-    cat(sprintf("The null hypothesis is rejected at the %s level.\n\n",
-                paste0(x$alpha*100, "%")))
-  } else {
-    cat(sprintf("The null hypothesis cannot be rejected at the %s level.\n\n",
-                paste0(x$alpha*100, "%")))
-  }
-  cat(sprintf("Test statistic: %s.             \n", round(x$T.n, digits = 5)))
-  cat(sprintf("p-value: %s.\n", round(x$pval, digits = 5)))
-  cat(sprintf("Linear and quadratic programming solver used: %s.\n", x$solver))
-  if (x$norm == 1){
-    cat(sprintf("Norm used in the optimization problem: L1-norm.\n"))
-  } else if (x$norm == 2){
-    cat(sprintf("Norm used in the optimization problem: L2-norm.\n"))
-  }
-  cat(sprintf("Number of cores used: %s.\n", x$cores))
+  cat(sprintf("p-value: %s\n", round(x$pval, digits = 5)))
 }
 
 #' Summary of results from \code{subsample}
 #'
 #' @description This function uses the summary method on the return list of
-#'    the function \code{subsample}. This is a wrapper of the \code{print}
-#'    command.
+#'    the function \code{subsample}.
 #'
 #' @param x Object returned from \code{subsample}.
 #' @param ... Additional arguments.
 #'
-#' @return Print the summary of the basic set of results from \code{subsample}.
+#' @return Nothing is returned.
 #'
 #' @export
 #'
 summary.subsample <- function(x, ...){
+  cat("\r\r")
+  # Print the p-values
   print(x)
+
+  # Print test statistic, solver used, norm used and number of
+  # cores used
+  cat(sprintf("Test statistic: %s\n", round(x$T.n, digits = 5)))
+  cat(sprintf("Solver used: %s\n", x$solver))
+  cat(sprintf("Norm used: %s\n", x$norm))
+  cat(sprintf("Phi used: %s\n", round(x$phi, digits = 5)))
+  cat(sprintf("Number of cores used: %s\n", x$cores))
 }
 
 #' Checks and updates the input from \code{subsample}

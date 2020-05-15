@@ -67,6 +67,7 @@ Returns a list of output calculated from the function:
   \item{solver}{Solver used in solving the linear and quadratic programs.}
   \item{cores}{Number of cores used.}
   \item{call}{The function that has been called.}
+  \item{phi}{The \eqn{\phi} parameter used.}
   \item{norm}{Norm used.}
 }
 \description{

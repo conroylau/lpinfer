@@ -12,10 +12,9 @@ summary.subsample(x, ...)
 \item{...}{Additional arguments.}
 }
 \value{
-Print the summary of the basic set of results from \code{subsample}.
+Nothing is returned.
 }
 \description{
 This function uses the summary method on the return list of
-   the function \code{subsample}. This is a wrapper of the \code{print}
-   command.
+   the function \code{subsample}.
 }

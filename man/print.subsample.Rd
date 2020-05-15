@@ -12,7 +12,7 @@ print.subsample(x, ...)
 \item{...}{Additional arguments.}
 }
 \value{
-Print the basic set of results from \code{subsample}.
+Nothing is returned.
 }
 \description{
 This function uses the print method on the return list of the
