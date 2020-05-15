@@ -47,8 +47,8 @@ subsample <- function(data, lpmodel, beta.tgt, R = 100, solver = NULL,
   call <- match.call()
 
   # Check the arguments
-  subsample.return <- subsample.check(data, lpmodel, beta.tgt, R, solver, cores,
-                                 norm, phi, alpha, progress)
+  subsample.return <- subsample.check(data, lpmodel, beta.tgt, R, solver, 
+                                      cores, norm, phi, alpha, progress)
 
   # Update the arguments
   data <- subsample.return$data
