@@ -116,7 +116,7 @@ beta_shp <- c(1)
 # Part 6: Run the subsample module to compute p-values
 # ---------------- #
 # Define the parameters to be used
-beta_tgt <- .375
+beta.tgt <- .375
 phi_predefine <- 2/3
 
 # Define the lpmodels
