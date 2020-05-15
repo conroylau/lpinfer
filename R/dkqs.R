@@ -782,18 +782,20 @@ dkqs.check <- function(data, lpmodel, beta.tgt, R, tau, solver, cores,
 print.dkqs <- function(x, ...){
   cat("\r\r")
 
-  # Print the p-values
   df.pval <- x$pval
+
+  # Merge the table with the infeasible taus
+  if (!is.null(x$tau.infeasible)) {
+    df.infeasible <- cbind(x$tau.infeasible, "infeasible")
+    colnames(df.infeasible) <- colnames(df.pval)
+    df.pval <- rbind(df.pval, df.infeasible)
+  }
+
+  # Print the p-values
   if (nrow(df.pval) == 1) {
     cat(sprintf("p-value: %s\n", df.pval[1,2]))
   } else {
-    cat("p-values:\n")
     print(df.pval, row.names = FALSE)
-  }
-
-  # Print the infeasible taus
-  if (!is.null(x$tau.infeasible)) {
-    dkqs.infeasible.tau(x$tau.infeasible)
   }
 }
 
@@ -811,46 +813,13 @@ print.dkqs <- function(x, ...){
 #'
 summary.dkqs <- function(x, ...){
 
-  # Print the p-values for each tau
-  df.pval <- x$pval
-  if (nrow(df.pval) == 1) {
-    cat(sprintf("p-value: %s\n", df.pval[1,2]))
-    cat(sprintf("tau used: %s\n", df.pval[1,1]))
-  } else {
-    cat("p-values:\n")
-    print(df.pval, row.names = FALSE)
-  }
+  # Print the p-values
+  print(x)
 
-  # Print test statistics, maximum feasible tau, solver used and number of
+  # Print maximum feasible tau, test statistic, solver used and number of
   # cores used
-  cat(sprintf("Test statistic: %s\n", round(x$T.n, digits = 5)))
-  cat(sprintf("Solver used: %s\n", x$solver))
-  cat(sprintf("Number of cores used: %s\n", x$cores))
-  cat(sprintf("Maximum feasible tau: %s\n", round(x$tau.max, digits = 5)))
-  # Print the infeasible taus
-  if (!is.null(x$tau.infeasible)) {
-    dkqs.infeasible.tau(x$tau.infeasible)
-  }
-}
-
-#' Function to print the infeasible taus
-#'
-#' @description This function is used to print the list of infeasible taus
-#'   in the \code{print} and \code{summary} functions for \code{dkqs}.
-#'
-#' @param tau.infeasible A vector of infeasible taus.
-#'
-#' @return Nothing is returned.
-#'
-#' @export
-#'
-dkqs.infeasible.tau <- function(tau.infeasible){
-  n.tau.infeasible <- length(tau.infeasible)
-  if (n.tau.infeasible == 1) {
-    cat(sprintf("The following tau from the input is infeasible: %s",
-                tau.infeasible))
-  } else if (n.tau.infeasible > 1) {
-    cat(sprintf("The following taus from the input are infeasible: %s",
-                paste(tau.infeasible, collapse = ", ")))
-  }
+  cat(sprintf(" Maximum feasible tau: %s\n", round(x$tau.max, digits = 5)))
+  cat(sprintf(" Test statistic: %s\n", round(x$T.n, digits = 5)))
+  cat(sprintf(" Solver used: %s\n", x$solver))
+  cat(sprintf(" Number of cores used: %s\n", x$cores))
 }
