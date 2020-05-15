@@ -521,7 +521,7 @@ subsample.check <- function(data, lpmodel, beta.tgt, R, solver, cores,
   check.numrange(phi, "phi", "open", 0, "open", 1)
   check.numeric(phi, "phi")
   check.positiveinteger(R, "R")
-  cores <- check.positiveinteger(cores, "cores")
+  cores <- check.cores(cores, "cores")
 
   # Check norm
   norm <- check.norm(norm, "norm")
