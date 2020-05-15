@@ -68,6 +68,7 @@ subsample <- function(data, lpmodel, beta.tgt, R = 100, solver = NULL,
   # ---------------- #
   n = nrow(data)
   m = floor(n^(phi))
+
   if (cores == 1){
     # One core
     T_subsample <- subsample.onecore(data, R, lpmodel, beta.tgt, norm,
@@ -101,8 +102,8 @@ subsample <- function(data, lpmodel, beta.tgt, R = 100, solver = NULL,
                  decision = decision,
                  alpha = alpha,
                  T.n = as.numeric(Treturn$objval),
-                 T.sub = T_subsample$T_sub,
-                 solver = subsample.return$solver_name,
+                 T.sub = T_subsample$T.sub,
+                 solver = solver.name,
                  cores = cores,
                  call = call,
                  norm = norm)
@@ -146,7 +147,6 @@ subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver, i){
   beta.obs.hat <- beta.obs.return$beta.obs
   omega.hat <- beta.obs.return$omega
 
-  # A.obs, A.shp, A.tgt, beta.shp
   A.obs.hat <- lpmodel.eval(data, lpmodel$A.obs, i)
   A.shp.hat <- lpmodel.eval(data, lpmodel$A.shp, i)
   A.tgt.hat <- lpmodel.eval(data, lpmodel$A.tgt, i)
@@ -159,7 +159,7 @@ subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver, i){
   # ---------------- #
   # Step 2: Define the inverse omega matrix
   # ---------------- #
-  # Obtain the inverse of the diagonal etnreis
+  # Obtain the inverse of the diagonal entries
   diag.omega <- diag(omega.hat)
   g <- 1/diag.omega
   # Replace the entries by 0 for those that are equal to zero in 1/Omega
@@ -280,7 +280,7 @@ subsample.onecore <- function(data, R, lpmodel, beta.tgt, norm, solver,
   # ---------------- #
   for (i in 1:R){
     # (2.1) Re-sample the data
-    data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
+    data.bs <- as.data.frame(data[sample(1:nrow(data), m, replace = FALSE),])
     rownames(data.bs) <- 1:nrow(data.bs)
 
     # (2.2) Compute the bootstrap estimates
@@ -288,6 +288,7 @@ subsample.onecore <- function(data, R, lpmodel, beta.tgt, norm, solver,
     sub.return <- subsample.prob(data.bs, lpmodel, beta.tgt, norm, solver, i+1)
     T.sub <- c(T.sub, sub.return$objval)
     beta.sub <- cbind(beta.sub, sub.return$beta)
+
     # (2.3) Update progress bar
     if (progress == TRUE){
       if (i != R){
@@ -370,21 +371,39 @@ subsample.manycores <- function(data, R, lpmodel, beta.tgt, norm, solver,
                                                       function(y) y[[i]])))
   }
 
+  # Initialize the lpmodel.bs and beta.obs.var object
+  lpmodel.bs <- list()
+
+  # Use a normal for-loop to construct the list of lpmodel objects
+  for (i in 1:R) {
+    # Construct bootstrap data
+    data.bs <- as.data.frame(data[sample(1:nrow(data), m, replace = FALSE),])
+    rownames(data.bs) <- 1:nrow(data.bs)
+
+    # Assign the lpmodel objects
+    lpmodel.bs[[i]] <- list()
+    lpmodel.bs[[i]]$A.obs <- lpmodel.eval(data.bs, lpmodel$A.obs, i + 1)
+    lpmodel.bs[[i]]$A.shp <- lpmodel.eval(data.bs, lpmodel$A.shp, i + 1)
+    lpmodel.bs[[i]]$A.tgt <- lpmodel.eval(data.bs, lpmodel$A.tgt, i + 1)
+    lpmodel.bs[[i]]$beta.shp <- lpmodel.eval(data.bs, lpmodel$beta.shp, i + 1)
+    beta.obs.return <- lpmodel.beta.eval(data.bs, lpmodel$beta.obs, i + 1)
+    lpmodel.bs[[i]]$beta.obs <- beta.obs.return
+  }
+
   # ---------------- #
   # Step 3: Conduct the subsampling procedure
   # ---------------- #
   listans = foreach::foreach(i = 1:R, .multicombine = TRUE,
                              .combine = "comb", .options.snow = opts,
                              .packages = "lpinfer") %dorng% {
-   ## (3.1) Draw the subsample
-   data.bs <- as.data.frame(data[sample(1:nrow(data), replace = FALSE),])
-   rownames(data.bs) <- 1:nrow(data.bs)
-   ## (3.2) Compute the bootstrap estimates
+   ## (3.1) Compute the bootstrap estimates
    # Compute the value of beta_bs_star using the function func_obs
-   sub.return <- subsample.prob(data.bs, lpmodel, beta.tgt, norm, solver, i+1)
+   sub.return <- subsample.prob(data.bs, lpmodel.bs[[i]], beta.tgt, norm,
+                                solver, 1)
    T.sub <- data.frame(sub.return$objval)
    beta.sub <- data.frame(c(sub.return$beta))
-   ## (3.3) Combine the results
+
+   ## (3.2) Combine the results
    list(T.sub, beta.sub)
   }
 
