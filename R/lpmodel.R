@@ -109,8 +109,21 @@ lpmodel.beta.eval <- function(data, obj, i){
         }
       }
     } else {
-      beta.obs.hat <- obj[[i]]
-      omega.hat <- NULL
+      if (length(obj) == 2) {
+        if (is.null(nrow(obj[[1]]))){
+          beta.obs.hat <- obj[[1]]
+          omega.hat <- obj[[2]]
+        } else if (nrow(obj[[1]]) == 1 | ncol(obj[[1]]) == 1){
+          beta.obs.hat <- obj[[1]]
+          omega.hat <- obj[[2]]
+        } else {
+          beta.obs.hat <- obj[[2]]
+          omega.hat <- obj[[1]]
+        }
+      } else {
+        beta.obs.hat <- obj[[i]]
+        omega.hat <- NULL 
+      }
     }
   } else if (class(obj) == "numeric"){
     beta.obs.hat <- obj
