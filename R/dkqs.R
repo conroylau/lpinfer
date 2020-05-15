@@ -32,16 +32,16 @@
 #'    Otherwise, the messages will not be displayed.
 #'
 #' @return Returns a list of output calculated from the function:
-#'   \item{pval}{\eqn{p}-value.}
-#'   \item{tau}{The value of tau used \eqn{\tau^\ast} in the linear and
-#'      quadratic programs.}
+#'   \item{pval}{A table of \eqn{p}-values for each \eqn{\tau}.}
+#'   \item{tau.feasible}{The list of \eqn{\tau}s that are feasible.}
+#'   \item{tau.ineffective}{The list of \eqn{\tau}s that are infeasible.}
 #'   \item{T.n}{Test statistic \eqn{T.n}.}
 #'   \item{T.bs}{The list of bootstrap test statistics
-#'      \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}.}
+#'      \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}} for each \eqn{\tau}.}
 #'   \item{beta.bs.bar}{The list of \eqn{\tau}-tightened re-centered bootstrap
 #'      estimators \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}.}
-#'   \item{lb0}{Logical lower bound of the problem.}
-#'   \item{ub0}{Logical upper bound of the problem.}
+#'   \item{lb0}{Logical lower bound of the problem for each \eqn{\tau}.}
+#'   \item{ub0}{Logical upper bound of the problem for each \eqn{\tau}.}
 #'   \item{solver}{Solver used in solving the linear and quadratic programs.}
 #'   \item{cores}{Number of cores used.}
 #'   \item{call}{The function that has been called.}
@@ -97,92 +97,120 @@ dkqs <- function(data, lpmodel, beta.tgt, R = 100, tau = NULL, solver = NULL,
   tau.return <- dkqs.qlp(lpmodel, beta.tgt, beta.obs.hat, 1, "tau",
                          n, solver)
   if (is.null(tau)) {
-    tau <- tau.return$objval
+    tau.feasible <- as.numeric(tau.return$objval)
+    tau.infeasible <- NULL
   } else {
-    if (tau > tau.return$objval) {
-      tau <- tau.return$objval
-    } else if (tau <= tau.return$objval) {
-      tau <- tau
-    } else {
-      # Error message when the problem is infeasible.
-      stop("The problem is infeasible. Choose other values of tau.")
-    } 
+    tau.feasible <- c()
+    tau.infeasible <- c()
+    for (i in 1:length(tau)) {
+      if (tau[i] > tau.return$objval) {
+        tau.feasible <- c(tau.feasible, tau.return$objval)
+        tau.infeasible <- c(tau.infeasible, tau[i])
+      } else if (tau[i] <= tau.return$objval) {
+        tau.feasible <- c(tau.feasible, tau[i])
+      } else {
+        # Error message when the problem is infeasible.
+        stop("The problem is infeasible. Choose other values of tau.")
+      }
+    }
+
+    # Remove the duplicates
+    tau.feasible <- sort(unique(tau.feasible))
+    tau.infeasible <- sort(unique(tau.infeasible))
   }
+
+  n.tau <- length(tau.feasible)
 
   # ---------------- #
   # Step 4: Compute T.n, x.star and s.star
   # ---------------- #
-  # Compute T.n
-  T.n <- dkqs.qlp(lpmodel, beta.tgt, beta.obs.hat, tau, "test",
+  # Initialize the data.frames and lists to contain the optimal value of x,
+  # bootstrap test statistics and p-values for each tau
+  pval.df <- data.frame(matrix(vector(), nrow = n.tau, ncol = 2))
+  pval.df[,1] <- tau.feasible
+  lb.df <- pval.df
+  ub.df <- pval.df
+  colnames(pval.df) <- c("tau", "p-value")
+  colnames(lb.df) <- c("tau", "lb")
+  colnames(ub.df) <- c("tau", "ub")
+
+  x.star.list <- list()
+  s.star.list <- list()
+  T.bs.list <- list()
+  beta.bs.bar.list <- list()
+
+  # Compute T.n (Here, the value of tau does not affect the problem)
+  T.n <- dkqs.qlp(lpmodel, beta.tgt, beta.obs.hat, tau.feasible[1], "test",
                   n, solver)$objval
 
-  # The problem is infeasible if T.n is NULL
-  if (is.null(T.n) == TRUE){
-    stop("The problem is infeasible. Choose other values of tau.")
-  }
+  # Compute s.star, x.star, bootstrap test statistics and p-values for each
+  # tau
+  for (i in 1:n.tau) {
 
-  # Compute s.star
-  x.return <- dkqs.qlp(lpmodel, beta.tgt, beta.obs.hat, tau, "cone",
-                       n, solver)
-  x.star <- x.return$x
-  s.star <- lpmodel$A.obs %*% x.star
+    # Compute s.star
+    x.return <- dkqs.qlp(lpmodel, beta.tgt, beta.obs.hat, tau.feasible[i],
+                         "cone", n, solver)
+    x.star.list[[i]] <- x.return$x
+    s.star.list[[i]] <- lpmodel$A.obs %*% x.star.list[[i]]
 
-  # ---------------- #
-  # Step 5: Compute the bootstrap beta and estimates
-  # ---------------- #
-  # if (T.n != 0){
-  if (TRUE){
-    if (cores == 1){
-      # No parallelization
-      T.bs.return <- beta.bs(data, lpmodel, beta.tgt, R, J, s.star,
-                             tau, solver, progress)
+    # ---------------- #
+    # Step 5: Compute the bootstrap beta and estimates
+    # ---------------- #
+    if (T.n != 0){
+      if (cores == 1){
+        # No parallelization
+        T.bs.return <- beta.bs(data, lpmodel, beta.tgt, R, J, s.star.list[[i]],
+                               tau.feasible[i], solver, progress, i, n.tau)
+      } else {
+        # Parallelization
+        T.bs.return <- beta.bs.parallel(data, lpmodel, beta.tgt, R, J,
+                                        s.star.list[[i]], tau.feasible[i],
+                                        solver, progress, cores, i, n.tau)
+      }
+      # Retrive answer
+      T.bs.list[[i]] <- T.bs.return$T.bs
+      beta.bs.bar.list[[i]] <- T.bs.return$beta.bs.bar.list
     } else {
-      # Parallelization
-      T.bs.return <- beta.bs.parallel(data, lpmodel, beta.tgt, R, J, s.star,
-                                      tau, solver, progress, cores)
+      if (progress == TRUE){
+        cat(sprintf(paste0("Bootstrap is skipped for tau = %s because the ",
+                           "value of the test statistic is zero.\n"), tau[i]))
+        T.n <- 0
+        T.bs.list[[i]] <- NULL
+        beta.bs.bar.list[[i]] <- NULL
+      }
     }
-    # Retrive answer
-    T.bs <- T.bs.return$T.bs
-    beta.bs.bar <- T.bs.return$beta.bs.bar.list
-  } else {
-    if (progress == TRUE){
-      cat(paste("Bootstrap is skipped because the value of the test ",
-                "statistic is zero.\n"))
-      T.n <- 0
-      T.bs.return <- NULL
-      beta.bs.bar <- NULL
+    # ---------------- #
+    # Step 6: Compute p-value
+    # ---------------- #
+    pval.df[i,2] <- pval(T.bs.list[[i]], T.n)$p
+
+    # ---------------- #
+    # Step 7: Obtain logical bounds for the function invertci
+    # ---------------- #
+    lb.df[i,2] <- x.return$lb0$objval
+    ub.df[i,2] <- x.return$ub0$objval
+
+    # ---------------- #
+    # Step 8: Close the progress bar that is used in the bootstrap procedure
+    # ---------------- #
+    if ((progress == TRUE) & (i == n.tau)){
+      close(T.bs.return$pb)
+      # Remove progress bar
+      cat("\r\r                              ")
     }
-  }
-  # ---------------- #
-  # Step 6: Compute p-value
-  # ---------------- #
-  p <- pval(T.bs, T.n)$p
-
-  # ---------------- #
-  # Step 7: Obtain logical bounds for the function invertci
-  # ---------------- #
-  lb0 <- x.return$lb0
-  ub0 <- x.return$ub0
-
-  # ---------------- #
-  # Step 8: Close the progress bar that is used in the bootstrap procedure
-  # ---------------- #
-  if (progress == TRUE){
-    close(T.bs.return$pb)
-    # Remove progress bar
-    cat("\r\r                              ")
   }
 
   # ---------------- #
   # Step 9: Assign the return list and return output
   # ---------------- #
-  output <- list(pval = as.numeric(p),
-                 tau = as.numeric(tau),
-                 T.n = as.numeric(T.n),
-                 T.bs = T.bs,
-                 beta.bs.bar = beta.bs.bar,
-                 lb0 = lb0$objval,
-                 ub0 = ub0$objval,
+  output <- list(pval = pval.df,
+                 tau.feasible = tau.feasible,
+                 tau.infeasible = tau.infeasible,
+                 T.n = T.n,
+                 T.bs = T.bs.list,
+                 beta.bs.bar = beta.bs.bar.list,
+                 lb0 = lb.df,
+                 ub0 = ub.df,
                  solver = solver.name,
                  cores = cores,
                  call = call)
@@ -225,7 +253,7 @@ dkqs <- function(data, lpmodel, beta.tgt, R = 100, tau = NULL, solver = NULL,
 #'
 #' @export
 #'
-dkqs.qlp <- function(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n, 
+dkqs.qlp <- function(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
                      solver){
   # ---------------- #
   # Step 1: Obtain the dimension of the
@@ -393,7 +421,7 @@ dkqs.qlp <- function(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
 #' @export
 #'
 beta.bs <- function(data, lpmodel, beta.tgt, R, J, s.star, tau, solver,
-                    progress){
+                    progress, tau.i, n.tau){
   # ---------------- #
   # Step 1: Initialize the vectors and progress counters
   # ---------------- #
@@ -401,8 +429,10 @@ beta.bs <- function(data, lpmodel, beta.tgt, R, J, s.star, tau, solver,
   beta.bs.bar.list <- NULL
 
   # Initialize the progress bar
+  bar.initial <- R*(tau.i - 1)/n.tau
   if (progress == TRUE){
-    pb <- utils::txtProgressBar(min = 0, max = R, style = 3, width = 20)
+    pb <- utils::txtProgressBar(initial = bar.initial,
+                                max = R, style = 3, width = 20)
     cat("\r")
   } else {
     pb <- NULL
@@ -438,11 +468,11 @@ beta.bs <- function(data, lpmodel, beta.tgt, R, J, s.star, tau, solver,
 
     # Update progress bar
     if (progress == TRUE){
-      if (i != R){
-        utils::setTxtProgressBar(pb, i)
+      if (i < R){
+        utils::setTxtProgressBar(pb, bar.initial + i/n.tau)
         cat("\r\r")
-      } else {
-        utils::setTxtProgressBar(pb, i)
+      } else if ((i == R) & (n.tau == tau.i)) {
+        utils::setTxtProgressBar(pb, bar.initial + i/n.tau)
         cat("\r\b")
       }
     }
@@ -477,7 +507,7 @@ beta.bs <- function(data, lpmodel, beta.tgt, R, J, s.star, tau, solver,
 #' @export
 #'
 beta.bs.parallel <- function(data, lpmodel, beta.tgt, R, J, s.star, tau,
-                             solver, progress, cores){
+                             solver, progress, cores, tau.i, n.tau){
   # ---------------- #
   # Step 1: Register the number of cores and extract information
   # ---------------- #
@@ -498,17 +528,19 @@ beta.bs.parallel <- function(data, lpmodel, beta.tgt, R, J, s.star, tau,
   # ---------------- #
   if (progress == TRUE){
     # Initialize the counter
+    bar.initial <- R*(tau.i - 1)/n.tau
     cl <- PtProcess::makeSOCKcluster(8)
     doSNOW::registerDoSNOW(cl)
 
     # Set the counter and progress bar
-    pb <- utils::txtProgressBar(max = R, style = 3, width = 20)
+    pb <- utils::txtProgressBar(initial = bar.initial,
+                                max = R, style = 3, width = 20)
     cat("\r")
     progress <- function(n){
-      utils::setTxtProgressBar(pb, n)
+      utils::setTxtProgressBar(pb, bar.initial + n/n.tau)
       if (n < R){
         cat("\r\r")
-      } else {
+      } else if ((n == R) & (n.tau == tau.i)) {
         cat("\r\b")
       }
     }
@@ -561,7 +593,7 @@ beta.bs.parallel <- function(data, lpmodel, beta.tgt, R, J, s.star, tau,
       beta.bs.bar <- beta.bs.list[[i + 1]] - beta.bs.list[[1]] + s.star
       T.bs.i <- dkqs.qlp(lpmodel, beta.tgt, beta.bs.bar, tau, "cone",
                          nrow(data), solver)$objval
-  
+
       # Append results
       T.bs <- data.frame(T.bs.i)
       beta.bs.bar.list <- data.frame(beta.bs.bar)
@@ -747,11 +779,21 @@ dkqs.check <- function(data, lpmodel, beta.tgt, R, tau, solver, cores,
 #'
 print.dkqs <- function(x, ...){
   cat("\r\r")
-  cat(sprintf("Test statistic: %s.             \n", round(x$T.n, digits = 5)))
-  cat(sprintf("p-value: %s.\n", round(x$pval, digits = 5)))
-  cat(sprintf("Value of tau used: %s.\n", round(x$tau, digits = 5)))
-  cat(sprintf("Solver used: %s.\n", x$solver))
-  cat(sprintf("Number of cores used: %s.\n", x$cores))
+
+  # Print the p-values
+  df.pval <- x$pval
+  if (nrow(df.pval) == 1) {
+    cat(sprintf("p-value: %s\n", df.pval[1,2]))
+  } else {
+    cat("p-values:\n")
+    print(df.pval, row.names = FALSE)
+  }
+
+  # Print the infeasible taus
+  if (!is.null(x$tau.infeasible)) {
+    cat("\n")
+    dkqs.infeasible.tau(x$tau.infeasible)
+  }
 }
 
 #' Summary of results from \code{dkqs}
@@ -767,5 +809,46 @@ print.dkqs <- function(x, ...){
 #' @export
 #'
 summary.dkqs <- function(x, ...){
-  print(x)
+
+  # Print the p-values and test statistics
+  df.pval <- x$pval
+  if (nrow(df.pval) == 1) {
+    cat(sprintf("p-value: %s\n", df.pval[1,2]))
+    cat(sprintf("tau used: %s\n", df.pval[1,1]))
+  } else {
+    cat("p-values:\n")
+    print(df.pval, row.names = FALSE)
+  }
+  cat(sprintf("Test statistic: %s\n", round(x$T.n, digits = 5)))
+
+  cat(sprintf("Solver used: %s\n", x$solver))
+  cat(sprintf("Number of cores used: %s\n", x$cores))
+
+  # Print the infeasible taus
+  if (!is.null(x$tau.infeasible)) {
+    cat("\n")
+    dkqs.infeasible.tau(x$tau.infeasible)
+  }
+}
+
+#' Function to print the infeasible taus
+#'
+#' @description This function is used to print the list of infeasible taus
+#'   in the \code{print} and \code{summary} functions for \code{dkqs}.
+#'
+#' @param tau.infeasible A vector of infeasible taus.
+#'
+#' @return Nothing is returned.
+#'
+#' @export
+#'
+dkqs.infeasible.tau <- function(tau.infeasible){
+  n.tau.infeasible <- length(tau.infeasible)
+  if (n.tau.infeasible == 1) {
+    cat(sprintf("The following tau from the input is infeasible: %s",
+                tau.infeasible))
+  } else if (n.tau.infeasible > 1) {
+    cat(sprintf("The following taus from the input are infeasible: %s",
+                paste(tau.infeasible, collapse = ", ")))
+  }
 }
