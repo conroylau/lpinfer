@@ -52,6 +52,7 @@ Returns a list of output calculated from the function:
   \item{pval}{A table of \eqn{p}-values for each \eqn{\tau}.}
   \item{tau.feasible}{The list of \eqn{\tau}s that are feasible.}
   \item{tau.ineffective}{The list of \eqn{\tau}s that are infeasible.}
+  \item{tau.max}{Maximum value of the feasible tau for the problem.}
   \item{T.n}{Test statistic \eqn{T.n}.}
   \item{T.bs}{The list of bootstrap test statistics
      \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}} for each \eqn{\tau}.}

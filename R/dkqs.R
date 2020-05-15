@@ -35,6 +35,7 @@
 #'   \item{pval}{A table of \eqn{p}-values for each \eqn{\tau}.}
 #'   \item{tau.feasible}{The list of \eqn{\tau}s that are feasible.}
 #'   \item{tau.ineffective}{The list of \eqn{\tau}s that are infeasible.}
+#'   \item{tau.max}{Maximum value of the feasible tau for the problem.}
 #'   \item{T.n}{Test statistic \eqn{T.n}.}
 #'   \item{T.bs}{The list of bootstrap test statistics
 #'      \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}} for each \eqn{\tau}.}
@@ -206,6 +207,7 @@ dkqs <- function(data, lpmodel, beta.tgt, R = 100, tau = NULL, solver = NULL,
   output <- list(pval = pval.df,
                  tau.feasible = tau.feasible,
                  tau.infeasible = tau.infeasible,
+                 tau.max = tau.return$objval,
                  T.n = T.n,
                  T.bs = T.bs.list,
                  beta.bs.bar = beta.bs.bar.list,
@@ -791,7 +793,6 @@ print.dkqs <- function(x, ...){
 
   # Print the infeasible taus
   if (!is.null(x$tau.infeasible)) {
-    cat("\n")
     dkqs.infeasible.tau(x$tau.infeasible)
   }
 }
@@ -810,7 +811,7 @@ print.dkqs <- function(x, ...){
 #'
 summary.dkqs <- function(x, ...){
 
-  # Print the p-values and test statistics
+  # Print the p-values for each tau
   df.pval <- x$pval
   if (nrow(df.pval) == 1) {
     cat(sprintf("p-value: %s\n", df.pval[1,2]))
@@ -819,14 +820,15 @@ summary.dkqs <- function(x, ...){
     cat("p-values:\n")
     print(df.pval, row.names = FALSE)
   }
-  cat(sprintf("Test statistic: %s\n", round(x$T.n, digits = 5)))
 
+  # Print test statistics, maximum feasible tau, solver used and number of
+  # cores used
+  cat(sprintf("Test statistic: %s\n", round(x$T.n, digits = 5)))
   cat(sprintf("Solver used: %s\n", x$solver))
   cat(sprintf("Number of cores used: %s\n", x$cores))
-
+  cat(sprintf("Maximum feasible tau: %s\n", round(x$tau.max, digits = 5)))
   # Print the infeasible taus
   if (!is.null(x$tau.infeasible)) {
-    cat("\n")
     dkqs.infeasible.tau(x$tau.infeasible)
   }
 }
