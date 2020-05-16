@@ -124,6 +124,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda = .5,
    } else {
       d <- ncol(lpmodel$A.tgt)
    }
+
    if (d >= p){
       beta.star <- beta.n
 
@@ -379,7 +380,7 @@ sigma.est <- function(n, data, beta.obs.hat, lpmodel, R){
       # ---------------- #
       # Step 3: Compute the matrix product
       # ---------------- #
-      sigma.sum <- sigma.sum + t(beta.product) %*% (beta.product)
+      sigma.sum <- sigma.sum + (beta.product) %*% t(beta.product)
    }
 
    # Compute sigma hat
@@ -473,17 +474,17 @@ sigma.est.parallel <- function(data, beta.obs.hat, lpmodel, R, cores, progress){
                       .options.snow = opts,
                       .packages = "lpinfer") %dorng% {
 
-                         # Re-sample the data
-                         data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
-                         rownames(data.bs) <- 1:nrow(data.bs)
+       # Re-sample the data
+       data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
+       rownames(data.bs) <- 1:nrow(data.bs)
 
-                         # Compute the bootstrap test statistic
-                         beta.obs.bs <- lpmodel$beta.obs(data.bs)
-                         beta.product <- (beta.obs.bs - beta.obs.hat)
-                         sigma.mat <- t(beta.product) %*% (beta.product)
+       # Compute the bootstrap test statistic
+       beta.obs.bs <- lpmodel$beta.obs(data.bs)
+       beta.product <- (beta.obs.bs - beta.obs.hat)
+       sigma.mat <- (beta.product) %*% t(beta.product)
 
-                         list(sigma.mat)
-                      }
+       list(sigma.mat)
+    }
 
    # ---------------- #
    # Step 4: Retrieve information from the output
@@ -735,8 +736,8 @@ beta.star.qp <- function(data, lpmodel, beta.tgt, weight.matrix, beta.obs.hat,
    A.obj <- A.obs.hat
 
    # Assign the optimization argument
-   optim.arg <- list(Af = as.matrix(A.obj),
-                     bf = as.matrix(beta.obs.hat),
+   optim.arg <- list(Af = A.obj,
+                     bf = beta.obs.hat,
                      nf = 1,
                      A = A.mat,
                      rhs = b,
@@ -1103,7 +1104,7 @@ fsst.range.bs <- function(n, omega.e, beta.n, beta.star, R, beta.n.bs,
           # ---------------- #
           beta.bs.1 <- beta.n.bs[[i]] - beta.n
           beta.bs.2 <- beta.star.bs[[i]] - beta.star
-   
+
           # ---------------- #
           # Step 2: Solve the linear program and extract the solution
           # ---------------- #
