@@ -4,7 +4,7 @@
 \alias{sigma.est}
 \title{Computing bootstrap and variance estimators}
 \usage{
-\method{sigma}{est}(n, data, beta.obs.hat, lpmodel, R)
+\method{sigma}{est}(n, data, beta.obs.hat, lpmodel, R, progress)
 }
 \arguments{
 \item{data}{The data being used in the inference.}
@@ -22,6 +22,11 @@ procedure are:
 }}
 
 \item{R}{Number of bootstraps chosen by the users.}
+
+\item{progress}{The boolean variable for whether the result messages
+should be displayed in the inference procedure. If it is set as
+\code{TRUE}, the messages are displayed throughout the procedure.
+Otherwise, the messages will not be displayed.}
 }
 \value{
 Returns the bootstrap estimators and the estimator of the

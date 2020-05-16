@@ -76,7 +76,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda = .5,
    if (class(lpmodel$beta.obs) == "list"){
       beta.var.method <- "list"
       if (is.null(sigma.beta.obs)){
-         sigma.beta.obs <- sigma.summation(n, lpmodel$beta.obs)
+         sigma.beta.obs <- sigma.summation(n, lpmodel$beta.obs, progress, 0)
          beta.var.method <- "bootstrapped values of the input list"
       }
       beta.obs.bs <- lpmodel$beta.obs[2:(R+1)]
@@ -87,7 +87,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda = .5,
    } else {
       beta.var.method <- "function"
       if (cores == 1){
-         sigma.return <- sigma.est(n, data, beta.obs.hat, lpmodel, R)
+         sigma.return <- sigma.est(n, data, beta.obs.hat, lpmodel, R, progress)
          if (is.null(sigma.beta.obs)){
             sigma.beta.obs <- sigma.return$sigma.hat
             beta.var.method <- "bootstrapped 'beta.obs' from the function."
@@ -158,7 +158,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda = .5,
    } else {
       # Compute sigma.star of beta.star
       if (cores == 1){
-         sigma.star <- sigma.summation(n, beta.star.list)
+         sigma.star <- sigma.summation(n, beta.star.list, progress, 1)
       } else {
          sigma.star <- sigma.summation.parallel(n, beta.star.list, cores,
                                                 progress, 1)
@@ -171,7 +171,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda = .5,
          beta.diff.bs[[i+1]] <- beta.n.bs[[i]] - beta.star.bs[[i]]
       }
       if (cores == 1){
-         sigma.star.diff <- sigma.summation(n, beta.diff.bs)
+         sigma.star.diff <- sigma.summation(n, beta.diff.bs, progress, 2)
       } else {
          sigma.star.diff <- sigma.summation.parallel(n, beta.diff.bs, cores,
                                                      progress, 2)
@@ -354,14 +354,22 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda = .5,
 #'
 #' @export
 #'
-sigma.est <- function(n, data, beta.obs.hat, lpmodel, R){
+sigma.est <- function(n, data, beta.obs.hat, lpmodel, R, progress){
 
    # ---------------- #
-   # Step 1: Initialization
+   # Step 1: Initialize the matrix and progress bar
    # ---------------- #
    sigma.sum <- matrix(rep(0, length(beta.obs.hat)^2),
                        nrow = length(beta.obs.hat))
    beta.obs.bs <- list()
+
+   # Initialize the progress bar
+   if (progress == TRUE){
+      pb <- utils::txtProgressBar(initial = 0, max = R, style = 3, width = 20)
+      cat("\r")
+   } else {
+      pb <- NULL
+   }
 
    for (i in 1:R){
       # ---------------- #
@@ -381,6 +389,12 @@ sigma.est <- function(n, data, beta.obs.hat, lpmodel, R){
       # Step 3: Compute the matrix product
       # ---------------- #
       sigma.sum <- sigma.sum + (beta.product) %*% t(beta.product)
+
+      # Update progress bar
+      if (progress == TRUE) {
+         utils::setTxtProgressBar(pb, i/10)
+         cat("\r\r")
+      }
    }
 
    # Compute sigma hat
@@ -401,7 +415,7 @@ sigma.est <- function(n, data, beta.obs.hat, lpmodel, R){
 #'   for some suitable estimators \eqn{\widehat{\bm{\beta}}} and the
 #'   corresponding bootstrap estimators
 #'   \eqn{\{\widehat{\bm{\beta}}_b\}^B_{b=1}}.
-#'   
+#'
 #' @import doParallel doRNG
 #'
 #' @inheritParams fsst
@@ -561,7 +575,7 @@ full.beta.bs <- function(lpmodel, beta.tgt, beta.obs.bs, R){
 #'
 #' @export
 #'
-sigma.summation <- function(n, beta.bs.list){
+sigma.summation <- function(n, beta.bs.list, progress, ind.times){
    # ---------------- #
    # Step 1: Estimate beta.obs.hat
    # ---------------- #
@@ -569,15 +583,42 @@ sigma.summation <- function(n, beta.bs.list){
    beta.dim <- nrow(beta.obs.hat) * ncol(beta.obs.hat)
 
    # ---------------- #
-   # Step 2: Obtain the variance
+   # Step 2: Initialize the progress bar
+   # ---------------- #
+   R <- length(beta.bs.list) - 1
+   if (progress == TRUE) {
+      if (ind.times == 1){
+         initial.bar <- R/10
+         pb <- utils::txtProgressBar(max = R,
+                                     initial = initial.bar,
+                                     style = 3,
+                                     width = 20)
+      } else if (ind.times == 2){
+         initial.bar <- 2*R/10
+         pb <- utils::txtProgressBar(max = R,
+                                     initial = initial.bar,
+                                     style = 3,
+                                     width = 20)
+      }
+      cat("\r")
+   }
+
+   # ---------------- #
+   # Step 3: Obtain the variance
    # ---------------- #
    sigma.sum <- matrix(rep(0, beta.dim^2), nrow = beta.dim)
-   for (i in 1:(length(beta.bs.list)-1)){
+   for (i in 1:R){
       beta.diff <- as.matrix(beta.bs.list[[i+1]] - beta.obs.hat)
       if (nrow(beta.diff) == 1){
          sigma.sum <- sigma.sum + t(beta.diff) %*% (beta.diff)
       } else {
          sigma.sum <- sigma.sum + (beta.diff) %*% t(beta.diff)
+      }
+
+      # Update progress bar
+      if (progress == TRUE) {
+         utils::setTxtProgressBar(pb, initial.bar + i/10)
+         cat("\r\r")
       }
    }
    sigma.hat <- sigma.sum/(length(beta.bs.list)-1)*n
@@ -1081,6 +1122,16 @@ fsst.range.bs <- function(n, omega.e, beta.n, beta.star, R, beta.n.bs,
 
    ### A. Non-parallel version
    if (cores == 1){
+      # Initialize progress bar
+      if (progress == TRUE){
+         pb <- utils::txtProgressBar(initial = 3*R/10, max = R, style = 3,
+                                     width = 20)
+         cat("\r")
+      } else {
+         pb <- NULL
+      }
+
+      # Initialize the for-loop
       for (i in 1:R){
          # ---------------- #
          # Step A1: Compute the replacements
@@ -1094,6 +1145,12 @@ fsst.range.bs <- function(n, omega.e, beta.n, beta.star, R, beta.n.bs,
          range.n.return <- fsst.range.lp(n, omega.e, beta.bs.1, beta.bs.2,
                                          solver)
          range.n.list <- c(range.n.list, range.n.return$objval)
+
+         # Update progress bar
+         if (progress == TRUE) {
+            utils::setTxtProgressBar(pb, (3.5*n)/10 + 3*i/10)
+            cat("\r\r")
+         }
       }
    } else {
       ### B. Parallel version
@@ -1173,6 +1230,18 @@ fsst.cone.bs <- function(n, omega.i, beta.n, beta.star, lpmodel, R, lambda,
    cone.n.list <- NULL
 
    if (cores == 1){
+      # Initialize progress bar
+      if (progress == TRUE){
+         lambda.bar.i0 <- .35*(lambda.i-1)/length.lambda
+         pb <- utils::txtProgressBar(initial = R*.65 + R*lambda.bar.i0,
+                                     max = R,
+                                     style = 3,
+                                     width = 20)
+         cat("\r")
+      } else {
+         pb <- NULL
+      }
+
       for (i in 1:R){
          # ---------------- #
          # Step 1: Compute the replacements
@@ -1185,6 +1254,13 @@ fsst.cone.bs <- function(n, omega.i, beta.n, beta.star, lpmodel, R, lambda,
          cone.n.return <- fsst.cone.lp(n, omega.i, beta.n, beta.new, lpmodel,
                                        indicator, solver)
          cone.n.list <- c(cone.n.list, cone.n.return$objval)
+
+         # Update progress bar
+         if (progress == TRUE) {
+            utils::setTxtProgressBar(pb, R*.65 + R*lambda.bar.i0 +
+                                        i*.35/length.lambda)
+            cat("\r\r")
+         }
       }
    } else {
       options(warn=-1)
