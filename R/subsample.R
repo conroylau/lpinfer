@@ -33,6 +33,7 @@
 #'   \item{call}{The function that has been called.}
 #'   \item{phi}{The \eqn{\phi} parameter used.}
 #'   \item{norm}{Norm used.}
+#'   \item{subsample.size}{Size of subsample}
 #'
 #' @export
 #'
@@ -108,7 +109,8 @@ subsample <- function(data, lpmodel, beta.tgt, R = 100, solver = NULL,
                  cores = cores,
                  call = call,
                  phi = phi,
-                 norm = norm)
+                 norm = norm,
+                 subsample.size = m)
 
   attr(output, "class") <- "subsample"
 
@@ -464,6 +466,7 @@ summary.subsample <- function(x, ...){
   cat(sprintf("Solver used: %s\n", x$solver))
   cat(sprintf("Norm used: %s\n", x$norm))
   cat(sprintf("Phi used: %s\n", round(x$phi, digits = 5)))
+  cat(sprintf("Size of each subsample: %s\n", x$subsample.size))
   cat(sprintf("Number of cores used: %s\n", x$cores))
 }
 

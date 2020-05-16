@@ -69,6 +69,7 @@ Returns a list of output calculated from the function:
   \item{call}{The function that has been called.}
   \item{phi}{The \eqn{\phi} parameter used.}
   \item{norm}{Norm used.}
+  \item{subsample.size}{Size of subsample}
 }
 \description{
 This function conducts inference and returns the
