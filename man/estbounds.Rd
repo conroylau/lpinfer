@@ -54,6 +54,7 @@ Returns the bounds subject to the shape constraints.
   estimation}
   \item{call}{The function that has been called.}
   \item{norm}{Norm used in the optimization problem.}
+  \item{solver}{Name of the solver used.}
 }
 \description{
 This function computes the bound of the linear program

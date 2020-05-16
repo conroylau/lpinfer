@@ -17,6 +17,5 @@ Nothing is returned. This function prints results from
 }
 \description{
 This function uses the summary method on the return list of the
-   function \code{estbounds}. This is a wrapper of the function
-   \code{print.estbounds}.
+   function \code{estbounds}.
 }

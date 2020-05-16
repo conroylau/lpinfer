@@ -33,6 +33,7 @@
 #'   estimation}
 #'   \item{call}{The function that has been called.}
 #'   \item{norm}{Norm used in the optimization problem.}
+#'   \item{solver}{Name of the solver used.}
 #'
 #' @export
 #'
@@ -133,7 +134,8 @@ estbounds <- function(data, lpmodel, kappa = 1e-5, norm = 2, solver = NULL,
                 lb = lb,
                 est = est,
                 call = call,
-                norm = norm)
+                norm = norm,
+                solver = solver.name)
 
   attr(output, "class") = "estbounds"
 
@@ -464,31 +466,21 @@ estbounds.check <- function(data, lpmodel, kappa, norm, solver, estimate,
 #' @export
 #'
 print.estbounds <- function(x, ...){
-  cat("Call:\n")
-  dput(x$call)
-  cat("\n")
-
+  # Print the estimated bounds, norm used and the solver used
   if (x$est == TRUE){
     # Case 1: Report the estimated bounds
-    if (is.numeric(x$norm) == TRUE){
-      cat(sprintf("Norm used in optimization problem: L%s-norm \n", x$norm))
-    } else {
-      cat(sprintf("Norm used in optimization problem: %s-norm \n", x$norm))
-    }
-    cat(sprintf("Estimated bounds subject to shape constraints: [%s, %s] \n",
+    cat(sprintf("Estimated bounds: [%s, %s] \n",
                 round(x$lb, digits = 5), round(x$ub, digits = 5)))
   } else {
     # Case 2: Report the true bounds
-    cat(sprintf("True bounds subject to shape constraints: [%s, %s] \n",
-                x$lb, x$ub))
+    cat(sprintf("True bounds: [%s, %s] \n", x$lb, x$ub))
   }
 }
 
 #' Summary of results from \code{estbounds}
 #'
 #' @description This function uses the summary method on the return list of the
-#'    function \code{estbounds}. This is a wrapper of the function
-#'    \code{print.estbounds}.
+#'    function \code{estbounds}.
 #'
 #' @param x Object returned from \code{estbounds}.
 #' @param ... Additional arguments.
@@ -499,8 +491,17 @@ print.estbounds <- function(x, ...){
 #' @export
 #'
 summary.estbounds <- function(x, ...){
-  #### Call theprint function
-  print(x)
+  # Print the estimated bounds, norm used and the solver used
+  if (x$est == TRUE){
+    # Case 1: Report the estimated bounds
+    cat(sprintf("Estimated bounds: [%s, %s] \n",
+                round(x$lb, digits = 5), round(x$ub, digits = 5)))
+    cat(sprintf("Norm used: %s \n", x$norm))
+  } else {
+    # Case 2: Report the true bounds
+    cat(sprintf("True bounds: [%s, %s] \n", x$lb, x$ub))
+  }
+  cat(sprintf("Solver: %s \n", x$solver))
 }
 
 #' First-stage of the estimation procedure for \code{estbounds}
@@ -723,17 +724,14 @@ mincriterion.check <- function(data, lpmodel, norm, solver){
 #' @export
 #'
 print.mincriterion <- function(x, ...){
+  # Print the minimum value
   cat(sprintf("Minimum value: %s \n", round(x$objval)))
-  cat(sprintf("Norm: %s \n", x$norm))
-  cat(sprintf("Solver: %s \n", x$solver))
-
 }
 
 #' Summary of results from \code{mincriterion}
 #'
 #' @description This function uses the summary method on the return list of the
-#'    function \code{mincriterion}. This is a wrapper of the function
-#'    \code{print.mincriterion}.
+#'    function \code{mincriterion}.
 #'
 #' @param x Object returned from \code{mincriterion}.
 #' @param ... Additional arguments.
@@ -744,6 +742,8 @@ print.mincriterion <- function(x, ...){
 #' @export
 #'
 summary.mincriterion <- function(x, ...){
-  #### Call theprint function
-  print(x)
+  # Print the minimum value, normed used and solver
+  cat(sprintf("Minimum value: %s \n", round(x$objval)))
+  cat(sprintf("Norm used: %s \n", x$norm))
+  cat(sprintf("Solver: %s \n", x$solver))
 }
