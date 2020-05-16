@@ -16,6 +16,7 @@ Imports:
     doMC,
     e1071,
     parallel,
+    doParallel,
     ddpcr,
     Matrix,
     doSNOW,
