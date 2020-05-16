@@ -777,7 +777,11 @@ check.matrix <- function(mat, mat.name, mat.cat, inside.list){
   if (class(mat) == "data.frame" | class(mat) == "matrix" |
       class(mat) == "numeric"){
     if (is.null(dim(mat))) {
-      mat.update <- matrix(mat, nrow = 1)
+      if (mat.name %in% c("A.obs", "A.shp", "A.tgt")) {
+        mat.update <- matrix(mat, nrow = 1)
+      } else if (mat.name %in% c("beta.obs", "beta.shp")) {
+        mat.update <- matrix(mat, ncol = 1)
+      }
     } else {
       mat.update <- as.matrix(mat) 
     }

@@ -26,10 +26,11 @@ lpmodel.eval <- function(data, obj, i){
     obj.eval <- obj(data)
   } else if (class(obj) == "list"){
     obj.eval <- obj[[i]]
+  } else if (!is.matrix(obj) & !is.data.frame(obj)) {
+    obj.eval <- matrix(obj, nrow = 1)
+  } else if (class(obj) == "data.frame") {
+    obj.eval <- as.matrix(obj)
   } else {
-    if (!is.matrix(obj)) {
-      obj <- matrix(obj, nrow = 1)
-    }
     obj.eval <- obj
   }
 
@@ -128,6 +129,12 @@ lpmodel.beta.eval <- function(data, obj, i){
   } else if (class(obj) == "numeric"){
     beta.obs.hat <- obj
     omega.hat <- NULL
+  }
+  
+  if (class(beta.obs.hat) == "data.frame") {
+    beta.obs.hat <- as.matrix(beta.obs.hat)
+  } else if (class(beta.obs.hat) == "numeric") {
+    beta.obs.hat <- matrix(beta.obs.hat, ncol = 1)
   }
 
   return(list(beta.obs = beta.obs.hat,
