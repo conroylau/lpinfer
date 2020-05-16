@@ -378,11 +378,10 @@ objective.function <- function(A, b, n, weight = NULL){
     }
 
     # Quadratic program coefficients
+    A <- as.matrix(A)
     obj2 <- as.matrix(t(A) %*% weight %*% A * n)
-    # colnames(obj2) <- NULL
     rownames(obj2) <- 1:nrow(obj2)
     colnames(obj2) <- 1:ncol(obj2)
-    # obj1 <- -2 * t(A) %*% weight %*% b * n
     obj1 <- -2 * as.matrix(t(b) %*% weight %*% A * n)
     obj0 <- t(b) %*% weight %*% b * n
   }
