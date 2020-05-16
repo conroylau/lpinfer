@@ -1259,7 +1259,11 @@ fsst.cone.bs <- function(n, omega.i, beta.n, beta.star, lpmodel, R, lambda,
          if (progress == TRUE) {
             utils::setTxtProgressBar(pb, R*.65 + R*lambda.bar.i0 +
                                         i*.35/length.lambda)
-            cat("\r\r")
+            if ((i == R) & (length.lambda == lambda.i)) {
+               cat("\r\b")
+            } else {
+               cat("\r\r")
+            }
          }
       }
    } else {
