@@ -299,7 +299,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda = .5,
    # Step 8: Close the progress bar
    # ---------------- #
    if (progress == TRUE){
-      cat("\n\b                                                ")
+      cat("\n\b                                                \n")
    }
 
    # ---------------- #
@@ -401,6 +401,8 @@ sigma.est <- function(n, data, beta.obs.hat, lpmodel, R){
 #'   for some suitable estimators \eqn{\widehat{\bm{\beta}}} and the
 #'   corresponding bootstrap estimators
 #'   \eqn{\{\widehat{\bm{\beta}}_b\}^B_{b=1}}.
+#'   
+#' @import doParallel doRNG
 #'
 #' @inheritParams fsst
 #' @param beta.obs.hat Estimator of \eqn{\widehat{\bm{\beta}_{\mathrm{obs}, n}}}
@@ -429,6 +431,7 @@ sigma.est.parallel <- function(data, beta.obs.hat, lpmodel, R, cores, progress){
    } else if (class(lpmodel$beta.obs) == "list"){
       beta.obs.nr <- lpmodel$beta.obs[[1]]
    }
+   n <- nrow(data)
 
    # ---------------- #
    # Step 2: Initialize progress bar, comb function and assign doRNG
@@ -466,36 +469,55 @@ sigma.est.parallel <- function(data, beta.obs.hat, lpmodel, R, cores, progress){
    `%dorng%` <- doRNG::`%dorng%`
 
    # ---------------- #
-   # Step 3: Bootstrap procedure
+   # Step 3: Compute bootstrap estimators
    # ---------------- #
-   listans <- foreach(i = 1:R,
+   # Initialize the bootstrap list here
+   beta.bs.list <- list()
+
+   # Compute the bootstrap estimators
+   for (i in 1:R) {
+      if (class(lpmodel$beta.obs) == "function") {
+         # Re-sample the data
+         data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
+         rownames(data.bs) <- 1:nrow(data.bs)
+
+         beta.obs.return <- lpmodel.beta.eval(data.bs, lpmodel$beta.obs, 1)
+         beta.bs.list[[i]] <- beta.obs.return[[1]]
+      } else if (class(lpmodel$beta.obs) == "list") {
+         beta.bs.list[[i]] <- lpmodel.beta.eval(data, lpmodel$beta.obs,
+                                                i + 1)[[1]]
+      }
+   }
+
+   # ---------------- #
+   # Step 4: Compute the variance
+   # ---------------- #
+   listans <- foreach::foreach(i = 1:R,
                       .multicombine = TRUE,
                       .combine = "comb",
                       .options.snow = opts,
-                      .packages = "lpinfer") %dorng% {
-
-       # Re-sample the data
-       data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
-       rownames(data.bs) <- 1:nrow(data.bs)
+                      .packages = c("lpinfer", "doRNG")) %dorng% {
 
        # Compute the bootstrap test statistic
-       beta.obs.bs <- lpmodel$beta.obs(data.bs)
-       beta.product <- (beta.obs.bs - beta.obs.hat)
-       sigma.mat <- (beta.product) %*% t(beta.product)
+       beta.product <- beta.bs.list[[i]] - beta.obs.hat
+       listans <- (beta.product) %*% t(beta.product)
 
-       list(sigma.mat)
+       list(x = listans)
     }
 
    # ---------------- #
-   # Step 4: Retrieve information from the output
+   # Step 5: Retrieve information from the output
    # ---------------- #
-   sigma.hat <- Reduce('+', listans[[1]])*n/R
+   p <- length(beta.bs.list[[1]])
+   sigma.hat1 <- matrix(unlist(listans[[1]][1:(p^2)]), nrow = p, byrow = TRUE)
+   sigma.hat2 <- Reduce('+', listans[[1]][(p^2+1):(R+p^2-1)])
+   sigma.hat <- (sigma.hat1 + sigma.hat2)*n/R
 
    # ---------------- #
-   # Step 5: Return results
+   # Step 6: Return results
    # ---------------- #
    return(list(sigma.hat = sigma.hat,
-               beta.obs.bs = beta.obs.bs))
+               beta.obs.bs = beta.bs.list))
 }
 
 #' Construct the full beta vector
@@ -571,6 +593,8 @@ sigma.summation <- function(n, beta.bs.list){
 #'     \widehat{\bm{\beta}}\right)  \left(\widehat{\bm{\beta}}_b -
 #'     \widehat{\bm{\beta}}\right)'.}
 #'
+#' @import doParallel doRNG
+#'
 #' @inheritParams fsst
 #' @param beta.bs.list List of bootstrap estimators
 #'    \eqn{\{\widehat{\bm{\beta}}_b\}^B_{b=1}}.
@@ -604,13 +628,17 @@ sigma.summation.parallel <- function(n, beta.bs.list, cores, progress,
 
       # Set the counter and progress bar
       if (ind.times == 1){
-         pb <- utils::txtProgressBar(max = R, initial = 0, style = 3,
-                                     width = 20)
-         initial.bar <- 0
-      } else if (ind.times == 2){
-         pb <- utils::txtProgressBar(max = R, initial = R/10, style = 3,
-                                     width = 20)
          initial.bar <- R/10
+         pb <- utils::txtProgressBar(max = R,
+                                     initial = initial.bar,
+                                     style = 3,
+                                     width = 20)
+      } else if (ind.times == 2){
+         initial.bar <- 2*R/10
+         pb <- utils::txtProgressBar(max = R,
+                                     initial = initial.bar,
+                                     style = 3,
+                                     width = 20)
       }
       cat("\r")
       progress <- function(n){
@@ -1036,6 +1064,8 @@ beta.r.compute <- function(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
 #' @description This function computes the bootstrap components of the
 #'   `Range` test statistics.
 #'
+#' @import doParallel doRNG
+#'
 #' @inheritParams fsst
 #' @inheritParams fsst.range.lp
 #'
@@ -1073,11 +1103,11 @@ fsst.range.bs <- function(n, omega.e, beta.n, beta.star, R, beta.n.bs,
          doSNOW::registerDoSNOW(cl)
 
          # Set the counter and progress bar
-         pb <- utils::txtProgressBar(max = R, initial = R/5, style = 3,
+         pb <- utils::txtProgressBar(max = R, initial = 3*R/10, style = 3,
                                      width = 20)
          cat("\r")
          progress <- function(n){
-            utils::setTxtProgressBar(pb, (4*n)/10+R/5)
+            utils::setTxtProgressBar(pb, (3.5*n)/10 + 3*R/10)
             if (n < R){
                cat("\r\r")
             } else {
@@ -1124,6 +1154,8 @@ fsst.range.bs <- function(n, omega.e, beta.n, beta.star, R, beta.n.bs,
 #' @description This function computes the bootstrap components of the
 #'   `Cone` test statistics.
 #'
+#' @import doParallel doRNG
+#'
 #' @inheritParams fsst
 #' @inheritParams fsst.cone.lp
 #' @param length.lambda The length of the `\code{lambda}` vector.
@@ -1167,15 +1199,15 @@ fsst.cone.bs <- function(n, omega.i, beta.n, beta.star, lpmodel, R, lambda,
          doSNOW::registerDoSNOW(cl)
 
          # Set the counter and progress bar
-         lambda.bar.i0 <- .4*(lambda.i-1)/length.lambda
+         lambda.bar.i0 <- .35*(lambda.i-1)/length.lambda
          pb <- utils::txtProgressBar(max = R,
-                                     initial = R*.6 + R*lambda.bar.i0,
+                                     initial = R*.65 + R*lambda.bar.i0,
                                      style = 3,
                                      width = 20)
          cat("\r")
          progress <- function(n){
-            utils::setTxtProgressBar(pb, R*.6 + R*lambda.bar.i0 +
-                                        n*.4/length.lambda)
+            utils::setTxtProgressBar(pb, R*.65 + R*lambda.bar.i0 +
+                                        n*.35/length.lambda)
             if (n < R){
                cat("\r\r")
             } else if ((n == R) & (length.lambda == lambda.i)){
