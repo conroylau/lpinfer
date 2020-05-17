@@ -5,7 +5,7 @@
 ##  This is an example code for applying the R module invertci on the missing
 ##  data problem using the sample data by Torgovitsky (2019). This file
 ##  illustrates how the module can be used to obtain the confidence interval
-##  for the cone-tightening procedure problem.
+##  for the subsampling procedure problem.
 ##
 ## ========================================================================= ##
 
@@ -47,7 +47,14 @@ tau <- sqrt(log(N)/N)
 # ---------------- #
 # Part 3: Define functions to compute beta_obs_hat
 # ---------------- #
-# Full information approach
+### Full information approach
+# Function for Omega_hat
+var_full_info <- function(data){
+  len <- length(unique(data[,"Y"]))
+  return(diag(len))
+}
+
+# Function for beta_hat
 func_full_info <- function(data){
   # Initialize beta
   beta <- NULL
@@ -61,20 +68,33 @@ func_full_info <- function(data){
     beta_i <- sum((data[,"Y"] == y_list[i]) * (data[,"D"] == 1))/n
     beta <- c(beta,c(beta_i))
   }
-  beta = as.matrix(beta)
-  return(beta)
+  beta <- as.matrix(beta)
+  # Variance
+  var <- var_full_info(data)
+  return(list(beta = beta,
+              var = var))
 }
-# Two moments approach
+
+### Two moments approach
+# Function for Omega_hat
+var_two_moment <- function(data){
+  return(diag(2))
+}
+
+# Function for beta_hat
 func_two_moment <- function(data){
   # Initialize beta
   beta <- matrix(c(0,0), nrow = 2)
   # Count total number of rows of data and y_list
-  n = dim(data)[1]
+  n <- dim(data)[1]
   # Moment 1 E[YD]
   beta[1] <- sum(data[,"Y"] * data[,"D"])/n
   # Moment 2 E[D]
   beta[2] <- sum(data[,"D"])/n
-  return(beta)
+  # Variance
+  var <- var_two_moment(data)
+  return(list(beta = beta,
+              var = var))
 }
 
 # ---------------- #
@@ -85,31 +105,42 @@ A_obs_twom <- matrix(c(rep(0,J1), yp, rep(0,J1), rep(1, J1)), nrow = 2,
                     byrow = TRUE)
 
 # ---------------- #
-# Part 5: Run the dkqs module to compute p-values
+# Part 5: Introduce shape constraints
 # ---------------- #
-# Define the value of beta_tgt and significant figures needed
-beta_tgt <- .365
+A_shp_full <- matrix(rep(1, ncol(A_obs_full)), nrow = 1)
+A_shp_twom <- matrix(rep(1, ncol(A_obs_twom)), nrow = 1)
+beta_shp <- c(1)
 
 # ---------------- #
-# Part 6: Arguments for the dkqs function without beta_tgt
+# Part 6: Arguments for the subsample function without beta.tgt
 # ---------------- #
-# Define the value of full information method
+phi.predefine <- .75
+
+# Define the lpmodels
 lpmodel.full <- lpmodel(A.obs    = A_obs_full,
                         A.tgt    = A_tgt,
-                        beta.obs = func_full_info)
+                        A.shp    = A_shp_full,
+                        beta.obs = func_full_info,
+                        beta.shp = beta_shp)
 
-# Define the argument of the functions
+lpmodel.twom <- lpmodel(A.obs    = A_obs_twom,
+                        A.tgt    = A_tgt,
+                        A.shp    = A_shp_full,
+                        beta.obs = func_two_moment,
+                        beta.shp = beta_shp)
+
+# Define the arguments
 farg <- list(data = data,
              lpmodel = lpmodel.full,
              R = 100,
-             tau = tau,
+             phi = phi.predefine,
              solver = "gurobi",
              cores = 1,
-             progress = TRUE)
+             progress = FALSE)
 
 # Demonstration 1: Construction of confidence interval
 set.seed(1)
-invertci_output <- invertci(f = dkqs,
+invertci_output <- invertci(f = subsample,
                             farg = farg,
                             alpha = 0.05,
                             lb0 = 0,
@@ -117,14 +148,13 @@ invertci_output <- invertci(f = dkqs,
                             ub0 = 1,
                             ub1 = .6,
                             tol = 0.001,
-                            max.iter = 5,
+                            max.iter = 50,
                             df_ci = NULL,
                             progress = TRUE)
 
-# Demonstration 2: Use wrapper function to construct a list of confidence
-# intervals
+# Demonstration 2: Construct a list of multiple confidence intervals
 set.seed(1)
-invertci_output_many1 <- invertci(f = dkqs,
+invertci_output_many1 <- invertci(f = subsample,
                                   farg = farg,
                                   alpha = c(0.01, 0.05),
                                   lb0 = 0,
