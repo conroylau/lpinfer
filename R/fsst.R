@@ -321,7 +321,8 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda = .5,
                   rhobar.i = rhobar.i,
                   beta.var.method = beta.var.method,
                   omega.e = omega.e,
-                  omega.i = omega.i)
+                  omega.i = omega.i,
+                  beta.obs.bs = beta.obs.bs)
 
    # Assign class
    attr(output, "class") <- "fsst"
@@ -616,7 +617,7 @@ sigma.summation <- function(n, beta.bs.list, progress, ind.times){
       }
 
       # Update progress bar
-      if (progress == TRUE) {
+      if (progress == TRUE & ind.times %in% c(1,2)) {
          utils::setTxtProgressBar(pb, initial.bar + i/10)
          cat("\r\r")
       }
