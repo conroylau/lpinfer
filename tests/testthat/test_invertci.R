@@ -16,7 +16,14 @@ library(doMC)
 # ---------------- #
 # Define functions to match the moments
 # ---------------- #
-# Full information approach
+### Full information approach
+# Function for Omega_hat
+var_full_info <- function(data){
+  len <- length(unique(data[,"Y"]))
+  return(diag(len))
+}
+
+# Function for beta_hat
 func_full_info <- function(data){
   # Initialize beta
   beta <- NULL
@@ -30,13 +37,20 @@ func_full_info <- function(data){
     beta_i <- sum((data[,"Y"] == y_list[i]) * (data[,"D"] == 1))/n
     beta <- c(beta,c(beta_i))
   }
-  beta = as.matrix(beta)
-  return(beta)
+  beta <- as.matrix(beta)
+  # Variance
+  var <- var_full_info(data)
+  return(list(beta = beta,
+              var = var))
 }
 
-# ---------------- #
-# Two moments approach
-# ---------------- #
+### Two moments approach
+# Function for Omega_hat
+var_two_moment <- function(data){
+  return(diag(2))
+}
+
+# Function for beta_hat
 func_two_moment <- function(data){
   # Initialize beta
   beta <- matrix(c(0,0), nrow = 2)
@@ -46,7 +60,10 @@ func_two_moment <- function(data){
   beta[1] <- sum(data[,"Y"] * data[,"D"])/n
   # Moment 2 E[D]
   beta[2] <- sum(data[,"D"])/n
-  return(beta)
+  # Variance
+  var <- var_two_moment(data)
+  return(list(beta = beta,
+              var = var))
 }
 
 # ---------------- #
@@ -68,28 +85,35 @@ tau <- sqrt(log(N)/N)
 A_obs_full <- cbind(matrix(rep(0,J1*J1), nrow = J1), diag(1, J1))
 A_obs_twom <- matrix(c(rep(0,J1), yp, rep(0,J1), rep(1, J1)), nrow = 2,
                      byrow = TRUE)
+# Introduce shape constraints
+A_shp_full <- matrix(rep(1, ncol(A_obs_full)), nrow = 1)
+A_shp_twom <- matrix(rep(1, ncol(A_obs_twom)), nrow = 1)
+beta_shp <- c(1)
+
 
 # ---------------- #
 # Construct arguments for dkqs command for each solver and approach
 # ---------------- #
-# Parameters to test
-beta_tgt <- .375
 
 # Define the value of full information method
 lpmodel.full <- lpmodel(A.obs    = A_obs_full,
                         A.tgt    = A_tgt,
-                        beta.obs = func_full_info)
+                        A.shp    = A_shp_full,
+                        beta.obs = func_full_info,
+                        beta.shp = beta_shp)
 
 # Define the value of full two moments method
 lpmodel.twom <- lpmodel(A.obs    = A_obs_twom,
                         A.tgt    = A_tgt,
-                        beta.obs = func_two_moment)
+                        A.shp    = A_shp_full,
+                        beta.obs = func_two_moment,
+                        beta.shp = beta_shp)
 
 # Define arguments for dkqs
 farg <- list(data = data,
              lpmodel = lpmodel.full,
              R = 100,
-             tau = tau,
+             phi = 0.75,
              solver = "gurobi",
              cores = 1,
              progress = TRUE)
@@ -132,11 +156,11 @@ farg_l_twom <- farg
 # ---------------- #
 # Construct arguments for constructing confidence interval
 # ---------------- #
-invertci_arg <- list(f = dkqs,
+invertci_arg <- list(f = subsample,
                      alpha = 0.05,
-                     lb0 = 0,
+                     lb0 = .2,
                      lb1 = .4,
-                     ub0 = 1,
+                     ub0 = .8,
                      ub1 = .6,
                      tol = 0.001,
                      max.iter = 5,
@@ -188,7 +212,6 @@ dp <- 5
 ci_test <- function(dkqs_return1, dkqs_return2, dp){
   expect_equal(dkqs_return1$up, dkqs_return2$up)
   expect_equal(dkqs_return1$down, dkqs_return2$down)
-  expect_equal(dkqs_return1$df_ci, dkqs_return2$df_ci)
   expect_equal(dkqs_return1$df_down, dkqs_return2$df_down)
   expect_equal(dkqs_return1$df_up, dkqs_return2$df_up)
   expect_equal(dkqs_return1$tol, dkqs_return2$tol)
@@ -214,7 +237,6 @@ test_that("limSolve solver",{
 # Test 2: Test equivalence of results across different optimizers for each
 # approach
 # ---------------- #
-#
 # Full information approach
 test_that("Full information approach - Gurobi vs Rcplex",{
   ci_test(invertci_g_full, invertci_r_full, dp)
@@ -224,6 +246,10 @@ test_that("Full information approach - Rcplex vs limSolve",{
   ci_test(invertci_r_full, invertci_l_full, dp)
 })
 
+# test_that("Full information approach - Rcplex vs limSolve",{
+#   ci_test(invertci_g_full, invertci_l_full, dp)
+# })
+
 # Two moments approach
 test_that("Two moments approach - Gurobi vs Rcplex",{
   ci_test(invertci_g_twom, invertci_r_twom, dp)
@@ -232,3 +258,7 @@ test_that("Two moments approach - Gurobi vs Rcplex",{
 test_that("Two moments approach - Rcplex vs limSolve",{
   ci_test(invertci_r_twom, invertci_l_twom, dp)
 })
+
+# test_that("Two moments approach - Rcplex vs limSolve",{
+#   ci_test(invertci_g_twom, invertci_l_twom, dp)
+# })
