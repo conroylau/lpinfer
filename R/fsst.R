@@ -1515,7 +1515,6 @@ print.fsst <- function(x, ...){
    if (nrow(df.pval) == 1){
       cat(sprintf("p-value: %s\n", df.pval[1,2]))
    } else {
-      cat("p-values:\n")
       cat("     lambda\tp-value\n")
       for (i in 1:nrow(df.pval)){
          cat(sprintf("     %s\t%s\n",
