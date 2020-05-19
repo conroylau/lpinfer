@@ -282,10 +282,9 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, df_ci,
   # Only called when the maximum number of iterations is reached
   iter_msg <- paste(" >>> Reached the maximum number of iterations. ",
                     "Bisection method is completed.\n", sep = "")
-  last_iter_msg <- " >>> Reached maximum number of iterations"
   if (progress == TRUE & i == max.iter){
     cat(iter_msg)
-
+    last_iter_msg <- " >>> Reached maximum number of iterations"
   }
 
   # ---------------- #
