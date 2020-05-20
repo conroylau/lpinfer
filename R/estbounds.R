@@ -743,7 +743,7 @@ print.mincriterion <- function(x, ...){
 #'
 summary.mincriterion <- function(x, ...){
   # Print the minimum value, normed used and solver
-  cat(sprintf("Minimum value: %s \n", round(x$objval)))
+  cat(sprintf("Minimum value: %s \n", round(x$objval, digits = 5)))
   cat(sprintf("Norm used: %s \n", x$norm))
   cat(sprintf("Solver: %s \n", x$solver))
 }
