@@ -149,18 +149,25 @@ invertci_output <- invertci(f = subsample,
                             tol = 0.001,
                             max.iter = 50,
                             df_ci = NULL,
-                            progress = TRUE)
+                            progress = FALSE)
+print(invertci_output)
+summary(invertci_output)
 
 # Demonstration 2: Construct a list of multiple confidence intervals
 set.seed(1)
 invertci_output_many1 <- invertci(f = subsample,
                                   farg = farg,
-                                  alpha = c(0.01, 0.05),
+                                  alpha = c(0.05, 0.1, 0.2),
                                   lb0 = 0,
                                   lb1 = .4,
                                   ub0 = 1,
                                   ub1 = .6,
                                   tol = 0.001,
-                                  max.iter = 50,
+                                  max.iter = 5,
                                   df_ci = NULL,
-                                  progress = TRUE)
+                                  progress = FALSE)
+print(invertci_output_many1)
+summary(invertci_output_many1)
+
+# Print only the list of selected output
+summary(invertci_output_many1, alphas = .05)
