@@ -299,7 +299,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda = .5,
    # Step 8: Close the progress bar
    # ---------------- #
    if (progress == TRUE){
-      cat("\n\b                                                \n")
+      cat("                                                \n\b\r")
    }
 
    # ---------------- #

@@ -197,7 +197,7 @@ dkqs <- function(data, lpmodel, beta.tgt, R = 100, tau = NULL, solver = NULL,
     if ((progress == TRUE) & (i == n.tau)){
       close(T.bs.return$pb)
       # Remove progress bar
-      cat("\r\r                              ")
+      cat("                               \n\b\r")
     }
   }
 

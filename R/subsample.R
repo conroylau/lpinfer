@@ -94,7 +94,7 @@ subsample <- function(data, lpmodel, beta.tgt, R = 100, solver = NULL,
   # ---------------- #
   if (progress == TRUE){
     close(T_subsample$pb)
-    cat("                                            ")
+    cat("                                            \n\b\r")
   }
 
   # ---------------- #
