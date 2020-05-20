@@ -677,9 +677,8 @@ summary.invertci_multiple <- function(x, alphas, ...){
   # ---------------- #
   # Step 1: Print the basic set of results
   # ---------------- #
-  print.invertci_multiple(x)
   cat(sprintf("Maximum number of iterations: %s\n", x$max.iter))
-  cat(sprintf("Tolerance level: %s\n", x$tol))
+  cat(sprintf("Tolerance level: %s", x$tol))
 
   # ---------------- #
   # Step 2: Check if users want to print a specific set of iterations only
@@ -689,9 +688,30 @@ summary.invertci_multiple <- function(x, alphas, ...){
   } else {
     alphas.seq <- which(x$alpha %in% alphas)
   }
-
+  
+  # Display the details
   if (length(alphas.seq) != 0) {
     cat("\n")
+    # Display the confidence intervals
+    n.alpha <- length(alphas.seq)
+    df <- data.frame(matrix(vector(), nrow = n.alpha + 1, ncol = 1))
+    
+    # ---------------- #
+    # Step 2: Print the results
+    # ---------------- #
+    colnames(df) <- NULL
+    rownames(df) <- c("Significance level", round(x$alpha[alphas.seq], 
+                                                  digits = 5))
+    df[1,1] <- "Confidence interval"
+    for (i in 1:n.alpha) {
+      df[i + 1,1] <- sprintf("[%s, %s]",
+                             round(x$lb[[i]], digits = 5),
+                             round(x$ub[[i]], digits = 5))
+    }
+    print(df)
+    cat("\n")
+    
+    # Display the details
     cat("Details:\n\n")
     for (i in alphas.seq) {
       cat(sprintf("<Confidence interval for significance level = %s>\n\n",
