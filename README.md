@@ -48,9 +48,9 @@ Installation and Requirements
 -----------------------------
 
 `lpinfer` can be installed from our GitHub repository via
-
-    devtools::install_github("conroylau/lpinfer")
-
+```r
+devtools::install_github("conroylau/lpinfer")
+```
 To use most of the functions in this `lpinfer` package, one of the
 following packages for solving the linear and quadratic programs is
 required. There are four options for the solver:
@@ -104,10 +104,10 @@ In this package, a sample simulated data set on the missing data problem
 is included. This can be obtained by `sampledata`. This data set
 contains 1,000 observations with 2 columns. The following shows the
 first 10 observations of the simulated data set:
-
-    library(lpinfer)
-    knitr::kable(head(sampledata, n = 10))
-
+```r
+library(lpinfer)
+knitr::kable(head(sampledata, n = 10))
+```
 <table>
 <thead>
 <tr>
@@ -282,44 +282,44 @@ requirements:
 The following is an example on how to construct each of the components
 in the `lpmodel` object and how to assign the `lpmodel` object based on
 the example data mentioned [here](#data):
+```r
+# Extract relevant information from data
+N <- nrow(sampledata)
+J <- length(unique(sampledata[,"Y"])) - 1
+J1 <- J + 1
 
-    # Extract relevant information from data
-    N <- nrow(sampledata)
-    J <- length(unique(sampledata[,"Y"])) - 1
-    J1 <- J + 1
+# Construct A.obs
+Aobs.full <- cbind(matrix(rep(0, J1 * J1), nrow = J1), diag(1, J1))
 
-    # Construct A.obs
-    Aobs.full <- cbind(matrix(rep(0, J1 * J1), nrow = J1), diag(1, J1))
+# Construct A.tgt
+yp <- seq(0, 1, 1/J)
+Atgt <- matrix(c(yp, yp), nrow = 1)
 
-    # Construct A.tgt
-    yp <- seq(0, 1, 1/J)
-    Atgt <- matrix(c(yp, yp), nrow = 1)
+# Construct A.shp
+Ashp <- matrix(rep(1, ncol(Aobs.full)), nrow = 1)
 
-    # Construct A.shp
-    Ashp <- matrix(rep(1, ncol(Aobs.full)), nrow = 1)
+# Construct beta.obs (a function)
+betaobs.fullinfo <- function(data){
+  beta <- NULL
+  y.list <- sort(unique(data[,"Y"]))
+  n <- dim(data)[1]
+  yn <- length(y.list)
+  for (i in 1:yn) {
+    beta.i <- sum((data[,"Y"] == y.list[i]) * (data[,"D"] == 1))/n
+    beta <- c(beta, c(beta.i))
+  }
+  beta <- as.matrix(beta)
+  return(list(beta = beta,
+              var = diag(yn)))
+}
 
-    # Construct beta.obs (a function)
-    betaobs.fullinfo <- function(data){
-      beta <- NULL
-      y.list <- sort(unique(data[,"Y"]))
-      n <- dim(data)[1]
-      yn <- length(y.list)
-      for (i in 1:yn) {
-        beta.i <- sum((data[,"Y"] == y.list[i]) * (data[,"D"] == 1))/n
-        beta <- c(beta, c(beta.i))
-      }
-      beta <- as.matrix(beta)
-      return(list(beta = beta,
-                  var = diag(yn)))
-    }
-
-    # Define the lpmodel object
-    lpm.full <- lpmodel(A.obs    = Aobs.full,
-                        A.tgt    = Atgt,
-                        A.shp    = Ashp,
-                        beta.obs = betaobs.fullinfo,
-                        beta.shp = c(1))
-
+# Define the lpmodel object
+lpm.full <- lpmodel(A.obs    = Aobs.full,
+                    A.tgt    = Atgt,
+                    A.shp    = Ashp,
+                    beta.obs = betaobs.fullinfo,
+                    beta.shp = c(1))
+```
 In the above, the `betaobs.fullinfo` function returns two information:
 `beta` is a vector of length that is equal to the number of distinct
 observations for *Y* where element *i* of the vector refers to the
@@ -341,16 +341,16 @@ appendix of Deb et al. (2018).
 #### Syntax
 
 The `dkqs` command has the following syntax:
-
-    dkqs(data = sampledata,
-         lpmodel = lpm.full,
-         beta.tgt = .375,
-         R = 100,
-         tau = sqrt(log(N)/N),
-         solver = "gurobi",
-         cores = 1,
-         progress = FALSE)
-
+```r
+dkqs(data = sampledata,
+     lpmodel = lpm.full,
+     beta.tgt = .375,
+     R = 100,
+     tau = sqrt(log(N)/N),
+     solver = "gurobi",
+     cores = 1,
+     progress = FALSE)
+```
 where
 
 -   `data` refers to the data set.
@@ -435,54 +435,54 @@ called either “Y” or “y”.
 #### Example
 
 The following is what happens when the above code is run:
-
-    set.seed(1)
-    dkqs.full1 <- dkqs(data = sampledata,
-                       lpmodel = lpm.full,
-                       beta.tgt = .375,
-                       R = 100,
-                       tau = sqrt(log(N)/N),
-                       solver = "gurobi",
-                       cores = 1,
-                       progress = FALSE)
-    print(dkqs.full1)
-    #> p-value: 0.18
-
+```r
+set.seed(1)
+dkqs.full1 <- dkqs(data = sampledata,
+                   lpmodel = lpm.full,
+                   beta.tgt = .375,
+                   R = 100,
+                   tau = sqrt(log(N)/N),
+                   solver = "gurobi",
+                   cores = 1,
+                   progress = FALSE)
+print(dkqs.full1)
+#> p-value: 0.18
+```
 As noted in the syntax section, we provide the flexibility for users to
 conduct inference with multiple tuning parameters at the same time. The
 following is an example when the user specifies multiple taus in the
 `dkqs` procedure:
-
-    set.seed(1)
-    dkqs.full2 <- dkqs(data = sampledata,
-                       lpmodel = lpm.full,
-                       beta.tgt = .375,
-                       R = 100,
-                       tau = c(.1, .2, .3, .5),
-                       solver = "gurobi",
-                       cores = 1,
-                       progress = FALSE)
-    print(dkqs.full2)
-    #>  tau p-value
-    #>  0.1    0.19
-    #>  0.2    0.23
-    #>  0.3    0.26
-    #>  0.5    0.27
-
+```r
+set.seed(1)
+dkqs.full2 <- dkqs(data = sampledata,
+                   lpmodel = lpm.full,
+                   beta.tgt = .375,
+                   R = 100,
+                   tau = c(.1, .2, .3, .5),
+                   solver = "gurobi",
+                   cores = 1,
+                   progress = FALSE)
+print(dkqs.full2)
+#>  tau p-value
+#>  0.1    0.19
+#>  0.2    0.23
+#>  0.3    0.26
+#>  0.5    0.27
+```
 Users can get a more detailed summary of the results when applying the
 `summary` command on the resulting object:
-
-    summary(dkqs.full2)
-    #>  tau p-value
-    #>  0.1    0.19
-    #>  0.2    0.23
-    #>  0.3    0.26
-    #>  0.5    0.27
-    #>  Maximum feasible tau: 0.76923
-    #>  Test statistic: 0.01746
-    #>  Solver used: gurobi
-    #>  Number of cores used: 1
-
+```r
+summary(dkqs.full2)
+#>  tau p-value
+#>  0.1    0.19
+#>  0.2    0.23
+#>  0.3    0.26
+#>  0.5    0.27
+#>  Maximum feasible tau: 0.76923
+#>  Test statistic: 0.01746
+#>  Solver used: gurobi
+#>  Number of cores used: 1
+```
 #### Alternative approach
 
 The approach that has been demonstrated so far is known as the full
@@ -497,43 +497,43 @@ procedure.
 Similar to what has been demonstrated in the [example](#eg_fullinfo)
 earlier, some of the components has to be updated in the `lpmodel`
 object. This can be done as follows:
+```r
+# Construct A.obs
+Aobs.twom <- matrix(c(rep(0,J1), yp, rep(0,J1), rep(1, J1)), nrow = 2,
+                     byrow = TRUE)
 
-    # Construct A.obs
-    Aobs.twom <- matrix(c(rep(0,J1), yp, rep(0,J1), rep(1, J1)), nrow = 2,
-                         byrow = TRUE)
+# Construct beta.obs (a function)
+betaobs.twom <- function(data){
+  beta <- matrix(c(0,0), nrow = 2)
+  n <- dim(data)[1]
+  beta[1] <- sum(data[,"Y"] * data[,"D"])/n
+  beta[2] <- sum(data[,"D"])/n
+  return(list(beta = beta,
+              var = diag(2)))
+}
 
-    # Construct beta.obs (a function)
-    betaobs.twom <- function(data){
-      beta <- matrix(c(0,0), nrow = 2)
-      n <- dim(data)[1]
-      beta[1] <- sum(data[,"Y"] * data[,"D"])/n
-      beta[2] <- sum(data[,"D"])/n
-      return(list(beta = beta,
-                  var = diag(2)))
-    }
-
-    # Define the lpmodel object
-    lpm.twom <- lpmodel(A.obs    = Aobs.twom,
-                        A.tgt    = Atgt,
-                        A.shp    = Ashp,
-                        beta.obs = betaobs.twom,
-                        beta.shp = c(1))
-
+# Define the lpmodel object
+lpm.twom <- lpmodel(A.obs    = Aobs.twom,
+                    A.tgt    = Atgt,
+                    A.shp    = Ashp,
+                    beta.obs = betaobs.twom,
+                    beta.shp = c(1))
+```
 The `dkqs` procedure can be ran in the same fashion as before. The
 following is an example on how this can be ran:
-
-    set.seed(1)
-    dkqs.full3 <- dkqs(data = sampledata,
-                       lpmodel = lpm.twom,
-                       beta.tgt = .375,
-                       R = 100,
-                       tau =  sqrt(log(N)/N),
-                       solver = "gurobi",
-                       cores = 1,
-                       progress = FALSE)
-    print(dkqs.full3)
-    #> p-value: 0.18
-
+```r
+set.seed(1)
+dkqs.full3 <- dkqs(data = sampledata,
+                   lpmodel = lpm.twom,
+                   beta.tgt = .375,
+                   R = 100,
+                   tau =  sqrt(log(N)/N),
+                   solver = "gurobi",
+                   cores = 1,
+                   progress = FALSE)
+print(dkqs.full3)
+#> p-value: 0.18
+```
 As shown above, we get the same *p*-value as before.
 
 ### Test 2: Subsampling procedure
@@ -544,18 +544,18 @@ subsampling procedure.
 #### Syntax
 
 The `subsample` command has the following syntax:
-
-    subsample(data = sampledata, 
-              lpmodel = lpm.twom,
-              beta.tgt = 0.375,
-              R = 100,
-              solver = "gurobi",
-              cores = 1,
-              norm = 2,
-              phi = 2/3,
-              alpha = 0.05,
-              progress = FALSE)
-
+```r
+subsample(data = sampledata, 
+          lpmodel = lpm.twom,
+          beta.tgt = 0.375,
+          R = 100,
+          solver = "gurobi",
+          cores = 1,
+          norm = 2,
+          phi = 2/3,
+          alpha = 0.05,
+          progress = FALSE)
+```
 where
 
 -   `phi` refers to the parameter that controls the size of each
@@ -610,33 +610,33 @@ be deterministic or stochastic:
 #### Example
 
 The following is what happens when the above code is run:
-
-    set.seed(1)
-    subsample.full <- subsample(data = sampledata, 
-                                lpmodel = lpm.full,
-                                beta.tgt = 0.375,
-                                R = 100,
-                                solver = "gurobi",
-                                cores = 1,
-                                norm = 2,
-                                phi = 2/3,
-                                alpha = 0.05,
-                                progress = FALSE)
-    print(subsample.full)
-    #> p-value: 0.35
-
+```r
+set.seed(1)
+subsample.full <- subsample(data = sampledata, 
+                            lpmodel = lpm.full,
+                            beta.tgt = 0.375,
+                            R = 100,
+                            solver = "gurobi",
+                            cores = 1,
+                            norm = 2,
+                            phi = 2/3,
+                            alpha = 0.05,
+                            progress = FALSE)
+print(subsample.full)
+#> p-value: 0.35
+```
 Again, more detailed information can be extracted via the `summary`
 command:
-
-    summary(subsample.full)
-    #> p-value: 0.35
-    #> Test statistic: 0.00055
-    #> Solver used: gurobi
-    #> Norm used: 2
-    #> Phi used: 0.66667
-    #> Size of each subsample: 99
-    #> Number of cores used: 1
-
+```r
+summary(subsample.full)
+#> p-value: 0.35
+#> Test statistic: 0.00055
+#> Solver used: gurobi
+#> Norm used: 2
+#> Phi used: 0.66667
+#> Size of each subsample: 99
+#> Number of cores used: 1
+```
 ### Test 3: FSST procedure
 
 The `fsst` function in this `lpinfer` package is used to conduct the
@@ -645,19 +645,19 @@ testing procedure by Fang et al. (2020).
 #### Syntax
 
 The `fsst` command has the following syntax:
-
-    fsst(data = sampledata, 
-         lpmodel = lpm.full,
-         beta.tgt = 0.375,
-         R = 100,
-         lambda = 0.5,
-         rho = 1e-4,
-         n = nrow(sampledata),
-         weight.matrix = "diag",
-         solver = "gurobi",
-         cores = 1,
-         progress = FALSE)
-
+```r
+fsst(data = sampledata, 
+     lpmodel = lpm.full,
+     beta.tgt = 0.375,
+     R = 100,
+     lambda = 0.5,
+     rho = 1e-4,
+     n = nrow(sampledata),
+     weight.matrix = "diag",
+     solver = "gurobi",
+     cores = 1,
+     progress = FALSE)
+```
 where
 
 -   `lambda` refers to the tuning parameter that affects test statistics
@@ -741,78 +741,78 @@ be deterministic or stochastic:
 #### Example
 
 The following is what happens when the above code is run:
-
-    set.seed(1)
-    fsst.full1 <- fsst(data = sampledata, 
-                       lpmodel = lpm.full,
-                       beta.tgt = 0.375,
-                       R = 100,
-                       lambda = 0.5,
-                       rho = 1e-4,
-                       n = nrow(sampledata),
-                       weight.matrix = "diag",
-                       solver = "gurobi",
-                       cores = 1,
-                       progress = FALSE)
-    print(fsst.full1)
-    #> p-value: 0.2
-
+```r
+set.seed(1)
+fsst.full1 <- fsst(data = sampledata, 
+                   lpmodel = lpm.full,
+                   beta.tgt = 0.375,
+                   R = 100,
+                   lambda = 0.5,
+                   rho = 1e-4,
+                   n = nrow(sampledata),
+                   weight.matrix = "diag",
+                   solver = "gurobi",
+                   cores = 1,
+                   progress = FALSE)
+print(fsst.full1)
+#> p-value: 0.2
+```
 As noted above, the `fsst` procedure provides the flexibility for users
 to pass multiple tuning parameters.
-
-    set.seed(1)
-    fsst.full2 <- fsst(data = sampledata, 
-                       lpmodel = lpm.full,
-                       beta.tgt = 0.375,
-                       R = 100,
-                       lambda = c(0.1, 0.2, 0.5),
-                       rho = 1e-4,
-                       n = nrow(sampledata),
-                       weight.matrix = "diag",
-                       solver = "gurobi",
-                       cores = 1,
-                       progress = FALSE)
-    print(fsst.full2)
-    #>      lambda  p-value
-    #>      0.1 0.95
-    #>      0.2 0.51
-    #>      0.5 0.2
-
+```r
+set.seed(1)
+fsst.full2 <- fsst(data = sampledata, 
+                   lpmodel = lpm.full,
+                   beta.tgt = 0.375,
+                   R = 100,
+                   lambda = c(0.1, 0.2, 0.5),
+                   rho = 1e-4,
+                   n = nrow(sampledata),
+                   weight.matrix = "diag",
+                   solver = "gurobi",
+                   cores = 1,
+                   progress = FALSE)
+print(fsst.full2)
+#>      lambda  p-value
+#>      0.1 0.95
+#>      0.2 0.51
+#>      0.5 0.2
+```
 Again, more detailed information can be extracted via the `summary`
 command:
-
-    summary(fsst.full2)
-    #> 
-    #> Sample and quantiles of bootstrap test statistics: 
-    #>                               lambda       0.1     0.2     0.5
-    #>     Test statistic            Sample   0.04698 0.04698 0.04698
-    #>                     Bootstrap 99% CV   0.45051 0.23704 0.15356
-    #>                     Bootstrap 95% CV   0.38727  0.1991 0.10772
-    #>                     Bootstrap 90% CV   0.35249 0.14219 0.08365
-    #>               Cone            Sample   0.04698 0.04698 0.04698
-    #>                     Bootstrap 99% CV   0.45051 0.23704 0.15356
-    #>                     Bootstrap 95% CV   0.38727  0.1991 0.10772
-    #>                     Bootstrap 90% CV   0.35249 0.14219 0.08365
-    #>              Range            Sample   0.00000                
-    #>                     Bootstrap 99% CV   0.00000                
-    #>                     Bootstrap 95% CV   0.00000                
-    #>                     Bootstrap 90% CV   0.00000                
-    #> 
-    #> p-values:
-    #>      lambda      0.1  0.2 0.5
-    #>      p-value    0.95 0.51 0.2
-    #> 
-    #> Solver used: gurobi
-    #> 
-    #> Number of cores used: 1
-    #> 
-    #> Regularization parameters: 
-    #>    - Input value of rho: 1e-04
-    #>    - Regularization parameter for the Range studentization matrix: NA
-    #>    - Regularization parameter for the Cone studentization matrix: 0.00033
-    #> 
-    #> The asymptotic variance of the observed component of the beta vector is approximated from the function.
-
+```r
+summary(fsst.full2)
+#> 
+#> Sample and quantiles of bootstrap test statistics: 
+#>                               lambda       0.1     0.2     0.5
+#>     Test statistic            Sample   0.04698 0.04698 0.04698
+#>                     Bootstrap 99% CV   0.45051 0.23704 0.15356
+#>                     Bootstrap 95% CV   0.38727  0.1991 0.10772
+#>                     Bootstrap 90% CV   0.35249 0.14219 0.08365
+#>               Cone            Sample   0.04698 0.04698 0.04698
+#>                     Bootstrap 99% CV   0.45051 0.23704 0.15356
+#>                     Bootstrap 95% CV   0.38727  0.1991 0.10772
+#>                     Bootstrap 90% CV   0.35249 0.14219 0.08365
+#>              Range            Sample   0.00000                
+#>                     Bootstrap 99% CV   0.00000                
+#>                     Bootstrap 95% CV   0.00000                
+#>                     Bootstrap 90% CV   0.00000                
+#> 
+#> p-values:
+#>      lambda      0.1  0.2 0.5
+#>      p-value    0.95 0.51 0.2
+#> 
+#> Solver used: gurobi
+#> 
+#> Number of cores used: 1
+#> 
+#> Regularization parameters: 
+#>    - Input value of rho: 1e-04
+#>    - Regularization parameter for the Range studentization matrix: NA
+#>    - Regularization parameter for the Cone studentization matrix: 0.00033
+#> 
+#> The asymptotic variance of the observed component of the beta vector is approximated from the function.
+```
 Constructing Bounds subject to Shape Constraints
 ------------------------------------------------
 
@@ -824,15 +824,15 @@ Hence, an `estimate` option is available. The estimation can be
 conducted via L1-norm or L2-norm.
 
 #### Syntax
-
-    estbounds(data = sampledata,
-              lpmodel = lpm.full,
-              kappa = 1e-5,
-              norm = 2,
-              solver = "gurobi",
-              estimate = FALSE,
-              progress = FALSE)
-
+```r
+estbounds(data = sampledata,
+          lpmodel = lpm.full,
+          kappa = 1e-5,
+          norm = 2,
+          solver = "gurobi",
+          estimate = FALSE,
+          progress = FALSE)
+```
 where
 
 -   `norm` refers to the norm used in the optimization problem. The
@@ -862,26 +862,26 @@ can choose one of the following packages as the solver:
 #### Example
 
 The following is what happens when the above code is run:
-
-    set.seed(1)
-    estbounds.full <- estbounds(data = sampledata,
-                                lpmodel = lpm.full,
-                                kappa = 1e-5,
-                                norm = 2,
-                                solver = "gurobi",
-                                estimate = TRUE,
-                                progress = FALSE)
-    print(estbounds.full)
-    #> Estimated bounds: [0.38316, 0.63344]
-
+```r
+set.seed(1)
+estbounds.full <- estbounds(data = sampledata,
+                            lpmodel = lpm.full,
+                            kappa = 1e-5,
+                            norm = 2,
+                            solver = "gurobi",
+                            estimate = TRUE,
+                            progress = FALSE)
+print(estbounds.full)
+#> Estimated bounds: [0.38316, 0.63344]
+```
 Again, more detailed information can be extracted via the `summary`
 command:
-
-    summary(estbounds.full)
-    #> Estimated bounds: [0.38316, 0.63344] 
-    #> Norm used: 2 
-    #> Solver: gurobi
-
+```r
+summary(estbounds.full)
+#> Estimated bounds: [0.38316, 0.63344] 
+#> Norm used: 2 
+#> Solver: gurobi
+```
 Constructing Confidence Intervals
 ---------------------------------
 
@@ -894,17 +894,19 @@ function. The confidence interval is constructed by evaluating the
 
 The syntax of the `invertci` function is as follows:
 
-    invertci(f = subsample, 
-             farg = subsample.args, 
-             alpha = 0.05, 
-             lb0 = NULL, 
-             lb1 = NULL, 
-             ub0 = NULL, 
-             ub1 = NULL, 
-             tol = 0.0001, 
-             max.iter = 20, 
-             df_ci = NULL,
-             progress = FALSE)
+```r
+invertci(f = subsample, 
+         farg = subsample.args, 
+         alpha = 0.05, 
+         lb0 = NULL, 
+         lb1 = NULL, 
+         ub0 = NULL, 
+         ub1 = NULL, 
+         tol = 0.0001, 
+         max.iter = 20, 
+         df_ci = NULL,
+         progress = FALSE)
+```
 
 where
 
@@ -937,15 +939,15 @@ To use the `invertci` function, the arguments for the test statistic has
 to be specified and passed to the `farg` argument. For instance, if the
 testing procedure `subsample` is used, the arguments can be defined as
 follows:
-
-    subsample.args <- list(data = sampledata,
-                           lpmodel = lpm.full,
-                           R = 100,
-                           phi = .75,
-                           solver = "gurobi",
-                           cores = 1,
-                           progress = FALSE)
-
+```r
+subsample.args <- list(data = sampledata,
+                       lpmodel = lpm.full,
+                       R = 100,
+                       phi = .75,
+                       solver = "gurobi",
+                       cores = 1,
+                       progress = FALSE)
+```
 Note that the argument for the target value of beta, i.e. the value to
 be tested under the null, is not required in the above argument
 assignment.
@@ -967,215 +969,215 @@ The requirement for the data frame is as follows:
 The following shows a sample output of the function `invertci` that is
 used to the confidence interval for the test `dkqs` with significance
 level 0.05.
-
-    set.seed(1)
-    invertci.subsample1 <- invertci(f = subsample,
-                                    farg = subsample.args, 
-                                    alpha = 0.05, 
-                                    lb0 = 0, 
-                                    lb1 = 0.4, 
-                                    ub0 = 1, 
-                                    ub1 = 0.6, 
-                                    tol = 0.001, 
-                                    max.iter = 5, 
-                                    df_ci = NULL, 
-                                    progress = FALSE)
-    print(invertci.subsample1)
-    #> 
-    #> Confidence interval: [0.29375, 0.70625]
-
+```r
+set.seed(1)
+invertci.subsample1 <- invertci(f = subsample,
+                                farg = subsample.args, 
+                                alpha = 0.05, 
+                                lb0 = 0, 
+                                lb1 = 0.4, 
+                                ub0 = 1, 
+                                ub1 = 0.6, 
+                                tol = 0.001, 
+                                max.iter = 5, 
+                                df_ci = NULL, 
+                                progress = FALSE)
+print(invertci.subsample1)
+#> 
+#> Confidence interval: [0.29375, 0.70625]
+```
 The details for each iteration can be obtained in real-time by setting
 `progress` as `TRUE` or applying the `summary` command on the resulting
 object:
-
-    summary(invertci.subsample1)
-    #> 
-    #> Significance level: 0.05
-    #> Confidence interval: [0.29375, 0.70625]
-    #> Maximum number of iterations: 5
-    #> 
-    #> Detais:
-    #> 
-    #> === Iterations in constructing upper bound:                                                                          
-    #> Iteration       Lower bound   Upper bound   Test point   p-value   Reject?
-    #> Left end pt.        0.60000            NA      0.60000   0.09000     FALSE
-    #> Right end pt.            NA       1.00000      1.00000   0.00000      TRUE
-    #> 1                   0.60000       1.00000      0.80000   0.00000      TRUE
-    #> 2                   0.60000       0.80000      0.70000   0.04000     FALSE
-    #> 3                   0.70000       0.80000      0.75000   0.00000      TRUE
-    #> 4                   0.70000       0.75000      0.72500   0.01000      TRUE
-    #> 5                   0.70000       0.72500      0.71250   0.01000      TRUE
-    #> Reason for termination: Reached maximum number of iterations
-    #> 
-    #> 
-    #> === Iterations in constructing lower bound:                                                                          
-    #> Iteration       Lower bound   Upper bound   Test point   p-value   Reject?
-    #> Left end pt.        0.00000            NA      0.00000   0.00000      TRUE
-    #> Right end pt.            NA       0.40000      0.40000   1.00000     FALSE
-    #> 1                   0.00000       0.40000      0.20000   0.00000      TRUE
-    #> 2                   0.20000       0.40000      0.30000   0.05000     FALSE
-    #> 3                   0.20000       0.30000      0.25000   0.00000      TRUE
-    #> 4                   0.25000       0.30000      0.27500   0.00000      TRUE
-    #> 5                   0.27500       0.30000      0.28750   0.00000      TRUE
-    #> Reason for termination: Reached maximum number of iterations
-
+```r
+summary(invertci.subsample1)
+#> 
+#> Significance level: 0.05
+#> Confidence interval: [0.29375, 0.70625]
+#> Maximum number of iterations: 5
+#> 
+#> Detais:
+#> 
+#> === Iterations in constructing upper bound:                                                                          
+#> Iteration       Lower bound   Upper bound   Test point   p-value   Reject?
+#> Left end pt.        0.60000            NA      0.60000   0.09000     FALSE
+#> Right end pt.            NA       1.00000      1.00000   0.00000      TRUE
+#> 1                   0.60000       1.00000      0.80000   0.00000      TRUE
+#> 2                   0.60000       0.80000      0.70000   0.04000     FALSE
+#> 3                   0.70000       0.80000      0.75000   0.00000      TRUE
+#> 4                   0.70000       0.75000      0.72500   0.01000      TRUE
+#> 5                   0.70000       0.72500      0.71250   0.01000      TRUE
+#> Reason for termination: Reached maximum number of iterations
+#> 
+#> 
+#> === Iterations in constructing lower bound:                                                                          
+#> Iteration       Lower bound   Upper bound   Test point   p-value   Reject?
+#> Left end pt.        0.00000            NA      0.00000   0.00000      TRUE
+#> Right end pt.            NA       0.40000      0.40000   1.00000     FALSE
+#> 1                   0.00000       0.40000      0.20000   0.00000      TRUE
+#> 2                   0.20000       0.40000      0.30000   0.05000     FALSE
+#> 3                   0.20000       0.30000      0.25000   0.00000      TRUE
+#> 4                   0.25000       0.30000      0.27500   0.00000      TRUE
+#> 5                   0.27500       0.30000      0.28750   0.00000      TRUE
+#> Reason for termination: Reached maximum number of iterations
+```
 #### Constructing Multiple Confidence Intervals
 
 The function `invertci` can also be used to generate multiple confidence
 intervals if the argument `alpha` is a vector. For instance, the
 following code produces confidence intervals for alpha equals 0.01, 0.05
 and 0.1.
-
-    set.seed(1)
-    invertci.subsample2 <- invertci(f = subsample, 
-                                    farg = subsample.args, 
-                                    alpha = c(0.01, 0.05, 0.1), 
-                                    lb0 = 0, 
-                                    lb1 = 0.4, 
-                                    ub0 = 1, 
-                                    ub1 = 0.6, 
-                                    tol = 0.001, 
-                                    max.iter = 5, 
-                                    df_ci = NULL, 
-                                    progress = FALSE)
-    print(invertci.subsample2)
-    #>                                       
-    #> Significance level Confidence interval
-    #> 0.01                [0.29375, 0.73125]
-    #> 0.05                [0.29375, 0.73125]
-    #> 0.1                 [0.30625, 0.70625]
-
+```r
+set.seed(1)
+invertci.subsample2 <- invertci(f = subsample, 
+                                farg = subsample.args, 
+                                alpha = c(0.01, 0.05, 0.1), 
+                                lb0 = 0, 
+                                lb1 = 0.4, 
+                                ub0 = 1, 
+                                ub1 = 0.6, 
+                                tol = 0.001, 
+                                max.iter = 5, 
+                                df_ci = NULL, 
+                                progress = FALSE)
+print(invertci.subsample2)
+#>                                       
+#> Significance level Confidence interval
+#> 0.01                [0.29375, 0.73125]
+#> 0.05                [0.29375, 0.73125]
+#> 0.1                 [0.30625, 0.70625]
+```
 Again, the detailed steps in constructing the confidence intervals can
 be obtained as follows:
-
-    summary(invertci.subsample2)
-    #>                                       
-    #> Significance level Confidence interval
-    #> 0.01                [0.29375, 0.73125]
-    #> 0.05                [0.29375, 0.73125]
-    #> 0.1                 [0.30625, 0.70625]
-    #> Maximum number of iterations: 5
-    #> 
-    #> Details:
-    #> 
-    #> <Confidence interval for significance level = 0.01>
-    #> 
-    #> === Iterations in constructing upper bound:                                                                          
-    #> Iteration       Lower bound   Upper bound   Test point   p-value   Reject?
-    #> Left end pt.        0.60000            NA      0.60000   0.09000     FALSE
-    #> Right end pt.            NA       1.00000      1.00000   0.00000      TRUE
-    #> 1                   0.60000       1.00000      0.80000   0.00000      TRUE
-    #> 2                   0.60000       0.80000      0.70000   0.04000     FALSE
-    #> 3                   0.70000       0.80000      0.75000   0.00000      TRUE
-    #> 4                   0.70000       0.75000      0.72500   0.01000     FALSE
-    #> 5                   0.72500       0.75000      0.73750   0.00000      TRUE
-    #> Reason for termination: Reached maximum number of iterations
-    #> 
-    #> 
-    #> === Iterations in constructing lower bound:                                                                          
-    #> Iteration       Lower bound   Upper bound   Test point   p-value   Reject?
-    #> Left end pt.        0.00000            NA      0.00000   0.00000      TRUE
-    #> Right end pt.            NA       0.40000      0.40000   1.00000     FALSE
-    #> 1                   0.00000       0.40000      0.20000   0.00000      TRUE
-    #> 2                   0.20000       0.40000      0.30000   0.05000     FALSE
-    #> 3                   0.20000       0.30000      0.25000   0.00000      TRUE
-    #> 4                   0.25000       0.30000      0.27500   0.00000      TRUE
-    #> 5                   0.27500       0.30000      0.28750   0.00000      TRUE
-    #> Reason for termination: Reached maximum number of iterations
-    #> 
-    #> 
-    #> <Confidence interval for significance level = 0.05>
-    #> 
-    #> === Iterations in constructing upper bound:                                                                          
-    #> Iteration       Lower bound   Upper bound   Test point   p-value   Reject?
-    #> Left end pt.        0.60000            NA      0.60000   0.15000     FALSE
-    #> Right end pt.            NA       1.00000      1.00000   0.00000      TRUE
-    #> 1                   0.60000       1.00000      0.80000   0.00000      TRUE
-    #> 2                   0.60000       0.80000      0.70000   0.06000     FALSE
-    #> 3                   0.70000       0.80000      0.75000   0.01000      TRUE
-    #> 4                   0.70000       0.75000      0.72500   0.03000     FALSE
-    #> 5                   0.72500       0.75000      0.73750   0.00000      TRUE
-    #> Reason for termination: Reached maximum number of iterations
-    #> 
-    #> 
-    #> === Iterations in constructing lower bound:                                                                          
-    #> Iteration       Lower bound   Upper bound   Test point   p-value   Reject?
-    #> Left end pt.        0.00000            NA      0.00000   0.00000      TRUE
-    #> Right end pt.            NA       0.40000      0.40000   1.00000     FALSE
-    #> 1                   0.00000       0.40000      0.20000   0.00000      TRUE
-    #> 2                   0.20000       0.40000      0.30000   0.03000     FALSE
-    #> 3                   0.20000       0.30000      0.25000   0.00000      TRUE
-    #> 4                   0.25000       0.30000      0.27500   0.00000      TRUE
-    #> 5                   0.27500       0.30000      0.28750   0.01000      TRUE
-    #> Reason for termination: Reached maximum number of iterations
-    #> 
-    #> 
-    #> <Confidence interval for significance level = 0.1>
-    #> 
-    #> === Iterations in constructing upper bound:                                                                          
-    #> Iteration       Lower bound   Upper bound   Test point   p-value   Reject?
-    #> Left end pt.        0.60000            NA      0.60000   0.11000     FALSE
-    #> Right end pt.            NA       1.00000      1.00000   0.00000      TRUE
-    #> 1                   0.60000       1.00000      0.80000   0.00000      TRUE
-    #> 2                   0.60000       0.80000      0.70000   0.05000     FALSE
-    #> 3                   0.70000       0.80000      0.75000   0.01000      TRUE
-    #> 4                   0.70000       0.75000      0.72500   0.00000      TRUE
-    #> 5                   0.70000       0.72500      0.71250   0.01000      TRUE
-    #> Reason for termination: Reached maximum number of iterations
-    #> 
-    #> 
-    #> === Iterations in constructing lower bound:                                                                          
-    #> Iteration       Lower bound   Upper bound   Test point   p-value   Reject?
-    #> Left end pt.        0.00000            NA      0.00000   0.00000      TRUE
-    #> Right end pt.            NA       0.40000      0.40000   1.00000     FALSE
-    #> 1                   0.00000       0.40000      0.20000   0.00000      TRUE
-    #> 2                   0.20000       0.40000      0.30000   0.00000      TRUE
-    #> 3                   0.30000       0.40000      0.35000   0.30000     FALSE
-    #> 4                   0.30000       0.35000      0.32500   0.09000     FALSE
-    #> 5                   0.30000       0.32500      0.31250   0.07000     FALSE
-    #> Reason for termination: Reached maximum number of iterations
-
+```r
+summary(invertci.subsample2)
+#>                                       
+#> Significance level Confidence interval
+#> 0.01                [0.29375, 0.73125]
+#> 0.05                [0.29375, 0.73125]
+#> 0.1                 [0.30625, 0.70625]
+#> Maximum number of iterations: 5
+#> 
+#> Details:
+#> 
+#> <Confidence interval for significance level = 0.01>
+#> 
+#> === Iterations in constructing upper bound:                                                                          
+#> Iteration       Lower bound   Upper bound   Test point   p-value   Reject?
+#> Left end pt.        0.60000            NA      0.60000   0.09000     FALSE
+#> Right end pt.            NA       1.00000      1.00000   0.00000      TRUE
+#> 1                   0.60000       1.00000      0.80000   0.00000      TRUE
+#> 2                   0.60000       0.80000      0.70000   0.04000     FALSE
+#> 3                   0.70000       0.80000      0.75000   0.00000      TRUE
+#> 4                   0.70000       0.75000      0.72500   0.01000     FALSE
+#> 5                   0.72500       0.75000      0.73750   0.00000      TRUE
+#> Reason for termination: Reached maximum number of iterations
+#> 
+#> 
+#> === Iterations in constructing lower bound:                                                                          
+#> Iteration       Lower bound   Upper bound   Test point   p-value   Reject?
+#> Left end pt.        0.00000            NA      0.00000   0.00000      TRUE
+#> Right end pt.            NA       0.40000      0.40000   1.00000     FALSE
+#> 1                   0.00000       0.40000      0.20000   0.00000      TRUE
+#> 2                   0.20000       0.40000      0.30000   0.05000     FALSE
+#> 3                   0.20000       0.30000      0.25000   0.00000      TRUE
+#> 4                   0.25000       0.30000      0.27500   0.00000      TRUE
+#> 5                   0.27500       0.30000      0.28750   0.00000      TRUE
+#> Reason for termination: Reached maximum number of iterations
+#> 
+#> 
+#> <Confidence interval for significance level = 0.05>
+#> 
+#> === Iterations in constructing upper bound:                                                                          
+#> Iteration       Lower bound   Upper bound   Test point   p-value   Reject?
+#> Left end pt.        0.60000            NA      0.60000   0.15000     FALSE
+#> Right end pt.            NA       1.00000      1.00000   0.00000      TRUE
+#> 1                   0.60000       1.00000      0.80000   0.00000      TRUE
+#> 2                   0.60000       0.80000      0.70000   0.06000     FALSE
+#> 3                   0.70000       0.80000      0.75000   0.01000      TRUE
+#> 4                   0.70000       0.75000      0.72500   0.03000     FALSE
+#> 5                   0.72500       0.75000      0.73750   0.00000      TRUE
+#> Reason for termination: Reached maximum number of iterations
+#> 
+#> 
+#> === Iterations in constructing lower bound:                                                                          
+#> Iteration       Lower bound   Upper bound   Test point   p-value   Reject?
+#> Left end pt.        0.00000            NA      0.00000   0.00000      TRUE
+#> Right end pt.            NA       0.40000      0.40000   1.00000     FALSE
+#> 1                   0.00000       0.40000      0.20000   0.00000      TRUE
+#> 2                   0.20000       0.40000      0.30000   0.03000     FALSE
+#> 3                   0.20000       0.30000      0.25000   0.00000      TRUE
+#> 4                   0.25000       0.30000      0.27500   0.00000      TRUE
+#> 5                   0.27500       0.30000      0.28750   0.01000      TRUE
+#> Reason for termination: Reached maximum number of iterations
+#> 
+#> 
+#> <Confidence interval for significance level = 0.1>
+#> 
+#> === Iterations in constructing upper bound:                                                                          
+#> Iteration       Lower bound   Upper bound   Test point   p-value   Reject?
+#> Left end pt.        0.60000            NA      0.60000   0.11000     FALSE
+#> Right end pt.            NA       1.00000      1.00000   0.00000      TRUE
+#> 1                   0.60000       1.00000      0.80000   0.00000      TRUE
+#> 2                   0.60000       0.80000      0.70000   0.05000     FALSE
+#> 3                   0.70000       0.80000      0.75000   0.01000      TRUE
+#> 4                   0.70000       0.75000      0.72500   0.00000      TRUE
+#> 5                   0.70000       0.72500      0.71250   0.01000      TRUE
+#> Reason for termination: Reached maximum number of iterations
+#> 
+#> 
+#> === Iterations in constructing lower bound:                                                                          
+#> Iteration       Lower bound   Upper bound   Test point   p-value   Reject?
+#> Left end pt.        0.00000            NA      0.00000   0.00000      TRUE
+#> Right end pt.            NA       0.40000      0.40000   1.00000     FALSE
+#> 1                   0.00000       0.40000      0.20000   0.00000      TRUE
+#> 2                   0.20000       0.40000      0.30000   0.00000      TRUE
+#> 3                   0.30000       0.40000      0.35000   0.30000     FALSE
+#> 4                   0.30000       0.35000      0.32500   0.09000     FALSE
+#> 5                   0.30000       0.32500      0.31250   0.07000     FALSE
+#> Reason for termination: Reached maximum number of iterations
+```
 Since the details of the iterations could potentially be a long list of
 outputs, users may specify a particular list of output that they wish to
 read in the `summary` command. For instance, to only print the details
 of the iterations when the significance level is 0.05, it can be done as
 follows:
-
-    summary(invertci.subsample2, alphas = 0.05)
-    #>                                       
-    #> Significance level Confidence interval
-    #> 0.01                [0.29375, 0.73125]
-    #> 0.05                [0.29375, 0.73125]
-    #> 0.1                 [0.30625, 0.70625]
-    #> Maximum number of iterations: 5
-    #> 
-    #> Details:
-    #> 
-    #> <Confidence interval for significance level = 0.05>
-    #> 
-    #> === Iterations in constructing upper bound:                                                                          
-    #> Iteration       Lower bound   Upper bound   Test point   p-value   Reject?
-    #> Left end pt.        0.60000            NA      0.60000   0.15000     FALSE
-    #> Right end pt.            NA       1.00000      1.00000   0.00000      TRUE
-    #> 1                   0.60000       1.00000      0.80000   0.00000      TRUE
-    #> 2                   0.60000       0.80000      0.70000   0.06000     FALSE
-    #> 3                   0.70000       0.80000      0.75000   0.01000      TRUE
-    #> 4                   0.70000       0.75000      0.72500   0.03000     FALSE
-    #> 5                   0.72500       0.75000      0.73750   0.00000      TRUE
-    #> Reason for termination: Reached maximum number of iterations
-    #> 
-    #> 
-    #> === Iterations in constructing lower bound:                                                                          
-    #> Iteration       Lower bound   Upper bound   Test point   p-value   Reject?
-    #> Left end pt.        0.00000            NA      0.00000   0.00000      TRUE
-    #> Right end pt.            NA       0.40000      0.40000   1.00000     FALSE
-    #> 1                   0.00000       0.40000      0.20000   0.00000      TRUE
-    #> 2                   0.20000       0.40000      0.30000   0.03000     FALSE
-    #> 3                   0.20000       0.30000      0.25000   0.00000      TRUE
-    #> 4                   0.25000       0.30000      0.27500   0.00000      TRUE
-    #> 5                   0.27500       0.30000      0.28750   0.01000      TRUE
-    #> Reason for termination: Reached maximum number of iterations
-
+```r
+summary(invertci.subsample2, alphas = 0.05)
+#>                                       
+#> Significance level Confidence interval
+#> 0.01                [0.29375, 0.73125]
+#> 0.05                [0.29375, 0.73125]
+#> 0.1                 [0.30625, 0.70625]
+#> Maximum number of iterations: 5
+#> 
+#> Details:
+#> 
+#> <Confidence interval for significance level = 0.05>
+#> 
+#> === Iterations in constructing upper bound:                                                                          
+#> Iteration       Lower bound   Upper bound   Test point   p-value   Reject?
+#> Left end pt.        0.60000            NA      0.60000   0.15000     FALSE
+#> Right end pt.            NA       1.00000      1.00000   0.00000      TRUE
+#> 1                   0.60000       1.00000      0.80000   0.00000      TRUE
+#> 2                   0.60000       0.80000      0.70000   0.06000     FALSE
+#> 3                   0.70000       0.80000      0.75000   0.01000      TRUE
+#> 4                   0.70000       0.75000      0.72500   0.03000     FALSE
+#> 5                   0.72500       0.75000      0.73750   0.00000      TRUE
+#> Reason for termination: Reached maximum number of iterations
+#> 
+#> 
+#> === Iterations in constructing lower bound:                                                                          
+#> Iteration       Lower bound   Upper bound   Test point   p-value   Reject?
+#> Left end pt.        0.00000            NA      0.00000   0.00000      TRUE
+#> Right end pt.            NA       0.40000      0.40000   1.00000     FALSE
+#> 1                   0.00000       0.40000      0.20000   0.00000      TRUE
+#> 2                   0.20000       0.40000      0.30000   0.03000     FALSE
+#> 3                   0.20000       0.30000      0.25000   0.00000      TRUE
+#> 4                   0.25000       0.30000      0.27500   0.00000      TRUE
+#> 5                   0.27500       0.30000      0.28750   0.01000      TRUE
+#> Reason for termination: Reached maximum number of iterations
+```
 Parallel Programming
 --------------------
 
@@ -1192,39 +1194,39 @@ be less than or equal to the cores that you have on your machine.
 The computational time for using multiple cores should be shorter than
 using a single core for a large number of bootstraps. This is
 illustrated by the example via the `dkqs` procedure below:
+```r
+dkqs.args <- list(data = sampledata,
+                  lpmodel = lpm.full,
+                  beta.tgt = .375,
+                  R = 100,
+                  tau = sqrt(log(N)/N),
+                  solver = "gurobi",
+                  progress = FALSE)
 
-    dkqs.args <- list(data = sampledata,
-                      lpmodel = lpm.full,
-                      beta.tgt = .375,
-                      R = 100,
-                      tau = sqrt(log(N)/N),
-                      solver = "gurobi",
-                      progress = FALSE)
+# Run dkqs with one core
+dkqs.args$cores <- 1
+t10 <- Sys.time()
+set.seed(1)
+do.call(dkqs, dkqs.args)
+#> p-value: 0.18
+t11 <- Sys.time()
+time1 <- t11 - t10
 
-    # Run dkqs with one core
-    dkqs.args$cores <- 1
-    t10 <- Sys.time()
-    set.seed(1)
-    do.call(dkqs, dkqs.args)
-    #> p-value: 0.18
-    t11 <- Sys.time()
-    time1 <- t11 - t10
+# Run dkqs with eight cores
+dkqs.args$cores = 8
+t80 <- Sys.time()
+set.seed(1)
+do.call(dkqs, dkqs.args)
+#> p-value: 0.18
+t81 <- Sys.time()
+time8 <- t81 - t80
 
-    # Run dkqs with eight cores
-    dkqs.args$cores = 8
-    t80 <- Sys.time()
-    set.seed(1)
-    do.call(dkqs, dkqs.args)
-    #> p-value: 0.18
-    t81 <- Sys.time()
-    time8 <- t81 - t80
-
-    # Print the time used
-    print(sprintf("Time used with 1 core: %s", time1))
-    #> [1] "Time used with 1 core: 0.502087116241455"
-    print(sprintf("Time used with 8 cores: %s", time8))
-    #> [1] "Time used with 8 cores: 0.399277925491333"
-
+# Print the time used
+print(sprintf("Time used with 1 core: %s", time1))
+#> [1] "Time used with 1 core: 0.502087116241455"
+print(sprintf("Time used with 8 cores: %s", time8))
+#> [1] "Time used with 8 cores: 0.399277925491333"
+```
 Help, Feature Requests and Bug Reports
 --------------------------------------
 
