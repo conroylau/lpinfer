@@ -830,7 +830,7 @@ estbounds(data = sampledata,
           kappa = 1e-5,
           norm = 2,
           solver = "gurobi",
-          estimate = FALSE,
+          estimate = TRUE,
           progress = FALSE)
 ```
 where

@@ -854,7 +854,7 @@ conducted via L1-norm or L2-norm.
               kappa = 1e-5,
               norm = 2,
               solver = "gurobi",
-              estimate = FALSE,
+              estimate = TRUE,
               progress = FALSE)
 
 where
