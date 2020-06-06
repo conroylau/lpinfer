@@ -410,16 +410,21 @@ check.solver <- function(x, name.var, norm = 2){
     # If gurobi is installed, the gurobi solver will be used for L1- & L2-norm
     if (requireNamespace("gurobi", quietly = TRUE) == TRUE){
       solver = gurobi.optim
+      x <- "gurobi"
     } else if (norm == 1) {
       # If L1-norm is used, other solvers will be checked
       if (requireNamespace("limSolve", quietly = TRUE) == TRUE){
         solver <- limsolve.optim
+        x <- "limSolve"
       } else if (requireNamespace("Rcplex", quietly = TRUE) == TRUE){
         solver <- rcplex.optim
+        x <- "Rcplex"
       } else if (requireNamespace("cplexAPI", quietly = TRUE) == TRUE){
         solver <- cplexapi.optim
+        x <- "cplexAPI"
       } else if (requireNamespace("lpsolveAPI", quietly = TRUE) == TRUE){
         solver <- lpsolveapi.optim
+        x <- "lpSolveAPI"
       }
     } else {
       if (norm == 1){
@@ -442,10 +447,6 @@ check.solver <- function(x, name.var, norm = 2){
                        bounds of the problem subject to shape restriction.")),
              call. = FALSE)
       }
-    }
-    if (progress == TRUE){
-      cat(paste("No solver solver is suggested by the user. The solver",
-                x, "is chosen.\n", sep = ""))
     }
   } else if (x == "gurobi"){
     # ---------------- #
