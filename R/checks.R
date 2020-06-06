@@ -454,18 +454,23 @@ check.solver <- function(x, name.var, norm = 2){
     # ---------------- #
     ## Case 1: If the user specified the solver as 'gurobi'
     solver <- gurobi.optim
+    x <- "gurobi"
   } else if (x == "limsolve"){
     ## Case 2: If the user specified the solver as 'limSolve'
     solver <- limsolve.optim
+    x <- "limSolve"
   } else if (x == "rcplex"){
     ## Case 3: If the user specified the solver as 'rcplex'
     solver <- rcplex.optim
+    x <- "Rcplex"
   } else if (x == "cplexapi"){
     ## Case 4: If the user specified the solver as 'cplexapi'
     solver <- cplexapi.optim
+    x <- "cplexAPI"
   } else if (x == "lpsolveapi" & norm == 1){
     ## Case 5: If the user specified the solver as 'lpsolveapi'
     solver <- lpsolveapi.optim
+    x <- "lpSolveAPI"
   } else {
     ## Case 6: If the user specified a solver that is not compatible
     if (norm == 1){
