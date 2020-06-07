@@ -544,9 +544,10 @@ subsampling procedure.
 #### Syntax
 
 The `subsample` command has the following syntax:
+
 ```r
 subsample(data = sampledata, 
-          lpmodel = lpm.twom,
+          lpmodel = lpm.full,
           beta.tgt = 0.375,
           R = 100,
           solver = "gurobi",
@@ -554,12 +555,16 @@ subsample(data = sampledata,
           norm = 2,
           phi = 2/3,
           alpha = 0.05,
+          replace = FALSE,
           progress = FALSE)
 ```
 where
 
 -   `phi` refers to the parameter that controls the size of each
     subsample. This will be further explained [here](#phi_subsample).
+-   `replace` refers to the boolean variable to indicate whether the
+    function samples the data with or without replacement. This will be
+    further explained [here](#replace).
 -   `norm` refers to the norm used in the objective function.
 
 The rest of the arguments are the same as that in the `dkqs` procedure.
@@ -570,6 +575,39 @@ The `phi` parameter is a parameter between 0 and 1. The sample size of
 the original data to the power `phi` is the size of each subsample.
 Unlike the other bootstrap procedures, the bootstrap data are drawn
 without replacement.
+
+#### Choosing the `replace` parameter (\#replace)
+
+The `replace` parameter is used to indicate whether the function samples
+the data with or without replacement. Currently there are three options
+available:
+
+<table>
+<thead>
+<tr class="header">
+<th><code>replace</code></th>
+<th style="text-align: left;"><code>phi</code></th>
+<th style="text-align: left;">Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>FALSE</code></td>
+<td style="text-align: left;">Any number between 0 and 1</td>
+<td style="text-align: left;">Subsample</td>
+</tr>
+<tr class="even">
+<td><code>TRUE</code></td>
+<td style="text-align: left;">Equals to 1</td>
+<td style="text-align: left;">Bootstrap</td>
+</tr>
+<tr class="odd">
+<td><code>TRUE</code></td>
+<td style="text-align: left;">Any nonnegative number other than 1</td>
+<td style="text-align: left;"><em>m</em> out of <em>n</em> bootstrap</td>
+</tr>
+</tbody>
+</table>
 
 #### Components in `lpmodel`
 
@@ -621,12 +659,15 @@ subsample.full <- subsample(data = sampledata,
                             norm = 2,
                             phi = 2/3,
                             alpha = 0.05,
+                            replace = FALSE,
                             progress = FALSE)
 print(subsample.full)
 #> p-value: 0.35
 ```
+
 Again, more detailed information can be extracted via the `summary`
 command:
+
 ```r
 summary(subsample.full)
 #> p-value: 0.35
@@ -637,6 +678,50 @@ summary(subsample.full)
 #> Size of each subsample: 99
 #> Number of cores used: 1
 ```
+
+As indicated [earlier](#replace), the `subsample` command can perform the
+bootstrap and *m* out of *n* boostrap procedures. They are illustrated
+as follows.
+
+The following is an exmaple of performing a bootstrapping procedure:
+
+```r
+set.seed(1)
+subsample.bootstrap <- subsample(data = sampledata, 
+                                 lpmodel = lpm.full,
+                                 beta.tgt = 0.375,
+                                 R = 100,
+                                 solver = "gurobi",
+                                 cores = 1,
+                                 norm = 2,
+                                 phi = 1,
+                                 alpha = 0.05,
+                                 replace = TRUE,
+                                 progress = FALSE)
+print(subsample.bootstrap)
+#> p-value: 0.45
+```
+
+The following is an exmaple of performing a *m* out of *n* bootstrapping
+procedure:
+
+```r
+set.seed(1)
+subsample.bootstrap2 <- subsample(data = sampledata, 
+                                  lpmodel = lpm.full,
+                                  beta.tgt = 0.375,
+                                  R = 100,
+                                  solver = "gurobi",
+                                  cores = 1,
+                                  norm = 2,
+                                  phi = 2/3,
+                                  alpha = 0.05,
+                                  replace = TRUE,
+                                  progress = FALSE)
+print(subsample.bootstrap2)
+#> p-value: 0.38
+```
+
 ### Test 3: FSST procedure
 
 The `fsst` function in this `lpinfer` package is used to conduct the

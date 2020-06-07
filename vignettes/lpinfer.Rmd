@@ -431,7 +431,7 @@ the subsampling procedure.
 The `subsample` command has the following syntax:
 ```{r, subsample_syntax, eval = FALSE}
 subsample(data = sampledata, 
-          lpmodel = lpm.twom,
+          lpmodel = lpm.full,
           beta.tgt = 0.375,
           R = 100,
           solver = "gurobi",
@@ -439,12 +439,16 @@ subsample(data = sampledata,
           norm = 2,
           phi = 2/3,
           alpha = 0.05,
+          replace = FALSE,
           progress = FALSE)
 ```
 where 
 
 * `phi` refers to the parameter that controls the size of each subsample. 
 This will be further explained [here](#phi_subsample).
+* `replace` refers to the boolean variable to indicate whether the function 
+samples the data with or without replacement. This will be further explained
+[here](#replace).
 * `norm` refers to the norm used in the objective function.
 
 The rest of the arguments are the same as that in the `dkqs` procedure.
@@ -455,6 +459,18 @@ The `phi` parameter is a parameter between 0 and 1. The sample size
 of the original data to the power `phi` is the size of each 
 subsample. Unlike the other bootstrap procedures, the bootstrap data are
 drawn without replacement.
+
+#### Choosing the `replace` parameter (#replace)
+
+The `replace` parameter is used to indicate whether the function 
+samples the data with or without replacement. Currently there are three 
+options available:
+
+| `replace`| `phi` | Meaning |
+| --------------- | :-------------- | :-------------- |
+|`FALSE`| Any number between 0 and 1 | Subsample |
+|`TRUE`| Equals to 1 | Bootstrap |
+|`TRUE`| Any nonnegative number other than 1 | *m* out of *n* bootstrap |
 
 #### Components in `lpmodel`
 
@@ -483,6 +499,7 @@ subsample.full <- subsample(data = sampledata,
                             norm = 2,
                             phi = 2/3,
                             alpha = 0.05,
+                            replace = FALSE,
                             progress = FALSE)
 print(subsample.full)
 ```
@@ -492,6 +509,46 @@ Again, more detailed information can be extracted via the `summary` command:
 summary(subsample.full)
 ```
 
+As indicated [earlier](#replace), the `subsample` command can perform
+the bootstrap and *m* out of *n* boostrap procedures. They are illustrated
+as follows.
+
+The following is an exmaple of performing a bootstrapping procedure:
+
+``` {r, subsample_eg3, eval = TRUE}
+set.seed(1)
+subsample.bootstrap <- subsample(data = sampledata, 
+                                 lpmodel = lpm.full,
+                                 beta.tgt = 0.375,
+                                 R = 100,
+                                 solver = "gurobi",
+                                 cores = 1,
+                                 norm = 2,
+                                 phi = 1,
+                                 alpha = 0.05,
+                                 replace = TRUE,
+                                 progress = FALSE)
+print(subsample.bootstrap)
+```
+
+The following is an exmaple of performing a *m* out of *n* bootstrapping 
+procedure:
+
+``` {r, subsample_eg4, eval = TRUE}
+set.seed(1)
+subsample.bootstrap2 <- subsample(data = sampledata, 
+                                  lpmodel = lpm.full,
+                                  beta.tgt = 0.375,
+                                  R = 100,
+                                  solver = "gurobi",
+                                  cores = 1,
+                                  norm = 2,
+                                  phi = 2/3,
+                                  alpha = 0.05,
+                                  replace = TRUE,
+                                  progress = FALSE)
+print(subsample.bootstrap2)
+```
 
 ### Test 3: FSST procedure
 

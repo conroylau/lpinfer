@@ -2,18 +2,18 @@
 title: 'lpinfer: An R Package for Inference in Linear Programs'
 author: ''
 output:
+  github_document:
+    keep_html: yes
+    toc: yes
+    df_print: paged
+  pdf_document:
+    toc: yes
+    df_print: paged
   md_document:
     variant: "markdown_strict"
     preserve_yaml: yes
     toc: yes
     df_print: paged  
-  pdf_document:
-    toc: yes
-    df_print: paged
-  github_document:
-    keep_html: yes
-    toc: yes
-    df_print: paged
   html_document:
     keep_md: yes
     toc: yes
@@ -570,7 +570,7 @@ subsampling procedure.
 The `subsample` command has the following syntax:
 
     subsample(data = sampledata, 
-              lpmodel = lpm.twom,
+              lpmodel = lpm.full,
               beta.tgt = 0.375,
               R = 100,
               solver = "gurobi",
@@ -578,12 +578,16 @@ The `subsample` command has the following syntax:
               norm = 2,
               phi = 2/3,
               alpha = 0.05,
+              replace = FALSE,
               progress = FALSE)
 
 where
 
 -   `phi` refers to the parameter that controls the size of each
     subsample. This will be further explained [here](#phi_subsample).
+-   `replace` refers to the boolean variable to indicate whether the
+    function samples the data with or without replacement. This will be
+    further explained [here](#replace).
 -   `norm` refers to the norm used in the objective function.
 
 The rest of the arguments are the same as that in the `dkqs` procedure.
@@ -594,6 +598,39 @@ The `phi` parameter is a parameter between 0 and 1. The sample size of
 the original data to the power `phi` is the size of each subsample.
 Unlike the other bootstrap procedures, the bootstrap data are drawn
 without replacement.
+
+#### Choosing the `replace` parameter (\#replace)
+
+The `replace` parameter is used to indicate whether the function samples
+the data with or without replacement. Currently there are three options
+available:
+
+<table>
+<thead>
+<tr class="header">
+<th><code>replace</code></th>
+<th style="text-align: left;"><code>phi</code></th>
+<th style="text-align: left;">Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>FALSE</code></td>
+<td style="text-align: left;">Any number between 0 and 1</td>
+<td style="text-align: left;">Subsample</td>
+</tr>
+<tr class="even">
+<td><code>TRUE</code></td>
+<td style="text-align: left;">Equals to 1</td>
+<td style="text-align: left;">Bootstrap</td>
+</tr>
+<tr class="odd">
+<td><code>TRUE</code></td>
+<td style="text-align: left;">Any nonnegative number other than 1</td>
+<td style="text-align: left;"><em>m</em> out of <em>n</em> bootstrap</td>
+</tr>
+</tbody>
+</table>
 
 #### Components in `lpmodel`
 
@@ -645,6 +682,7 @@ The following is what happens when the above code is run:
                                 norm = 2,
                                 phi = 2/3,
                                 alpha = 0.05,
+                                replace = FALSE,
                                 progress = FALSE)
     print(subsample.full)
     #> p-value: 0.35
@@ -660,6 +698,45 @@ command:
     #> Phi used: 0.66667
     #> Size of each subsample: 99
     #> Number of cores used: 1
+
+As indicated [earlier](#replace), the `subsample` command can perform the
+bootstrap and *m* out of *n* boostrap procedures. They are illustrated
+as follows.
+
+The following is an exmaple of performing a bootstrapping procedure:
+
+    set.seed(1)
+    subsample.bootstrap <- subsample(data = sampledata, 
+                                     lpmodel = lpm.full,
+                                     beta.tgt = 0.375,
+                                     R = 100,
+                                     solver = "gurobi",
+                                     cores = 1,
+                                     norm = 2,
+                                     phi = 1,
+                                     alpha = 0.05,
+                                     replace = TRUE,
+                                     progress = FALSE)
+    print(subsample.bootstrap)
+    #> p-value: 0.45
+
+The following is an exmaple of performing a *m* out of *n* bootstrapping
+procedure:
+
+    set.seed(1)
+    subsample.bootstrap2 <- subsample(data = sampledata, 
+                                      lpmodel = lpm.full,
+                                      beta.tgt = 0.375,
+                                      R = 100,
+                                      solver = "gurobi",
+                                      cores = 1,
+                                      norm = 2,
+                                      phi = 2/3,
+                                      alpha = 0.05,
+                                      replace = TRUE,
+                                      progress = FALSE)
+    print(subsample.bootstrap2)
+    #> p-value: 0.38
 
 ### Test 3: FSST procedure
 
@@ -1016,9 +1093,11 @@ object:
     #> 
     #> Significance level: 0.05
     #> Confidence interval: [0.29375, 0.70625]
-    #> Maximum number of iterations: 5
     #> 
-    #> Detais:
+    #> Maximum number of iterations: 5
+    #> Tolerance level: 0.001
+    #> 
+    #> Details:
     #> 
     #> === Iterations in constructing upper bound:                                                                          
     #> Iteration       Lower bound   Upper bound   Test point   p-value   Reject?
@@ -1073,12 +1152,13 @@ Again, the detailed steps in constructing the confidence intervals can
 be obtained as follows:
 
     summary(invertci.subsample2)
+    #> Maximum number of iterations: 5
+    #> Tolerance level: 0.001
     #>                                       
     #> Significance level Confidence interval
     #> 0.01                [0.29375, 0.73125]
     #> 0.05                [0.29375, 0.73125]
     #> 0.1                 [0.30625, 0.70625]
-    #> Maximum number of iterations: 5
     #> 
     #> Details:
     #> 
@@ -1166,12 +1246,11 @@ of the iterations when the significance level is 0.05, it can be done as
 follows:
 
     summary(invertci.subsample2, alphas = 0.05)
+    #> Maximum number of iterations: 5
+    #> Tolerance level: 0.001
     #>                                       
     #> Significance level Confidence interval
-    #> 0.01                [0.29375, 0.73125]
     #> 0.05                [0.29375, 0.73125]
-    #> 0.1                 [0.30625, 0.70625]
-    #> Maximum number of iterations: 5
     #> 
     #> Details:
     #> 
@@ -1245,9 +1324,9 @@ illustrated by the example via the `dkqs` procedure below:
 
     # Print the time used
     print(sprintf("Time used with 1 core: %s", time1))
-    #> [1] "Time used with 1 core: 0.502087116241455"
+    #> [1] "Time used with 1 core: 0.402737140655518"
     print(sprintf("Time used with 8 cores: %s", time8))
-    #> [1] "Time used with 8 cores: 0.399277925491333"
+    #> [1] "Time used with 8 cores: 0.271302938461304"
 
 Help, Feature Requests and Bug Reports
 --------------------------------------
