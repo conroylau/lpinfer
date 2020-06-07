@@ -71,7 +71,7 @@ estbounds <- function(data, lpmodel, kappa = 1e-5, norm = 2, solver = NULL,
     lb <- lb_shp0$objval
 
     # Store indicator of whether the estimation procedure should be conducted
-    if (is.numeric(ub) == FALSE | is.numeric(lb) == FALSE){
+    if (!is.numeric(ub) | !is.numeric(lb) | length(ub) == 0 | length(lb) == 0){
       bound0infe <- TRUE
       if (progress == TRUE){
         cat(paste("The original problem is infeasible. ",
