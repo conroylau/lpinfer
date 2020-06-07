@@ -599,7 +599,7 @@ the original data to the power `phi` is the size of each subsample.
 Unlike the other bootstrap procedures, the bootstrap data are drawn
 without replacement.
 
-#### Choosing the `replace` parameter (\#replace)
+#### Choosing the `replace` parameter 
 
 The `replace` parameter is used to indicate whether the function samples
 the data with or without replacement. Currently there are three options
