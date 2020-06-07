@@ -395,7 +395,10 @@ check.solver <- function(x, name.var, norm = 2){
   # ---------------- #
   # Step 1: Preparation and hard-coded information
   # ---------------- #
-  x <- tolower(x)
+  # Only change x to lower case if it is non-null. Otherwise, keep it as null
+  if (!is.null(x)) {
+    x <- tolower(x) 
+  }
   # Package recommendation messages
   gurobi.msg <- "'gurobi' (version 8.1-1 or later)"
   cplexapi.msg <- "'cplexAPI' (version 1.3.3 or later)"
