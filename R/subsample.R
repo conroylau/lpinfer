@@ -19,8 +19,22 @@
 #' @param phi Power for the sample. \eqn{n^\phi} represents the size
 #'   of each subsample.
 #' @param alpha Significance level.
+#' @param replace Boolean variable to indicate whether the function samples
+#'   the data with or without replacement.
 #' @inheritParams dkqs
 #' @inheritParams estbounds
+#' 
+#' @details There are three possible cases for the parameter \code{replace}:
+#' \itemize{
+#'   \item{If \code{replace} is set as \code{FALSE}, it refers to the 
+#'     subsampling procedure.}
+#'   \item{If \code{replace} is set as \code{TRUE} and \code{phi} is set as 1,
+#'     then it refers to the bootstrap procedure.}
+#'   \item{If \code{replace} is set as \code{TRUE} and \code{phi} set between
+#'     0 and 1, then it refers to the \eqn{m} out of \eqn{n} bootstrap 
+#'     procedure, where \eqn{m} is the size of the subsample and \eqn{n} is
+#'     the total number of observations.}   
+#' }
 #'
 #' @return Returns a list of output calculated from the function:
 #'   \item{pval}{\eqn{p}-value.}
@@ -39,7 +53,7 @@
 #'
 subsample <- function(data, lpmodel, beta.tgt, R = 100, solver = NULL,
                       cores = 8, norm = 2, phi = 2/3, alpha = .05,
-                      progress = FALSE){
+                      replace = FALSE, progress = FALSE){
 
   # ---------------- #
   # Step 1: Obtain call, check and update the dependencies
@@ -49,7 +63,8 @@ subsample <- function(data, lpmodel, beta.tgt, R = 100, solver = NULL,
 
   # Check the arguments
   subsample.return <- subsample.check(data, lpmodel, beta.tgt, R, solver, 
-                                      cores, norm, phi, alpha, progress)
+                                      cores, norm, phi, alpha, replace,
+                                      progress)
 
   # Update the arguments
   data <- subsample.return$data
@@ -74,12 +89,12 @@ subsample <- function(data, lpmodel, beta.tgt, R = 100, solver = NULL,
   if (cores == 1){
     # One core
     T_subsample <- subsample.onecore(data, R, lpmodel, beta.tgt, norm,
-                                     solver, progress, m)
+                                     solver, replace, progress, m)
 
   } else {
     # Many cores
     T_subsample <- subsample.manycores(data, R, lpmodel, beta.tgt, norm,
-                                       solver, cores, progress, m)
+                                       solver, cores, replace, progress, m)
   }
 
   # ---------------- #
@@ -264,7 +279,7 @@ subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver, i){
 #' @export
 #'
 subsample.onecore <- function(data, R, lpmodel, beta.tgt, norm, solver,
-                              progress, m){
+                              replace, progress, m){
   # ---------------- #
   # Step 1: Initialize the vectors and the progress bar
   # ---------------- #
@@ -284,7 +299,7 @@ subsample.onecore <- function(data, R, lpmodel, beta.tgt, norm, solver,
   # ---------------- #
   for (i in 1:R){
     # (2.1) Re-sample the data
-    data.bs <- as.data.frame(data[sample(1:nrow(data), m, replace = FALSE),])
+    data.bs <- as.data.frame(data[sample(1:nrow(data), m, replace),])
     rownames(data.bs) <- 1:nrow(data.bs)
 
     # (2.2) Compute the bootstrap estimates
@@ -330,7 +345,7 @@ subsample.onecore <- function(data, R, lpmodel, beta.tgt, norm, solver,
 #' @export
 #'
 subsample.manycores <- function(data, R, lpmodel, beta.tgt, norm, solver,
-                                cores, progress, m){
+                                cores, replace, progress, m){
   # ---------------- #
   # Step 1: Initialize the parallel programming package
   # ---------------- #
@@ -381,7 +396,7 @@ subsample.manycores <- function(data, R, lpmodel, beta.tgt, norm, solver,
   # Use a normal for-loop to construct the list of lpmodel objects
   for (i in 1:R) {
     # Construct bootstrap data
-    data.bs <- as.data.frame(data[sample(1:nrow(data), m, replace = FALSE),])
+    data.bs <- as.data.frame(data[sample(1:nrow(data), m, replace),])
     rownames(data.bs) <- 1:nrow(data.bs)
 
     # Assign the lpmodel objects
@@ -496,7 +511,7 @@ summary.subsample <- function(x, ...){
 #' @export
 #'
 subsample.check <- function(data, lpmodel, beta.tgt, R, solver, cores,
-                            norm, phi, alpha, progress){
+                            norm, phi, alpha, replace, progress){
 
   # ---------------- #
   # Step 1: Conduct the checks
@@ -521,7 +536,7 @@ subsample.check <- function(data, lpmodel, beta.tgt, R, solver, cores,
   solver.name <- solver.return$solver.name
 
   # Check numerics
-  check.numrange(phi, "phi", "open", 0, "open", 1)
+  check.numrange(phi, "phi", "closed", 0, "closed", 1)
   check.numeric(phi, "phi")
   check.positiveinteger(R, "R")
   cores <- check.cores(cores)
@@ -530,6 +545,7 @@ subsample.check <- function(data, lpmodel, beta.tgt, R, solver, cores,
   norm <- check.norm(norm, "norm")
 
   # Check Boolean
+  check.boolean(replace, "replace")
   check.boolean(progress, "progress")
 
   # ---------------- #

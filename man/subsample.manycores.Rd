@@ -12,6 +12,7 @@ subsample.manycores(
   norm,
   solver,
   cores,
+  replace,
   progress,
   m
 )
@@ -42,6 +43,9 @@ The solvers supported by this module are `\code{cplexAPI}',
 \item{cores}{Number of cores to be used in the parallelized for-loop.
 Parallelized for-loop is used if \code{cores} is set to be an integer
 greater than or equal to 2.}
+
+\item{replace}{Boolean variable to indicate whether the function samples
+the data with or without replacement.}
 
 \item{progress}{The boolean variable for whether the result messages
 should be displayed in the inference procedure. If it is set as

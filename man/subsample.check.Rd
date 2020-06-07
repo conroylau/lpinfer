@@ -14,6 +14,7 @@ subsample.check(
   norm,
   phi,
   alpha,
+  replace,
   progress
 )
 }
@@ -48,6 +49,9 @@ greater than or equal to 2.}
 of each subsample.}
 
 \item{alpha}{Significance level.}
+
+\item{replace}{Boolean variable to indicate whether the function samples
+the data with or without replacement.}
 
 \item{progress}{The boolean variable for whether the result messages
 should be displayed in the inference procedure. If it is set as

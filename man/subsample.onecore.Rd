@@ -4,7 +4,17 @@
 \alias{subsample.onecore}
 \title{Subsampling procedure without parallel programming}
 \usage{
-subsample.onecore(data, R, lpmodel, beta.tgt, norm, solver, progress, m)
+subsample.onecore(
+  data,
+  R,
+  lpmodel,
+  beta.tgt,
+  norm,
+  solver,
+  replace,
+  progress,
+  m
+)
 }
 \arguments{
 \item{data}{The data being used in the inference.}
@@ -28,6 +38,9 @@ procedure are:
 are used to obtain the solution to linear and quadratic programs.
 The solvers supported by this module are `\code{cplexAPI}',
 `\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
+
+\item{replace}{Boolean variable to indicate whether the function samples
+the data with or without replacement.}
 
 \item{progress}{The boolean variable for whether the result messages
 should be displayed in the inference procedure. If it is set as

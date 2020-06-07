@@ -14,6 +14,7 @@ subsample(
   norm = 2,
   phi = 2/3,
   alpha = 0.05,
+  replace = FALSE,
   progress = FALSE
 )
 }
@@ -52,6 +53,9 @@ of each subsample.}
 
 \item{alpha}{Significance level.}
 
+\item{replace}{Boolean variable to indicate whether the function samples
+the data with or without replacement.}
+
 \item{progress}{The boolean variable for whether the result messages
 should be displayed in the inference procedure. If it is set as
 \code{TRUE}, the messages are displayed throughout the procedure.
@@ -74,4 +78,17 @@ Returns a list of output calculated from the function:
 \description{
 This function conducts inference and returns the
   \eqn{p}-value using the subsampling procedure.
+}
+\details{
+There are three possible cases for the parameter \code{replace}:
+\itemize{
+  \item{If \code{replace} is set as \code{FALSE}, it refers to the 
+    subsampling procedure.}
+  \item{If \code{replace} is set as \code{TRUE} and \code{phi} is set as 1,
+    then it refers to the bootstrap procedure.}
+  \item{If \code{replace} is set as \code{TRUE} and \code{phi} set between
+    0 and 1, then it refers to the \eqn{m} out of \eqn{n} bootstrap 
+    procedure, where \eqn{m} is the size of the subsample and \eqn{n} is
+    the total number of observations.}   
+}
 }
