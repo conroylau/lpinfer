@@ -143,6 +143,7 @@ subsample(data = data,
           norm = 2,
           phi = phi_predefine,
           alpha = .05,
+          replace = FALSE,
           progress = FALSE)
 
 # Example 2 - Using the full information approach and gurobi solver and print
@@ -157,6 +158,7 @@ subsample(data = data,
           norm = 2,
           phi = phi_predefine,
           alpha = .05,
+          replace = FALSE,
           progress = FALSE)
 
 # Example 3 - Using two moments approach and gurobi solver (1 core)
@@ -170,4 +172,37 @@ subsample(data = data,
           norm = 2,
           phi = phi_predefine,
           alpha = .05,
+          replace = FALSE,
           progress = FALSE)
+
+# Example 4 - Using the two moments approach with bootstrap 
+# (i.e. replace and phi = 1)
+set.seed(1)
+subsample(data = data,
+          lpmodel = lpmodel.twom,
+          beta.tgt = beta.tgt,
+          R = 100,
+          solver = "gurobi",
+          cores = 8,
+          norm = 2,
+          phi = 1,
+          alpha = .05,
+          replace = TRUE,
+          progress = FALSE)
+
+# Example 5 - Using the two moments approach with m out of n bootstrap 
+# (i.e. replace and phi != 1)
+set.seed(1)
+subsample(data = data,
+          lpmodel = lpmodel.twom,
+          beta.tgt = beta.tgt,
+          R = 100,
+          solver = "gurobi",
+          cores = 8,
+          norm = 2,
+          phi = .5,
+          alpha = .05,
+          replace = TRUE,
+          progress = FALSE)
+
+
