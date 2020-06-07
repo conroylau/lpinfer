@@ -434,8 +434,7 @@ check.solver <- function(x, name.var, norm = 2){
         stop(gsub("\\s+", " ",
                   paste0("This function is incompatible with '", x,
                          "' when L1-norm is chosen in the estimation procedure.
-                         Please install one of the following packages to solve
-                         the linear and quadratic programs: ",
+                         Please install one of the following packages: ",
                          gurobi.msg, "; ",
                          cplexapi.msg, "; ",
                          rcplex.msg, "; ",
@@ -445,9 +444,8 @@ check.solver <- function(x, name.var, norm = 2){
       } else if (norm == 2){
         stop(gsub("\\s+", " ",
                   paste0("This function with L2-norm in the estimation
-                         procedure is only incompatible with 'gurobi'. ",
-                         "Please install ", gurobi.msg, " to obtain the
-                       bounds of the problem subject to shape restriction.")),
+                         procedure is only compatible with 'gurobi'. ",
+                         "Please install ", gurobi.msg, ".")),
              call. = FALSE)
       }
     }
@@ -480,8 +478,7 @@ check.solver <- function(x, name.var, norm = 2){
       stop(gsub("\\s+", " ",
                 paste0("This function is incompatible with '", x,
                        "' when L1-norm is chosen in the estimation procedure.
-                       Please install one of the following packages to solve
-                       the linear and quadratic programs: ",
+                       Please install one of the following packages: ",
                        gurobi.msg, "; ",
                        cplexapi.msg, "; ",
                        rcplex.msg, "; ",
@@ -491,8 +488,7 @@ check.solver <- function(x, name.var, norm = 2){
       stop(gsub("\\s+", " ",
                 paste0("This function with L2-norm in the estimation procedure
                        is only incompatible with 'gurobi'. ",
-                       "Please install ", gurobi.msg, " to obtain the
-                       bounds of the problem subject to shape restriction.")),
+                       "Please install ", gurobi.msg, ".")),
            call. = FALSE)
     }
   }

@@ -430,7 +430,7 @@ estbounds.check <- function(data, lpmodel, kappa, norm, solver, estimate,
                            R = 1)
 
   # Check solver
-  solver.return <- check.solver(solver, "solver")
+  solver.return <- check.solver(solver, "solver", norm)
   solver <- solver.return$solver
   solver.name <- solver.return$solver.name
 
