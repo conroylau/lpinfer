@@ -86,7 +86,8 @@ check.positiveinteger <- function(x, name.var){
 #'
 check.numeric <- function(x, name.var){
   if ((is.numeric(x) == TRUE & length(x) == 1) == FALSE){
-    stop(sprintf("The class of the variable '%s' has to be numeric.", x),
+    stop(sprintf("The class of the variable '%s' has to be numeric.", 
+                 name.var),
          call. = FALSE)
   }
 }
