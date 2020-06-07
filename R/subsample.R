@@ -29,11 +29,11 @@
 #' \itemize{
 #'   \item{If \code{replace} is set as \code{FALSE}, it refers to the 
 #'     subsampling procedure. In this case, \code{phi} has to be in the 
-#'     interval \eqn{[0, 1)}.}
+#'     interval \eqn{(0, 1)}.}
 #'   \item{If \code{replace} is set as \code{TRUE} and \code{phi} is set as 1,
 #'     then it refers to the bootstrap procedure.}
 #'   \item{If \code{replace} is set as \code{TRUE} and \code{phi} is in the 
-#'     interval \eqn{[0, 1)}, then it refers to the \eqn{m} out of \eqn{n} 
+#'     interval \eqn{(0, 1)}, then it refers to the \eqn{m} out of \eqn{n} 
 #'     bootstrap procedure, where \eqn{m} is the size of the subsample and 
 #'     \eqn{n} is the total number of observations.}
 #' }
@@ -539,9 +539,9 @@ subsample.check <- function(data, lpmodel, beta.tgt, R, solver, cores,
 
   # Check phi
   if (isTRUE(replace)) {
-    check.numrange(phi, "phi", "closed", 0, "closed", 1) 
+    check.numrange(phi, "phi", "open", 0, "closed", 1) 
   } else if (isFALSE(replace)) {
-    check.numrange(phi, "phi", "closed", 0, "open", 1) 
+    check.numrange(phi, "phi", "open", 0, "open", 1) 
   }
   
   # Check other numbers

@@ -462,9 +462,9 @@ whether the function samples the data with or without replacement.
 
 | `replace`| `phi` | Meaning |
 | --------------- | :-------------- | :-------------- |
-|`FALSE`| Any number in the interval [0, 1) | Subsample |
+|`FALSE`| Any number in the interval (0, 1) | Subsample |
 |`TRUE`| Equals to 1 | Bootstrap |
-|`TRUE`| Any number in the interval [0, 1) | *m* out of *n* bootstrap |
+|`TRUE`| Any number in the interval (0, 1) | *m* out of *n* bootstrap |
 
 Note that users cannot specify `phi` as 1 when `replace` is set to `FALSE`
 because it will be generating the exactly same set of data in every 

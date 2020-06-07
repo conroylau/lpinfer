@@ -588,7 +588,7 @@ without replacement.
 <tbody>
 <tr class="odd">
 <td><code>FALSE</code></td>
-<td style="text-align: left;">Any number in the interval [0, 1)</td>
+<td style="text-align: left;">Any number in the interval (0, 1)</td>
 <td style="text-align: left;">Subsample</td>
 </tr>
 <tr class="even">
@@ -598,7 +598,7 @@ without replacement.
 </tr>
 <tr class="odd">
 <td><code>TRUE</code></td>
-<td style="text-align: left;">Any number in the interval [0, 1)</td>
+<td style="text-align: left;">Any number in the interval (0, 1)</td>
 <td style="text-align: left;"><em>m</em> out of <em>n</em> bootstrap</td>
 </tr>
 </tbody>
