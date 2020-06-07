@@ -15,7 +15,7 @@ fsst(
   n = NULL,
   weight.matrix = "diag",
   solver,
-  cores,
+  cores = 1,
   progress
 )
 }

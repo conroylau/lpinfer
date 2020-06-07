@@ -54,7 +54,7 @@
 #' @export
 #'
 subsample <- function(data, lpmodel, beta.tgt, R = 100, solver = NULL,
-                      cores = 8, norm = 2, phi = 2/3, alpha = .05,
+                      cores = 1, norm = 2, phi = 2/3, alpha = .05,
                       replace = FALSE, progress = FALSE){
 
   # ---------------- #

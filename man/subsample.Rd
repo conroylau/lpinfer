@@ -10,7 +10,7 @@ subsample(
   beta.tgt,
   R = 100,
   solver = NULL,
-  cores = 8,
+  cores = 1,
   norm = 2,
   phi = 2/3,
   alpha = 0.05,
