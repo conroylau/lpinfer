@@ -2,18 +2,18 @@
 title: 'lpinfer: An R Package for Inference in Linear Programs'
 author: ''
 output:
-  github_document:
-    keep_html: yes
-    toc: yes
-    df_print: paged
-  pdf_document:
-    toc: yes
-    df_print: paged
   md_document:
     variant: "markdown_strict"
     preserve_yaml: yes
     toc: yes
     df_print: paged  
+  pdf_document:
+    toc: yes
+    df_print: paged
+  github_document:
+    keep_html: yes
+    toc: yes
+    df_print: paged
   html_document:
     keep_md: yes
     toc: yes
@@ -587,23 +587,18 @@ where
     subsample. This will be further explained [here](#phi_subsample).
 -   `replace` refers to the boolean variable to indicate whether the
     function samples the data with or without replacement. This will be
-    further explained [here](#replace).
+    further explained [here](#phi_subsample).
 -   `norm` refers to the norm used in the objective function.
 
 The rest of the arguments are the same as that in the `dkqs` procedure.
 
-#### Choosing the phi parameter
+#### Choosing the `phi` and `replace` parameter
 
-The `phi` parameter is a parameter between 0 and 1. The sample size of
-the original data to the power `phi` is the size of each subsample.
-Unlike the other bootstrap procedures, the bootstrap data are drawn
+The `phi` parameter is a parameter to control the size of each
+subsample. The sample size of the original data to the power `phi` is
+the size of each subsample. On the other hand, the `replace` parameter
+is used to indicate whether the function samples the data with or
 without replacement.
-
-#### Choosing the `replace` parameter 
-
-The `replace` parameter is used to indicate whether the function samples
-the data with or without replacement. Currently there are three options
-available:
 
 <table>
 <thead>
@@ -616,7 +611,7 @@ available:
 <tbody>
 <tr class="odd">
 <td><code>FALSE</code></td>
-<td style="text-align: left;">Any number between 0 and 1</td>
+<td style="text-align: left;">Any number in the interval [0, 1)</td>
 <td style="text-align: left;">Subsample</td>
 </tr>
 <tr class="even">
@@ -626,11 +621,15 @@ available:
 </tr>
 <tr class="odd">
 <td><code>TRUE</code></td>
-<td style="text-align: left;">Any nonnegative number other than 1</td>
+<td style="text-align: left;">Any number in the interval [0, 1)</td>
 <td style="text-align: left;"><em>m</em> out of <em>n</em> bootstrap</td>
 </tr>
 </tbody>
 </table>
+
+Note that users cannot specify `phi` as 1 when `replace` is set to
+`FALSE` because it will be generating the exactly same set of data in
+every subsample draw.
 
 #### Components in `lpmodel`
 
@@ -699,9 +698,9 @@ command:
     #> Size of each subsample: 99
     #> Number of cores used: 1
 
-As indicated [earlier](#replace), the `subsample` command can perform the
-bootstrap and *m* out of *n* boostrap procedures. They are illustrated
-as follows.
+As indicated [earlier](#replace), the `subsample` command can perform
+the bootstrap and *m* out of *n* boostrap procedures. They are
+illustrated as follows.
 
 The following is an exmaple of performing a bootstrapping procedure:
 
@@ -1324,9 +1323,9 @@ illustrated by the example via the `dkqs` procedure below:
 
     # Print the time used
     print(sprintf("Time used with 1 core: %s", time1))
-    #> [1] "Time used with 1 core: 0.402737140655518"
+    #> [1] "Time used with 1 core: 0.405235052108765"
     print(sprintf("Time used with 8 cores: %s", time8))
-    #> [1] "Time used with 8 cores: 0.271302938461304"
+    #> [1] "Time used with 8 cores: 0.278135061264038"
 
 Help, Feature Requests and Bug Reports
 --------------------------------------

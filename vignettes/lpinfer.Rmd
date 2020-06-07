@@ -2,18 +2,18 @@
 title: 'lpinfer: An R Package for Inference in Linear Programs'
 author: ''
 output:
+  github_document:
+    keep_html: yes
+    toc: yes
+    df_print: paged
+  pdf_document:
+    toc: yes
+    df_print: paged
   md_document:
     variant: "markdown_strict"
     preserve_yaml: yes
     toc: yes
     df_print: paged  
-  pdf_document:
-    toc: yes
-    df_print: paged
-  github_document:
-    keep_html: yes
-    toc: yes
-    df_print: paged
   html_document:
     keep_md: yes
     toc: yes
@@ -448,29 +448,27 @@ where
 This will be further explained [here](#phi_subsample).
 * `replace` refers to the boolean variable to indicate whether the function 
 samples the data with or without replacement. This will be further explained
-[here](#replace).
+[here](#phi_subsample).
 * `norm` refers to the norm used in the objective function.
 
 The rest of the arguments are the same as that in the `dkqs` procedure.
 
-#### Choosing the phi parameter {#phi_subsample}
+#### Choosing the `phi` and `replace` parameter {#phi_subsample}
 
-The `phi` parameter is a parameter between 0 and 1. The sample size
-of the original data to the power `phi` is the size of each 
-subsample. Unlike the other bootstrap procedures, the bootstrap data are
-drawn without replacement.
-
-#### Choosing the `replace` parameter {#replace}
-
-The `replace` parameter is used to indicate whether the function 
-samples the data with or without replacement. Currently there are three 
-options available:
+The `phi` parameter is a parameter to control the size of each subsample. 
+The sample size of the original data to the power `phi` is the size of each 
+subsample. On the other hand, the `replace` parameter is used to indicate 
+whether the function samples the data with or without replacement. 
 
 | `replace`| `phi` | Meaning |
 | --------------- | :-------------- | :-------------- |
-|`FALSE`| Any number between 0 and 1 | Subsample |
+|`FALSE`| Any number in the interval [0, 1) | Subsample |
 |`TRUE`| Equals to 1 | Bootstrap |
-|`TRUE`| Any nonnegative number other than 1 | *m* out of *n* bootstrap |
+|`TRUE`| Any number in the interval [0, 1) | *m* out of *n* bootstrap |
+
+Note that users cannot specify `phi` as 1 when `replace` is set to `FALSE`
+because it will be generating the exactly same set of data in every 
+subsample draw.
 
 #### Components in `lpmodel`
 

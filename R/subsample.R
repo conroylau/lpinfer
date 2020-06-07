@@ -24,16 +24,18 @@
 #' @inheritParams dkqs
 #' @inheritParams estbounds
 #' 
-#' @details There are three possible cases for the parameter \code{replace}:
+#' @details There are three possible combinations for the parameters 
+#' \code{phi} and \code{replace}:
 #' \itemize{
 #'   \item{If \code{replace} is set as \code{FALSE}, it refers to the 
-#'     subsampling procedure.}
+#'     subsampling procedure. In this case, \code{phi} has to be in the 
+#'     interval \eqn{[0, 1)}.}
 #'   \item{If \code{replace} is set as \code{TRUE} and \code{phi} is set as 1,
 #'     then it refers to the bootstrap procedure.}
-#'   \item{If \code{replace} is set as \code{TRUE} and \code{phi} set between
-#'     0 and 1, then it refers to the \eqn{m} out of \eqn{n} bootstrap 
-#'     procedure, where \eqn{m} is the size of the subsample and \eqn{n} is
-#'     the total number of observations.}   
+#'   \item{If \code{replace} is set as \code{TRUE} and \code{phi} is in the 
+#'     interval \eqn{[0, 1)}, then it refers to the \eqn{m} out of \eqn{n} 
+#'     bootstrap procedure, where \eqn{m} is the size of the subsample and 
+#'     \eqn{n} is the total number of observations.}
 #' }
 #'
 #' @return Returns a list of output calculated from the function:
@@ -535,9 +537,14 @@ subsample.check <- function(data, lpmodel, beta.tgt, R, solver, cores,
   solver <- solver.return$solver
   solver.name <- solver.return$solver.name
 
-  # Check numerics
-  check.numrange(phi, "phi", "closed", 0, "closed", 1)
-  check.numeric(phi, "phi")
+  # Check phi
+  if (isTRUE(replace)) {
+    check.numrange(phi, "phi", "closed", 0, "closed", 1) 
+  } else if (isFALSE(replace)) {
+    check.numrange(phi, "phi", "closed", 0, "open", 1) 
+  }
+  
+  # Check other numbers
   check.positiveinteger(R, "R")
   cores <- check.cores(cores)
 
