@@ -74,8 +74,9 @@ estbounds <- function(data, lpmodel, kappa = 1e-5, norm = 2, solver = NULL,
     if (!is.numeric(ub) | !is.numeric(lb) | length(ub) == 0 | length(lb) == 0){
       bound0infe <- TRUE
       if (progress == TRUE){
-        cat(paste("The original problem is infeasible. ",
-                  "The estimated bounds will be displayed.", sep = ""))
+        cat(sprintf(paste0("The original problem is infeasible. ",
+                           "The bounds will be estimated by a %s-norm."),
+                    norm))
       }
     } else {
       est = FALSE
