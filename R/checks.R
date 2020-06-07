@@ -66,7 +66,7 @@ check.datafunction <- function(data, f, lpmodel.comp){
 #'
 check.positiveinteger <- function(x, name.var){
   if ((is.numeric(x) == TRUE & length(x) == 1 & x > 0 & x%%1 == 0) == FALSE){
-    stop(sprintf("The variable '%s' has to be a positive integer.", x),
+    stop(sprintf("The variable '%s' has to be a positive integer.", name.var),
          call. = FALSE)
   }
   return(x)
