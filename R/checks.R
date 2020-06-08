@@ -87,7 +87,8 @@ check.positiveinteger <- function(x, name.var){
 #'
 check.nonnegaetive <- function(x, name.var){
   if ((is.numeric(x) == TRUE & length(x) == 1 & x >= 0) == FALSE){
-    stop(sprintf("The variable '%s' has to be a nonnegative number", name.var),
+    stop(sprintf("The variable '%s' has to be a nonnegative number.", 
+                 name.var),
          call. = FALSE)
   }
   return(x)
