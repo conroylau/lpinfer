@@ -32,19 +32,21 @@ check.dataframe <- function(data){
 #' @export
 #'
 check.datafunction <- function(data, f, lpmodel.comp){
+  # General warning message
+  display.msg <- sprintf(paste0("The function defined in the '%s' component ",
+                                "for 'lpmodel' needs to accept data of class",
+                                "'data.frame'."), lpmodel.comp)
+  
+  # try-catch
   tryCatch(
     expr = {
       f(data)
     },
     error = function(e) {
-      stop(sprintf(paste0("The funciton defined in the '%s' component ",
-                          "for 'lpmodel' needs to accept data of clas s",
-                          "'data.frame'."), lpmodel.comp))
+      stop(display.msg)
     },
     warning = function(w) {
-      stop(sprintf(paste0("The funciton defined in the '%s' component ",
-                          "for 'lpmodel' needs to accept data of class ",
-                          "'data.frame'."), lpmodel.comp))
+      stop(display.msg)
     },
     finally = {
     }
