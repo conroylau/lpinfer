@@ -23,7 +23,8 @@ Imports:
     PtProcess,
     doRNG,
     boot,
-    dplyr
+    dplyr,
+    pracma
 Suggests:
     knitr,
     rmarkdown,

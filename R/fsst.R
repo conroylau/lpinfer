@@ -1379,6 +1379,8 @@ fsst.pval <- function(range.n, cone.n, range.n.list, cone.n.list, R,
 #'   different standard quantiles. By default, it evaluates the test
 #'   statistics at the quantiles - 90%, 95% and 99%.
 #'
+#' @import pracma
+#' 
 #' @param stat Test statistics
 #' @param quan Quantiles
 #'
