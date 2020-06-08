@@ -743,6 +743,7 @@ dkqs.check <- function(data, lpmodel, beta.tgt, R, tau, solver, cores,
   # Check numerics
   check.numeric(beta.tgt, "beta.tgt")
   check.positiveinteger(R, "R")
+  check.numeric(tau, "tau")
   cores <- check.cores(cores)
 
   # Check Boolean
