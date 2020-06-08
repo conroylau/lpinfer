@@ -18,7 +18,6 @@
 #'   matrix of the estimator \eqn{\hat{\beta}_{\mathrm{obs}}}.
 #' @param phi Power for the sample. \eqn{n^\phi} represents the size
 #'   of each subsample.
-#' @param alpha Significance level.
 #' @param replace Boolean variable to indicate whether the function samples
 #'   the data with or without replacement.
 #' @inheritParams dkqs
@@ -41,7 +40,6 @@
 #' @return Returns a list of output calculated from the function:
 #'   \item{pval}{\eqn{p}-value.}
 #'   \item{decision}{Decision of the test.}
-#'   \item{alpha}{Significance level.}
 #'   \item{T.n}{Test statistic \eqn{T_n}.}
 #'   \item{T.sub}{The list of test statistics from the subsampling procedure.}
 #'   \item{solver}{Solver used in solving the linear and quadratic programs.}
@@ -54,8 +52,8 @@
 #' @export
 #'
 subsample <- function(data, lpmodel, beta.tgt, R = 100, solver = NULL,
-                      cores = 1, norm = 2, phi = 2/3, alpha = .05,
-                      replace = FALSE, progress = FALSE){
+                      cores = 1, norm = 2, phi = 2/3, replace = FALSE, 
+                      progress = FALSE){
 
   # ---------------- #
   # Step 1: Obtain call, check and update the dependencies
@@ -65,7 +63,7 @@ subsample <- function(data, lpmodel, beta.tgt, R = 100, solver = NULL,
 
   # Check the arguments
   subsample.return <- subsample.check(data, lpmodel, beta.tgt, R, solver, 
-                                      cores, norm, phi, alpha, replace,
+                                      cores, norm, phi, replace,
                                       progress)
 
   # Update the arguments
@@ -102,7 +100,7 @@ subsample <- function(data, lpmodel, beta.tgt, R = 100, solver = NULL,
   # ---------------- #
   # Step 4: Compute the p-value (using the p_eval function in dkqs)
   # ---------------- #
-  pval_return <- pval(T_subsample$T.sub, Treturn$objval, alpha)
+  pval_return <- pval(T_subsample$T.sub, Treturn$objval)
   pval <- pval_return$p
   decision <- pval_return$decision
 
@@ -119,7 +117,6 @@ subsample <- function(data, lpmodel, beta.tgt, R = 100, solver = NULL,
   # ---------------- #
   output <- list(pval = as.numeric(pval),
                  decision = decision,
-                 alpha = alpha,
                  T.n = as.numeric(Treturn$objval),
                  T.sub = T_subsample$T.sub,
                  solver = solver.name,
@@ -513,7 +510,7 @@ summary.subsample <- function(x, ...){
 #' @export
 #'
 subsample.check <- function(data, lpmodel, beta.tgt, R, solver, cores,
-                            norm, phi, alpha, replace, progress){
+                            norm, phi, replace, progress){
 
   # ---------------- #
   # Step 1: Conduct the checks

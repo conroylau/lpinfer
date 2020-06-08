@@ -20,7 +20,8 @@
 #'    }
 #' @param norm Norm used in the optimization problem.
 #' @param kappa Parameter used in the second step of the two-step procedure
-#'    for obtaining the solution subject to the shape constraints.
+#'    for obtaining the solution subject to the shape constraints. It can be
+#'    any nonnegative number.
 #' @param estimate Boolean variable to indicate whether the estimated
 #'    problem should be considered.
 #' @inheritParams dkqs
@@ -436,7 +437,7 @@ estbounds.check <- function(data, lpmodel, kappa, norm, solver, estimate,
 
   # Check numerics
   norm <- check.norm(norm, "norm")
-  kappa <- check.numrange(kappa, "kappa", "closed", 0, "closed", 1)
+  kappa <- check.nonnegaetive(kappa, "kappa")
 
   # Check Boolean
   check.boolean(progress, "progress")

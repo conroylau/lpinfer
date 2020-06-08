@@ -21,7 +21,8 @@ procedure are:
 }}
 
 \item{kappa}{Parameter used in the second step of the two-step procedure
-for obtaining the solution subject to the shape constraints.}
+for obtaining the solution subject to the shape constraints. It can be
+any nonnegative number.}
 
 \item{norm}{Norm used in the optimization problem.}
 

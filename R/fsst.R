@@ -30,7 +30,7 @@
 #'
 #' @export
 #'
-fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda = .5,
+fsst <- function(data = NULL, lpmodel, beta.tgt, R, lambda = .5,
                  rho = 1e-4, n = NULL, weight.matrix = "diag",
                  solver, cores = 1, progress){
 
@@ -259,7 +259,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R, alpha = .05, lambda = .5,
    for (i in 1:n.lambda){
       # Compute the p-values
       pval.return <- fsst.pval(range.n$objval, cone.n$objval, range.n.list,
-                               cone.n.list[[i]], R, alpha)
+                               cone.n.list[[i]], R)
       df.pval[i,1] <- lambda[i]
       df.pval[i,2] <- pval.return$pval
    }

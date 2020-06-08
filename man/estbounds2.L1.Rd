@@ -26,7 +26,8 @@ procedure are:
 objective function.}
 
 \item{kappa}{Parameter used in the second step of the two-step procedure
-for obtaining the solution subject to the shape constraints.}
+for obtaining the solution subject to the shape constraints. It can be
+any nonnegative number.}
 
 \item{solver}{The name of the linear and quadratic programming solver that
 are used to obtain the solution to linear and quadratic programs.

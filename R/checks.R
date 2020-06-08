@@ -72,6 +72,27 @@ check.positiveinteger <- function(x, name.var){
   return(x)
 }
 
+#' Check function: Nonnegative number
+#'
+#' @description This function checks whether the class of the variable
+#'   is \code{numeric}, has length 1 and is a nonnegative number. If not, an
+#'   error message is displayed.
+#'
+#' @param x Variable to be checked.
+#' @inheritParams check.dataframe
+#'
+#' @return Nothing is returned.
+#'
+#' @export
+#'
+check.nonnegaetive <- function(x, name.var){
+  if ((is.numeric(x) == TRUE & length(x) == 1 & x >= 0) == FALSE){
+    stop(sprintf("The variable '%s' has to be a nonnegative number", name.var),
+         call. = FALSE)
+  }
+  return(x)
+}
+
 #' Check function: numeric
 #'
 #' @description This function checks whether the class of the variable

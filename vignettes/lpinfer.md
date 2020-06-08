@@ -577,7 +577,6 @@ The `subsample` command has the following syntax:
               cores = 1,
               norm = 2,
               phi = 2/3,
-              alpha = 0.05,
               replace = FALSE,
               progress = FALSE)
 
@@ -680,7 +679,6 @@ The following is what happens when the above code is run:
                                 cores = 1,
                                 norm = 2,
                                 phi = 2/3,
-                                alpha = 0.05,
                                 replace = FALSE,
                                 progress = FALSE)
     print(subsample.full)
@@ -713,7 +711,6 @@ The following is an exmaple of performing a bootstrapping procedure:
                                      cores = 1,
                                      norm = 2,
                                      phi = 1,
-                                     alpha = 0.05,
                                      replace = TRUE,
                                      progress = FALSE)
     print(subsample.bootstrap)
@@ -731,7 +728,6 @@ procedure:
                                       cores = 1,
                                       norm = 2,
                                       phi = 2/3,
-                                      alpha = 0.05,
                                       replace = TRUE,
                                       progress = FALSE)
     print(subsample.bootstrap2)

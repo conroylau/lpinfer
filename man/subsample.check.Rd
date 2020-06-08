@@ -13,7 +13,6 @@ subsample.check(
   cores,
   norm,
   phi,
-  alpha,
   replace,
   progress
 )
@@ -47,8 +46,6 @@ greater than or equal to 2.}
 
 \item{phi}{Power for the sample. \eqn{n^\phi} represents the size
 of each subsample.}
-
-\item{alpha}{Significance level.}
 
 \item{replace}{Boolean variable to indicate whether the function samples
 the data with or without replacement.}

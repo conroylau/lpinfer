@@ -13,7 +13,6 @@ subsample(
   cores = 1,
   norm = 2,
   phi = 2/3,
-  alpha = 0.05,
   replace = FALSE,
   progress = FALSE
 )
@@ -51,8 +50,6 @@ greater than or equal to 2.}
 \item{phi}{Power for the sample. \eqn{n^\phi} represents the size
 of each subsample.}
 
-\item{alpha}{Significance level.}
-
 \item{replace}{Boolean variable to indicate whether the function samples
 the data with or without replacement.}
 
@@ -65,7 +62,6 @@ Otherwise, the messages will not be displayed.}
 Returns a list of output calculated from the function:
   \item{pval}{\eqn{p}-value.}
   \item{decision}{Decision of the test.}
-  \item{alpha}{Significance level.}
   \item{T.n}{Test statistic \eqn{T_n}.}
   \item{T.sub}{The list of test statistics from the subsampling procedure.}
   \item{solver}{Solver used in solving the linear and quadratic programs.}

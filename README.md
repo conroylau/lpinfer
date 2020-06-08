@@ -554,7 +554,6 @@ subsample(data = sampledata,
           cores = 1,
           norm = 2,
           phi = 2/3,
-          alpha = 0.05,
           replace = FALSE,
           progress = FALSE)
 ```
@@ -657,7 +656,6 @@ subsample.full <- subsample(data = sampledata,
                             cores = 1,
                             norm = 2,
                             phi = 2/3,
-                            alpha = 0.05,
                             replace = FALSE,
                             progress = FALSE)
 print(subsample.full)
@@ -694,7 +692,6 @@ subsample.bootstrap <- subsample(data = sampledata,
                                  cores = 1,
                                  norm = 2,
                                  phi = 1,
-                                 alpha = 0.05,
                                  replace = TRUE,
                                  progress = FALSE)
 print(subsample.bootstrap)
@@ -714,7 +711,6 @@ subsample.bootstrap2 <- subsample(data = sampledata,
                                   cores = 1,
                                   norm = 2,
                                   phi = 2/3,
-                                  alpha = 0.05,
                                   replace = TRUE,
                                   progress = FALSE)
 print(subsample.bootstrap2)

@@ -9,7 +9,6 @@ fsst(
   lpmodel,
   beta.tgt,
   R,
-  alpha = 0.05,
   lambda = 0.5,
   rho = 1e-04,
   n = NULL,
