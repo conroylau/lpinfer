@@ -413,17 +413,18 @@ subsample.manycores <- function(data, R, lpmodel, beta.tgt, norm, solver,
   # ---------------- #
   listans = foreach::foreach(i = 1:R, .multicombine = TRUE,
                              .combine = "comb", .options.snow = opts,
-                             .packages = "lpinfer") %dorng% {
-   ## (3.1) Compute the bootstrap estimates
-   # Compute the value of beta_bs_star using the function func_obs
-   sub.return <- subsample.prob(data.bs, lpmodel.bs[[i]], beta.tgt, norm,
-                                solver, 1)
-   T.sub <- data.frame(sub.return$objval)
-   beta.sub <- data.frame(c(sub.return$beta))
+                             .packages = "lpinfer") %dorng%
+    {
+      ## (3.1) Compute the bootstrap estimates
+      # Compute the value of beta_bs_star using the function func_obs
+      sub.return <- subsample.prob(data.bs, lpmodel.bs[[i]], beta.tgt, norm,
+                                   solver, 1)
+      T.sub <- data.frame(sub.return$objval)
+      beta.sub <- data.frame(c(sub.return$beta))
 
-   ## (3.2) Combine the results
-   list(T.sub, beta.sub)
-  }
+      ## (3.2) Combine the results
+      list(T.sub, beta.sub)
+    }
 
   # ---------------- #
   # Step 4: Retrieve results from output

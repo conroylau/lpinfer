@@ -513,14 +513,14 @@ sigma.est.parallel <- function(data, beta.obs.hat, lpmodel, R, cores, progress){
                       .multicombine = TRUE,
                       .combine = "comb",
                       .options.snow = opts,
-                      .packages = c("lpinfer", "doRNG")) %dorng% {
+                      .packages = c("lpinfer", "doRNG")) %dorng%
+      {
+         # Compute the bootstrap test statistic
+         beta.product <- beta.bs.list[[i]] - beta.obs.hat
+         listans <- (beta.product) %*% t(beta.product)
 
-       # Compute the bootstrap test statistic
-       beta.product <- beta.bs.list[[i]] - beta.obs.hat
-       listans <- (beta.product) %*% t(beta.product)
-
-       list(x = listans)
-    }
+         list(x = listans)
+      }
 
    # ---------------- #
    # Step 5: Retrieve information from the output
@@ -720,21 +720,21 @@ sigma.summation.parallel <- function(n, beta.bs.list, cores, progress,
    # ---------------- #
    # Step 4: Bootstrap procedure
    # ---------------- #
-   listans <- foreach(i = 1:R,
+   listans <- foreach::foreach(i = 1:R,
                       .multicombine = TRUE,
                       .combine = "comb",
                       .options.snow = opts,
-                      .packages = "lpinfer") %dorng% {
-
-      beta.diff <- as.matrix(beta.bs.list[[i+1]] - beta.obs.hat)
-      if (nrow(beta.diff) == 1){
-         listans <- t(beta.diff) %*% (beta.diff)
-      } else {
-         listans <- (beta.diff) %*% t(beta.diff)
+                      .packages = "lpinfer") %dorng%
+      {
+         beta.diff <- as.matrix(beta.bs.list[[i+1]] - beta.obs.hat)
+         if (nrow(beta.diff) == 1){
+            listans <- t(beta.diff) %*% (beta.diff)
+         } else {
+            listans <- (beta.diff) %*% t(beta.diff)
+         }
+         listans <- as.matrix(listans, nrow = p)
+         list(x=listans)
       }
-      listans <- as.matrix(listans, nrow = p)
-      list(x=listans)
-   }
 
    # ---------------- #
    # Step 5: Retrieve information from the output
@@ -1184,24 +1184,24 @@ fsst.range.bs <- function(n, omega.e, beta.n, beta.star, R, beta.n.bs,
       # Assign doRnG
       `%dorng%` <- doRNG::`%dorng%`
 
-      listans <- foreach(i = 1:R,
+      listans <- foreach::foreach(i = 1:R,
                          .multicombine = TRUE,
                          .options.snow = opts,
-                         .packages = "lpinfer") %dorng% {
+                         .packages = "lpinfer") %dorng%
+         {
+            # ---------------- #
+            # Step 1: Compute the replacements
+            # ---------------- #
+            beta.bs.1 <- beta.n.bs[[i]] - beta.n
+            beta.bs.2 <- beta.star.bs[[i]] - beta.star
 
-          # ---------------- #
-          # Step 1: Compute the replacements
-          # ---------------- #
-          beta.bs.1 <- beta.n.bs[[i]] - beta.n
-          beta.bs.2 <- beta.star.bs[[i]] - beta.star
-
-          # ---------------- #
-          # Step 2: Solve the linear program and extract the solution
-          # ---------------- #
-          range.n.return <- fsst.range.lp(n, omega.e, beta.bs.1, beta.bs.2,
-                                          solver)
-          list(range.n.return$objval)
-       }
+            # ---------------- #
+            # Step 2: Solve the linear program and extract the solution
+            # ---------------- #
+            range.n.return <- fsst.range.lp(n, omega.e, beta.bs.1, beta.bs.2,
+                                            solver)
+            list(range.n.return$objval)
+        }
       range.n.list <- unlist(listans)
    }
 
@@ -1307,22 +1307,23 @@ fsst.cone.bs <- function(n, omega.i, beta.n, beta.star, lpmodel, R, lambda,
       # Assign doRnG
       `%dorng%` <- doRNG::`%dorng%`
 
-      listans <- foreach(i = 1:R,
+      listans <- foreach::foreach(i = 1:R,
                          .multicombine = TRUE,
                          .options.snow = opts,
-                         .packages = "lpinfer") %dorng% {
-       # ---------------- #
-       # Step 1: Compute the replacements
-       # ---------------- #
-       beta.new <- beta.star.list[[i+1]] - beta.star + lambda*beta.r
+                         .packages = "lpinfer") %dorng%
+         {
+            # ---------------- #
+            # Step 1: Compute the replacements
+            # ---------------- #
+            beta.new <- beta.star.list[[i+1]] - beta.star + lambda*beta.r
 
-       # ---------------- #
-       # Step 2: Solve the linear program and extract the solution
-       # ---------------- #
-       cone.n.return <- fsst.cone.lp(n, omega.i, beta.n, beta.new, lpmodel,
-                                     indicator, solver)
-       list(cone.n.return$objval)
-      }
+            # ---------------- #
+            # Step 2: Solve the linear program and extract the solution
+            # ---------------- #
+            cone.n.return <- fsst.cone.lp(n, omega.i, beta.n, beta.new, lpmodel,
+                                           indicator, solver)
+            list(cone.n.return$objval)
+         }
       cone.n.list <- unlist(listans)
    }
 

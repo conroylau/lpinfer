@@ -605,23 +605,24 @@ beta.bs.parallel <- function(data, lpmodel, beta.tgt, R, J, s.star.list,
   # ---------------- #
   listans <- foreach::foreach(i = 1:R, .multicombine = TRUE, .combine = "comb",
                               .options.snow = opts,
-                              .packages = c("lpinfer", "doRNG")) %dorng% {
+                              .packages = c("lpinfer", "doRNG")) %dorng%
+    {
 
-                                T.bs.list <- NULL
-                                beta.bs.bar.list <- list()
+      T.bs.list <- NULL
+      beta.bs.bar.list <- list()
 
-                                for (j in 1:n.tau) {
-                                  beta.bs.bar <- beta.bs.list[[i + 1]] - beta.bs.list[[1]] +
-                                    s.star.list[[j]]
+      for (j in 1:n.tau) {
+        beta.bs.bar <- beta.bs.list[[i + 1]] - beta.bs.list[[1]] +
+          s.star.list[[j]]
 
-                                  T.bs <- dkqs.qlp(lpmodel, beta.tgt,  beta.bs.bar, tau.list[j],
-                                                   "cone", nrow(data), solver)$objval
-                                  T.bs.list <- c(T.bs.list, T.bs)
-                                  beta.bs.bar.list[[j]] <- beta.bs.bar
-                                }
+        T.bs <- dkqs.qlp(lpmodel, beta.tgt,  beta.bs.bar, tau.list[j],
+                         "cone", nrow(data), solver)$objval
+        T.bs.list <- c(T.bs.list, T.bs)
+        beta.bs.bar.list[[j]] <- beta.bs.bar
+      }
 
-                                list(T.bs.list, beta.bs.bar.list)
-                              }
+      list(T.bs.list, beta.bs.bar.list)
+    }
 
   # ---------------- #
   # Step 5: Retrieve information from the output
