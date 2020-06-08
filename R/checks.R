@@ -87,7 +87,7 @@ check.positiveinteger <- function(x, name.var){
 #'
 check.nonnegaetive <- function(x, name.var){
   if ((is.numeric(x) == TRUE & length(x) == 1 & x >= 0) == FALSE){
-    stop(sprintf("The variable '%s' has to be a nonnegative number.", 
+    stop(sprintf("The variable '%s' has to be a nonnegative number.",
                  name.var),
          call. = FALSE)
   }
@@ -108,7 +108,7 @@ check.nonnegaetive <- function(x, name.var){
 #'
 check.numeric <- function(x, name.var){
   if ((is.numeric(x) == TRUE & length(x) == 1) == FALSE){
-    stop(sprintf("The class of the variable '%s' has to be numeric.", 
+    stop(sprintf("The class of the variable '%s' has to be numeric.",
                  name.var),
          call. = FALSE)
   }
@@ -420,7 +420,7 @@ check.solver <- function(x, name.var, norm = 2){
   # ---------------- #
   # Only change x to lower case if it is non-null. Otherwise, keep it as null
   if (!is.null(x)) {
-    x <- tolower(x) 
+    x <- tolower(x)
   }
   # Package recommendation messages
   gurobi.msg <- "'gurobi' (version 8.1-1 or later)"
@@ -692,9 +692,9 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R){
           if (i > 1){
             if ((df.dim[i,1] != df.dim[i-1,1]) |
                 (df.dim[i,1] != df.dim[i-1,1])){
-              stop(sprintf(paste0("The dimension of the objects inside the list ",
-                                  "'%s' in 'lpmodel' need to have the same",
-                                  "dimension.",
+              stop(sprintf(paste0("The dimension of the objects inside the ",
+                                  "list '%s' in 'lpmodel' need to have the ",
+                                  "same dimension.",
                                   mat.name)),
                    call. = FALSE)
             }
@@ -811,7 +811,7 @@ check.matrix <- function(mat, mat.name, mat.cat, inside.list){
         mat.update <- matrix(mat, ncol = 1)
       }
     } else {
-      mat.update <- as.matrix(mat) 
+      mat.update <- as.matrix(mat)
     }
     return(list(mat.update = mat.update,
                 err.ind = 0,

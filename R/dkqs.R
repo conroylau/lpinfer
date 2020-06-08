@@ -52,7 +52,7 @@
 #'
 #' @export
 #'
-dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, tau = NULL, 
+dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, tau = NULL,
                  solver = NULL, cores = 1, progress = TRUE){
 
   # ---------------- #

@@ -22,18 +22,18 @@
 #'   the data with or without replacement.
 #' @inheritParams dkqs
 #' @inheritParams estbounds
-#' 
-#' @details There are three possible combinations for the parameters 
+#'
+#' @details There are three possible combinations for the parameters
 #' \code{phi} and \code{replace}:
 #' \itemize{
-#'   \item{If \code{replace} is set as \code{FALSE}, it refers to the 
-#'     subsampling procedure. In this case, \code{phi} has to be in the 
+#'   \item{If \code{replace} is set as \code{FALSE}, it refers to the
+#'     subsampling procedure. In this case, \code{phi} has to be in the
 #'     interval \eqn{(0, 1)}.}
 #'   \item{If \code{replace} is set as \code{TRUE} and \code{phi} is set as 1,
 #'     then it refers to the bootstrap procedure.}
-#'   \item{If \code{replace} is set as \code{TRUE} and \code{phi} is in the 
-#'     interval \eqn{(0, 1)}, then it refers to the \eqn{m} out of \eqn{n} 
-#'     bootstrap procedure, where \eqn{m} is the size of the subsample and 
+#'   \item{If \code{replace} is set as \code{TRUE} and \code{phi} is in the
+#'     interval \eqn{(0, 1)}, then it refers to the \eqn{m} out of \eqn{n}
+#'     bootstrap procedure, where \eqn{m} is the size of the subsample and
 #'     \eqn{n} is the total number of observations.}
 #' }
 #'
@@ -51,7 +51,7 @@
 #'
 #' @export
 #'
-subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, norm = 2, 
+subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, norm = 2,
                       phi = 2/3, replace = FALSE, solver = NULL,
                       cores = 1, progress = TRUE){
 
@@ -62,7 +62,7 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, norm = 2,
   call <- match.call()
 
   # Check the arguments
-  subsample.return <- subsample.check(data, lpmodel, beta.tgt, R, solver, 
+  subsample.return <- subsample.check(data, lpmodel, beta.tgt, R, solver,
                                       cores, norm, phi, replace,
                                       progress)
 
@@ -536,11 +536,11 @@ subsample.check <- function(data, lpmodel, beta.tgt, R, solver, cores,
 
   # Check phi
   if (isTRUE(replace)) {
-    check.numrange(phi, "phi", "open", 0, "closed", 1) 
+    check.numrange(phi, "phi", "open", 0, "closed", 1)
   } else if (isFALSE(replace)) {
-    check.numrange(phi, "phi", "open", 0, "open", 1) 
+    check.numrange(phi, "phi", "open", 0, "open", 1)
   }
-  
+
   # Check other numbers
   check.positiveinteger(R, "R")
   cores <- check.cores(cores)

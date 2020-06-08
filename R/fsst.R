@@ -2,7 +2,7 @@
 #'
 #' @description This module conducts inference in linear programs using the
 #'   `\code{fsst}` procedure by Fang, Santos, Shaikh and Torgovitsky (2020).
-#'   
+#'
 #' @import expm
 #'
 #' @inheritParams dkqs
@@ -1382,7 +1382,7 @@ fsst.pval <- function(range.n, cone.n, range.n.list, cone.n.list, R,
 #'   statistics at the quantiles - 90%, 95% and 99%.
 #'
 #' @import pracma
-#' 
+#'
 #' @param stat Test statistics
 #' @param quan Quantiles
 #'

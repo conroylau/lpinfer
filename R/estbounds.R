@@ -38,7 +38,7 @@
 #'
 #' @export
 #'
-estbounds <- function(data = NULL, lpmodel, kappa = 1e-5, norm = 2, 
+estbounds <- function(data = NULL, lpmodel, kappa = 1e-5, norm = 2,
                       estimate = TRUE, solver = NULL, progress = TRUE){
 
   # ---------------- #

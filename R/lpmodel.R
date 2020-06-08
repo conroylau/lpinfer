@@ -123,14 +123,14 @@ lpmodel.beta.eval <- function(data, obj, i){
         }
       } else {
         beta.obs.hat <- obj[[i]]
-        omega.hat <- NULL 
+        omega.hat <- NULL
       }
     }
   } else if (class(obj) == "numeric"){
     beta.obs.hat <- obj
     omega.hat <- NULL
   }
-  
+
   if (class(beta.obs.hat) == "data.frame") {
     beta.obs.hat <- as.matrix(beta.obs.hat)
   } else if (class(beta.obs.hat) == "numeric") {

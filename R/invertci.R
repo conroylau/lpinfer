@@ -688,19 +688,19 @@ summary.invertci_multiple <- function(x, alphas, ...){
   } else {
     alphas.seq <- which(x$alpha %in% alphas)
   }
-  
+
   # Display the details
   if (length(alphas.seq) != 0) {
     cat("\n")
     # Display the confidence intervals
     n.alpha <- length(alphas.seq)
     df <- data.frame(matrix(vector(), nrow = n.alpha + 1, ncol = 1))
-    
+
     # ---------------- #
     # Step 2: Print the results
     # ---------------- #
     colnames(df) <- NULL
-    rownames(df) <- c("Significance level", round(x$alpha[alphas.seq], 
+    rownames(df) <- c("Significance level", round(x$alpha[alphas.seq],
                                                   digits = 5))
     df[1,1] <- "Confidence interval"
     for (i in 1:n.alpha) {
@@ -710,7 +710,7 @@ summary.invertci_multiple <- function(x, alphas, ...){
     }
     print(df)
     cat("\n")
-    
+
     # Display the details
     cat("Details:\n\n")
     for (i in alphas.seq) {
