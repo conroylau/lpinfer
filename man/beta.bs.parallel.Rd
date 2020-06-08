@@ -10,13 +10,11 @@ beta.bs.parallel(
   beta.tgt,
   R,
   J,
-  s.star,
-  tau,
+  s.star.list,
+  tau.list,
   solver,
   progress,
-  cores,
-  tau.i,
-  n.tau
+  cores
 )
 }
 \arguments{
@@ -37,7 +35,11 @@ procedure are:
 
 \item{J}{The number of distinct nonzero values in vector \eqn{\bm{y}}.}
 
-\item{tau}{The value of tau chosen by the user.}
+\item{s.star.list}{The list of values of 
+\eqn{\hat{s}^\ast \equiv A_{\mathrm{obs}}\hat{\bm{x}}_n^\ast}
+in the cone-tightening procedure for each tau.}
+
+\item{tau.list}{The list of feasible taus.}
 
 \item{solver}{The name of the linear and quadratic programming solver that
 are used to obtain the solution to linear and quadratic programs.

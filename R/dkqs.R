@@ -144,73 +144,73 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, tau = NULL,
   T.n <- dkqs.qlp(lpmodel, beta.tgt, beta.obs.hat, tau.feasible[1], "test",
                   n, solver)$objval
 
-  # Compute s.star, x.star, bootstrap test statistics and p-values for each
-  # tau
-  for (i in 1:n.tau) {
+  if (T.n == 0) {
+    cat(paste0("Bootstrap is skipped because the ",
+               "value of the test statistic is zero.\n"))
+    T.n <- 0
+    T.bs.list[[i]] <- NULL
+    beta.bs.bar.list[[i]] <- NULL
+  } else {
+    # Compute s.star, x.star, bootstrap test statistics and p-values for each
+    # tau
+    for (i in 1:n.tau) {
+      # ---------------- #
+      # Step 5: Compute x.star and s.star for each tau
+      # ---------------- #
+      x.return <- dkqs.qlp(lpmodel, beta.tgt, beta.obs.hat, tau.feasible[i],
+                           "cone", n, solver)
+      x.star.list[[i]] <- x.return$x
+      s.star.list[[i]] <- lpmodel$A.obs %*% x.star.list[[i]]
 
-    # Compute s.star
-    x.return <- dkqs.qlp(lpmodel, beta.tgt, beta.obs.hat, tau.feasible[i],
-                         "cone", n, solver)
-    x.star.list[[i]] <- x.return$x
-    s.star.list[[i]] <- lpmodel$A.obs %*% x.star.list[[i]]
-
-    # ---------------- #
-    # Step 5: Compute the bootstrap beta and estimates
-    # ---------------- #
-    if (T.n != 0){
-      if (cores == 1){
-        # No parallelization
-        T.bs.return <- beta.bs(data, lpmodel, beta.tgt, R, J, s.star.list[[i]],
-                               tau.feasible[i], solver, progress, i, n.tau)
-      } else {
-        # Parallelization
-        T.bs.return <- beta.bs.parallel(data, lpmodel, beta.tgt, R, J,
-                                        s.star.list[[i]], tau.feasible[i],
-                                        solver, progress, cores, i, n.tau)
-      }
-      # Retrive answer
-      T.bs.list[[i]] <- T.bs.return$T.bs
-      beta.bs.bar.list[[i]] <- T.bs.return$beta.bs.bar.list
-    } else {
-      if (progress == TRUE){
-        cat(sprintf(paste0("Bootstrap is skipped for tau = %s because the ",
-                           "value of the test statistic is zero.\n"), tau[i]))
-        T.n <- 0
-        T.bs.list[[i]] <- NULL
-        beta.bs.bar.list[[i]] <- NULL
-      }
+      # ---------------- #
+      # Step 6: Obtain logical bounds for the function invertci
+      # ---------------- #
+      lb.df[i,2] <- x.return$lb0$objval
+      ub.df[i,2] <- x.return$ub0$objval
     }
-    # ---------------- #
-    # Step 6: Compute p-value
-    # ---------------- #
-    pval.df[i,2] <- pval(T.bs.list[[i]], T.n)$p
 
     # ---------------- #
-    # Step 7: Obtain logical bounds for the function invertci
+    # Step 7: Compute the bootstrap beta and estimates
     # ---------------- #
-    lb.df[i,2] <- x.return$lb0$objval
-    ub.df[i,2] <- x.return$ub0$objval
+    if (cores == 1) {
+      # No parallelization
+      T.bs.return <- beta.bs(data, lpmodel, beta.tgt, R, J, s.star.list,
+                             tau.feasible, solver, progress)
+    } else {
+      # Parallelization
+      T.bs.return <- beta.bs.parallel(data, lpmodel, beta.tgt, R, J,
+                                      s.star.list, tau.feasible,
+                                      solver, progress, cores)
+    }
 
     # ---------------- #
-    # Step 8: Close the progress bar that is used in the bootstrap procedure
+    # Step 8: Compute p-value
+    # ---------------- #
+    for (i in 1:n.tau) {
+      pval.df[i,2] <- pval(T.bs.return$T.bs[[i]], T.n)$p
+    }
+
+    # ---------------- #
+    # Step 9: Close the progress bar that is used in the bootstrap procedure
     # ---------------- #
     if ((progress == TRUE) & (i == n.tau)){
       close(T.bs.return$pb)
       # Remove progress bar
       cat("                               \n\b\r")
     }
+
   }
 
   # ---------------- #
-  # Step 9: Assign the return list and return output
+  # Step 10: Assign the return list and return output
   # ---------------- #
   output <- list(pval = pval.df,
                  tau.feasible = tau.feasible,
                  tau.infeasible = tau.infeasible,
                  tau.max = tau.return$objval,
                  T.n = T.n,
-                 T.bs = T.bs.list,
-                 beta.bs.bar = beta.bs.bar.list,
+                 T.bs = T.bs.return$T.bs,
+                 beta.bs.bar = T.bs.return$beta.bs.bar.list,
                  lb0 = lb.df,
                  ub0 = ub.df,
                  solver = solver.name,
@@ -407,9 +407,10 @@ dkqs.qlp <- function(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
 #' @import modelr dplyr
 #'
 #' @param J The number of distinct nonzero values in vector \eqn{\bm{y}}.
-#' @param s_star The value of
+#' @param s.star.list The list of values of
 #'    \eqn{\hat{s}^\ast \equiv A_{\mathrm{obs}}\hat{\bm{x}}_n^\ast}
-#'    in the cone-tightening procedure.
+#'    in the cone-tightening procedure for each tau.
+#' @param tau.list The list of feasible taus.
 #' @inheritParams dkqs
 #' @inheritParams dkqs.qlp
 #'
@@ -422,8 +423,8 @@ dkqs.qlp <- function(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
 #'
 #' @export
 #'
-beta.bs <- function(data, lpmodel, beta.tgt, R, J, s.star, tau, solver,
-                    progress, tau.i, n.tau){
+beta.bs <- function(data, lpmodel, beta.tgt, R, J, s.star.list, tau.list,
+                    solver, progress){
   # ---------------- #
   # Step 1: Initialize the vectors and progress counters
   # ---------------- #
@@ -431,14 +432,19 @@ beta.bs <- function(data, lpmodel, beta.tgt, R, J, s.star, tau, solver,
   beta.bs.bar.list <- NULL
 
   # Initialize the progress bar
-  bar.initial <- R*(tau.i - 1)/n.tau
   if (progress == TRUE){
-    pb <- utils::txtProgressBar(initial = bar.initial,
-                                max = R, style = 3, width = 20)
+    pb <- utils::txtProgressBar(initial = 0, max = R, style = 3, width = 20)
     cat("\r")
   } else {
     pb <- NULL
   }
+
+  # Count the total number of taus
+  n.tau <- length(tau.list)
+
+  # Initialize the lists
+  T.bs <- list()
+  beta.bs.bar.list <- list()
 
   # ---------------- #
   # Step 2: Bootstrap procedure
@@ -446,7 +452,7 @@ beta.bs <- function(data, lpmodel, beta.tgt, R, J, s.star, tau, solver,
   lpmodel.bs <- lpmodel
 
   # Use the for-loop to construct the bootstrap test statistic
-  for (i in 1:R){
+  for (i in 1:R) {
     data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
     rownames(data.bs) <- 1:nrow(data.bs)
 
@@ -459,22 +465,30 @@ beta.bs <- function(data, lpmodel, beta.tgt, R, J, s.star, tau, solver,
       beta.obs <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
     }
 
-    # Compute beta.bs.bar and test statistic
-    beta.bs.bar <- beta.obs.bs - beta.obs + s.star
-    T.bs.i <- dkqs.qlp(lpmodel.bs, beta.tgt, beta.bs.bar, tau, "cone",
-                       nrow(data), solver)$objval
+    # Loop through each tau to compute the corresponding bootstrap test
+    # statistics
+    for (j in 1:n.tau) {
+      # Compute beta.bs.bar and test statistic
+      beta.bs.bar <- beta.obs.bs - beta.obs + s.star.list[[j]]
 
-    # Append results
-    T.bs <- c(T.bs, T.bs.i)
-    beta.bs.bar.list <- cbind(beta.bs.bar.list, beta.bs.bar)
+      T.bs.j <- dkqs.qlp(lpmodel.bs, beta.tgt, beta.bs.bar, tau.list[j], "cone",
+                         nrow(data), solver)$objval
+      if (i == 1) {
+        T.bs[[j]] <- T.bs.j
+        beta.bs.bar.list[[j]] <- beta.bs.bar
+      } else {
+        T.bs[[j]] <- c(T.bs[[j]], T.bs.j)
+        beta.bs.bar.list[[j]] <- cbind(beta.bs.bar.list[[j]], beta.bs.bar)
+      }
+    }
 
     # Update progress bar
     if (progress == TRUE){
       if (i < R){
-        utils::setTxtProgressBar(pb, bar.initial + i/n.tau)
+        utils::setTxtProgressBar(pb, i)
         cat("\r\r")
-      } else if ((i == R) & (n.tau == tau.i)) {
-        utils::setTxtProgressBar(pb, bar.initial + i/n.tau)
+      } else if ((i == R)) {
+        utils::setTxtProgressBar(pb, i)
         cat("\r\b")
       }
     }
@@ -508,8 +522,8 @@ beta.bs <- function(data, lpmodel, beta.tgt, R, J, s.star, tau, solver,
 #'
 #' @export
 #'
-beta.bs.parallel <- function(data, lpmodel, beta.tgt, R, J, s.star, tau,
-                             solver, progress, cores, tau.i, n.tau){
+beta.bs.parallel <- function(data, lpmodel, beta.tgt, R, J, s.star.list,
+                             tau.list, solver, progress, cores){
   # ---------------- #
   # Step 1: Register the number of cores and extract information
   # ---------------- #
@@ -525,24 +539,26 @@ beta.bs.parallel <- function(data, lpmodel, beta.tgt, R, J, s.star, tau,
     beta.obs.nr <- lpmodel$beta.obs[[1]]
   }
 
+  # Count the total number of taus
+  n.tau <- length(tau.list)
+
   # ---------------- #
   # Step 2: Initialize progress bar, comb function and assign doRNG
   # ---------------- #
   if (progress == TRUE){
     # Initialize the counter
-    bar.initial <- R*(tau.i - 1)/n.tau
     cl <- PtProcess::makeSOCKcluster(8)
     doSNOW::registerDoSNOW(cl)
 
     # Set the counter and progress bar
-    pb <- utils::txtProgressBar(initial = bar.initial,
+    pb <- utils::txtProgressBar(initial = 0,
                                 max = R, style = 3, width = 20)
     cat("\r")
     progress <- function(n){
-      utils::setTxtProgressBar(pb, bar.initial + n/n.tau)
+      utils::setTxtProgressBar(pb, n)
       if (n < R){
         cat("\r\r")
-      } else if ((n == R) & (n.tau == tau.i)) {
+      } else if (n == R) {
         cat("\r\b")
       }
     }
@@ -591,25 +607,41 @@ beta.bs.parallel <- function(data, lpmodel, beta.tgt, R, J, s.star, tau,
                               .options.snow = opts,
                               .packages = c("lpinfer", "doRNG")) %dorng% {
 
-      # Compute beta.bs.bar and test statistic
-      beta.bs.bar <- beta.bs.list[[i + 1]] - beta.bs.list[[1]] + s.star
-      T.bs.i <- dkqs.qlp(lpmodel, beta.tgt, beta.bs.bar, tau, "cone",
-                         nrow(data), solver)$objval
+                                T.bs.list <- NULL
+                                beta.bs.bar.list <- list()
 
-      # Append results
-      T.bs <- data.frame(T.bs.i)
-      beta.bs.bar.list <- data.frame(beta.bs.bar)
-      list(T.bs, beta.bs.bar.list)
-    }
+                                for (j in 1:n.tau) {
+                                  beta.bs.bar <- beta.bs.list[[i + 1]] - beta.bs.list[[1]] +
+                                    s.star.list[[j]]
+
+                                  T.bs <- dkqs.qlp(lpmodel, beta.tgt,  beta.bs.bar, tau.list[j],
+                                                   "cone", nrow(data), solver)$objval
+                                  T.bs.list <- c(T.bs.list, T.bs)
+                                  beta.bs.bar.list[[j]] <- beta.bs.bar
+                                }
+
+                                list(T.bs.list, beta.bs.bar.list)
+                              }
 
   # ---------------- #
   # Step 5: Retrieve information from the output
   # ---------------- #
-  T.bs <- as.vector(unlist(listans[[1]]))
-  beta.bs.bar.list <- data.frame(matrix(unlist(listans[[2]]),
-                                        nrow = beta.obs.nr,
-                                        ncol = R,
-                                        byrow = FALSE))
+  ### Initialize the lists
+  T.bs <- list()
+  beta.bs.bar.list <- list()
+
+  ### Consolidate the results
+  for (j in 1:n.tau) {
+    # Consolidate the test statistics
+    T.bs[[j]] <- unlist(listans[[1]])[seq(j, n.tau*R, n.tau)]
+
+    # Consolidate the betas
+    beta.bs.bar.list[[j]] <- listans[[2]][[j]]
+    for (i in 2:R) {
+      beta.bs.bar.list[[j]] <- cbind(beta.bs.bar.list[[j]],
+                                     listans[[2]][[n.tau + i - 1]][[j]])
+    }
+  }
 
   # ---------------- #
   # Step 6: Return results
@@ -743,7 +775,9 @@ dkqs.check <- function(data, lpmodel, beta.tgt, R, tau, solver, cores,
   # Check numerics
   check.numeric(beta.tgt, "beta.tgt")
   check.positiveinteger(R, "R")
-  check.numeric(tau, "tau")
+  for (i in 1:length(tau)) {
+    check.numeric(tau[i], "tau")
+  }
   cores <- check.cores(cores)
 
   # Check Boolean

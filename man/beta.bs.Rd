@@ -4,19 +4,7 @@
 \alias{beta.bs}
 \title{Computes the bootstrap test statistics}
 \usage{
-beta.bs(
-  data,
-  lpmodel,
-  beta.tgt,
-  R,
-  J,
-  s.star,
-  tau,
-  solver,
-  progress,
-  tau.i,
-  n.tau
-)
+beta.bs(data, lpmodel, beta.tgt, R, J, s.star.list, tau.list, solver, progress)
 }
 \arguments{
 \item{data}{The data being used in the inference.}
@@ -36,7 +24,11 @@ procedure are:
 
 \item{J}{The number of distinct nonzero values in vector \eqn{\bm{y}}.}
 
-\item{tau}{The value of tau chosen by the user.}
+\item{s.star.list}{The list of values of 
+\eqn{\hat{s}^\ast \equiv A_{\mathrm{obs}}\hat{\bm{x}}_n^\ast}
+in the cone-tightening procedure for each tau.}
+
+\item{tau.list}{The list of feasible taus.}
 
 \item{solver}{The name of the linear and quadratic programming solver that
 are used to obtain the solution to linear and quadratic programs.
@@ -47,10 +39,6 @@ The solvers supported by this module are `\code{cplexAPI}',
 should be displayed in the inference procedure. If it is set as
 \code{TRUE}, the messages are displayed throughout the procedure.
 Otherwise, the messages will not be displayed.}
-
-\item{s_star}{The value of
-\eqn{\hat{s}^\ast \equiv A_{\mathrm{obs}}\hat{\bm{x}}_n^\ast}
-in the cone-tightening procedure.}
 }
 \value{
 Returns the list of estimates from bootstrap:

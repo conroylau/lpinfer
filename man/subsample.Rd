@@ -76,17 +76,17 @@ This function conducts inference and returns the
   \eqn{p}-value using the subsampling procedure.
 }
 \details{
-There are three possible combinations for the parameters 
+There are three possible combinations for the parameters
 \code{phi} and \code{replace}:
 \itemize{
-  \item{If \code{replace} is set as \code{FALSE}, it refers to the 
-    subsampling procedure. In this case, \code{phi} has to be in the 
+  \item{If \code{replace} is set as \code{FALSE}, it refers to the
+    subsampling procedure. In this case, \code{phi} has to be in the
     interval \eqn{(0, 1)}.}
   \item{If \code{replace} is set as \code{TRUE} and \code{phi} is set as 1,
     then it refers to the bootstrap procedure.}
-  \item{If \code{replace} is set as \code{TRUE} and \code{phi} is in the 
-    interval \eqn{(0, 1)}, then it refers to the \eqn{m} out of \eqn{n} 
-    bootstrap procedure, where \eqn{m} is the size of the subsample and 
+  \item{If \code{replace} is set as \code{TRUE} and \code{phi} is in the
+    interval \eqn{(0, 1)}, then it refers to the \eqn{m} out of \eqn{n}
+    bootstrap procedure, where \eqn{m} is the size of the subsample and
     \eqn{n} is the total number of observations.}
 }
 }
