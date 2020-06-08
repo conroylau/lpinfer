@@ -2,11 +2,10 @@
 title: 'lpinfer: An R Package for Inference in Linear Programs'
 author: ''
 output:
-  md_document:
-    variant: "markdown_strict"
-    preserve_yaml: yes
+  html_document:
+    keep_md: yes
     toc: yes
-    df_print: paged  
+    df_print: paged
   pdf_document:
     toc: yes
     df_print: paged
@@ -14,10 +13,10 @@ output:
     keep_html: yes
     toc: yes
     df_print: paged
-  html_document:
-    keep_md: yes
+  md_document:
+    preserve_yaml: yes
     toc: yes
-    df_print: paged
+    df_print: paged  
 bibliography: refs.bib
 vignette: |
   %\VignetteIndexEntry{dkqs} 

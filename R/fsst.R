@@ -2,6 +2,8 @@
 #'
 #' @description This module conducts inference in linear programs using the
 #'   `\code{fsst}` procedure by Fang, Santos, Shaikh and Torgovitsky (2020).
+#'   
+#' @import expm
 #'
 #' @inheritParams dkqs
 #' @param lambda Parameter used in the cone bootstrap sattistics
