@@ -120,7 +120,6 @@ farg <- list(data = data,
              beta.tgt = beta.tgt,
              cores = 1,
              norm = 2,
-             alpha = .05,
              phi = 2/3,
              replace = FALSE,
              progress = TRUE)

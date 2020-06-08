@@ -142,7 +142,6 @@ subsample(data = data,
           cores = 1,
           norm = 2,
           phi = phi_predefine,
-          alpha = .05,
           replace = FALSE,
           progress = FALSE)
 
@@ -157,7 +156,6 @@ subsample(data = data,
           cores = 8,
           norm = 2,
           phi = phi_predefine,
-          alpha = .05,
           replace = FALSE,
           progress = FALSE)
 
@@ -171,7 +169,6 @@ subsample(data = data,
           cores = 8,
           norm = 2,
           phi = phi_predefine,
-          alpha = .05,
           replace = FALSE,
           progress = FALSE)
 
@@ -186,7 +183,6 @@ subsample(data = data,
           cores = 8,
           norm = 2,
           phi = 1,
-          alpha = .05,
           replace = TRUE,
           progress = FALSE)
 
@@ -201,7 +197,6 @@ subsample(data = data,
           cores = 8,
           norm = 2,
           phi = .5,
-          alpha = .05,
           replace = TRUE,
           progress = FALSE)
 
