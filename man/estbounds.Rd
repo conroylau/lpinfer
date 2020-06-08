@@ -9,8 +9,8 @@ estbounds(
   lpmodel,
   kappa = 1e-05,
   norm = 2,
-  solver = NULL,
   estimate = TRUE,
+  solver = NULL,
   progress = FALSE
 )
 }
@@ -34,13 +34,13 @@ any nonnegative number.}
 
 \item{norm}{Norm used in the optimization problem.}
 
+\item{estimate}{Boolean variable to indicate whether the estimated
+problem should be considered.}
+
 \item{solver}{The name of the linear and quadratic programming solver that
 are used to obtain the solution to linear and quadratic programs.
 The solvers supported by this module are `\code{cplexAPI}',
 `\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
-
-\item{estimate}{Boolean variable to indicate whether the estimated
-problem should be considered.}
 
 \item{progress}{The boolean variable for whether the result messages
 should be displayed in the inference procedure. If it is set as
