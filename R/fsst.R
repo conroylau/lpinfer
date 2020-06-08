@@ -32,9 +32,9 @@
 #'
 #' @export
 #'
-fsst <- function(data = NULL, lpmodel, beta.tgt, R, lambda = .5,
+fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
                  rho = 1e-4, n = NULL, weight.matrix = "diag",
-                 solver, cores = 1, progress){
+                 solver = NULL, cores = 1, progress = FALSE){
 
    # ---------------- #
    # Step 1: Update call, check and update the arguments

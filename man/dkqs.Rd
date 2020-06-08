@@ -5,7 +5,7 @@
 \title{Computes the \eqn{p}-value of the \code{dkqs} procedure}
 \usage{
 dkqs(
-  data,
+  data = NULL,
   lpmodel,
   beta.tgt,
   R = 100,

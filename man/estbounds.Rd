@@ -5,13 +5,13 @@
 \title{Estimate bounds with shape restrictions}
 \usage{
 estbounds(
-  data,
+  data = NULL,
   lpmodel,
   kappa = 1e-05,
   norm = 2,
   solver = NULL,
   estimate = TRUE,
-  progress = TRUE
+  progress = FALSE
 )
 }
 \arguments{

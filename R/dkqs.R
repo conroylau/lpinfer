@@ -52,8 +52,8 @@
 #'
 #' @export
 #'
-dkqs <- function(data, lpmodel, beta.tgt, R = 100, tau = NULL, solver = NULL,
-                 cores = 1, progress = FALSE){
+dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, tau = NULL, 
+                 solver = NULL, cores = 1, progress = FALSE){
 
   # ---------------- #
   # Step 1: Update call, check and update the arguments

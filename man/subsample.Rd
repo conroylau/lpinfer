@@ -5,7 +5,7 @@
 \title{Computes the \eqn{p}-value of the subsampling procedure}
 \usage{
 subsample(
-  data,
+  data = NULL,
   lpmodel,
   beta.tgt,
   R = 100,

@@ -8,14 +8,14 @@ fsst(
   data = NULL,
   lpmodel,
   beta.tgt,
-  R,
+  R = 100,
   lambda = 0.5,
   rho = 1e-04,
   n = NULL,
   weight.matrix = "diag",
-  solver,
+  solver = NULL,
   cores = 1,
-  progress
+  progress = FALSE
 )
 }
 \arguments{
