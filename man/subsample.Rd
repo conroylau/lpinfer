@@ -14,7 +14,7 @@ subsample(
   replace = FALSE,
   solver = NULL,
   cores = 1,
-  progress = FALSE
+  progress = TRUE
 )
 }
 \arguments{

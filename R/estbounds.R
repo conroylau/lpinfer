@@ -39,7 +39,7 @@
 #' @export
 #'
 estbounds <- function(data = NULL, lpmodel, kappa = 1e-5, norm = 2, 
-                      estimate = TRUE, solver = NULL, progress = FALSE){
+                      estimate = TRUE, solver = NULL, progress = TRUE){
 
   # ---------------- #
   # Step 1: Obtain call, check and update input

@@ -53,7 +53,7 @@
 #'
 subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, norm = 2, 
                       phi = 2/3, replace = FALSE, solver = NULL,
-                      cores = 1, progress = FALSE){
+                      cores = 1, progress = TRUE){
 
   # ---------------- #
   # Step 1: Obtain call, check and update the dependencies

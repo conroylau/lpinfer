@@ -15,7 +15,7 @@ invertci(
   tol = 1e-04,
   max.iter = 20,
   df_ci = NULL,
-  progress = FALSE
+  progress = TRUE
 )
 }
 \arguments{

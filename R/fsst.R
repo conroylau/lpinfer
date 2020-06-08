@@ -34,7 +34,7 @@
 #'
 fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
                  rho = 1e-4, n = NULL, weight.matrix = "diag",
-                 solver = NULL, cores = 1, progress = FALSE){
+                 solver = NULL, cores = 1, progress = TRUE){
 
    # ---------------- #
    # Step 1: Update call, check and update the arguments

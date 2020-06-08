@@ -47,7 +47,7 @@
 #'
 invertci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
                      ub1 = NULL, tol = .0001, max.iter = 20, df_ci = NULL,
-                     progress = FALSE){
+                     progress = TRUE){
 
   # ---------------- #
   # Step 1: Update call, check and update the arguments

@@ -15,7 +15,7 @@ fsst(
   weight.matrix = "diag",
   solver = NULL,
   cores = 1,
-  progress = FALSE
+  progress = TRUE
 )
 }
 \arguments{

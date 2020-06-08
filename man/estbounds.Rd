@@ -11,7 +11,7 @@ estbounds(
   norm = 2,
   estimate = TRUE,
   solver = NULL,
-  progress = FALSE
+  progress = TRUE
 )
 }
 \arguments{
