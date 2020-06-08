@@ -11,28 +11,30 @@ Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.0.2
 Imports:
-    modelr,
-    foreach,
-    doMC,
-    e1071,
-    parallel,
-    doParallel,
-    ddpcr,
-    Matrix,
-    doSNOW,
-    PtProcess,
-    doRNG,
-    boot,
-    dplyr,
-    pracma,
-    expm
+    modelr (>= 0.1.8),
+    foreach (>= 1.5.0),
+    doMC (>= 1.3.6),
+    e1071 (>= 1.7.3),
+    parallel (>= 3.6.1),
+    doParallel (>= 1.0.15),
+    ddpcr (>= 1.15),
+    Matrix (>= 1.2.18),
+    doSNOW (>= 1.0.18),
+    PtProcess (>= 3.3.13),
+    doRNG (>= 1.8.2),
+    boot (>= 1.3.24),
+    dplyr (>= 1.0.0),
+    pracma (>= 2.2.9),
+    expm (>= 0.999.4)
+
 Suggests:
-    knitr,
-    rmarkdown,
-    testthat,
-    gurobi,
-    cplexAPI,
-    Rcplex,
-    limSolve,
-    lpSolveAPI
+    knitr (>= 1.28),
+    rmarkdown (>= 2.0),
+    testthat (>= 2.3.2),
+    gurobi (>= 8.1.1),
+    cplexAPI (>= 1.3.6),
+    Rcplex (>= 0.3.3),
+    limSolve (>= 1.5.6),
+    lpSolveAPI (>= 5.5.2.0.17.4)
+
 VignetteBuilder: knitr
