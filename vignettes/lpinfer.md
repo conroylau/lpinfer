@@ -3,7 +3,6 @@ title: 'lpinfer: An R Package for Inference in Linear Programs'
 author: ''
 output:
   md_document:
-    variant: "markdown_strict"
     preserve_yaml: yes
     toc: yes
     df_print: paged  
@@ -20,7 +19,7 @@ output:
     df_print: paged
 bibliography: refs.bib
 vignette: |
-  %\VignetteIndexEntry{dkqs} 
+  %\VignetteIndexEntry{lpinfer} 
   %\VignetteEncoding{UTF-8} 
   %\VignetteEngine{knitr::rmarkdown}
 ---
@@ -28,9 +27,9 @@ vignette: |
 -   [Introduction](#introduction)
 -   [Scope of the Vignette](#scope-of-the-vignette)
 -   [Installation and Requirements](#installation-and-requirements)
--   [Example](#data)
+-   [Sample data](#sample-data)
 -   [General Syntax](#general-syntax)
--   [Tests](#test)
+-   [Tests](#tests)
     -   [Test 1: DKQS cone-tightening
         procedure](#test-1-dkqs-cone-tightening-procedure)
     -   [Test 2: Subsampling procedure](#test-2-subsampling-procedure)
@@ -39,7 +38,7 @@ vignette: |
     Constraints](#constructing-bounds-subject-to-shape-constraints)
 -   [Constructing Confidence
     Intervals](#constructing-confidence-intervals)
--   [Parallel Programming](#parallel-dkqs)
+-   [Parallel Programming](#parallel-programming)
 -   [Help, Feature Requests and Bug
     Reports](#help-feature-requests-and-bug-reports)
 -   [References](#references)
@@ -115,8 +114,8 @@ when the L1-norm is used. This is a free and open-source package
 available on CRAN. This can be installed directly via the
 `install.packages` command in R.
 
-Example
--------
+Sample data
+-----------
 
 The classical missing data problem due to Manski (1989) is used as a
 running example throughout this vignette to demonstrate the commands in
@@ -301,11 +300,11 @@ requirements:
     it returns the estimator for `beta.obs` and a square matrix that
     refers to the estimator of the asymptotic variance of `beta.obs`.
 
-#### Example
+#### Demonstration
 
 The following is an example on how to construct each of the components
 in the `lpmodel` object and how to assign the `lpmodel` object based on
-the example data mentioned [here](#data):
+the example data mentioned [here](#sample-data):
 
     # Extract relevant information from data
     N <- nrow(sampledata)
@@ -382,10 +381,10 @@ where
 -   `beta.tgt` refers to the parameter that is being tested.
 -   `R` refers to the total number of bootstraps.
 -   `tau` refers to the tuning parameter tau. This will be explained
-    [here](#tau_dkqs). It can be a scalar or a vector.
+    [here](#choosing-the-tau-parameter). It can be a scalar or a vector.
 -   `cores` refers to the number of cores to be used in the parallelized
     for-loop for computing the bootstrap test statistics. See
-    [here](#parallel-dkqs) for more details.
+    [here](#parallel-programming) for more details.
 -   `progress` refers to the boolean variable for whether the progress
     bar should be printed in the testing procedure.
 
@@ -489,8 +488,8 @@ following is an example when the user specifies multiple taus in the
     print(dkqs.full2)
     #>  tau p-value
     #>  0.1    0.19
-    #>  0.2    0.23
-    #>  0.3    0.26
+    #>  0.2    0.18
+    #>  0.3    0.18
     #>  0.5    0.27
 
 Users can get a more detailed summary of the results when applying the
@@ -499,8 +498,8 @@ Users can get a more detailed summary of the results when applying the
     summary(dkqs.full2)
     #>  tau p-value
     #>  0.1    0.19
-    #>  0.2    0.23
-    #>  0.3    0.26
+    #>  0.2    0.18
+    #>  0.3    0.18
     #>  0.5    0.27
     #>  Maximum feasible tau: 0.76923
     #>  Test statistic: 0.01746
@@ -518,7 +517,7 @@ the two moments approach because the two moments
 **E**\[*Y*<sub>*i*</sub>*D*<sub>*i*</sub>\] are used in the inference
 procedure.
 
-Similar to what has been demonstrated in the [example](#eg_fullinfo)
+Similar to what has been demonstrated in the [example](#demonstration)
 earlier, some of the components has to be updated in the `lpmodel`
 object. This can be done as follows:
 
@@ -583,10 +582,11 @@ The `subsample` command has the following syntax:
 where
 
 -   `phi` refers to the parameter that controls the size of each
-    subsample. This will be further explained [here](#phi_subsample).
+    subsample. This will be further explained
+    [here](#choosing-the-phi-and-replace-parameter).
 -   `replace` refers to the boolean variable to indicate whether the
     function samples the data with or without replacement. This will be
-    further explained [here](#phi_subsample).
+    further explained [here](#choosing-the-phi-and-replace-parameter).
 -   `norm` refers to the norm used in the objective function.
 
 The rest of the arguments are the same as that in the `dkqs` procedure.
@@ -696,9 +696,9 @@ command:
     #> Size of each subsample: 99
     #> Number of cores used: 1
 
-As indicated [earlier](#replace), the `subsample` command can perform
-the bootstrap and *m* out of *n* boostrap procedures. They are
-illustrated as follows.
+As indicated [earlier](#choosing-the-phi-and-replace-parameter), the
+`subsample` command can perform the bootstrap and *m* out of *n*
+boostrap procedures. They are illustrated as follows.
 
 The following is an exmaple of performing a bootstrapping procedure:
 
@@ -766,7 +766,7 @@ where
     `list`, then users can skip `data` and pass the number of rows of
     the `data` as `n` instead.
 -   `weight.matrix` is a string that determines the weighting matrix.
-    The details can be found [here](#weight_matrix).
+    The details can be found [here](#weight-matrix).
 
 The rest of the arguments are the same as that in the `dkqs` procedure.
 
@@ -933,7 +933,7 @@ where
 
 -   `norm` refers to the norm used in the optimization problem. The
     norms that are supported by this function are L1-norm and L2-norm.
-    See [here](#estbounds_norm) for more details.
+    See [here](#norms) for more details.
 -   `kappa` refers to the parameter used in the second step of the
     two-step procedure for obtaining the solution subject to the shape
     constraints.
@@ -1007,9 +1007,9 @@ where
 -   `f` refers to the function that represents a testing procedure.
 -   `farg` refers to the list of arguments to be passed to the function
     of testing procedure. The details can be found
-    [here](#argument_invertci).
+    [here](#specifying-the-argument).
 -   `alpha` refers to the significance level of the test. Please refer
-    to the details [here](#multiple_ci).
+    to the details [here](#constructing-multiple-confidence-intervals).
 -   `lb0` refers to the logical lower bound for the confidence interval.
 -   `lb1` refers to the maximum possible lower bound for the confidence
     interval.
@@ -1022,7 +1022,7 @@ where
 -   `df_ci` refers to `data.frame` that consists of the points and the
     corresponding *p*-values that have been tested in constructing the
     confidence intervals. The details can be found
-    [here](#dfci_invertci).
+    [here](#specifying-the-data-frame-df_ci).
 -   `progress` refers to the boolean variable for whether the result
     messages should be displayed in the procedure of constructing
     confidence interval.
@@ -1319,9 +1319,9 @@ illustrated by the example via the `dkqs` procedure below:
 
     # Print the time used
     print(sprintf("Time used with 1 core: %s", time1))
-    #> [1] "Time used with 1 core: 0.405235052108765"
+    #> [1] "Time used with 1 core: 0.406310081481934"
     print(sprintf("Time used with 8 cores: %s", time8))
-    #> [1] "Time used with 8 cores: 0.278135061264038"
+    #> [1] "Time used with 8 cores: 0.261389017105103"
 
 Help, Feature Requests and Bug Reports
 --------------------------------------

@@ -2,10 +2,10 @@
 title: 'lpinfer: An R Package for Inference in Linear Programs'
 author: ''
 output:
-  html_document:
-    keep_md: yes
+  md_document:
+    preserve_yaml: yes
     toc: yes
-    df_print: paged
+    df_print: paged  
   pdf_document:
     toc: yes
     df_print: paged
@@ -13,13 +13,13 @@ output:
     keep_html: yes
     toc: yes
     df_print: paged
-  md_document:
-    preserve_yaml: yes
+  html_document:
+    keep_md: yes
     toc: yes
-    df_print: paged  
+    df_print: paged
 bibliography: refs.bib
 vignette: |
-  %\VignetteIndexEntry{dkqs} 
+  %\VignetteIndexEntry{lpinfer} 
   %\VignetteEncoding{UTF-8} 
   %\VignetteEngine{knitr::rmarkdown}
 ---
@@ -108,7 +108,7 @@ The package `lpSolveAPI` is only supported in the function `estbounds`
 when the L1-norm is used. This is a free and open-source package available on
 CRAN. This can be installed directly via the `install.packages` command in R.
 
-## Example {#data}
+## Sample data
 The classical missing data problem due to @manski1989 is used as a running
 example throughout this vignette to demonstrate the commands in this 
 `lpinfer` package. We consider this problem here because the sharp bounds for 
@@ -196,11 +196,11 @@ then it has to be a vector or a column matrix that represents the estimator for
 for `beta.obs` and a square matrix that refers to the estimator of the 
 asymptotic variance of `beta.obs`.
 
-#### Example {#eg_fullinfo}
+#### Demonstration {#demonstration}
 
 The following is an example on how to construct each of the components in the
 `lpmodel` object and how to assign the `lpmodel` object based on the example 
-data mentioned [here](#data):
+data mentioned [here](#sample-data):
 
 
 ```{r, syntax_fullinfo, eval = TRUE}
@@ -250,7 +250,7 @@ corresponding value of *y*~*i*~ is observed. The `var` object is the
 estimator of the asymptotic variance of `beta`, which is assumed to be an
 identity matrix here for illustration purpose.
 
-## Tests {#test}
+## Tests
 
 ### Test 1: DKQS cone-tightening procedure
 
@@ -278,14 +278,14 @@ where
 * `beta.tgt` refers to the parameter that is being tested.
 * `R` refers to the total number of bootstraps.
 * `tau` refers to the tuning parameter tau. This will be explained 
-[here](#tau_dkqs). It can be a scalar or a vector.
+[here](#choosing-the-tau-parameter). It can be a scalar or a vector.
 * `cores` refers to the number of cores to be used in the parallelized for-loop
-for computing the bootstrap test statistics. See [here](#parallel-dkqs) for
-more details.
+for computing the bootstrap test statistics. See [here](#parallel-programming) 
+for more details.
 * `progress` refers to the boolean variable for whether the progress bar
 should be printed in the testing procedure.
 
-#### Choosing the tau parameter {#tau_dkqs}
+#### Choosing the tau parameter {#choosing-the-tau-parameter}
 
 Depending on the value of `tau`, the main quadratic program in @dkqs2018 is 
 not always feasible. The details on how to choose the maximum tau such 
@@ -374,7 +374,7 @@ how to use the two moments approach. This alternative method is known as the
 two moments approach because the two moments **E**[*Y*~*i*~] and 
 **E**[*Y*~*i*~*D*~*i*~] are used in the inference procedure.
 
-Similar to what has been demonstrated in the [example](#eg_fullinfo) earlier,
+Similar to what has been demonstrated in the [example](#demonstration) earlier,
 some of the components has to be updated in the `lpmodel` object. 
 This can be done as follows:
 
@@ -443,15 +443,15 @@ subsample(data = sampledata,
 where 
 
 * `phi` refers to the parameter that controls the size of each subsample. 
-This will be further explained [here](#phi_subsample).
+This will be further explained [here](#choosing-the-phi-and-replace-parameter).
 * `replace` refers to the boolean variable to indicate whether the function 
 samples the data with or without replacement. This will be further explained
-[here](#phi_subsample).
+[here](#choosing-the-phi-and-replace-parameter).
 * `norm` refers to the norm used in the objective function.
 
 The rest of the arguments are the same as that in the `dkqs` procedure.
 
-#### Choosing the `phi` and `replace` parameter {#phi_subsample}
+#### Choosing the `phi` and `replace` parameter
 
 The `phi` parameter is a parameter to control the size of each subsample. 
 The sample size of the original data to the power `phi` is the size of each 
@@ -504,9 +504,9 @@ Again, more detailed information can be extracted via the `summary` command:
 summary(subsample.full)
 ```
 
-As indicated [earlier](#replace), the `subsample` command can perform
-the bootstrap and *m* out of *n* boostrap procedures. They are illustrated
-as follows.
+As indicated [earlier](#choosing-the-phi-and-replace-parameter), the 
+`subsample` command can perform the bootstrap and *m* out of *n* boostrap 
+procedures. They are illustrated as follows.
 
 The following is an exmaple of performing a bootstrapping procedure:
 
@@ -575,7 +575,7 @@ in the FSST procedure.
 number of rows of `data`. If the `beta.obs` in `lpmodel` is a `list`, then
 users can skip `data` and pass the number of rows of the `data` as `n` instead.
 * `weight.matrix` is a string that determines the weighting matrix. 
-The details can be found [here](#weight_matrix).
+The details can be found [here](#weight-matrix).
 
 The rest of the arguments are the same as that in the `dkqs` procedure.
 
@@ -673,7 +673,7 @@ where
 
 * `norm` refers to the norm used in the optimization problem. The norms
 that are supported by this function are L1-norm and L2-norm. See 
-[here](#estbounds_norm) for more details.
+[here](#norms) for more details.
 * `kappa`  refers to the parameter used in the second step of the two-step
 procedure for obtaining the solution subject to the shape constraints.
 * `estimate` refers to the boolean variable that indicate whether the estimated
@@ -681,7 +681,7 @@ problem should be considered.
 
 The rest of the arguments are the same as that in the `dkqs` procedure.
 
-#### Norms {#estbounds_norm}
+#### Norms
 In constructing the estimated bounds, users are free to choose the L1-norm or
 the L2-norm. For the estimation with L2-norm, users need to choose `gurobi` as 
 the solver. For the estimation with L1-norm, users can choose one of the 
@@ -742,9 +742,9 @@ where
 
 * `f` refers to the function that represents a testing procedure.
 * `farg` refers to the list of arguments to be passed to the function of 
-testing procedure. The details can be found [here](#argument_invertci).
+testing procedure. The details can be found [here](#specifying-the-argument).
 * `alpha` refers to the significance level of the test. Please refer to the 
-details [here](#multiple_ci).
+details [here](#constructing-multiple-confidence-intervals).
 * `lb0` refers to the logical lower bound for the confidence interval.
 * `lb1` refers to the maximum possible lower bound for the confidence interval.
 * `ub0` refers to the logical upper bound for the confidence interval.
@@ -754,11 +754,12 @@ details [here](#multiple_ci).
 method.
 * `df_ci` refers to `data.frame` that consists of the points and the 
 corresponding *p*-values that have been tested in constructing the confidence 
-intervals. The details can be found [here](#dfci_invertci).
+intervals. The details can be found 
+[here](#specifying-the-data-frame-df_ci).
 * `progress` refers to the boolean variable for whether the result messages 
 should be displayed in the procedure of constructing confidence interval. 
 
-#### Specifying the argument {#argument_invertci}
+#### Specifying the argument
 To use the `invertci` function, the arguments for the test statistic has to
 be specified and passed to the `farg` argument. For instance, if the testing
 procedure `subsample` is used, the arguments can be defined as follows:
@@ -814,7 +815,7 @@ object:
 summary(invertci.subsample1)
 ```
 
-#### Constructing Multiple Confidence Intervals {#multiple_ci}
+#### Constructing Multiple Confidence Intervals
 
 The function `invertci` can also be used to generate multiple confidence
 intervals if the argument `alpha` is a vector. For instance, the following
@@ -850,7 +851,7 @@ iterations when the significance level is 0.05, it can be done as follows:
 summary(invertci.subsample2, alphas = 0.05)
 ```
 
-## Parallel Programming {#parallel-dkqs}
+## Parallel Programming
 
 The `lpinfer` package supports the use of parallel programming in 
 computing the bootstrap test statistics to reduce the computational time. 

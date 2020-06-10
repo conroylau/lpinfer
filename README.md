@@ -48,9 +48,11 @@ Installation and Requirements
 -----------------------------
 
 `lpinfer` can be installed from our GitHub repository via
+
 ```r
 devtools::install_github("conroylau/lpinfer")
 ```
+
 To use most of the functions in this `lpinfer` package, one of the
 following packages for solving the linear and quadratic programs is
 required. There are four options for the solver:
@@ -91,8 +93,8 @@ when the L1-norm is used. This is a free and open-source package
 available on CRAN. This can be installed directly via the
 `install.packages` command in R.
 
-Example
--------
+Sample data
+-----------
 
 The classical missing data problem due to Manski (1989) is used as a
 running example throughout this vignette to demonstrate the commands in
@@ -104,10 +106,12 @@ In this package, a sample simulated data set on the missing data problem
 is included. This can be obtained by `sampledata`. This data set
 contains 1,000 observations with 2 columns. The following shows the
 first 10 observations of the simulated data set:
+
 ```r
 library(lpinfer)
 knitr::kable(head(sampledata, n = 10))
 ```
+
 <table>
 <thead>
 <tr>
@@ -277,11 +281,12 @@ requirements:
     it returns the estimator for `beta.obs` and a square matrix that
     refers to the estimator of the asymptotic variance of `beta.obs`.
 
-#### Example
+#### Demonstration
 
 The following is an example on how to construct each of the components
 in the `lpmodel` object and how to assign the `lpmodel` object based on
-the example data mentioned [here](#data):
+the example data mentioned [here](#sample-data):
+
 ```r
 # Extract relevant information from data
 N <- nrow(sampledata)
@@ -320,6 +325,7 @@ lpm.full <- lpmodel(A.obs    = Aobs.full,
                     beta.obs = betaobs.fullinfo,
                     beta.shp = c(1))
 ```
+
 In the above, the `betaobs.fullinfo` function returns two information:
 `beta` is a vector of length that is equal to the number of distinct
 observations for *Y* where element *i* of the vector refers to the
@@ -341,6 +347,7 @@ appendix of Deb et al. (2018).
 #### Syntax
 
 The `dkqs` command has the following syntax:
+
 ```r
 dkqs(data = sampledata,
      lpmodel = lpm.full,
@@ -351,6 +358,7 @@ dkqs(data = sampledata,
      cores = 1,
      progress = FALSE)
 ```
+
 where
 
 -   `data` refers to the data set.
@@ -358,10 +366,10 @@ where
 -   `beta.tgt` refers to the parameter that is being tested.
 -   `R` refers to the total number of bootstraps.
 -   `tau` refers to the tuning parameter tau. This will be explained
-    [here](#tau_dkqs). It can be a scalar or a vector.
+    [here](#choosing-the-tau-parameter). It can be a scalar or a vector.
 -   `cores` refers to the number of cores to be used in the parallelized
     for-loop for computing the bootstrap test statistics. See
-    [here](#parallel-dkqs) for more details.
+    [here](#parallel-programming) for more details.
 -   `progress` refers to the boolean variable for whether the progress
     bar should be printed in the testing procedure.
 
@@ -435,6 +443,7 @@ called either “Y” or “y”.
 #### Example
 
 The following is what happens when the above code is run:
+
 ```r
 set.seed(1)
 dkqs.full1 <- dkqs(data = sampledata,
@@ -452,6 +461,7 @@ As noted in the syntax section, we provide the flexibility for users to
 conduct inference with multiple tuning parameters at the same time. The
 following is an example when the user specifies multiple taus in the
 `dkqs` procedure:
+
 ```r
 set.seed(1)
 dkqs.full2 <- dkqs(data = sampledata,
@@ -465,24 +475,26 @@ dkqs.full2 <- dkqs(data = sampledata,
 print(dkqs.full2)
 #>  tau p-value
 #>  0.1    0.19
-#>  0.2    0.23
-#>  0.3    0.26
+#>  0.2    0.18
+#>  0.3    0.18
 #>  0.5    0.27
 ```
 Users can get a more detailed summary of the results when applying the
 `summary` command on the resulting object:
+
 ```r
 summary(dkqs.full2)
 #>  tau p-value
 #>  0.1    0.19
-#>  0.2    0.23
-#>  0.3    0.26
+#>  0.2    0.18
+#>  0.3    0.18
 #>  0.5    0.27
 #>  Maximum feasible tau: 0.76923
 #>  Test statistic: 0.01746
 #>  Solver used: gurobi
 #>  Number of cores used: 1
 ```
+
 #### Alternative approach
 
 The approach that has been demonstrated so far is known as the full
@@ -494,9 +506,10 @@ the two moments approach because the two moments
 **E**\[*Y*<sub>*i*</sub>*D*<sub>*i*</sub>\] are used in the inference
 procedure.
 
-Similar to what has been demonstrated in the [example](#eg_fullinfo)
+Similar to what has been demonstrated in the [example](#demonstration)
 earlier, some of the components has to be updated in the `lpmodel`
 object. This can be done as follows:
+
 ```r
 # Construct A.obs
 Aobs.twom <- matrix(c(rep(0,J1), yp, rep(0,J1), rep(1, J1)), nrow = 2,
@@ -519,8 +532,10 @@ lpm.twom <- lpmodel(A.obs    = Aobs.twom,
                     beta.obs = betaobs.twom,
                     beta.shp = c(1))
 ```
+
 The `dkqs` procedure can be ran in the same fashion as before. The
 following is an example on how this can be ran:
+
 ```r
 set.seed(1)
 dkqs.full3 <- dkqs(data = sampledata,
@@ -534,6 +549,7 @@ dkqs.full3 <- dkqs(data = sampledata,
 print(dkqs.full3)
 #> p-value: 0.18
 ```
+
 As shown above, we get the same *p*-value as before.
 
 ### Test 2: Subsampling procedure
@@ -560,10 +576,11 @@ subsample(data = sampledata,
 where
 
 -   `phi` refers to the parameter that controls the size of each
-    subsample. This will be further explained [here](#phi_subsample).
+    subsample. This will be further explained
+    [here](#choosing-the-phi-and-replace-parameter).
 -   `replace` refers to the boolean variable to indicate whether the
     function samples the data with or without replacement. This will be
-    further explained [here](#phi_subsample).
+    further explained [here](#choosing-the-phi-and-replace-parameter).
 -   `norm` refers to the norm used in the objective function.
 
 The rest of the arguments are the same as that in the `dkqs` procedure.
@@ -646,6 +663,7 @@ be deterministic or stochastic:
 #### Example
 
 The following is what happens when the above code is run:
+
 ```r
 set.seed(1)
 subsample.full <- subsample(data = sampledata, 
@@ -661,7 +679,6 @@ subsample.full <- subsample(data = sampledata,
 print(subsample.full)
 #> p-value: 0.35
 ```
-
 Again, more detailed information can be extracted via the `summary`
 command:
 
@@ -676,9 +693,9 @@ summary(subsample.full)
 #> Number of cores used: 1
 ```
 
-As indicated [earlier](#replace), the `subsample` command can perform the
-bootstrap and *m* out of *n* boostrap procedures. They are illustrated
-as follows.
+As indicated [earlier](#choosing-the-phi-and-replace-parameter), the
+`subsample` command can perform the bootstrap and *m* out of *n*
+boostrap procedures. They are illustrated as follows.
 
 The following is an exmaple of performing a bootstrapping procedure:
 
@@ -725,6 +742,7 @@ testing procedure by Fang et al. (2020).
 #### Syntax
 
 The `fsst` command has the following syntax:
+
 ```r
 fsst(data = sampledata, 
      lpmodel = lpm.full,
@@ -738,6 +756,7 @@ fsst(data = sampledata,
      cores = 1,
      progress = FALSE)
 ```
+
 where
 
 -   `lambda` refers to the tuning parameter that affects test statistics
@@ -750,7 +769,7 @@ where
     `list`, then users can skip `data` and pass the number of rows of
     the `data` as `n` instead.
 -   `weight.matrix` is a string that determines the weighting matrix.
-    The details can be found [here](#weight_matrix).
+    The details can be found [here](#weight-matrix).
 
 The rest of the arguments are the same as that in the `dkqs` procedure.
 
@@ -821,6 +840,7 @@ be deterministic or stochastic:
 #### Example
 
 The following is what happens when the above code is run:
+
 ```r
 set.seed(1)
 fsst.full1 <- fsst(data = sampledata, 
@@ -837,8 +857,10 @@ fsst.full1 <- fsst(data = sampledata,
 print(fsst.full1)
 #> p-value: 0.2
 ```
+
 As noted above, the `fsst` procedure provides the flexibility for users
 to pass multiple tuning parameters.
+
 ```r
 set.seed(1)
 fsst.full2 <- fsst(data = sampledata, 
@@ -860,6 +882,7 @@ print(fsst.full2)
 ```
 Again, more detailed information can be extracted via the `summary`
 command:
+
 ```r
 summary(fsst.full2)
 #> 
@@ -893,6 +916,7 @@ summary(fsst.full2)
 #> 
 #> The asymptotic variance of the observed component of the beta vector is approximated from the function.
 ```
+
 Constructing Bounds subject to Shape Constraints
 ------------------------------------------------
 
@@ -904,6 +928,7 @@ Hence, an `estimate` option is available. The estimation can be
 conducted via L1-norm or L2-norm.
 
 #### Syntax
+
 ```r
 estbounds(data = sampledata,
           lpmodel = lpm.full,
@@ -913,11 +938,12 @@ estbounds(data = sampledata,
           estimate = TRUE,
           progress = FALSE)
 ```
+
 where
 
 -   `norm` refers to the norm used in the optimization problem. The
     norms that are supported by this function are L1-norm and L2-norm.
-    See [here](#estbounds_norm) for more details.
+    See [here](#norms) for more details.
 -   `kappa` refers to the parameter used in the second step of the
     two-step procedure for obtaining the solution subject to the shape
     constraints.
@@ -942,6 +968,7 @@ can choose one of the following packages as the solver:
 #### Example
 
 The following is what happens when the above code is run:
+
 ```r
 set.seed(1)
 estbounds.full <- estbounds(data = sampledata,
@@ -954,14 +981,17 @@ estbounds.full <- estbounds(data = sampledata,
 print(estbounds.full)
 #> Estimated bounds: [0.38316, 0.63344]
 ```
+
 Again, more detailed information can be extracted via the `summary`
 command:
+
 ```r
 summary(estbounds.full)
 #> Estimated bounds: [0.38316, 0.63344] 
 #> Norm used: 2 
 #> Solver: gurobi
 ```
+
 Constructing Confidence Intervals
 ---------------------------------
 
@@ -993,9 +1023,9 @@ where
 -   `f` refers to the function that represents a testing procedure.
 -   `farg` refers to the list of arguments to be passed to the function
     of testing procedure. The details can be found
-    [here](#argument_invertci).
+    [here](#specifying-the-argument).
 -   `alpha` refers to the significance level of the test. Please refer
-    to the details [here](#multiple_ci).
+    to the details [here](#constructing-multiple-confidence-intervals).
 -   `lb0` refers to the logical lower bound for the confidence interval.
 -   `lb1` refers to the maximum possible lower bound for the confidence
     interval.
@@ -1008,7 +1038,7 @@ where
 -   `df_ci` refers to `data.frame` that consists of the points and the
     corresponding *p*-values that have been tested in constructing the
     confidence intervals. The details can be found
-    [here](#dfci_invertci).
+    [here](#specifying-the-data-frame-df_ci).
 -   `progress` refers to the boolean variable for whether the result
     messages should be displayed in the procedure of constructing
     confidence interval.
@@ -1019,6 +1049,7 @@ To use the `invertci` function, the arguments for the test statistic has
 to be specified and passed to the `farg` argument. For instance, if the
 testing procedure `subsample` is used, the arguments can be defined as
 follows:
+
 ```r
 subsample.args <- list(data = sampledata,
                        lpmodel = lpm.full,
@@ -1028,7 +1059,7 @@ subsample.args <- list(data = sampledata,
                        cores = 1,
                        progress = FALSE)
 ```
-Note that the argument for the target value of beta, i.e. the value to
+Note that the argument for the target value of beta, i.e. the value to
 be tested under the null, is not required in the above argument
 assignment.
 
@@ -1049,6 +1080,7 @@ The requirement for the data frame is as follows:
 The following shows a sample output of the function `invertci` that is
 used to the confidence interval for the test `dkqs` with significance
 level 0.05.
+
 ```r
 set.seed(1)
 invertci.subsample1 <- invertci(f = subsample,
@@ -1069,14 +1101,17 @@ print(invertci.subsample1)
 The details for each iteration can be obtained in real-time by setting
 `progress` as `TRUE` or applying the `summary` command on the resulting
 object:
+
 ```r
 summary(invertci.subsample1)
 #> 
 #> Significance level: 0.05
 #> Confidence interval: [0.29375, 0.70625]
-#> Maximum number of iterations: 5
 #> 
-#> Detais:
+#> Maximum number of iterations: 5
+#> Tolerance level: 0.001
+#> 
+#> Details:
 #> 
 #> === Iterations in constructing upper bound:                                                                          
 #> Iteration       Lower bound   Upper bound   Test point   p-value   Reject?
@@ -1107,6 +1142,7 @@ The function `invertci` can also be used to generate multiple confidence
 intervals if the argument `alpha` is a vector. For instance, the
 following code produces confidence intervals for alpha equals 0.01, 0.05
 and 0.1.
+
 ```r
 set.seed(1)
 invertci.subsample2 <- invertci(f = subsample, 
@@ -1129,14 +1165,16 @@ print(invertci.subsample2)
 ```
 Again, the detailed steps in constructing the confidence intervals can
 be obtained as follows:
+
 ```r
 summary(invertci.subsample2)
+#> Maximum number of iterations: 5
+#> Tolerance level: 0.001
 #>                                       
 #> Significance level Confidence interval
 #> 0.01                [0.29375, 0.73125]
 #> 0.05                [0.29375, 0.73125]
 #> 0.1                 [0.30625, 0.70625]
-#> Maximum number of iterations: 5
 #> 
 #> Details:
 #> 
@@ -1217,19 +1255,20 @@ summary(invertci.subsample2)
 #> 5                   0.30000       0.32500      0.31250   0.07000     FALSE
 #> Reason for termination: Reached maximum number of iterations
 ```
+
 Since the details of the iterations could potentially be a long list of
 outputs, users may specify a particular list of output that they wish to
 read in the `summary` command. For instance, to only print the details
 of the iterations when the significance level is 0.05, it can be done as
 follows:
+
 ```r
 summary(invertci.subsample2, alphas = 0.05)
+#> Maximum number of iterations: 5
+#> Tolerance level: 0.001
 #>                                       
 #> Significance level Confidence interval
-#> 0.01                [0.29375, 0.73125]
 #> 0.05                [0.29375, 0.73125]
-#> 0.1                 [0.30625, 0.70625]
-#> Maximum number of iterations: 5
 #> 
 #> Details:
 #> 
@@ -1258,6 +1297,7 @@ summary(invertci.subsample2, alphas = 0.05)
 #> 5                   0.27500       0.30000      0.28750   0.01000      TRUE
 #> Reason for termination: Reached maximum number of iterations
 ```
+
 Parallel Programming
 --------------------
 
@@ -1274,6 +1314,7 @@ be less than or equal to the cores that you have on your machine.
 The computational time for using multiple cores should be shorter than
 using a single core for a large number of bootstraps. This is
 illustrated by the example via the `dkqs` procedure below:
+
 ```r
 dkqs.args <- list(data = sampledata,
                   lpmodel = lpm.full,
@@ -1303,10 +1344,11 @@ time8 <- t81 - t80
 
 # Print the time used
 print(sprintf("Time used with 1 core: %s", time1))
-#> [1] "Time used with 1 core: 0.502087116241455"
+#> [1] "Time used with 1 core: 0.413758993148804"
 print(sprintf("Time used with 8 cores: %s", time8))
-#> [1] "Time used with 8 cores: 0.399277925491333"
+#> [1] "Time used with 8 cores: 0.253432035446167"
 ```
+
 Help, Feature Requests and Bug Reports
 --------------------------------------
 
@@ -1328,5 +1370,3 @@ Paper*.
 
 Manski, C. F. 1989. “Anatomy of the Selection Problem.” *The Journal of
 Human Resources* 24: 343–60.
-
-
