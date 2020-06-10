@@ -2,10 +2,10 @@
 title: 'lpinfer: An R Package for Inference in Linear Programs'
 author: ''
 output:
-  md_document:
-    preserve_yaml: yes
+  html_document:
+    keep_md: yes
     toc: yes
-    df_print: paged  
+    df_print: paged
   pdf_document:
     toc: yes
     df_print: paged
@@ -13,10 +13,10 @@ output:
     keep_html: yes
     toc: yes
     df_print: paged
-  html_document:
-    keep_md: yes
+  md_document:
+    preserve_yaml: yes
     toc: yes
-    df_print: paged
+    df_print: paged  
 bibliography: refs.bib
 vignette: |
   %\VignetteIndexEntry{lpinfer} 
@@ -24,7 +24,7 @@ vignette: |
   %\VignetteEngine{knitr::rmarkdown}
 ---
 
-```{r, include = FALSE}
+```{r setup1, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
@@ -32,7 +32,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup, include = FALSE}
+```{r setup2, include = FALSE}
 require(lpinfer)
 require(data.table)
 require(pander)
@@ -70,7 +70,7 @@ methods.
 ## Installation and Requirements
 `lpinfer` can be installed from our GitHub repository via
 
-```{r eval = FALSE}
+```{r install.github, eval = FALSE}
 devtools::install_github("conroylau/lpinfer")
 ```
 
@@ -114,13 +114,12 @@ example throughout this vignette to demonstrate the commands in this
 `lpinfer` package. We consider this problem here because the sharp bounds for 
 the identified set of the expected values can be constructed by linear programs.
 
-
 In this package, a sample simulated data set on the missing data problem is
 included. This can be obtained by `sampledata`. This data set contains 1,000
 observations with 2 columns. The following shows the first 10 observations of 
 the simulated data set:
 
-```{r, drawData-df}
+```{r drawData-df, eval = TRUE}
 library(lpinfer)
 knitr::kable(head(sampledata, n = 10))
 ```
@@ -203,7 +202,7 @@ The following is an example on how to construct each of the components in the
 data mentioned [here](#sample-data):
 
 
-```{r, syntax_fullinfo, eval = TRUE}
+```{r syntax.fullinfo, eval = TRUE}
 # Extract relevant information from data
 N <- nrow(sampledata)
 J <- length(unique(sampledata[,"Y"])) - 1
@@ -260,7 +259,7 @@ procedure, readers may refer to section 4.2 and the appendix of @dkqs2018.
 
 #### Syntax
 The `dkqs` command has the following syntax:
-```{r, syntax_dkqs , eval = FALSE}
+```{r syntax.dkqs , eval = FALSE}
 dkqs(data = sampledata,
      lpmodel = lpm.full,
      beta.tgt = .375,
@@ -331,7 +330,7 @@ either "Y" or "y".
 #### Example
 
 The following is what happens when the above code is run:
-``` {r, dkqs_eg1, eval = TRUE}
+``` {r dkqs.eg1, eval = TRUE}
 set.seed(1)
 dkqs.full1 <- dkqs(data = sampledata,
                    lpmodel = lpm.full,
@@ -347,7 +346,7 @@ print(dkqs.full1)
 As noted in the syntax section, we provide the flexibility for users to conduct
 inference with multiple tuning parameters at the same time. The following is
 an example when the user specifies multiple taus in the `dkqs` procedure:
-``` {r, dkqs_eg2, eval = TRUE}
+``` {r dkqs.eg2, eval = TRUE}
 set.seed(1)
 dkqs.full2 <- dkqs(data = sampledata,
                    lpmodel = lpm.full,
@@ -362,7 +361,7 @@ print(dkqs.full2)
 
 Users can get a more detailed summary of the results when applying the 
 `summary` command on the resulting object:
-``` {r, dkqs_eg2summary, eval = TRUE}
+``` {r dkqs.eg2summary, eval = TRUE}
 summary(dkqs.full2)
 ```
 
@@ -378,7 +377,7 @@ Similar to what has been demonstrated in the [example](#demonstration) earlier,
 some of the components has to be updated in the `lpmodel` object. 
 This can be done as follows:
 
-```{r, syntax_twom, eval = TRUE}
+```{r syntax.twom, eval = TRUE}
 # Construct A.obs
 Aobs.twom <- matrix(c(rep(0,J1), yp, rep(0,J1), rep(1, J1)), nrow = 2,
                      byrow = TRUE)
@@ -405,7 +404,7 @@ lpm.twom <- lpmodel(A.obs    = Aobs.twom,
 The `dkqs` procedure can be ran in the same fashion as before. The following
 is an example on how this can be ran:
 
-``` {r, dkqs_eg3, eval = TRUE}
+``` {r dkqs.eg3, eval = TRUE}
 set.seed(1)
 dkqs.full3 <- dkqs(data = sampledata,
                    lpmodel = lpm.twom,
@@ -428,7 +427,7 @@ the subsampling procedure.
 #### Syntax
 
 The `subsample` command has the following syntax:
-```{r, subsample_syntax, eval = FALSE}
+```{r subsample.syntax, eval = FALSE}
 subsample(data = sampledata, 
           lpmodel = lpm.full,
           beta.tgt = 0.375,
@@ -484,7 +483,7 @@ can be deterministic or stochastic:
 #### Example
 
 The following is what happens when the above code is run:
-``` {r, subsample_eg1, eval = TRUE}
+``` {r subsample.eg1, eval = TRUE}
 set.seed(1)
 subsample.full <- subsample(data = sampledata, 
                             lpmodel = lpm.full,
@@ -500,7 +499,7 @@ print(subsample.full)
 ```
 
 Again, more detailed information can be extracted via the `summary` command:
-``` {r, subsample_eg2, eval = TRUE}
+``` {r subsample.eg2, eval = TRUE}
 summary(subsample.full)
 ```
 
@@ -510,7 +509,7 @@ procedures. They are illustrated as follows.
 
 The following is an exmaple of performing a bootstrapping procedure:
 
-``` {r, subsample_eg3, eval = TRUE}
+``` {r subsample.eg3, eval = TRUE}
 set.seed(1)
 subsample.bootstrap <- subsample(data = sampledata, 
                                  lpmodel = lpm.full,
@@ -528,7 +527,7 @@ print(subsample.bootstrap)
 The following is an exmaple of performing a *m* out of *n* bootstrapping 
 procedure:
 
-``` {r, subsample_eg4, eval = TRUE}
+``` {r subsample.eg4, eval = TRUE}
 set.seed(1)
 subsample.bootstrap2 <- subsample(data = sampledata, 
                                   lpmodel = lpm.full,
@@ -551,7 +550,7 @@ testing procedure by @fsst2020.
 #### Syntax
 
 The `fsst` command has the following syntax:
-```{r, fsst_syntax, eval = FALSE}
+```{r fsst.syntax, eval = FALSE}
 fsst(data = sampledata, 
      lpmodel = lpm.full,
      beta.tgt = 0.375,
@@ -607,7 +606,7 @@ can be deterministic or stochastic:
 #### Example
 
 The following is what happens when the above code is run:
-``` {r, fsst_eg1, eval = TRUE}
+``` {r fsst.eg1, eval = TRUE}
 set.seed(1)
 fsst.full1 <- fsst(data = sampledata, 
                    lpmodel = lpm.full,
@@ -626,7 +625,7 @@ print(fsst.full1)
 As noted above, the `fsst` procedure provides the flexibility for users to 
 pass multiple tuning parameters.
 
-``` {r, fsst_eg2, eval = TRUE}
+``` {r fsst.eg2, eval = TRUE}
 set.seed(1)
 fsst.full2 <- fsst(data = sampledata, 
                    lpmodel = lpm.full,
@@ -644,7 +643,7 @@ print(fsst.full2)
 
 
 Again, more detailed information can be extracted via the `summary` command:
-``` {r, fsst_eg2summary, eval = TRUE}
+``` {r fss.eg2summary, eval = TRUE}
 summary(fsst.full2)
 ```
 
@@ -660,7 +659,7 @@ or L2-norm.
 
 #### Syntax
 
-``` {r, estbounds_syntax, eval = FALSE}
+``` {r estbounds.syntax, eval = FALSE}
 estbounds(data = sampledata,
           lpmodel = lpm.full,
           kappa = 1e-5,
@@ -697,7 +696,7 @@ following packages as the solver:
 #### Example
 
 The following is what happens when the above code is run:
-``` {r, estbounds_eg1, eval = TRUE}
+``` {r estbounds.eg1, eval = TRUE}
 set.seed(1)
 estbounds.full <- estbounds(data = sampledata,
                             lpmodel = lpm.full,
@@ -710,7 +709,7 @@ print(estbounds.full)
 ```
 
 Again, more detailed information can be extracted via the `summary` command:
-``` {r, estbounds_eg1summary, eval = TRUE}
+``` {r estbounds.eg1summary, eval = TRUE}
 summary(estbounds.full)
 ```
 
@@ -725,7 +724,7 @@ and applying the bisection method.
 #### Syntax {#invertci_syntax}
 The syntax of the `invertci` function is as follows:
 
-```{r, invertci_syntax, eval = FALSE}
+```{r invertci.syntax, eval = FALSE}
 invertci(f = subsample, 
          farg = subsample.args, 
          alpha = 0.05, 
@@ -764,7 +763,7 @@ To use the `invertci` function, the arguments for the test statistic has to
 be specified and passed to the `farg` argument. For instance, if the testing
 procedure `subsample` is used, the arguments can be defined as follows:
 
-```{r, invertci.args, eval = TRUE}
+```{r invertci.args, eval = TRUE}
 subsample.args <- list(data = sampledata,
                        lpmodel = lpm.full,
                        R = 100,
@@ -792,7 +791,7 @@ contains the values of betas that has been evaluated) and the second column is
 The following shows a sample output of the function `invertci` that is used to 
 the confidence interval for the test `dkqs` with significance level 0.05.
 
-```{r, eval = TRUE}
+```{r invertci.eg1, eval = TRUE}
 set.seed(1)
 invertci.subsample1 <- invertci(f = subsample,
                                 farg = subsample.args, 
@@ -811,7 +810,7 @@ print(invertci.subsample1)
 The details for each iteration can be obtained in real-time by setting
 `progress` as `TRUE` or applying the `summary` command on the resulting
 object:
-``` {r, eval = TRUE}
+``` {r invertci.summary1, eval = TRUE}
 summary(invertci.subsample1)
 ```
 
@@ -821,7 +820,7 @@ The function `invertci` can also be used to generate multiple confidence
 intervals if the argument `alpha` is a vector. For instance, the following
 code produces confidence intervals for alpha equals 0.01, 0.05 and 0.1.
 
-```{r, eval = TRUE, warning = FALSE}
+```{r invertci.eg2, eval = TRUE}
 set.seed(1)
 invertci.subsample2 <- invertci(f = subsample, 
                                 farg = subsample.args, 
@@ -839,7 +838,7 @@ print(invertci.subsample2)
 
 Again, the detailed steps in constructing the confidence intervals can be 
 obtained as follows:
-``` {r, eval = TRUE}
+``` {r invertci.summary2, eval = TRUE}
 summary(invertci.subsample2)
 ```
 
@@ -847,7 +846,7 @@ Since the details of the iterations could potentially be a long list of
 outputs, users may specify a particular list of output that they wish to
 read in the `summary` command. For instance, to only print the details of the 
 iterations when the significance level is 0.05, it can be done as follows:
-``` {r, eval = TRUE}
+``` {r invertci.summary2b, eval = TRUE}
 summary(invertci.subsample2, alphas = 0.05)
 ```
 
@@ -866,7 +865,7 @@ The computational time for using multiple cores should be
 shorter than using a single core for a large number of bootstraps. This is
 illustrated by the example via the `dkqs` procedure below:
 
-```{r, eg.cores, eval = TRUE}
+```{r eg.cores, eval = TRUE}
 dkqs.args <- list(data = sampledata,
                   lpmodel = lpm.full,
                   beta.tgt = .375,
