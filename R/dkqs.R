@@ -234,7 +234,7 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, tau = NULL,
                    cores = cores,
                    call = call,
                    test.logical = test.logical)
-    
+
     # Print warning message
     infeasible.betatgt.warning()
 
@@ -851,7 +851,7 @@ print.dkqs <- function(x, ...){
   cat("\r\r")
 
   if (x$test.logical == 1) {
-    # Case 1: If 'beta.tgt' is within the logical bound
+    # Case 1: 'beta.tgt' is within the logical bound
     # Print the p-values
     df.pval <- x$pval
 
@@ -869,7 +869,8 @@ print.dkqs <- function(x, ...){
       print(df.pval, row.names = FALSE)
     }
   } else {
-    cat(infeasible.msg.betatgt()$msg.pval)
+    # Case 2: 'beta.tgt' is outside the logical bound
+    infeasible.pval.msg()
   }
 }
 
@@ -888,7 +889,7 @@ print.dkqs <- function(x, ...){
 summary.dkqs <- function(x, ...){
 
   if (x$test.logical == 1) {
-    # Case 1: If 'beta.tgt' is within the logical bound
+    # Case 1: 'beta.tgt' is within the logical bound
     # Print the p-values
     print(x)
 
@@ -899,8 +900,8 @@ summary.dkqs <- function(x, ...){
     cat(sprintf(" Solver used: %s\n", x$solver))
     cat(sprintf(" Number of cores used: %s\n", x$cores))
   } else if (x$test.logical == 0) {
-    # Case 2: If 'beta.tgt' is outside the logical bound
-    infeasible.summary.betatgt()
+    # Case 2: 'beta.tgt' is outside the logical bound
+    infeasible.pval.msg()
     cat(sprintf("\nSolver used: %s\n", x$solver))
   }
 }

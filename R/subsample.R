@@ -147,7 +147,7 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, norm = 2,
                    norm = norm,
                    subsample.size = m,
                    test.logical = test.logical)
-    
+
     # Print warning message
     infeasible.betatgt.warning()
   }
@@ -481,7 +481,13 @@ subsample.manycores <- function(data, R, lpmodel, beta.tgt, norm, solver,
 #'
 print.subsample <- function(x, ...){
   cat("\r\r")
-  cat(sprintf("p-value: %s\n", round(x$pval, digits = 5)))
+  if (x$test.logical == 1) {
+    # Case 1: 'beta.tgt' is within the logical bound
+    cat(sprintf("p-value: %s\n", round(x$pval, digits = 5)))
+  } else {
+    # Case 2: 'beta.tgt' is outside the logical bound
+    infeasible.pval.msg()
+  }
 }
 
 #' Summary of results from \code{subsample}
@@ -499,7 +505,7 @@ print.subsample <- function(x, ...){
 summary.subsample <- function(x, ...){
   cat("\r\r")
   if (x$test.logical == 1) {
-    # Case 1: If 'beta.tgt' is within the logical bound
+    # Case 1: 'beta.tgt' is within the logical bound
     # Print the p-values
     print(x)
 
@@ -512,8 +518,8 @@ summary.subsample <- function(x, ...){
     cat(sprintf("Size of each subsample: %s\n", x$subsample.size))
     cat(sprintf("Number of cores used: %s\n", x$cores))
   } else if (x$test.logical == 0) {
-    # Case 2: If 'beta.tgt' is outside the logical bound
-    infeasible.summary.betatgt()
+    # Case 2: 'beta.tgt' is outside the logical bound
+    infeasible.pval.msg()
     cat(sprintf("\nSolver used: %s\n", x$solver))
   }
 }

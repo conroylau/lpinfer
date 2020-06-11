@@ -1003,16 +1003,15 @@ infeasible.msg.betatgt <- function() {
 #' Wrapper for '\code{infeasible.msg.betatgt}'
 #'
 #' @description This function is a wrapper for '\code{infeasible.msg.betatgt}'
-#'   to print the reason for the p-value to be zero and the p-value. It is
-#'   used in the summary functions.
+#'   to print that p-value is zero in the `\code{print}' or '\code{summary}'
+#'   messages.
 #'
 #' @return Nothing is returned.
 #'
 #' @export
 #'
-infeasible.summary.betatgt <- function() {
+infeasible.pval.msg <- function() {
   msg <- infeasible.msg.betatgt()
-  cat(msg$msg.explain, "\n")
   cat(msg$msg.pval)
 }
 

@@ -344,7 +344,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
                      solver.name = solver.name,
                      rho = rho,
                      test.logical = test.logical)
-      
+
       # Print warning message
       infeasible.betatgt.warning()
    }
@@ -1547,7 +1547,7 @@ print.fsst <- function(x, ...){
    cat("\r\r")
 
    if (x$test.logical == 1) {
-      # Case 1: If 'beta.tgt' is within the logical bound
+      # Case 1: 'beta.tgt' is within the logical bound
       # Print the p-values
       df.pval <- x$pval
       if (nrow(df.pval) == 1){
@@ -1561,7 +1561,8 @@ print.fsst <- function(x, ...){
          }
       }
    } else {
-      cat(infeasible.msg.betatgt()$msg.pval)
+      # Case 2: 'beta.tgt' is outside the logical bound
+      infeasible.pval.msg()
    }
 }
 
@@ -1590,7 +1591,7 @@ summary.fsst <- function(x, ...){
    cat("\r\r")
 
    if (x$test.logical == 1) {
-      # Case 1: If 'beta.tgt' is within the logical bound
+      # Case 1: 'beta.tgt' is within the logical bound
       # Print the sample and bootstrap test statistics
       cat("\nSample and quantiles of bootstrap test statistics: \n")
       cv.tab <- x$cv.table
@@ -1633,8 +1634,8 @@ summary.fsst <- function(x, ...){
                          "of the beta vector is approximated from the %s."),
                   x$beta.var.method))
    } else if (x$test.logical == 0) {
-      # Case 2: If 'beta.tgt' is outside the logical bound
-      infeasible.summary.betatgt()
+      # Case 2: 'beta.tgt' is outside the logical bound
+      infeasible.pval.msg()
       cat(sprintf("\nSolver used: %s\n", x$solver.name))
    }
 }
