@@ -67,9 +67,13 @@ check.datafunction <- function(data, f, lpmodel.comp){
 #' @export
 #'
 check.positiveinteger <- function(x, name.var){
-  if ((is.numeric(x) == TRUE & length(x) == 1 & x > 0 & x%%1 == 0) == FALSE){
-    stop(sprintf("The variable '%s' has to be a positive integer.", name.var),
-         call. = FALSE)
+  if (!is.numeric(x)) {
+    # Call the general error message function
+    check.errormsg(name.var, "a positive integer")
+  } else if ((is.numeric(x) == TRUE & length(x) == 1 & x > 0 & x%%1 == 0)
+             == FALSE) {
+    # Call the general error message function
+    check.errormsg(name.var, "a positive integer")
   }
   return(x)
 }
@@ -88,10 +92,12 @@ check.positiveinteger <- function(x, name.var){
 #' @export
 #'
 check.nonnegaetive <- function(x, name.var){
-  if ((is.numeric(x) == TRUE & length(x) == 1 & x >= 0) == FALSE){
-    stop(sprintf("The variable '%s' has to be a nonnegative number.",
-                 name.var),
-         call. = FALSE)
+  if (!is.numeric(x)) {
+    # Call the general error message function
+    check.errormsg(name.var, "a nonnegative number")
+  } else if ((is.numeric(x) == TRUE & length(x) == 1 & x >= 0) == FALSE){
+    # Call the general error message function
+    check.errormsg(name.var, "a nonnegative number")
   }
   return(x)
 }
@@ -130,8 +136,8 @@ check.numeric <- function(x, name.var){
 #'
 check.boolean <- function(x, name.var){
   if (!(x == TRUE | x == FALSE)){
-    stop(sprintf(paste0("The variable '%s' has to be boolean variable."),
-                 name.var), call. = FALSE)
+    # Call the general error message function
+    check.errormsg(name.var, "a Boolean expression")
   }
 }
 
@@ -160,28 +166,29 @@ check.numrange <- function(x, name.var, left.type, left, right.type, right){
   # ---------------- #
   # Step 2: Check if the number is within the range
   # ---------------- #
+  # General message
+  msg.interval <- paste0("The variable '%s' has to be inside the interval ",
+                         "%s%s, %s%s.")
+
+  # Start the check
   if (left.type == "open" & right.type == "open"){
     if ((x > left & x < right) == FALSE){
-      stop(sprintf(paste0("The variable '%s' has to be inside the interval ",
-                          "(%s, %s)."), name.var, left, right),
+      stop(sprintf(msg.interval, name.var, "(", left, right, ")"),
            call. = FALSE)
     }
   } else if (left.type == "open" & right.type == "closed"){
     if ((x > left & x <= right) == FALSE){
-      stop(sprintf(paste0("The variable '%s' has to be inside the interval ",
-                          "(%s, %s]."), name.var, left, right),
+      stop(sprintf(msg.interval, name.var, "(", left, right, "]"),
            call. = FALSE)
     }
   } else if (left.type == "closed" & right.type == "open"){
     if ((x >= left & x < right) == FALSE){
-      stop(sprintf(paste0("The variable '%s' has to be inside the interval ",
-                          "[%s, %s)."), name.var, left, right),
+      stop(sprintf(msg.interval, name.var, "[", left, right, ")"),
            call. = FALSE)
     }
   } else if (left.type == "closed" & right.type == "closed"){
     if ((x >= left & x <= right) == FALSE){
-      stop(sprintf(paste0("The variable '%s' has to be inside the interval ",
-                          "[%s, %s]."), name.var, left, right),
+      stop(sprintf(msg.interval, name.var, "[", left, right, "]"),
            call. = FALSE)
     }
   }
@@ -192,7 +199,7 @@ check.numrange <- function(x, name.var, left.type, left, right.type, right){
 #' @description This function checks whether the the norm used in the
 #'   problem is an L1 or L2 norm. If not, an error message is displayed.
 #'
-#' @details The following input for \code{norm} will be interpreted as the L1-
+#' @details The following input for \code{norm} will be interpreted as the 1-
 #'   norm:
 #'   \itemize{
 #'     \item{\code{1} (numeric)}
@@ -202,7 +209,7 @@ check.numrange <- function(x, name.var, left.type, left, right.type, right){
 #'     \item{\code{"o"}}
 #'     \item{\code{"taxicab"}}
 #'   }
-#'   The following input for \code{norm} will be interpreted as the L2-norm:
+#'   The following input for \code{norm} will be interpreted as the 2-norm:
 #'   \itemize{
 #'     \item{\code{2} (numeric)}
 #'     \item{\code{"2"} (string)}
@@ -227,16 +234,16 @@ check.norm <- function(x, name.var){
   x <- tolower(x)
 
   if (x %in% c(1, "1", "l1", "one", "o", "taxicab")){
-    # Case 1: user provied an input that corresponds to L1-norm
+    # Case 1: user provided an input that corresponds to 1-norm
     norm <- 1
   } else if (x %in% c(2, "2", "l2", "two", "t", "e", "euclidean")){
-    # Case 1: user provied an input that corresponds to L2-norm
+    # Case 2: user provided an input that corresponds to 2-norm
     norm <- 2
   } else {
     stop(gsub("\\s+", " ",
               paste0("Only 1-norm and 2-norm are supported in this function. ",
-                     "For 1-norm, please enter one of the followings: 1, '1', ",
-                     "'l1', 'one', 'o' or 'taxicab'. For 2-norm, please enter ",
+                     "For 1-norm, please use one of the followings: 1, '1', ",
+                     "'l1', 'one', 'o' or 'taxicab'. For 2-norm, please use ",
                      "one of the followings: 2, '2', 'l2', 'two', 't', 'e', ",
                      "'euclidean'.")),
          call. = FALSE)
@@ -257,7 +264,7 @@ check.norm <- function(x, name.var){
 #' @param A Matrix that will be contains dimensional information for the
 #'    output of f
 #' @param data Data frame that will be passed to the function
-#' @param name.A Name of matrix
+#' @param name.A Name of the matrix
 #' @param mat.type Type of the matrix to be checked
 #' @inheritParams check.dataframe
 #' @inheritParams check.positiveinteger
@@ -270,25 +277,33 @@ check.norm <- function(x, name.var){
 #' @export
 #'
 check.func <- function(f, A, data, name.var, name.A, mat.type){
+  # ---------------- #
+  # Step 1: General messages
+  # ---------------- #
+  msg.class <- paste0("The %s of '%s' has to be %s.")
+
+  # ---------------- #
+  # Step 2: Start the check
+  # ---------------- #
   # Check the class of the function
   if (class(f) != "function"){
-    stop(sprintf("The input of '%s' has to be a function.", name.var),
+    stop(sprintf(msg.class, "input", name.var, "a function"),
          call. = FALSE)
   } else{
     out <- f(data)
     out <- as.matrix(out)
     # Check if the output is numeric
     if (is.numeric(out[,1]) == FALSE){
-      stop(sprintf("The output of '%s' has to be numeric.", name.var),
+      stop(sprintf(msg.class, "output", name.var, "numeric"),
            call. = FALSE)
     } else{
       if (mat.type == "col"){
         # If the output has to be a column vector
         if (dim(out)[2] != 1){
-          stop(sprintf("The output of '%s' has to be a column vector",
-                       name.var), call. = FALSE)
+          stop(sprintf(msg.class, "output", name.var, "a column vector"),
+               call. = FALSE)
         } else if (dim(out)[1] != dim(A)[1]){
-          stop(sprintf(paste0("The number of rows in the output of '%s' has ",
+          stop(sprintf(paste0("The number of rows in the output of '%s' need ",
                               "to be the same as the number of rows in the ",
                               "matrix '%s'."), name.var, name.A),
                call. = FALSE)
@@ -296,13 +311,13 @@ check.func <- function(f, A, data, name.var, name.A, mat.type){
       } else if (mat.type == "square"){
         # If the output has to be a square matrix
         if (nrow(out) != ncol(out)){
-          stop(sprintf("The output of '%s' has to be a square matrix",
-                       name.var), call. = FALSE)
+          stop(sprintf(msg.class, "output", name.var, "a square matrix"),
+               call. = FALSE)
         }
         if ((nrow(out) != nrow(A)) | (ncol(out) != nrow(A))){
-          stop(sprintf("The number of rows and columns of the output ",
-                       "for '%s' has to be equal to the number of rows in ",
-                       "matrix '%s'.", name.var, name.A),
+          stop(sprintf("The number of rows and columns for the output ",
+                       "of '%s' need to be equal to the number of rows in ",
+                       "the matrix '%s'.", name.var, name.A),
                call. = FALSE)
         }
       }
@@ -320,7 +335,7 @@ check.func <- function(f, A, data, name.var, name.A, mat.type){
 #' @param A Constraint matrix.
 #' @param b Corresponding vector.
 #' @param Aname Variable name of constraint matrix.
-#' @param bname Varaible name of the corresponding vector.
+#' @param bname Variable name of the corresponding vector.
 #'
 #' @return Returns the updated matrix and vector or print stop message.
 #'    \item{A_updated}{Updated constraint matrix.}
@@ -333,14 +348,13 @@ check.Ab <- function(A, b, Aname, bname){
     # ---------------- #
     # Step 1: Check that if A and b must be both NULL or both non-NULL
     # ---------------- #
+    msg.temp <- paste0("'%s' is NULL but '%s' is not NULL. Please ",
+                       "ensure that either they are both NULL or they are ",
+                       "both valid matrices.")
     if (is.null(A) == TRUE){
-      stop(sprintf("'%s' is NULL but '%s' is not NULL. Please ensure
-                   that either they are both NULL or they are both
-                   valid matrices.", Aname, bname))
+      stop(sprintf(msg.temp, Aname, bname))
     } else {
-      stop(sprintf("'%s' is NULL but '%s' is not NULL. Please ensure
-                   that either they are both NULL or they are both
-                   valid matrices.", bname, Aname))
+      stop(sprintf(msg.temp, bname, Aname))
     }
   } else if (is.null(A) + is.null(b) == 2){
     # ---------------- #
@@ -357,8 +371,9 @@ check.Ab <- function(A, b, Aname, bname){
       if (class(matrix.list[[i]]) %in%
           c("data.frame", "matrix", "numeric") == FALSE){
         stop(gsub("\\s+", " ",
-                  paste0("The argument '", matrix.names[i], "' must either be
-                a data.frame, data.table, or matrix.")), call. = FALSE)
+                  paste0("The argument '", matrix.names[i],
+                  "' must either be a data.frame, data.table, or matrix.")),
+             call. = FALSE)
       } else{
         # Ensure the variable is in matrix form
         matrix.list[[i]] <- as.matrix(matrix.list[[i]])
@@ -381,8 +396,9 @@ check.Ab <- function(A, b, Aname, bname){
 
     ## Part 4: Ensure that the number of rows of A and b are identical
     if (nrow(A) != length(b)){
-      stop(sprintf("The number of rows of '%s' has to be equal to the number
-                  of rows of '%s.", Aname, bname), call. = FALSE)
+      stop(sprintf(paste0("The number of rows of '%s' has to be equal to ",
+                          "the number of rows of '%s."), Aname, bname),
+           call. = FALSE)
     }
 
     # ---------------- #
@@ -431,16 +447,33 @@ check.solver <- function(x, name.var, norm = 2){
   limsolve.msg <- "'limSolve' (version 1.5.6 or later)"
   lpsolveapi.msg <- "lpSolveAPI (version 5.5.2.0 or later)"
 
+  # Message for asking the user to use 'gurobi' in 2-norm
+  msg.l2norm <- paste0("This function with a 2-norm in the estimation ",
+                       "procedure is only compatible with 'gurobi'. ",
+                       "Please install ", gurobi.msg, ".")
+
+  # Message telling the user the solver input is incompatible in 1-norm
+  msg.l1norm <- paste0("This function is incompatible with '", x,
+                       "' when 1-norm is chosen in the estimation ",
+                       "procedure. Please install one of the following ",
+                       "packages: ",
+                       gurobi.msg, "; ",
+                       cplexapi.msg, "; ",
+                       rcplex.msg, "; ",
+                       limsolve.msg, ";",
+                       lpsolveapi.msg, ".")
+
   # ---------------- #
   # Step 2a: If no solver name is provided by the user
   # ---------------- #
   if (is.null(x) == TRUE){
-    # If gurobi is installed, the gurobi solver will be used for L1- & L2-norm
+    # If 'gurobi' is installed, the 'gurobi' solver will be used for 1-norm &
+    # 2-norm
     if (requireNamespace("gurobi", quietly = TRUE) == TRUE){
       solver = gurobi.optim
       x <- "gurobi"
     } else if (norm == 1) {
-      # If L1-norm is used, other solvers will be checked
+      # If 1-norm is used, other solvers will be checked
       if (requireNamespace("limSolve", quietly = TRUE) == TRUE){
         solver <- limsolve.optim
         x <- "limSolve"
@@ -456,22 +489,9 @@ check.solver <- function(x, name.var, norm = 2){
       }
     } else {
       if (norm == 1){
-        stop(gsub("\\s+", " ",
-                  paste0("This function is incompatible with '", x,
-                         "' when L1-norm is chosen in the estimation procedure.
-                         Please install one of the following packages: ",
-                         gurobi.msg, "; ",
-                         cplexapi.msg, "; ",
-                         rcplex.msg, "; ",
-                         limsolve.msg, ";",
-                         lpsolveapi.msg, ".")),
-             call. = FALSE)
+        stop(gsub("\\s+", " ", msg.l1norm), call. = FALSE)
       } else if (norm == 2){
-        stop(gsub("\\s+", " ",
-                  paste0("This function with L2-norm in the estimation
-                         procedure is only compatible with 'gurobi'. ",
-                         "Please install ", gurobi.msg, ".")),
-             call. = FALSE)
+        stop(gsub("\\s+", " ", msg.l2norm), call. = FALSE)
       }
     }
   } else if (x == "gurobi"){
@@ -500,21 +520,9 @@ check.solver <- function(x, name.var, norm = 2){
   } else {
     ## Case 6: If the user specified a solver that is not compatible
     if (norm == 1){
-      stop(gsub("\\s+", " ",
-                paste0("This function is incompatible with '", x,
-                       "' when L1-norm is chosen in the estimation procedure.
-                       Please install one of the following packages: ",
-                       gurobi.msg, "; ",
-                       cplexapi.msg, "; ",
-                       rcplex.msg, "; ",
-                       limsolve.msg, ".")),
-           call. = FALSE)
+      stop(gsub("\\s+", " ", msg.l1norm), call. = FALSE)
     } else if (norm == 2){
-      stop(gsub("\\s+", " ",
-                paste0("This function with L2-norm in the estimation procedure
-                       is only incompatible with 'gurobi'. ",
-                       "Please install ", gurobi.msg, ".")),
-           call. = FALSE)
+      stop(gsub("\\s+", " ", msg.l2norm), call. = FALSE)
     }
   }
 
@@ -568,8 +576,8 @@ check.lpmodel <- function(data, lpmodel, name.var, A.tgt.cat, A.obs.cat,
   # Step 1: Check if lpmodel is a list
   # ---------------- #
   if (class(lpmodel) != "lpmodel"){
-    stop(sprintf("The object '%s' has to be a list.", name.var),
-         call. = FALSE)
+    # Call the general error message function
+    check.errormsg(name.var, "a list")
   }
 
   # ---------------- #
@@ -599,16 +607,20 @@ check.lpmodel <- function(data, lpmodel, name.var, A.tgt.cat, A.obs.cat,
   # ---------------- #
   # Step 3: Check whether the dimension matches
   # ---------------- #
+  # General message telling the user to provide the "A" matrix and the "beta"
+  # vector with the same number of rows
+  msg.row <- paste0("The objects '%s' and '%s' in 'lpmodel' has ",
+                    "to have the same number of rows.")
+
+  # Start the check
   if (!("not_used" %in% A.obs.cat)){
     if (nrow(A.obs.return$sample) != NROW(beta.obs.return$sample)){
-      stop(paste0("The objects 'A.obs' and 'beta.obs' in 'lpmodel' has ",
-                  "to have the same number of rows."))
+      stop(sprintf(msg.row, "A.obs", "beta.obs"))
     }
   }
   if (!("not_used" %in% A.shp.cat)){
     if (nrow(A.shp.return$sample) != NROW(beta.shp.return$sample)){
-      stop(paste0("The objects 'A.shp' and 'beta.shp' in 'lpmodel' has ",
-                  "to have the same number of rows."))
+      stop(sprintf(msg.row, "A.shp", "beta.shp"))
     }
   }
   return(lpmodel)
@@ -664,7 +676,7 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R){
         return(list(mat = mat,
                     sample = sample.return$beta.obs))
       } else if (length(mat.cat) == 1){
-        stop(sprintf(paste0("The object '%s' in 'lpmodel' has to be a ",
+        stop(sprintf(paste0("The object '%s' in 'lpmodel' needs to be a ",
                             "function."),
                      mat.name),
              call. = FALSE)
@@ -705,7 +717,7 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R){
         return(list(mat = mat,
                     sample = mat.return[[1]]))
       } else if (length(mat.cat) == 1){
-        stop(sprintf("The object '%s' in 'lpmodel' has to be a list.",
+        stop(sprintf("The object '%s' in 'lpmodel' needs to be a list.",
                      mat.name),
              call. = FALSE)
       } else {
@@ -720,14 +732,15 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R){
         # format
         check.datafunction(data, mat, mat.name)
 
+        msg.vecmat <- sprintf(paste0("The output of '%s' in 'lpmodel' needs ",
+                                     "to be a list of two objects (one vector ",
+                                     "and one matrix)."),
+                              mat.name)
+
         # Check if there are two outputs of the function
         func.output <- mat(data)
         if (length(func.output) != 2){
-          stop(sprintf(paste0("The output of '%s' in 'lpmodel' has to be a ",
-                              "list of two objects (one vector and one ",
-                              "matrix)."),
-                       mat.name),
-               call. = FALSE)
+          stop(msg.vecmat, call. = FALSE)
         } else {
           out1 <- matrix(func.output[[1]])
           out2 <- matrix(func.output[[2]])
@@ -735,11 +748,7 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R){
           # Check if one of out1 and out2 if a vector and the remaining one is
           # a matrix
           if ((ncol(out1) != 1 & ncol(out2) != 1)){
-            stop(sprintf(paste0("The output of '%s' in 'lpmodel' has to be a ",
-                                "list of two objects (one vector and one ",
-                                "matrix)."),
-                         mat.name),
-                 call. = FALSE)
+            stop(msg.vecmat, call. = FALSE)
           } else if (ncol(out1) == 1){
             sample <- out1
           } else if (ncol(out1) == 2){
@@ -749,11 +758,7 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R){
         return(list(mat = mat,
                     sample = sample))
       } else if (length(mat.cat) == 1){
-        stop(sprintf(paste0("The object '%s' in 'lpmodel' has to be a ",
-                            "function that produces a list of two objects ",
-                            "(one vector and one matrix)."),
-                     mat.name),
-             call. = FALSE)
+        stop(msg.vecmat,  call. = FALSE)
       } else {
         err.ind <- c(err.ind, 4)
       }
@@ -804,6 +809,12 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R){
 #' @export
 #'
 check.matrix <- function(mat, mat.name, mat.cat, inside.list){
+  # General message indicating the object has to be either a matrix or a
+  # data.frame
+  msg.matdf <- paste0("The objects inside the list object '%s' of ",
+                      "'lpmodel' has to be either a matrix or a ",
+                      "data.frame.")
+
   if (class(mat) == "data.frame" | class(mat) == "matrix" |
       class(mat) == "numeric"){
     if (is.null(dim(mat))) {
@@ -820,17 +831,13 @@ check.matrix <- function(mat, mat.name, mat.cat, inside.list){
                 dim = dim(mat.update)))
   } else if (length(mat.cat) == 1){
     if (inside.list == FALSE){
-      stop(sprintf(paste0("The class of teh object '%s' in 'lpmodel' has to ",
+      stop(sprintf(paste0("The class of the object '%s' in 'lpmodel' has to ",
                           "be one of the followings: data.frame, matrix, or ",
                           "numeric."),
                    mat.name),
            call. = FALSE)
     } else {
-      stop(sprintf(paste0("The objects inside the list object '%s' of ",
-                          "'lpmodel' has to be either a matrix or a ",
-                          "data.frame."),
-                   mat.name),
-           call. = FALSE)
+      stop(sprintf(msg.matdf, mat.name), call. = FALSE)
     }
   } else {
     if (inside.list == FALSE) {
@@ -842,11 +849,7 @@ check.matrix <- function(mat, mat.name, mat.cat, inside.list){
       return(list(mat.update = mat.update,
                   err.ind = 1))
     } else {
-      stop(sprintf(paste0("The objects inside the list object '%s' of ",
-                          "'lpmodel' has to be either a matrix or a ",
-                          "data.frame."),
-                   mat.name),
-           call. = FALSE)
+      stop(sprintf(msg.matdf, mat.name), call. = FALSE)
     }
   }
 }
@@ -864,18 +867,15 @@ check.matrix <- function(mat, mat.name, mat.cat, inside.list){
 #' @export
 #'
 check.vector <- function(vec, vec.name, inside.list){
+  msg.vector <- paste0("The object '%s' of 'lpmodel' has to be a %s.")
+
   vec <- as.matrix(vec)
 
   if (nrow(vec) != 1 & ncol(vec) != 1){
     if (inside.list == FALSE){
-      stop(sprintf(paste0("The object '%s' of 'lpmodel' has to be a vector."),
-                   vec.name),
-           call. = FALSE)
+      stop(sprintf(msg.vector, vec.name, "vector"), call. = FALSE)
     } else {
-      stop(sprintf(paste0("The object '%s' of 'lpmodel' has to be a list ",
-                          "of vectors"),
-                   vec.name),
-           call. = FALSE)
+      stop(sprintf(msg.vector, vec.name, "list of vectors"), call. = FALSE)
     }
   }
 }
@@ -940,7 +940,7 @@ check.betatgt <- function(data, lpmodel, beta.tgt, solver) {
 #' @inheritParams dkqs
 #' @param modelsense String that indicates whether the program is a
 #'   maximization or minimization problem. If it is "max", then it is referring
-#'   to a maximization problem. Otherewise, it is referring to a minimization
+#'   to a maximization problem. Otherwise, it is referring to a minimization
 #'   problem.
 #'
 #' @return Returns the solution to the linear program.
@@ -1014,4 +1014,21 @@ infeasible.summary.betatgt <- function() {
   msg <- infeasible.msg.betatgt()
   cat(msg$msg.explain, "\n")
   cat(msg$msg.pval)
+}
+
+#' General error for checking the objects
+#'
+#' @description This is a general function to produce the error messages in
+#'   checking the objects
+#'
+#' @param name.var Name of the object.
+#' @param needs.to.be What the object is supposed to be.
+#'
+#' @return Nothing is returned. An error message is printed.
+#'
+#' @export
+#'
+check.errormsg <- function(name.var, needs.to.be) {
+  general.msg <- "The object '%s' has to be %s."
+  stop(sprintf(general.msg, name.var, needs.to.be), call. = FALSE)
 }
