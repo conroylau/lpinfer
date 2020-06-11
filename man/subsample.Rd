@@ -70,6 +70,11 @@ Returns a list of output calculated from the function:
   \item{phi}{The \eqn{\phi} parameter used.}
   \item{norm}{Norm used.}
   \item{subsample.size}{Size of subsample}
+  \item{test.logical}{Indicator variable for whether the computation has 
+    been conducted. If '\code{test.logical}' is 1, it refers to the case 
+    where '\code{beta.tgt}' is inside the logical bound. If 
+    '\code{test.logical}' is 0, it refers to the case where '
+    \code{beta.tgt}' is outside the logical bound.}
 }
 \description{
 This function conducts inference and returns the

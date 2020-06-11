@@ -36,7 +36,7 @@ check.datafunction <- function(data, f, lpmodel.comp){
   display.msg <- sprintf(paste0("The function defined in the '%s' component ",
                                 "for 'lpmodel' needs to accept data of class",
                                 "'data.frame'."), lpmodel.comp)
-  
+
   # try-catch
   tryCatch(
     expr = {
@@ -897,4 +897,121 @@ check.cores <- function(x){
     x <- 1
   }
   return(x)
+}
+
+#' Check function: check if \code{beta.tgt} is within the logical bound
+#'
+#' @description This function checks whether the parameter \code{beta.tgt}
+#'   specified is within the logical bound. If it is not the logical
+#'   bound, then reject immediately.
+#'
+#' @inheritParams dkqs
+#'
+#' @return Returns an indicator to show whether the \code{beta.tgt} is within
+#'   the logical bound or not.
+#'   \item{beta.tgt.logical}{Equals 1 if it is within the logical bound.
+#'   Equals 0 otherwise.}
+#'
+#' @export
+#'
+check.betatgt <- function(data, lpmodel, beta.tgt, solver) {
+  # ---------------- #
+  # Step 1: Compute the logical upper and lower bound
+  # ---------------- #
+  ub <- check.betatgt.lp(data, lpmodel, beta.tgt, "max", solver)
+  lb <- check.betatgt.lp(data, lpmodel, beta.tgt, "min", solver)
+
+  # ---------------- #
+  # Step 2: Return the indicator
+  # ---------------- #
+  if (beta.tgt <= ub & beta.tgt >= lb) {
+    return(1)
+  } else {
+    return(0)
+  }
+}
+
+#' Construct the linear program for the function \code{check.betatgt}
+#'
+#' @description This function checks whether the parameter \code{beta.tgt}
+#'   specified is within the logical bound. If it is not the logical
+#'   bound, then reject immediately.
+#'
+#' @inheritParams dkqs
+#' @param modelsense String that indicates whether the program is a
+#'   maximization or minimization problem. If it is "max", then it is referring
+#'   to a maximization problem. Otherewise, it is referring to a minimization
+#'   problem.
+#'
+#' @return Returns the solution to the linear program.
+#'   \item{objval}{Objective value of the linear program. It is either the
+#'   logical upper bound or the logical lower bound.}
+#'
+#' @export
+#'
+check.betatgt.lp <- function(data, lpmodel, beta.tgt, modelsense, solver) {
+  # ---------------- #
+  # Step 1: Obtain the deterministic components of the objects in lpmodel
+  # ---------------- #
+  A.shp.hat <- lpmodel.eval(data, lpmodel$A.shp, 1)
+  A.tgt.hat <- lpmodel.eval(data, lpmodel$A.tgt, 1)
+  beta.shp.hat <- lpmodel.eval(data, lpmodel$beta.shp, 1)
+
+  # ---------------- #
+  # Step 2: Solve the linear program
+  # ---------------- #
+  # Set up the arguments for optimizer
+  optim.arg <- list(Af = NULL,
+                    bf = A.tgt.hat,
+                    nf = 1,
+                    A = A.shp.hat,
+                    rhs = beta.shp.hat,
+                    sense = "=",
+                    modelsense = modelsense,
+                    lb = rep(0, ncol(A.shp.hat)))
+
+  # Solve the linear program
+  ans <- do.call(solver, optim.arg)
+
+  # ---------------- #
+  # Step 3: Return result
+  # ---------------- #
+  return(ans$objval)
+}
+
+#' General message to be printed in the summary function
+#'
+#' @description This function prints the message to inform the user that
+#'   the p-value is directly set to 0 because they have specified a
+#'   '\code{beta.tgt}' parameter that is infeasible, i.e. outside the logical
+#'   bounds of the program.
+#'
+#' @return Returns a string of the message.
+#'   \item{msg.explain}{Message to explain why the p-value is zero.}
+#'   \item{msg.pval}{Message indicating that the p-value is zero.}
+#'
+#' @export
+#'
+infeasible.msg.betatgt <- function() {
+  msg.explain <- paste0("Computation is skipped because the parameter ",
+                        "'beta.tgt' is outside the logical bound.")
+  msg.pval <- "p-value: 0"
+  return(list(msg.explain = msg.explain,
+              msg.pval = msg.pval))
+}
+
+#' Wrapper for '\code{infeasible.msg.betatgt}'
+#'
+#' @description This function is a wrapper for '\code{infeasible.msg.betatgt}'
+#'   to print the reason for the p-value to be zero and the p-value. It is
+#'   used in the summary functions.
+#'
+#' @return Nothing is returned.
+#'
+#' @export
+#'
+infeasible.summary.betatgt <- function() {
+  msg <- infeasible.msg.betatgt()
+  cat(msg$msg.explain, "\n")
+  cat(msg$msg.pval)
 }

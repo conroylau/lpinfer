@@ -65,6 +65,7 @@ Returns the updated parameters and objects back to the function
       \item{\code{solver.name}}
       \item{\code{cores}}
       \item{\code{norm}}
+      \item{\code{test.logical}}
    }
 }
 \description{

@@ -24,7 +24,7 @@ procedure are:
 
 \item{J}{The number of distinct nonzero values in vector \eqn{\bm{y}}.}
 
-\item{s.star.list}{The list of values of 
+\item{s.star.list}{The list of values of
 \eqn{\hat{s}^\ast \equiv A_{\mathrm{obs}}\hat{\bm{x}}_n^\ast}
 in the cone-tightening procedure for each tau.}
 

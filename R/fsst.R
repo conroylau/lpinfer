@@ -29,6 +29,11 @@
 #'     studentization matrix}
 #'   \item{beta.var.method}{Method used in obtaining the asymptotic variance
 #'     of \code{beta.obs}}
+#'   \item{test.logical}{Indicator variable for whether the computation has
+#'     been conducted. If '\code{test.logical}' is 1, it refers to the case
+#'     where '\code{beta.tgt}' is inside the logical bound. If
+#'     '\code{test.logical}' is 0, it refers to the case where '
+#'     \code{beta.tgt}' is outside the logical bound.}
 #'
 #' @export
 #'
@@ -51,280 +56,295 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
    solver <- fsst.return$solver
    solver.name <- fsst.return$solver.name
    cores <- fsst.return$cores
+   test.logical <- fsst.return$test.logical
 
-   # The user must either provide the data or n
-   if (is.null(data)){
-      n <- n
-   } else {
-      n <- nrow(data)
-   }
-
-   # Rearrange the lambda terms
-   lambda <- sort(lambda, decreasing = FALSE)
-
-   # ---------------- #
-   # Step 2: Obtain beta.obs, the list of bootstrap estimators and the
-   # variance estimator
-   # ---------------- #
-   ### 2(a) Compute beta(P)
-   beta.obs.return <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)
-   beta.obs.hat <- beta.obs.return[[1]]
-   sigma.beta.obs <- beta.obs.return[[2]]
-   beta.shp.hat <- lpmodel.eval(data, lpmodel$beta.shp, 1)
-   beta.n <- c(unlist(beta.obs.hat), beta.shp.hat, beta.tgt)
-
-   ### 2(b) Estimate sigma.beta.obs and store the boostrap estimates
-   # If the user provided bootstrap estimates of beta, use it to compute sigma
-   if (class(lpmodel$beta.obs) == "list"){
-      beta.var.method <- "list"
-      if (is.null(sigma.beta.obs)){
-         sigma.beta.obs <- sigma.summation(n, lpmodel$beta.obs, progress, 0)
-         beta.var.method <- "bootstrapped values of the input list"
+   ### Case 1: test.logical == 1. Proceed with the calculation because
+   ### beta.tgt is inside the logical bounds
+   if (test.logical == 1) {
+      # The user must either provide the data or n
+      if (is.null(data)){
+         n <- n
+      } else {
+         n <- nrow(data)
       }
-      beta.obs.bs <- lpmodel$beta.obs[2:(R+1)]
-      beta.n.bs <- list()
-      for (i in 1:R){
-         beta.n.bs[[i]] <- c(beta.obs.bs[[i]], beta.shp.hat, beta.tgt)
-      }
-   } else {
-      beta.var.method <- "function"
-      if (cores == 1){
-         sigma.return <- sigma.est(n, data, beta.obs.hat, lpmodel, R, progress)
+
+      # Rearrange the lambda terms
+      lambda <- sort(lambda, decreasing = FALSE)
+
+      # ---------------- #
+      # Step 2: Obtain beta.obs, the list of bootstrap estimators and the
+      # variance estimator
+      # ---------------- #
+      ### 2(a) Compute beta(P)
+      beta.obs.return <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)
+      beta.obs.hat <- beta.obs.return[[1]]
+      sigma.beta.obs <- beta.obs.return[[2]]
+      beta.shp.hat <- lpmodel.eval(data, lpmodel$beta.shp, 1)
+      beta.n <- c(unlist(beta.obs.hat), beta.shp.hat, beta.tgt)
+
+      ### 2(b) Estimate sigma.beta.obs and store the boostrap estimates
+      # If the user provided bootstrap estimates of beta, use it to compute sigma
+      if (class(lpmodel$beta.obs) == "list"){
+         beta.var.method <- "list"
          if (is.null(sigma.beta.obs)){
-            sigma.beta.obs <- sigma.return$sigma.hat
-            beta.var.method <- "bootstrapped 'beta.obs' from the function."
+            sigma.beta.obs <- sigma.summation(n, lpmodel$beta.obs, progress, 0)
+            beta.var.method <- "bootstrapped values of the input list"
          }
-         beta.obs.bs <- sigma.return$beta.obs.bs
-         beta.n.bs <- full.beta.bs(lpmodel, beta.tgt, beta.obs.bs, R)
-      } else {
-         sigma.return <- sigma.est.parallel(data, beta.obs.hat, lpmodel,
-                                            R, cores, progress)
-         if (is.null(sigma.beta.obs)){
-            sigma.beta.obs <- sigma.return$sigma.hat
-            beta.var.method <- "bootstrapped 'beta.obs' from the function."
+         beta.obs.bs <- lpmodel$beta.obs[2:(R+1)]
+         beta.n.bs <- list()
+         for (i in 1:R){
+            beta.n.bs[[i]] <- c(beta.obs.bs[[i]], beta.shp.hat, beta.tgt)
          }
-         beta.obs.bs <- sigma.return$beta.obs.bs
-         beta.n.bs <- full.beta.bs(lpmodel, beta.tgt, beta.obs.bs, R)
-      }
-   }
-
-   ### 2(c) Compute the beta.sigma
-   n.beta1 <- nrow(sigma.beta.obs)
-   n.beta23 <- length(c(beta.shp.hat, beta.tgt))
-   zero.12 <- matrix(rep(0, n.beta1*n.beta23), nrow = n.beta1)
-   zero.21 <- t(zero.12)
-   zero.22 <- matrix(rep(0, n.beta23^2), nrow = n.beta23)
-   beta.sigma <- rbind(cbind(sigma.beta.obs, zero.12),
-                       cbind(zero.21, zero.22))
-
-   # ---------------- #
-   # Step 3: Estimate beta.star
-   # ---------------- #
-   p <- length(beta.n)
-   if (!is.matrix(lpmodel$A.tgt)) {
-      d <- length(lpmodel$A.tgt)
-   } else {
-      d <- ncol(lpmodel$A.tgt)
-   }
-
-   if (d >= p){
-      beta.star <- beta.n
-
-      # Construct the bootstrap estimates, which are the same for all of them
-      beta.star.bs <- beta.n.bs
-   } else {
-      # Solve the quadratic program
-      beta.star <- beta.star.qp(data, lpmodel, beta.tgt, weight.matrix,
-                                beta.obs.hat, sigma.beta.obs, solver)
-
-      # Construct bootstrap estimates of beta.star
-      beta.star.bs <- list()
-      for (i in 1:R){
-         beta.star.bs[[i]] <- beta.star.qp(data, lpmodel, beta.tgt,
-                                           weight.matrix, beta.obs.bs[[i]],
-                                           sigma.beta.obs, solver)
-      }
-   }
-
-   # Consolidate the bootstrap estimators into a list
-   beta.star.l <- list(beta.star = beta.star)
-   beta.star.list <- c(beta.star.l, beta.star.bs)
-
-   # ---------------- #
-   # Step 4: Studentization
-   # ---------------- #
-   # Obtain bootstrap star
-   if (d >= p){
-      sigma.star <- beta.sigma
-      sigma.star.diff <- matrix(rep(0, p^2), nrow = p)
-   } else {
-      # Compute sigma.star of beta.star
-      if (cores == 1){
-         sigma.star <- sigma.summation(n, beta.star.list, progress, 1)
       } else {
-         sigma.star <- sigma.summation.parallel(n, beta.star.list, cores,
-                                                progress, 1)
+         beta.var.method <- "function"
+         if (cores == 1){
+            sigma.return <- sigma.est(n, data, beta.obs.hat, lpmodel, R, progress)
+            if (is.null(sigma.beta.obs)){
+               sigma.beta.obs <- sigma.return$sigma.hat
+               beta.var.method <- "bootstrapped 'beta.obs' from the function."
+            }
+            beta.obs.bs <- sigma.return$beta.obs.bs
+            beta.n.bs <- full.beta.bs(lpmodel, beta.tgt, beta.obs.bs, R)
+         } else {
+            sigma.return <- sigma.est.parallel(data, beta.obs.hat, lpmodel,
+                                               R, cores, progress)
+            if (is.null(sigma.beta.obs)){
+               sigma.beta.obs <- sigma.return$sigma.hat
+               beta.var.method <- "bootstrapped 'beta.obs' from the function."
+            }
+            beta.obs.bs <- sigma.return$beta.obs.bs
+            beta.n.bs <- full.beta.bs(lpmodel, beta.tgt, beta.obs.bs, R)
+         }
       }
 
-      # Compute sigma.star of (beta.star - beta.n)
-      beta.diff.bs <- list()
-      beta.diff.bs[[1]] <- beta.n - beta.star
-      for (i in 1:R){
-         beta.diff.bs[[i+1]] <- beta.n.bs[[i]] - beta.star.bs[[i]]
-      }
-      if (cores == 1){
-         sigma.star.diff <- sigma.summation(n, beta.diff.bs, progress, 2)
+      ### 2(c) Compute the beta.sigma
+      n.beta1 <- nrow(sigma.beta.obs)
+      n.beta23 <- length(c(beta.shp.hat, beta.tgt))
+      zero.12 <- matrix(rep(0, n.beta1*n.beta23), nrow = n.beta1)
+      zero.21 <- t(zero.12)
+      zero.22 <- matrix(rep(0, n.beta23^2), nrow = n.beta23)
+      beta.sigma <- rbind(cbind(sigma.beta.obs, zero.12),
+                          cbind(zero.21, zero.22))
+
+      # ---------------- #
+      # Step 3: Estimate beta.star
+      # ---------------- #
+      p <- length(beta.n)
+      if (!is.matrix(lpmodel$A.tgt)) {
+         d <- length(lpmodel$A.tgt)
       } else {
-         sigma.star.diff <- sigma.summation.parallel(n, beta.diff.bs, cores,
-                                                     progress, 2)
-      }
-   }
-
-   # Compute the matrix square root
-   rhobar.i <- base::norm(sigma.star, type = "f") * rho
-   omega.i <- expm::sqrtm(sigma.star + rhobar.i * diag(nrow(sigma.star)))
-
-   if (d >= p){
-      rhobar.e <- NA
-      omega.e <- sigma.star.diff
-   } else {
-      rhobar.e <- base::norm(sigma.star.diff, type = "f") * rho
-      omega.e <- expm::sqrtm(sigma.star.diff + rhobar.e *
-                                diag(nrow(sigma.star)))
-   }
-
-   # ---------------- #
-   # Step 5: Test statistic
-   # ---------------- #
-   # Compute range.n
-   if (d >= p){
-      range.n <- list(objval = 0,
-                      x = NA)
-      cone.n <- fsst.cone.lp(n, omega.i, beta.n, beta.star, lpmodel, 1, solver)
-   } else {
-      range.n <- fsst.range.lp(n, omega.e, beta.n, beta.star, solver)
-      cone.n <- fsst.cone.lp(n, omega.i, beta.n, beta.star, lpmodel, 0, solver)
-   }
-
-   # ---------------- #
-   # Step 6: Compute bootstrap components of cone.n and range.n
-   # ---------------- #
-   if (d >= p){
-      # Compute the restricted estimator
-      beta.r <- beta.r.compute(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
-                               beta.star, omega.i, 1, solver)$x
-
-      # Compute range.n for bootstrap beta
-      range.n.list <- rep(0, R)
-
-      cone.n.list <- list()
-      # Compute cone.n for bootstrap beta
-      for (i in 1:length(lambda)){
-         cone.n.temp <- fsst.cone.bs(n, omega.i, beta.n, beta.star, lpmodel,
-                                     R, lambda[i], 1, beta.star.bs, beta.r,
-                                     beta.star.list, solver, cores, progress,
-                                     length(lambda), i)
-         cone.n.list[[i]] <- cone.n.temp
+         d <- ncol(lpmodel$A.tgt)
       }
 
-   } else {
-      # Compute the restricted estimator
-      beta.r <- beta.r.compute(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
-                               beta.star, omega.i, 0, solver)$x
+      if (d >= p){
+         beta.star <- beta.n
 
-      # Compute range.n for bootstrap beta
-      range.n.list <- fsst.range.bs(n, omega.e, beta.n, beta.star, R, beta.n.bs,
-                                    beta.star.bs, solver, cores, progress)
+         # Construct the bootstrap estimates, which are the same for all of them
+         beta.star.bs <- beta.n.bs
+      } else {
+         # Solve the quadratic program
+         beta.star <- beta.star.qp(data, lpmodel, beta.tgt, weight.matrix,
+                                   beta.obs.hat, sigma.beta.obs, solver)
 
-      cone.n.list <- list()
-      # Compute cone.n for bootstrap beta
-      for (i in 1:length(lambda)){
-         cone.n.temp <- fsst.cone.bs(n, omega.i, beta.n, beta.star, lpmodel,
-                                     R, lambda[i], 0, beta.star.bs, beta.r,
-                                     beta.star.list, solver, cores, progress,
-                                     length(lambda), i)
-         cone.n.list[[i]] <- cone.n.temp
+         # Construct bootstrap estimates of beta.star
+         beta.star.bs <- list()
+         for (i in 1:R){
+            beta.star.bs[[i]] <- beta.star.qp(data, lpmodel, beta.tgt,
+                                              weight.matrix, beta.obs.bs[[i]],
+                                              sigma.beta.obs, solver)
+         }
       }
-   }
 
-   # ---------------- #
-   # Step 7: Compute decision, p-value and the quantiles of the test statistics
-   # ---------------- #
-   # Parameters
-   quans <- c(.99, .95, .90)
-   n.lambda <- length(lambda)
+      # Consolidate the bootstrap estimators into a list
+      beta.star.l <- list(beta.star = beta.star)
+      beta.star.list <- c(beta.star.l, beta.star.bs)
 
-   # Initialize the data frames
-   df.pval <- data.frame(matrix(vector(), nrow = n.lambda, ncol = 2))
-   colnames(df.pval) <- c("lambda", "p-value")
+      # ---------------- #
+      # Step 4: Studentization
+      # ---------------- #
+      # Obtain bootstrap star
+      if (d >= p){
+         sigma.star <- beta.sigma
+         sigma.star.diff <- matrix(rep(0, p^2), nrow = p)
+      } else {
+         # Compute sigma.star of beta.star
+         if (cores == 1){
+            sigma.star <- sigma.summation(n, beta.star.list, progress, 1)
+         } else {
+            sigma.star <- sigma.summation.parallel(n, beta.star.list, cores,
+                                                   progress, 1)
+         }
 
-   for (i in 1:n.lambda){
-      # Compute the p-values
-      pval.return <- fsst.pval(range.n$objval, cone.n$objval, range.n.list,
-                               cone.n.list[[i]], R)
-      df.pval[i,1] <- lambda[i]
-      df.pval[i,2] <- pval.return$pval
-   }
+         # Compute sigma.star of (beta.star - beta.n)
+         beta.diff.bs <- list()
+         beta.diff.bs[[1]] <- beta.n - beta.star
+         for (i in 1:R){
+            beta.diff.bs[[i+1]] <- beta.n.bs[[i]] - beta.star.bs[[i]]
+         }
+         if (cores == 1){
+            sigma.star.diff <- sigma.summation(n, beta.diff.bs, progress, 2)
+         } else {
+            sigma.star.diff <- sigma.summation.parallel(n, beta.diff.bs, cores,
+                                                        progress, 2)
+         }
+      }
 
-   # Fill in the Cone components
-   cv.table <- data.frame(matrix(vector(), nrow = 12, ncol = (n.lambda+2)))
-   colnames(cv.table) <- c("", "lambda", lambda)
-   # cv.table[1,] <- c("", "lambda", lambda)
-   cv.table[,1] <- c("Test statistic", rep("", 3), "Cone", rep("", 3),
-                     "Range", rep("", 3))
-   cv.table[,2] <- rep(c("Sample", "Bootstrap 99% CV", "Bootstrap 95% CV",
-                         "Bootstrap 90% CV"), 3)
+      # Compute the matrix square root
+      rhobar.i <- base::norm(sigma.star, type = "f") * rho
+      omega.i <- expm::sqrtm(sigma.star + rhobar.i * diag(nrow(sigma.star)))
 
-   # Fill in the Range components
-   range.list <- quan.stat(range.n.list, quans)
-   cv.table[9,3] <- round(range.n$objval, digits = 5)
-   for (j in 1:3){
-      cv.table[9 + j,3] <- round(range.list[j], digits = 5)
-   }
+      if (d >= p){
+         rhobar.e <- NA
+         omega.e <- sigma.star.diff
+      } else {
+         rhobar.e <- base::norm(sigma.star.diff, type = "f") * rho
+         omega.e <- expm::sqrtm(sigma.star.diff + rhobar.e *
+                                   diag(nrow(sigma.star)))
+      }
 
-   # Fill in the Cone and Test statistics component
-   for (i in 1:n.lambda){
-      # Fill in the Cone test statistics
-      cone.list <- quan.stat(cone.n.list[[i]], quans)
-      cv.table[5, i+2] <- round(cone.n$objval, digits = 5)
+      # ---------------- #
+      # Step 5: Test statistic
+      # ---------------- #
+      # Compute range.n
+      if (d >= p){
+         range.n <- list(objval = 0,
+                         x = NA)
+         cone.n <- fsst.cone.lp(n, omega.i, beta.n, beta.star, lpmodel, 1, solver)
+      } else {
+         range.n <- fsst.range.lp(n, omega.e, beta.n, beta.star, solver)
+         cone.n <- fsst.cone.lp(n, omega.i, beta.n, beta.star, lpmodel, 0, solver)
+      }
+
+      # ---------------- #
+      # Step 6: Compute bootstrap components of cone.n and range.n
+      # ---------------- #
+      if (d >= p){
+         # Compute the restricted estimator
+         beta.r <- beta.r.compute(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
+                                  beta.star, omega.i, 1, solver)$x
+
+         # Compute range.n for bootstrap beta
+         range.n.list <- rep(0, R)
+
+         cone.n.list <- list()
+         # Compute cone.n for bootstrap beta
+         for (i in 1:length(lambda)){
+            cone.n.temp <- fsst.cone.bs(n, omega.i, beta.n, beta.star, lpmodel,
+                                        R, lambda[i], 1, beta.star.bs, beta.r,
+                                        beta.star.list, solver, cores, progress,
+                                        length(lambda), i)
+            cone.n.list[[i]] <- cone.n.temp
+         }
+
+      } else {
+         # Compute the restricted estimator
+         beta.r <- beta.r.compute(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
+                                  beta.star, omega.i, 0, solver)$x
+
+         # Compute range.n for bootstrap beta
+         range.n.list <- fsst.range.bs(n, omega.e, beta.n, beta.star, R, beta.n.bs,
+                                       beta.star.bs, solver, cores, progress)
+
+         cone.n.list <- list()
+         # Compute cone.n for bootstrap beta
+         for (i in 1:length(lambda)){
+            cone.n.temp <- fsst.cone.bs(n, omega.i, beta.n, beta.star, lpmodel,
+                                        R, lambda[i], 0, beta.star.bs, beta.r,
+                                        beta.star.list, solver, cores, progress,
+                                        length(lambda), i)
+            cone.n.list[[i]] <- cone.n.temp
+         }
+      }
+
+      # ---------------- #
+      # Step 7: Compute decision, p-value and the quantiles of the test statistics
+      # ---------------- #
+      # Parameters
+      quans <- c(.99, .95, .90)
+      n.lambda <- length(lambda)
+
+      # Initialize the data frames
+      df.pval <- data.frame(matrix(vector(), nrow = n.lambda, ncol = 2))
+      colnames(df.pval) <- c("lambda", "p-value")
+
+      for (i in 1:n.lambda){
+         # Compute the p-values
+         pval.return <- fsst.pval(range.n$objval, cone.n$objval, range.n.list,
+                                  cone.n.list[[i]], R)
+         df.pval[i,1] <- lambda[i]
+         df.pval[i,2] <- pval.return$pval
+      }
+
+      # Fill in the Cone components
+      cv.table <- data.frame(matrix(vector(), nrow = 12, ncol = (n.lambda+2)))
+      colnames(cv.table) <- c("", "lambda", lambda)
+      # cv.table[1,] <- c("", "lambda", lambda)
+      cv.table[,1] <- c("Test statistic", rep("", 3), "Cone", rep("", 3),
+                        "Range", rep("", 3))
+      cv.table[,2] <- rep(c("Sample", "Bootstrap 99% CV", "Bootstrap 95% CV",
+                            "Bootstrap 90% CV"), 3)
+
+      # Fill in the Range components
+      range.list <- quan.stat(range.n.list, quans)
+      cv.table[9,3] <- round(range.n$objval, digits = 5)
       for (j in 1:3){
-         cv.table[j+5,i+2] <- round(cone.list[j], digits = 5)
+         cv.table[9 + j,3] <- round(range.list[j], digits = 5)
       }
 
-      # Fill in the test statistics
-      for (j in 1:4){
-         cv.table[j,i+2] <- max(cv.table[j+4,i+2], cv.table[j+8,3])
+      # Fill in the Cone and Test statistics component
+      for (i in 1:n.lambda){
+         # Fill in the Cone test statistics
+         cone.list <- quan.stat(cone.n.list[[i]], quans)
+         cv.table[5, i+2] <- round(cone.n$objval, digits = 5)
+         for (j in 1:3){
+            cv.table[j+5,i+2] <- round(cone.list[j], digits = 5)
+         }
+
+         # Fill in the test statistics
+         for (j in 1:4){
+            cv.table[j,i+2] <- max(cv.table[j+4,i+2], cv.table[j+8,3])
+         }
       }
-   }
 
-   # ---------------- #
-   # Step 8: Close the progress bar
-   # ---------------- #
-   if (progress == TRUE){
-      cat("                                                \n\b\r")
-   }
+      # ---------------- #
+      # Step 8: Close the progress bar
+      # ---------------- #
+      if (progress == TRUE){
+         cat("                                                \n\b\r")
+      }
 
-   # ---------------- #
-   # Step 9: Assign the return list and return output
-   # ---------------- #
-   # Assign the list of objects returned
-   output <- list(pval = df.pval,
-                  cv.table = cv.table,
-                  cores = cores,
-                  call = call,
-                  range = range.n,
-                  cone = cone.n,
-                  test = max(range.n$objval, cone.n$objval),
-                  cone.n.list = cone.n.list,
-                  range.n.list = range.n.list,
-                  solver.name = solver.name,
-                  rho = rho,
-                  rhobar.e = rhobar.e,
-                  rhobar.i = rhobar.i,
-                  beta.var.method = beta.var.method,
-                  omega.e = omega.e,
-                  omega.i = omega.i,
-                  beta.obs.bs = beta.obs.bs)
+      # ---------------- #
+      # Step 9: Assign the return list and return output
+      # ---------------- #
+      # Assign the list of objects returned
+      output <- list(pval = df.pval,
+                     cv.table = cv.table,
+                     cores = cores,
+                     call = call,
+                     range = range.n,
+                     cone = cone.n,
+                     test = max(range.n$objval, cone.n$objval),
+                     cone.n.list = cone.n.list,
+                     range.n.list = range.n.list,
+                     solver.name = solver.name,
+                     rho = rho,
+                     rhobar.e = rhobar.e,
+                     rhobar.i = rhobar.i,
+                     beta.var.method = beta.var.method,
+                     omega.e = omega.e,
+                     omega.i = omega.i,
+                     beta.obs.bs = beta.obs.bs,
+                     test.logical = test.logical)
+   } else {
+      ### Case 2: test.logical == 0. Set the p-value as 0 directly because
+      ### beta.tgt is outside the logical bounds
+      output <- list(pval = 0,
+                     cores = cores,
+                     call = call,
+                     solver.name = solver.name,
+                     rho = rho,
+                     test.logical = test.logical)
+   }
 
    # Assign class
    attr(output, "class") <- "fsst"
@@ -1490,12 +1510,18 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, lambda, rho, n,
    }
 
    # ---------------- #
-   # Step 6: Return updated items
+   # Step 6: Check whether beta.tgt is within the logical bounds
+   # ---------------- #
+   test.logical <- check.betatgt(data, lpmodel, beta.tgt, solver)
+
+   # ---------------- #
+   # Step 7: Return updated items
    # ---------------- #
    return(list(solver = solver,
                solver.name = solver.name,
                cores = cores,
-               data = data))
+               data = data,
+               test.logical = test.logical))
 }
 
 
@@ -1516,16 +1542,23 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, lambda, rho, n,
 #'
 print.fsst <- function(x, ...){
    cat("\r\r")
-   df.pval <- x$pval
-   if (nrow(df.pval) == 1){
-      cat(sprintf("p-value: %s\n", df.pval[1,2]))
-   } else {
-      cat("     lambda\tp-value\n")
-      for (i in 1:nrow(df.pval)){
-         cat(sprintf("     %s\t%s\n",
-                     round(df.pval[i,1], digits = 5),
-                     round(df.pval[i,2], digits = 5)))
+
+   if (x$test.logical == 1) {
+      # Case 1: If 'beta.tgt' is within the logical bound
+      # Print the p-values
+      df.pval <- x$pval
+      if (nrow(df.pval) == 1){
+         cat(sprintf("p-value: %s\n", df.pval[1,2]))
+      } else {
+         cat("     lambda\tp-value\n")
+         for (i in 1:nrow(df.pval)){
+            cat(sprintf("     %s\t%s\n",
+                        round(df.pval[i,1], digits = 5),
+                        round(df.pval[i,2], digits = 5)))
+         }
       }
+   } else {
+      cat(infeasible.msg.betatgt()$msg.pval)
    }
 }
 
@@ -1552,45 +1585,52 @@ print.fsst <- function(x, ...){
 #'
 summary.fsst <- function(x, ...){
    cat("\r\r")
-   # Print the sample and bootstrap test statistics
-   cat("\nSample and quantiles of bootstrap test statistics: \n")
-   cv.tab <- x$cv.table
-   cv.tab[is.na(cv.tab)] <- ""
-   cv.tab[,1] <- paste0("   ", cv.tab[,1], " ")
-   cv.tab[,2] <- paste0(cv.tab[,2], "  ")
-   colnames(cv.tab)[2] <- paste0(colnames(cv.tab)[2], "  ")
-   print(cv.tab, row.names = FALSE)
 
-   # Print the p-values
-   df.pval <- x$pval
-   n.pval <- nrow(df.pval)
-   if (n.pval == 1){
-      cat(sprintf("\np-value: %s\n", df.pval[1,2]))
-   } else {
-      cat("\np-values:\n")
-      df.pval.2 <- data.frame(matrix(vector(), nrow = 1, ncol = n.pval+1))
-      colnames(df.pval.2) <- c("    lambda    ", df.pval$lambda)
-      df.pval.2[1,] <- c("    p-value   ", df.pval[,2])
-      print(df.pval.2, row.names = FALSE)
+   if (x$test.logical == 1) {
+      # Case 1: If 'beta.tgt' is within the logical bound
+      # Print the sample and bootstrap test statistics
+      cat("\nSample and quantiles of bootstrap test statistics: \n")
+      cv.tab <- x$cv.table
+      cv.tab[is.na(cv.tab)] <- ""
+      cv.tab[,1] <- paste0("   ", cv.tab[,1], " ")
+      cv.tab[,2] <- paste0(cv.tab[,2], "  ")
+      colnames(cv.tab)[2] <- paste0(colnames(cv.tab)[2], "  ")
+      print(cv.tab, row.names = FALSE)
+
+      # Print the p-values
+      df.pval <- x$pval
+      n.pval <- nrow(df.pval)
+      if (n.pval == 1){
+         cat(sprintf("\np-value: %s\n", df.pval[1,2]))
+      } else {
+         cat("\np-values:\n")
+         df.pval.2 <- data.frame(matrix(vector(), nrow = 1, ncol = n.pval+1))
+         colnames(df.pval.2) <- c("    lambda    ", df.pval$lambda)
+         df.pval.2[1,] <- c("    p-value   ", df.pval[,2])
+         print(df.pval.2, row.names = FALSE)
+      }
+
+      # Print solver
+      cat(sprintf("\nSolver used: %s\n", x$solver.name))
+
+      # Print cores
+      cat(sprintf("\nNumber of cores used: %s\n", x$cores))
+
+      # Regularization parameters
+      cat("\nRegularization parameters: \n")
+      cat(sprintf("   - Input value of rho: %s\n",
+                  round(x$rho, digits = 5)))
+      cat(sprintf(paste0("   - Regularization parameter for the Range ",
+                         "studentization matrix: %s\n"),
+                  round(x$rhobar.e, digits = 5)))
+      cat(sprintf(paste0("   - Regularization parameter for the Cone ",
+                         "studentization matrix: %s\n"),
+                  round(x$rhobar.i, digits = 5)))
+      cat(sprintf(paste0("\nThe asymptotic variance of the observed component ",
+                         "of the beta vector is approximated from the %s."),
+                  x$beta.var.method))
+   } else if (x$test.logical == 0) {
+      # Case 2: If 'beta.tgt' is outside the logical bound
+      infeasible.summary.betatgt()
    }
-
-   # Print solver
-   cat(sprintf("\nSolver used: %s\n", x$solver.name))
-
-   # Print cores
-   cat(sprintf("\nNumber of cores used: %s\n", x$cores))
-
-   # Regularization parameters
-   cat("\nRegularization parameters: \n")
-   cat(sprintf("   - Input value of rho: %s\n",
-               round(x$rho, digits = 5)))
-   cat(sprintf(paste0("   - Regularization parameter for the Range ",
-                      "studentization matrix: %s\n"),
-               round(x$rhobar.e, digits = 5)))
-   cat(sprintf(paste0("   - Regularization parameter for the Cone ",
-                      "studentization matrix: %s\n"),
-               round(x$rhobar.i, digits = 5)))
-   cat(sprintf(paste0("\nThe asymptotic variance of the observed component ",
-                      "of the beta vector is approximated from the %s."),
-               x$beta.var.method))
 }

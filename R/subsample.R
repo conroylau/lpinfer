@@ -48,6 +48,11 @@
 #'   \item{phi}{The \eqn{\phi} parameter used.}
 #'   \item{norm}{Norm used.}
 #'   \item{subsample.size}{Size of subsample}
+#'   \item{test.logical}{Indicator variable for whether the computation has
+#'     been conducted. If '\code{test.logical}' is 1, it refers to the case
+#'     where '\code{beta.tgt}' is inside the logical bound. If
+#'     '\code{test.logical}' is 0, it refers to the case where '
+#'     \code{beta.tgt}' is outside the logical bound.}
 #'
 #' @export
 #'
@@ -73,58 +78,76 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, norm = 2,
   solver.name <- subsample.return$solver.name
   cores <- subsample.return$cores
   norm <- subsample.return$norm
+  test.logical <- subsample.return$test.logical
 
-  # = = = = = =
-  # Step 2: Solve for T.n
-  # = = = = = =
-  ## Solve the main problem with the full sample
-  Treturn <- subsample.prob(data, lpmodel, beta.tgt, norm, solver, 1)
-
-  # ---------------- #
-  # Step 3: Subsampling procedure
-  # ---------------- #
+  # Compute size of each subsample
   n = nrow(data)
   m = floor(n^(phi))
 
-  if (cores == 1){
-    # One core
-    T_subsample <- subsample.onecore(data, R, lpmodel, beta.tgt, norm,
-                                     solver, replace, progress, m)
+  ### Case 1: test.logical == 1. Proceed with the calculation because
+  ### beta.tgt is inside the logical bounds
+  if (test.logical == 1) {
+    # = = = = = =
+    # Step 2: Solve for T.n
+    # = = = = = =
+    ## Solve the main problem with the full sample
+    Treturn <- subsample.prob(data, lpmodel, beta.tgt, norm, solver, 1)
 
+    # ---------------- #
+    # Step 3: Subsampling procedure
+    # ---------------- #
+    if (cores == 1){
+      # One core
+      T_subsample <- subsample.onecore(data, R, lpmodel, beta.tgt, norm,
+                                       solver, replace, progress, m)
+
+    } else {
+      # Many cores
+      T_subsample <- subsample.manycores(data, R, lpmodel, beta.tgt, norm,
+                                         solver, cores, replace, progress, m)
+    }
+
+    # ---------------- #
+    # Step 4: Compute the p-value (using the p_eval function in dkqs)
+    # ---------------- #
+    pval_return <- pval(T_subsample$T.sub, Treturn$objval)
+    pval <- pval_return$p
+    decision <- pval_return$decision
+
+    # ---------------- #
+    # Step 5: Close the progress bar that is used in the subsampling procedure
+    # ---------------- #
+    if (progress == TRUE){
+      close(T_subsample$pb)
+      cat("                                            \n\b\r")
+    }
+
+    # ---------------- #
+    # Step 6: Assign the return list
+    # ---------------- #
+    output <- list(pval = as.numeric(pval),
+                   decision = decision,
+                   T.n = as.numeric(Treturn$objval),
+                   T.sub = T_subsample$T.sub,
+                   solver = solver.name,
+                   cores = cores,
+                   call = call,
+                   phi = phi,
+                   norm = norm,
+                   subsample.size = m,
+                   test.logical = test.logical)
   } else {
-    # Many cores
-    T_subsample <- subsample.manycores(data, R, lpmodel, beta.tgt, norm,
-                                       solver, cores, replace, progress, m)
+    ### Case 2: test.logical == 0. Set the p-value as 0 directly because
+    ### beta.tgt is outside the logical bounds
+    output <- list(pval = 0,
+                   solver = solver.name,
+                   cores = cores,
+                   call = call,
+                   phi = phi,
+                   norm = norm,
+                   subsample.size = m,
+                   test.logical = test.logical)
   }
-
-  # ---------------- #
-  # Step 4: Compute the p-value (using the p_eval function in dkqs)
-  # ---------------- #
-  pval_return <- pval(T_subsample$T.sub, Treturn$objval)
-  pval <- pval_return$p
-  decision <- pval_return$decision
-
-  # ---------------- #
-  # Step 5: Close the progress bar that is used in the subsampling procedure
-  # ---------------- #
-  if (progress == TRUE){
-    close(T_subsample$pb)
-    cat("                                            \n\b\r")
-  }
-
-  # ---------------- #
-  # Step 6: Assign the return list
-  # ---------------- #
-  output <- list(pval = as.numeric(pval),
-                 decision = decision,
-                 T.n = as.numeric(Treturn$objval),
-                 T.sub = T_subsample$T.sub,
-                 solver = solver.name,
-                 cores = cores,
-                 call = call,
-                 phi = phi,
-                 norm = norm,
-                 subsample.size = m)
 
   attr(output, "class") <- "subsample"
 
@@ -472,17 +495,23 @@ print.subsample <- function(x, ...){
 #'
 summary.subsample <- function(x, ...){
   cat("\r\r")
-  # Print the p-values
-  print(x)
+  if (x$test.logical == 1) {
+    # Case 1: If 'beta.tgt' is within the logical bound
+    # Print the p-values
+    print(x)
 
-  # Print test statistic, solver used, norm used and number of
-  # cores used
-  cat(sprintf("Test statistic: %s\n", round(x$T.n, digits = 5)))
-  cat(sprintf("Solver used: %s\n", x$solver))
-  cat(sprintf("Norm used: %s\n", x$norm))
-  cat(sprintf("Phi used: %s\n", round(x$phi, digits = 5)))
-  cat(sprintf("Size of each subsample: %s\n", x$subsample.size))
-  cat(sprintf("Number of cores used: %s\n", x$cores))
+    # Print test statistic, solver used, norm used and number of
+    # cores used
+    cat(sprintf("Test statistic: %s\n", round(x$T.n, digits = 5)))
+    cat(sprintf("Solver used: %s\n", x$solver))
+    cat(sprintf("Norm used: %s\n", x$norm))
+    cat(sprintf("Phi used: %s\n", round(x$phi, digits = 5)))
+    cat(sprintf("Size of each subsample: %s\n", x$subsample.size))
+    cat(sprintf("Number of cores used: %s\n", x$cores))
+  } else if (x$test.logical == 0) {
+    # Case 2: If 'beta.tgt' is outside the logical bound
+    infeasible.summary.betatgt()
+  }
 }
 
 #' Checks and updates the input from \code{subsample}
@@ -506,6 +535,7 @@ summary.subsample <- function(x, ...){
 #'       \item{\code{solver.name}}
 #'       \item{\code{cores}}
 #'       \item{\code{norm}}
+#'       \item{\code{test.logical}}
 #'    }
 #'
 #' @export
@@ -553,6 +583,9 @@ subsample.check <- function(data, lpmodel, beta.tgt, R, solver, cores,
   check.boolean(replace, "replace")
   check.boolean(progress, "progress")
 
+  # Check whether beta.tgt is within the logical bounds
+  test.logical <- check.betatgt(data, lpmodel, beta.tgt, solver)
+
   # ---------------- #
   # Step 2: Return results
   # ---------------- #
@@ -561,5 +594,6 @@ subsample.check <- function(data, lpmodel, beta.tgt, R, solver, cores,
               solver = solver,
               solver.name = solver.name,
               cores = cores,
-              norm = norm))
+              norm = norm,
+              test.logical = test.logical))
 }
