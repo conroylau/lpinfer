@@ -511,6 +511,7 @@ summary.subsample <- function(x, ...){
   } else if (x$test.logical == 0) {
     # Case 2: If 'beta.tgt' is outside the logical bound
     infeasible.summary.betatgt()
+    cat(sprintf("\nSolver used: %s\n", x$solver))
   }
 }
 
