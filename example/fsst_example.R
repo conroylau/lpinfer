@@ -80,7 +80,16 @@ betaobs.fullinfo <- function(data){
 }
 
 # ---------------- #
-# Part 5: Run the fsst module to compute p-value
+# Part 5: Define the lpmodel object
+# ---------------- #
+lpm.full <- lpmodel(A.obs    = Aobs.full,
+                    A.tgt    = Atgt,
+                    A.shp    = Ashp,
+                    beta.obs = betaobs.fullinfo,
+                    beta.shp = 1)
+
+# ---------------- #
+# Part 6: Run the fsst module to compute p-value
 # ---------------- #
 set.seed(1)
 fsst.full1 <- fsst(data = sampledata, 
@@ -98,7 +107,7 @@ print(fsst.full1)
 summary(fsst.full1)
 
 # ---------------- #
-# Part 6: Run the fsst module to compute multiple p-values
+# Part 7: Run the fsst module to compute multiple p-values
 # ---------------- #
 set.seed(1)
 fsst.full2 <- fsst(data = sampledata, 
