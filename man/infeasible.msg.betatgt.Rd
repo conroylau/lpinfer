@@ -13,7 +13,7 @@ Returns a string of the message.
 }
 \description{
 This function prints the message to inform the user that
-  the p-value is directly set to 0 because they have specified a 
+  the p-value is directly set to 0 because they have specified a
   '\code{beta.tgt}' parameter that is infeasible, i.e. outside the logical
   bounds of the program.
 }

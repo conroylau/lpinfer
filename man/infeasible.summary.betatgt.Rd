@@ -11,6 +11,6 @@ Nothing is returned.
 }
 \description{
 This function is a wrapper for '\code{infeasible.msg.betatgt}'
-  to print the reason for the p-value to be zero and the p-value. It is 
+  to print the reason for the p-value to be zero and the p-value. It is
   used in the summary functions.
 }

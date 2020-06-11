@@ -20,9 +20,9 @@ procedure are:
 
 \item{beta.tgt}{Value of beta to be tested.}
 
-\item{modelsense}{String that indicates whether the program is a 
+\item{modelsense}{String that indicates whether the program is a
 maximization or minimization problem. If it is "max", then it is referring
-to a maximization problem. Otherewise, it is referring to a minimization
+to a maximization problem. Otherwise, it is referring to a minimization
 problem.}
 
 \item{solver}{The name of the linear and quadratic programming solver that

@@ -63,9 +63,9 @@ Returns a list of output calculated from the function:
   \item{solver}{Solver used in solving the linear and quadratic programs.}
   \item{cores}{Number of cores used.}
   \item{call}{The function that has been called.}
-  \item{test.logical}{Indicator variable for whether the computation has 
-    been conducted. If '\code{test.logical}' is 1, it refers to the case 
-    where '\code{beta.tgt}' is inside the logical bound. If 
+  \item{test.logical}{Indicator variable for whether the computation has
+    been conducted. If '\code{test.logical}' is 1, it refers to the case
+    where '\code{beta.tgt}' is inside the logical bound. If
     '\code{test.logical}' is 0, it refers to the case where '
     \code{beta.tgt}' is outside the logical bound.}
 }

@@ -13,7 +13,7 @@ check.Ab(A, b, Aname, bname)
 
 \item{Aname}{Variable name of constraint matrix.}
 
-\item{bname}{Varaible name of the corresponding vector.}
+\item{bname}{Variable name of the corresponding vector.}
 }
 \value{
 Returns the updated matrix and vector or print stop message.

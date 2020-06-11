@@ -74,9 +74,9 @@ Return a list of statistics for the `\code{fsst}` procedure:
     studentization matrix}
   \item{beta.var.method}{Method used in obtaining the asymptotic variance
     of \code{beta.obs}}
-  \item{test.logical}{Indicator variable for whether the computation has 
-    been conducted. If '\code{test.logical}' is 1, it refers to the case 
-    where '\code{beta.tgt}' is inside the logical bound. If 
+  \item{test.logical}{Indicator variable for whether the computation has
+    been conducted. If '\code{test.logical}' is 1, it refers to the case
+    where '\code{beta.tgt}' is inside the logical bound. If
     '\code{test.logical}' is 0, it refers to the case where '
     \code{beta.tgt}' is outside the logical bound.}
 }

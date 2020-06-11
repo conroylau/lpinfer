@@ -26,9 +26,9 @@ The solvers supported by this module are `\code{cplexAPI}',
 `\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
 }
 \value{
-Returns an indicator to show whether the \code{beta.tgt} is within 
+Returns an indicator to show whether the \code{beta.tgt} is within
   the logical bound or not.
-  \item{beta.tgt.logical}{Equals 1 if it is within the logical bound. 
+  \item{beta.tgt.logical}{Equals 1 if it is within the logical bound.
   Equals 0 otherwise.}
 }
 \description{

@@ -17,7 +17,7 @@ This function checks whether the the norm used in the
   problem is an L1 or L2 norm. If not, an error message is displayed.
 }
 \details{
-The following input for \code{norm} will be interpreted as the L1-
+The following input for \code{norm} will be interpreted as the 1-
   norm:
   \itemize{
     \item{\code{1} (numeric)}
@@ -27,7 +27,7 @@ The following input for \code{norm} will be interpreted as the L1-
     \item{\code{"o"}}
     \item{\code{"taxicab"}}
   }
-  The following input for \code{norm} will be interpreted as the L2-norm:
+  The following input for \code{norm} will be interpreted as the 2-norm:
   \itemize{
     \item{\code{2} (numeric)}
     \item{\code{"2"} (string)}

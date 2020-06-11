@@ -14,7 +14,7 @@ output of f}
 
 \item{data}{Data frame that will be passed to the function}
 
-\item{name.A}{Name of matrix}
+\item{name.A}{Name of the matrix}
 
 \item{mat.type}{Type of the matrix to be checked}
 }
