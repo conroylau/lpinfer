@@ -234,6 +234,9 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, tau = NULL,
                    cores = cores,
                    call = call,
                    test.logical = test.logical)
+    
+    # Print warning message
+    infeasible.betatgt.warning()
 
   }
   attr(output, "class") <- "dkqs"

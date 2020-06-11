@@ -344,6 +344,9 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
                      solver.name = solver.name,
                      rho = rho,
                      test.logical = test.logical)
+      
+      # Print warning message
+      infeasible.betatgt.warning()
    }
 
    # Assign class

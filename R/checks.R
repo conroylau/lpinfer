@@ -1016,6 +1016,20 @@ infeasible.summary.betatgt <- function() {
   cat(msg$msg.pval)
 }
 
+#' Display warning message for infeasible 'beta.tgt'
+#' 
+#' @description This function displays the warning message for infeasible
+#'   'beta.tgt'.
+#'   
+#' @return Nothing is returned.
+#' 
+#' @export
+#' 
+infeasible.betatgt.warning <- function() {
+  msg <- infeasible.msg.betatgt()$msg.explain
+  warning(msg, call. = FALSE, immediate. = TRUE)
+}
+
 #' General error for checking the objects
 #'
 #' @description This is a general function to produce the error messages in

@@ -147,6 +147,9 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, norm = 2,
                    norm = norm,
                    subsample.size = m,
                    test.logical = test.logical)
+    
+    # Print warning message
+    infeasible.betatgt.warning()
   }
 
   attr(output, "class") <- "subsample"
