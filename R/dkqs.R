@@ -813,7 +813,7 @@ dkqs.check <- function(data, lpmodel, beta.tgt, R, tau, solver, cores,
   lpmodel.temp <- lpmodel
   lpmodel.temp$A.shp <- rep(1, ncol(lpmodel$A.obs))
   lpmodel.temp$beta.shp <- 1
-  test.logical <- check.betatgt(data, lpmodel, beta.tgt, solver)
+  test.logical <- check.betatgt(data, lpmodel.temp, beta.tgt, solver)
 
   # ---------------- #
   # Step 2: Return results
