@@ -4,7 +4,7 @@
 \alias{mincriterion}
 \title{First-stage of the estimation procedure for \code{estbounds}}
 \usage{
-mincriterion(data, lpmodel, norm, solver)
+mincriterion(data = NULL, lpmodel, norm = 2, solver = NULL)
 }
 \arguments{
 \item{data}{The data being used in the inference.}

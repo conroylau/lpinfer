@@ -190,8 +190,9 @@ estbounds.original <- function(data, lpmodel, original.sense, solver){
   if (class(lpmodel$beta.obs) == "function"){
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   } else if (class(lpmodel$beta.obs) == "numeric" |
-             class(lpmodel$beta.obs) == "matrix"){
-    beta.obs.hat <- lpmodel$beta.obs
+             class(lpmodel$beta.obs) == "matrix" | 
+             class(lpmodel$beta.obs) == "list"){
+    beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   }
   beta.original <- c(beta.obs.hat, lpmodel$beta.shp)
   # Sense contraints
@@ -249,8 +250,9 @@ estbounds2.L1 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
   if (class(lpmodel$beta.obs) == "function"){
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   } else if (class(lpmodel$beta.obs) == "numeric" |
-             class(lpmodel$beta.obs) == "matrix"){
-    beta.obs.hat <- lpmodel$beta.obs
+             class(lpmodel$beta.obs) == "matrix" |
+             class(lpmodel$beta.obs) == "list"){
+    beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   }
   k <- length(beta.obs.hat)
 
@@ -344,8 +346,9 @@ estbounds2.L2 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
   if (class(lpmodel$beta.obs) == "function"){
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   } else if (class(lpmodel$beta.obs) == "numeric" |
-             class(lpmodel$beta.obs) == "matrix"){
-    beta.obs.hat <- lpmodel$beta.obs
+             class(lpmodel$beta.obs) == "matrix" | 
+             class(lpmodel$beta.obs) == "list"){
+    beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   }
   step2_qc <- list()
   if (is.null(lpmodel$A.obs) == FALSE){
@@ -414,9 +417,6 @@ estbounds.check <- function(data, lpmodel, kappa, norm, solver, estimate,
   # ---------------- #
   # Step 1: Check the arguments
   # ---------------- #
-  # Check data
-  data <- check.dataframe(data)
-
   # Check lpmodel
   lpmodel <- check.lpmodel(data = data,
                            lpmodel = lpmodel,
@@ -425,10 +425,16 @@ estbounds.check <- function(data, lpmodel, kappa, norm, solver, estimate,
                            A.obs.cat = "matrix",
                            A.shp.cat = "matrix",
                            beta.obs.cat = c("function_mat",
-                                            "list",
+                                            "list_vector",
+                                            "matrix",
                                             "function_obs_var"),
                            beta.shp.cat = "matrix",
                            R = 1)
+  
+  # Check data
+  if (!is.null(data)) {
+    data <- check.dataframe(data)
+  }
 
   # Check solver
   solver.return <- check.solver(solver, "solver", norm)
@@ -527,7 +533,7 @@ summary.estbounds <- function(x, ...){
 #'
 #' @export
 #'
-mincriterion <- function(data, lpmodel, norm, solver){
+mincriterion <- function(data = NULL, lpmodel, norm = 2, solver = NULL){
   # ---------------- #
   # Step 1: Obtain call, check and update the dependencies
   # ---------------- #
@@ -567,8 +573,9 @@ mincriterion <- function(data, lpmodel, norm, solver){
   if (class(lpmodel$beta.obs) == "function"){
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   } else if (class(lpmodel$beta.obs) == "numeric" |
-             class(lpmodel$beta.obs) == "matrix"){
-    beta.obs.hat <- lpmodel$beta.obs
+             class(lpmodel$beta.obs) == "matrix" | 
+             class(lpmodel$beta.obs) == "list"){
+    beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   }
 
   # ---------------- #
@@ -678,9 +685,6 @@ mincriterion.check <- function(data, lpmodel, norm, solver){
   # ---------------- #
   # Step 1: Check the arguments
   # ---------------- #
-  # Check data
-  data <- check.dataframe(data)
-
   # Check lpmodel
   lpmodel <- check.lpmodel(data = data,
                            lpmodel = lpmodel,
@@ -689,10 +693,16 @@ mincriterion.check <- function(data, lpmodel, norm, solver){
                            A.obs.cat = "matrix",
                            A.shp.cat = "matrix",
                            beta.obs.cat = c("function_mat",
-                                            "list",
+                                            "list_vector",
+                                            "matrix",
                                             "function_obs_var"),
                            beta.shp.cat = "matrix",
                            R = 1)
+  
+  # Check data
+  if (!is.null(data)) {
+    data <- check.dataframe(data)
+  }
 
   # Check solver
   solver.return <- check.solver(solver, "solver")

@@ -21,5 +21,5 @@ This function checks whether there will be any error if a
   \code{data.frame} is being passed to a user-defined function.
 }
 \details{
-An error message will be displayed it is .
+An error message will be displayed.
 }

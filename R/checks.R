@@ -25,7 +25,7 @@ check.dataframe <- function(data){
 #' @param f User-defined function in \code{lpmodel}.
 #' @param lpmodel.comp Name of the \code{lpmodel} object.
 #'
-#' @details An error message will be displayed it is .
+#' @details An error message will be displayed.
 #'
 #' @return Nothing is returned.
 #'
@@ -663,7 +663,7 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R){
         err.ind <- c(err.ind, 1)
       }
     }
-
+  
     # Category 2: Check if it is a function
     if ("function_mat" %in% mat.cat) {
       if (class(mat) == "function"){
@@ -726,11 +726,18 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R){
     }
 
     # Category 4: Check if it is a function that produces two matrices
-    if ("function_obs_var" %in% mat.cat) {
-      if (class(mat) == "function"){
+    # Category 5: If it is a list that contains two elements - one matrix
+    # and one vector
+    if ("function_obs_var" %in% mat.cat | "list_vector" %in% mat.cat) {
+      if (class(mat) == "function" | "list_vector" %in% mat.cat){
         # Check whether the function can accept 'data' in the 'data.frame'
         # format
-        check.datafunction(data, mat, mat.name)
+        if (class(mat) == "function") {
+          check.datafunction(data, mat, mat.name)
+          func.output <- mat(data)
+        } else if (class(mat) == "list") {
+          func.output <- mat
+        }
 
         msg.vecmat <- sprintf(paste0("The output of '%s' in 'lpmodel' needs ",
                                      "to be a list of two objects (one vector ",
@@ -738,12 +745,18 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R){
                               mat.name)
 
         # Check if there are two outputs of the function
-        func.output <- mat(data)
         if (length(func.output) != 2){
           stop(msg.vecmat, call. = FALSE)
         } else {
-          out1 <- matrix(func.output[[1]])
-          out2 <- matrix(func.output[[2]])
+          # It is safe to consider the 
+          for (i in 1:2) {
+            if (class(func.output[[i]]) == "numeric") {
+              func.output[[i]] <- matrix(func.output[[i]])
+            }
+          }
+          out1 <- func.output[[1]]
+          out2 <- func.output[[2]]
+
 
           # Check if one of out1 and out2 if a vector and the remaining one is
           # a matrix
@@ -751,8 +764,10 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R){
             stop(msg.vecmat, call. = FALSE)
           } else if (ncol(out1) == 1){
             sample <- out1
-          } else if (ncol(out1) == 2){
+            mat <- out2
+          } else if (ncol(out2) == 1){
             sample <- out2
+            mat <- out1
           }
         }
         return(list(mat = mat,
@@ -867,17 +882,19 @@ check.matrix <- function(mat, mat.name, mat.cat, inside.list){
 #' @export
 #'
 check.vector <- function(vec, vec.name, inside.list){
-  msg.vector <- paste0("The object '%s' of 'lpmodel' has to be a %s.")
+  msg.vector <- paste0("The object '%s' in 'lpmodel' has to be a %s.")
 
-  vec <- as.matrix(vec)
-
+  # Turn it into a matrix if it is not a list
+  if (!is.list(vec)) {
+    vec <- as.matrix(vec) 
+  } 
   if (nrow(vec) != 1 & ncol(vec) != 1){
     if (inside.list == FALSE){
       stop(sprintf(msg.vector, vec.name, "vector"), call. = FALSE)
     } else {
       stop(sprintf(msg.vector, vec.name, "list of vectors"), call. = FALSE)
     }
-  }
+  } 
 }
 
 #' Check function: check the number of cores
