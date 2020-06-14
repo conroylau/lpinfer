@@ -6,8 +6,6 @@
 #'    some tolerance level. \eqn{\ell^1}-norm and \eqn{\ell^2}-norm are
 #'    supported in the estimation procedure.
 #'
-#' @import Matrix
-#'
 #' @param lpmodel A list of objects that are used in inference of linear
 #'    programming problems. The list of objects required in the \code{dkqs}
 #'    procedure are:

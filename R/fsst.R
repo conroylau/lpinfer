@@ -860,7 +860,7 @@ beta.star.qp <- function(data, lpmodel, beta.tgt, weight.matrix, beta.obs.hat,
 #'
 #' @description This function computes the solution to the range problem.
 #'
-#' @import Matrix
+#' @importFrom Matrix norm
 #'
 #' @inheritParams fsst
 #' @param omega.e The matrix \eqn{\widehat{\bm{\Omega}}^e_n}, i.e. the
@@ -932,8 +932,6 @@ fsst.range.lp <- function(n, omega.e, beta.n, beta.star, solver){
 #' Computes the solution to the cone problem
 #'
 #' @description This function computes the solution to the cone problem.
-#'
-#' @import Matrix
 #'
 #' @inheritParams fsst
 #' @param omega.i The matrix \eqn{\widehat{\bm{\Omega}}^i_n}, i.e. the
@@ -1405,7 +1403,7 @@ fsst.pval <- function(range.n, cone.n, range.n.list, cone.n.list, R,
 #'   different standard quantiles. By default, it evaluates the test
 #'   statistics at the quantiles - 90%, 95% and 99%.
 #'
-#' @import pracma
+#' @importFrom pracma ceil
 #'
 #' @param stat Test statistics
 #' @param quan Quantiles
