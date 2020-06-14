@@ -4,7 +4,7 @@
 \alias{summary.mincriterion}
 \title{Summary of results from \code{mincriterion}}
 \usage{
-summary.mincriterion(x, ...)
+\method{summary}{mincriterion}(x, ...)
 }
 \arguments{
 \item{x}{Object returned from \code{mincriterion}.}

@@ -4,7 +4,7 @@
 \alias{print.subsample}
 \title{Print results from \code{subsample}}
 \usage{
-print.subsample(x, ...)
+\method{print}{subsample}(x, ...)
 }
 \arguments{
 \item{x}{Object returned from \code{subsample}.}

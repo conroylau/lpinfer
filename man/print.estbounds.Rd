@@ -4,7 +4,7 @@
 \alias{print.estbounds}
 \title{Print results from \code{estbounds}}
 \usage{
-print.estbounds(x, ...)
+\method{print}{estbounds}(x, ...)
 }
 \arguments{
 \item{x}{Object returned from \code{estbounds}.}

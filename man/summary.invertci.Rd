@@ -4,7 +4,7 @@
 \alias{summary.invertci}
 \title{Summary of results from \code{invertci}}
 \usage{
-summary.invertci(x, alphas = NULL, ...)
+\method{summary}{invertci}(x, alphas = NULL, ...)
 }
 \arguments{
 \item{x}{Object returned from \code{invertci}.}

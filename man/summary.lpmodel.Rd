@@ -4,7 +4,7 @@
 \alias{summary.lpmodel}
 \title{Summary of results from \code{lpmodel}}
 \usage{
-summary.lpmodel(x, ...)
+\method{summary}{lpmodel}(x, ...)
 }
 \arguments{
 \item{x}{The \code{lpmodel} object.}

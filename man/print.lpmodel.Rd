@@ -4,7 +4,7 @@
 \alias{print.lpmodel}
 \title{Print the \code{lpmodel} object}
 \usage{
-print.lpmodel(x, data = NULL, ...)
+\method{print}{lpmodel}(x, data = NULL, ...)
 }
 \arguments{
 \item{x}{The \code{lpmodel} object.}

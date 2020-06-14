@@ -4,7 +4,7 @@
 \alias{summary.fsst}
 \title{Summary of results from \code{fsst}}
 \usage{
-summary.fsst(x, ...)
+\method{summary}{fsst}(x, ...)
 }
 \arguments{
 \item{x}{Object returned from \code{fsst}.}

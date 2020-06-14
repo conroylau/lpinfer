@@ -4,7 +4,7 @@
 \alias{print.mincriterion}
 \title{Print results from \code{mincriterion}}
 \usage{
-print.mincriterion(x, ...)
+\method{print}{mincriterion}(x, ...)
 }
 \arguments{
 \item{x}{Object returned from \code{mincriterion}.}

@@ -4,7 +4,7 @@
 \alias{print.invertci_single}
 \title{Print results from \code{invertci} with a single alpha}
 \usage{
-print.invertci_single(x, ...)
+\method{print}{invertci_single}(x, ...)
 }
 \arguments{
 \item{x}{Object returned from \code{invertci}.}

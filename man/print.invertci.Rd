@@ -4,7 +4,7 @@
 \alias{print.invertci}
 \title{Print results from \code{invertci}}
 \usage{
-print.invertci(x, ...)
+\method{print}{invertci}(x, ...)
 }
 \arguments{
 \item{x}{Object returned from \code{invertci}.}

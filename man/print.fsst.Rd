@@ -4,7 +4,7 @@
 \alias{print.fsst}
 \title{Print results from \code{fsst}}
 \usage{
-print.fsst(x, ...)
+\method{print}{fsst}(x, ...)
 }
 \arguments{
 \item{x}{Object returned from \code{fsst}.}

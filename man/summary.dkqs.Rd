@@ -4,7 +4,7 @@
 \alias{summary.dkqs}
 \title{Summary of results from \code{dkqs}}
 \usage{
-summary.dkqs(x, ...)
+\method{summary}{dkqs}(x, ...)
 }
 \arguments{
 \item{x}{Object returned from \code{dkqs}.}

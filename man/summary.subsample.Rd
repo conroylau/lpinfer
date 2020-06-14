@@ -4,7 +4,7 @@
 \alias{summary.subsample}
 \title{Summary of results from \code{subsample}}
 \usage{
-summary.subsample(x, ...)
+\method{summary}{subsample}(x, ...)
 }
 \arguments{
 \item{x}{Object returned from \code{subsample}.}

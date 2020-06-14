@@ -4,7 +4,7 @@
 \alias{summary.invertci_multiple}
 \title{Summary of results from \code{invertci} with multiple alphas}
 \usage{
-summary.invertci_multiple(x, alphas, ...)
+\method{summary}{invertci_multiple}(x, alphas, ...)
 }
 \arguments{
 \item{x}{Object returned from \code{invertci}.}

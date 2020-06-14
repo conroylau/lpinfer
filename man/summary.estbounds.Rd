@@ -4,7 +4,7 @@
 \alias{summary.estbounds}
 \title{Summary of results from \code{estbounds}}
 \usage{
-summary.estbounds(x, ...)
+\method{summary}{estbounds}(x, ...)
 }
 \arguments{
 \item{x}{Object returned from \code{estbounds}.}

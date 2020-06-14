@@ -4,7 +4,7 @@
 \alias{print.dkqs}
 \title{Print results from \code{dkqs}}
 \usage{
-print.dkqs(x, ...)
+\method{print}{dkqs}(x, ...)
 }
 \arguments{
 \item{x}{Object returned from \code{dkqs}.}
