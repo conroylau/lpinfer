@@ -799,7 +799,7 @@ beta.star.qp <- function(data, lpmodel, beta.tgt, weight.matrix, beta.obs.hat,
    A.mat <- as.matrix(rbind(A.mat1, A.mat2))
 
    # RHS matrix
-   b <- as.matrix(cbind(lpmodel$beta.shp, c(beta.tgt)))
+   b <- matrix(c(lpmodel$beta.shp, c(beta.tgt)), ncol = 1)
 
    # Objective function
    A.obj <- A.obs.hat
