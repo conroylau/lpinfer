@@ -25,7 +25,8 @@ Imports:
     doRNG (>= 1.8.2),
     boot (>= 1.3.24),
     dplyr (>= 1.0.0),
-    pracma (>= 2.2.9)
+    pracma (>= 2.2.9),
+    scales (>= 1.1.1)
 Suggests:
     knitr (>= 1.28),
     rmarkdown (>= 2.0),

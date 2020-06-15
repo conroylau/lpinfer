@@ -62,6 +62,7 @@ Returns a list of output calculated from the function:
   \item{ub0}{Logical upper bound of the problem for each \eqn{\tau}.}
   \item{solver}{Solver used in solving the linear and quadratic programs.}
   \item{cores}{Number of cores used.}
+  \item{cv.table}{Table of critical values.}
   \item{call}{The function that has been called.}
   \item{test.logical}{Indicator variable for whether the computation has
     been conducted. If '\code{test.logical}' is 1, it refers to the case

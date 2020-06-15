@@ -44,6 +44,7 @@
 #'   \item{T.sub}{The list of test statistics from the subsampling procedure.}
 #'   \item{solver}{Solver used in solving the linear and quadratic programs.}
 #'   \item{cores}{Number of cores used.}
+#'   \item{cv.table}{Table of critical values.}
 #'   \item{call}{The function that has been called.}
 #'   \item{phi}{The \eqn{\phi} parameter used.}
 #'   \item{norm}{Norm used.}
@@ -115,7 +116,13 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, norm = 2,
     decision <- pval_return$decision
 
     # ---------------- #
-    # Step 5: Close the progress bar that is used in the subsampling procedure
+    # Step 5: Generate a table of critical values
+    # ---------------- #
+    cv.table <- construct.cv.table(phi, "phi", Treturn$objval,
+                                   T_subsample$T.sub)
+
+    # ---------------- #
+    # Step 6: Close the progress bar that is used in the subsampling procedure
     # ---------------- #
     if (progress == TRUE){
       close(T_subsample$pb)
@@ -123,7 +130,7 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, norm = 2,
     }
 
     # ---------------- #
-    # Step 6: Assign the return list
+    # Step 7: Assign the return list
     # ---------------- #
     output <- list(pval = as.numeric(pval),
                    decision = decision,
@@ -131,6 +138,7 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, norm = 2,
                    T.sub = T_subsample$T.sub,
                    solver = solver.name,
                    cores = cores,
+                   cv.table = cv.table,
                    call = call,
                    phi = phi,
                    norm = norm,

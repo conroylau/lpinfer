@@ -45,6 +45,7 @@
 #'   \item{ub0}{Logical upper bound of the problem for each \eqn{\tau}.}
 #'   \item{solver}{Solver used in solving the linear and quadratic programs.}
 #'   \item{cores}{Number of cores used.}
+#'   \item{cv.table}{Table of critical values.}
 #'   \item{call}{The function that has been called.}
 #'   \item{test.logical}{Indicator variable for whether the computation has
 #'     been conducted. If '\code{test.logical}' is 1, it refers to the case
@@ -200,7 +201,12 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, tau = NULL,
       }
 
       # ---------------- #
-      # Step 9: Close the progress bar that is used in the bootstrap procedure
+      # Step 9: Generate a table of critical values
+      # ---------------- #
+      cv.table <- construct.cv.table(tau.feasible, "tau", rep(T.n, n.tau),
+                                     T.bs.return$T.bs)
+      # ---------------- #
+      # Step 10: Close the progress bar that is used in the bootstrap procedure
       # ---------------- #
       if ((progress == TRUE) & (i == n.tau)){
         close(T.bs.return$pb)
@@ -211,7 +217,7 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, tau = NULL,
     }
 
     # ---------------- #
-    # Step 10: Assign the return list and return output
+    # Step 11: Assign the return list and return output
     # ---------------- #
     output <- list(pval = pval.df,
                    tau.feasible = tau.feasible,
@@ -224,6 +230,7 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, tau = NULL,
                    ub0 = ub.df,
                    solver = solver.name,
                    cores = cores,
+                   cv.table = cv.table,
                    call = call,
                    test.logical = test.logical)
   } else {
@@ -690,7 +697,7 @@ beta.bs.parallel <- function(data, lpmodel, beta.tgt, R, J, s.star.list,
 #'
 #' @export
 #'
-pval <- function(T.bs, T.n, alpha = .05){
+pval <- function(T.bs, T.n, alpha = .05) {
   # Compute p-value
   p <- mean(T.bs > T.n)
 

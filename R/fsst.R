@@ -275,36 +275,10 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
          df.pval[i,2] <- pval.return$pval
       }
 
-      # Fill in the Cone components
-      cv.table <- data.frame(matrix(vector(), nrow = 12, ncol = (n.lambda+2)))
-      colnames(cv.table) <- c("", "lambda", lambda)
-      # cv.table[1,] <- c("", "lambda", lambda)
-      cv.table[,1] <- c("Test statistic", rep("", 3), "Cone", rep("", 3),
-                        "Range", rep("", 3))
-      cv.table[,2] <- rep(c("Sample", "Bootstrap 99% CV", "Bootstrap 95% CV",
-                            "Bootstrap 90% CV"), 3)
-
-      # Fill in the Range components
-      range.list <- quan.stat(range.n.list, quans)
-      cv.table[9,3] <- round(range.n$objval, digits = 5)
-      for (j in 1:3){
-         cv.table[9 + j,3] <- round(range.list[j], digits = 5)
-      }
-
-      # Fill in the Cone and Test statistics component
-      for (i in 1:n.lambda){
-         # Fill in the Cone test statistics
-         cone.list <- quan.stat(cone.n.list[[i]], quans)
-         cv.table[5, i+2] <- round(cone.n$objval, digits = 5)
-         for (j in 1:3){
-            cv.table[j+5,i+2] <- round(cone.list[j], digits = 5)
-         }
-
-         # Fill in the test statistics
-         for (j in 1:4){
-            cv.table[j,i+2] <- max(cv.table[j+4,i+2], cv.table[j+8,3])
-         }
-      }
+      cv.table <- fsst.cv.table(lambda, "lambda",
+                                rep(cone.n$objval, n.lambda),
+                                range.n$objval,
+                                cone.n.list, range.n.list)
 
       # ---------------- #
       # Step 8: Close the progress bar
@@ -533,10 +507,10 @@ sigma.est.parallel <- function(data, beta.obs.hat, lpmodel, R, cores, progress){
    # Step 4: Compute the variance
    # ---------------- #
    listans <- foreach::foreach(i = 1:R,
-                      .multicombine = TRUE,
-                      .combine = "comb",
-                      .options.snow = opts,
-                      .packages = c("lpinfer", "doRNG")) %dorng%
+                               .multicombine = TRUE,
+                               .combine = "comb",
+                               .options.snow = opts,
+                               .packages = c("lpinfer", "doRNG")) %dorng%
       {
          # Compute the bootstrap test statistic
          beta.product <- beta.bs.list[[i]] - beta.obs.hat
@@ -744,10 +718,10 @@ sigma.summation.parallel <- function(n, beta.bs.list, cores, progress,
    # Step 4: Bootstrap procedure
    # ---------------- #
    listans <- foreach::foreach(i = 1:R,
-                      .multicombine = TRUE,
-                      .combine = "comb",
-                      .options.snow = opts,
-                      .packages = "lpinfer") %dorng%
+                               .multicombine = TRUE,
+                               .combine = "comb",
+                               .options.snow = opts,
+                               .packages = "lpinfer") %dorng%
       {
          beta.diff <- as.matrix(beta.bs.list[[i+1]] - beta.obs.hat)
          if (nrow(beta.diff) == 1){
@@ -1206,9 +1180,9 @@ fsst.range.bs <- function(n, omega.e, beta.n, beta.star, R, beta.n.bs,
       `%dorng%` <- doRNG::`%dorng%`
 
       listans <- foreach::foreach(i = 1:R,
-                         .multicombine = TRUE,
-                         .options.snow = opts,
-                         .packages = "lpinfer") %dorng%
+                                  .multicombine = TRUE,
+                                  .options.snow = opts,
+                                  .packages = "lpinfer") %dorng%
          {
             # ---------------- #
             # Step 1: Compute the replacements
@@ -1222,7 +1196,7 @@ fsst.range.bs <- function(n, omega.e, beta.n, beta.star, R, beta.n.bs,
             range.n.return <- fsst.range.lp(n, omega.e, beta.bs.1, beta.bs.2,
                                             solver)
             list(range.n.return$objval)
-        }
+         }
       range.n.list <- unlist(listans)
    }
 
@@ -1329,9 +1303,9 @@ fsst.cone.bs <- function(n, omega.i, beta.n, beta.star, lpmodel, R, lambda,
       `%dorng%` <- doRNG::`%dorng%`
 
       listans <- foreach::foreach(i = 1:R,
-                         .multicombine = TRUE,
-                         .options.snow = opts,
-                         .packages = "lpinfer") %dorng%
+                                  .multicombine = TRUE,
+                                  .options.snow = opts,
+                                  .packages = "lpinfer") %dorng%
          {
             # ---------------- #
             # Step 1: Compute the replacements
@@ -1342,7 +1316,7 @@ fsst.cone.bs <- function(n, omega.i, beta.n, beta.star, lpmodel, R, lambda,
             # Step 2: Solve the linear program and extract the solution
             # ---------------- #
             cone.n.return <- fsst.cone.lp(n, omega.i, beta.n, beta.new, lpmodel,
-                                           indicator, solver)
+                                          indicator, solver)
             list(cone.n.return$objval)
          }
       cone.n.list <- unlist(listans)
@@ -1395,44 +1369,6 @@ fsst.pval <- function(range.n, cone.n, range.n.list, cone.n.list, R,
    }
    return(list(pval = pval,
                decision = decision))
-}
-
-#' Function that computes the basic quantiles
-#'
-#' @description This function is used to evaluate the test statistics at
-#'   different standard quantiles. By default, it evaluates the test
-#'   statistics at the quantiles - 90%, 95% and 99%.
-#'
-#' @importFrom pracma ceil
-#'
-#' @param stat Test statistics
-#' @param quan Quantiles
-#'
-#' @return Return the quantile of the test statistics in the order of the
-#'   `\code{quan}` vector.
-#'   \item{stat.quan}{Quantile of the test statistics in the order of the
-#'   `\code{quan}` vector.}
-#'
-#' @export
-#'
-quan.stat <- function(stat, quan = c(.9, .95, .99)){
-   # ---------------- #
-   # Step 1: Compute the basic parameters and initialize
-   # ---------------- #
-   n.stat <- length(stat)
-   stat.order <- sort(stat)
-   n.quan <- length(quan)
-   stat.quan <- c()
-
-   # ---------------- #
-   # Step 2: Compute the quantiles via a for-loop
-   # ---------------- #
-   for (i in 1:n.quan) {
-      temp <- stat.order[pracma::ceil(quan[i]*n.stat)]
-      stat.quan <- c(stat.quan, temp)
-   }
-
-   return(stat.quan)
 }
 
 #' Checks and updates the input

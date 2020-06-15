@@ -66,6 +66,7 @@ Returns a list of output calculated from the function:
   \item{T.sub}{The list of test statistics from the subsampling procedure.}
   \item{solver}{Solver used in solving the linear and quadratic programs.}
   \item{cores}{Number of cores used.}
+  \item{cv.table}{Table of critical values.}
   \item{call}{The function that has been called.}
   \item{phi}{The \eqn{\phi} parameter used.}
   \item{norm}{Norm used.}
