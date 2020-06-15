@@ -1,4 +1,4 @@
-## Test file for the missing data file
+## Test file for estbounds
 context("Estimation of bounds subject to shape constraints")
 
 # ---------------- #

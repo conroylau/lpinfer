@@ -188,7 +188,7 @@ estbounds.original <- function(data, lpmodel, original.sense, solver){
   if (class(lpmodel$beta.obs) == "function"){
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   } else if (class(lpmodel$beta.obs) == "numeric" |
-             class(lpmodel$beta.obs) == "matrix" | 
+             class(lpmodel$beta.obs) == "matrix" |
              class(lpmodel$beta.obs) == "list"){
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   }
@@ -344,7 +344,7 @@ estbounds2.L2 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
   if (class(lpmodel$beta.obs) == "function"){
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   } else if (class(lpmodel$beta.obs) == "numeric" |
-             class(lpmodel$beta.obs) == "matrix" | 
+             class(lpmodel$beta.obs) == "matrix" |
              class(lpmodel$beta.obs) == "list"){
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   }
@@ -428,7 +428,7 @@ estbounds.check <- function(data, lpmodel, kappa, norm, solver, estimate,
                                             "function_obs_var"),
                            beta.shp.cat = "matrix",
                            R = 1)
-  
+
   # Check data
   if (!is.null(data)) {
     data <- check.dataframe(data)
@@ -571,7 +571,7 @@ mincriterion <- function(data = NULL, lpmodel, norm = 2, solver = NULL){
   if (class(lpmodel$beta.obs) == "function"){
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   } else if (class(lpmodel$beta.obs) == "numeric" |
-             class(lpmodel$beta.obs) == "matrix" | 
+             class(lpmodel$beta.obs) == "matrix" |
              class(lpmodel$beta.obs) == "list"){
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   }
@@ -696,7 +696,7 @@ mincriterion.check <- function(data, lpmodel, norm, solver){
                                             "function_obs_var"),
                            beta.shp.cat = "matrix",
                            R = 1)
-  
+
   # Check data
   if (!is.null(data)) {
     data <- check.dataframe(data)

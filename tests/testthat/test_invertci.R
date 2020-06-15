@@ -1,4 +1,4 @@
-## Test file for invert CI
+## Test file for invertci
 context("Constructing confidence interval")
 
 # ---------------- #
