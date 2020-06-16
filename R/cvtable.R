@@ -150,7 +150,7 @@ fsst.cv.table <- function(param, param.name, cone.n.list, range.n.list,
 #'
 #' @export
 #'
-quan.stat <- function(stat, quan = c(.9, .95, .99)) {
+quan.stat <- function(stat, quan = c(.99, .95, .9)) {
   # ---------------- #
   # Step 1: Compute the basic parameters and initialize
   # ---------------- #

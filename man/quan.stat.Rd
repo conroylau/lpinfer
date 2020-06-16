@@ -4,7 +4,7 @@
 \alias{quan.stat}
 \title{Function that computes the basic quantiles}
 \usage{
-quan.stat(stat, quan = c(0.9, 0.95, 0.99))
+quan.stat(stat, quan = c(0.99, 0.95, 0.9))
 }
 \arguments{
 \item{stat}{Test statistics}
