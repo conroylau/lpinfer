@@ -48,7 +48,7 @@ standard.form <- function(A, b, sense, lb = NULL, obj = NULL){
     lb.sf <- NULL
   }
 
-  if (is.null(obj)){
+  if (!is.null(obj)){
     # Return the updated objective value
     obj.sf <- c(obj, rep(0, nrow(rbind(A1, A2))))
   } else {
