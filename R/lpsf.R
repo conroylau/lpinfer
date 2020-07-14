@@ -60,3 +60,83 @@ standard.form <- function(A, b, sense, lb = NULL, obj = NULL){
               lb = lb.sf,
               obj = obj.sf))
 }
+
+#' Obtains standard form of linear program for constraints in `lpmodel`
+#'
+#' @description This function is uses the \code{standard.form} function to
+#'    convert a `\code{lpmodel.natural}` object into a
+#'    `\code{lpmodel}` object.
+#'
+#' @param lpm.natural A `\code{lpmodel.natural}` object.
+#' 
+#' @return Returns a `\code{lpmodel}` object.
+#'   \item{lpmodel}{A `\code{lpmodel}` object.}
+#' 
+#' @export
+#'
+standard.lpmodel <- function(lpm.natural) {
+  # ---------------- #
+  # Step 1: Update the sense constraints and the inequality constraints
+  # ---------------- #
+  # Extract the objects from `lpm.natural`
+  A.obs <- lpm.natural$A.obs
+  A.shp <- lpm.natural$A.shp
+  A.tgt <- lpm.natural$A.tgt
+  beta.obs <- lpm.natural$beta.obs
+  beta.shp <- lpm.natural$beta.shp
+  sense.shp <- lpm.natural$sense.shp
+  
+  # Update the upper bounds
+  if (!is.null(lpm.natural$x.ub)) {
+    ub.temp <- list()
+    ub.temp$A <- diag(length(lpm.natural$x.ub))
+    ub.temp$b <- c(lpm.natural$x.ub)
+    ub.temp$sense <- rep("<=", length(lpm.natural$x.ub))
+    
+    # Attach to the shape matrices
+    A.shp <- rbind(A.shp, ub.temp$A)
+    beta.shp <- c(beta.shp, ub.temp$b)
+    sense.shp <- c(sense.shp, ub.temp$sense)
+  }
+  
+  # Update the lower bounds
+  if (!is.null(lpm.natural$x.lb)) {
+    lb.temp <- list()
+    lb.temp$A <- diag(length(lpm.natural$x.lb))
+    lb.temp$b <- c(lpm.natural$x.lb)
+    lb.temp$sense <- rep(">=", length(lpm.natural$x.lb))
+    
+    # Attach to the shape matrices
+    A.shp <- rbind(A.shp, lb.temp$A)
+    beta.shp <- c(beta.shp, lb.temp$b)
+    sense.shp <- c(sense.shp, lb.temp$sense)
+  }
+
+  # ---------------- #
+  # Step 2: Prepare models to be passed to the `standard.form` function
+  # ---------------- #  
+  # Make the shape constraints in standard form
+  if (length(sense.shp) > 0) {
+    lpm.temp <- standard.form(A = A.shp,
+                              b = matrix(beta.shp, ncol = 1, byrow = TRUE),
+                              sense = matrix(sense.shp, ncol = 1, byrow = TRUE))
+    lpm.new <- list()
+    lpm.new$A.shp <- lpm.temp$A
+    lpm.new$beta.shp <- lpm.temp$b
+    
+    # Add the zeros to the equality constraints
+    k <- ncol(lpm.new$A.shp) - ncol(A.obs)
+    lpm.new$A.obs <- cbind(A.obs, matrix(rep(0, k * nrow(A.obs)), ncol = k))
+    lpm.new$A.tgt <- cbind(A.tgt, matrix(rep(0, k * nrow(A.tgt)), ncol = k))
+  }
+    
+  # ---------------- #
+  # Step 3: Create the new `lpmodel` object
+  # ---------------- #
+  lpm <- lpmodel(A.obs = lpm.new$A.obs,
+                 A.tgt = lpm.new$A.tgt,
+                 A.shp = lpm.new$A.shp,
+                 beta.obs = matrix(c(beta.obs), ncol = 1),
+                 beta.shp = matrix(c(lpm.new$beta.shp), ncol = 1))
+  return(lpm)
+}
