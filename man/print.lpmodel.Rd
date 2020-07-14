@@ -2,17 +2,17 @@
 % Please edit documentation in R/lpmodel.R
 \name{print.lpmodel}
 \alias{print.lpmodel}
-\title{Print the \code{lpmodel} object}
+\title{Print the `\code{lpmodel}` object}
 \usage{
 \method{print}{lpmodel}(x, data = NULL, ...)
 }
 \arguments{
-\item{x}{The \code{lpmodel} object.}
+\item{x}{The `\code{lpmodel}` object.}
 }
 \value{
-Print the summary of the objects in \code{lpmodel}.
+Print the summary of the objects in `\code{lpmodel}`.
 }
 \description{
-This function prints objects that are contained in the
-   list of \code{lpmodel}.
+This function is a wrapper of the `\code{lpm.print}` function
+   and prints objects that are contained in the list of `\code{lpmodel}`.
 }

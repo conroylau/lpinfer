@@ -2,19 +2,19 @@
 % Please edit documentation in R/lpmodel.R
 \name{summary.lpmodel}
 \alias{summary.lpmodel}
-\title{Summary of results from \code{lpmodel}}
+\title{Summary of the `\code{lpmodel}` object}
 \usage{
 \method{summary}{lpmodel}(x, ...)
 }
 \arguments{
-\item{x}{The \code{lpmodel} object.}
+\item{x}{The `\code{lpmodel}` object.}
 
 \item{...}{Additional arguments.}
 }
 \value{
-Print the summary of the basic set of results from \code{lpmodel}.
+Nothing is returned
 }
 \description{
-This function uses the summary method on the return list of the
-   function \code{lpmodel}. This is a wrapper of the \code{print} command.
+This function is a wrapper of the `\code{print.lpmodel}`
+   function and prints the same information for the object `\code{lpmodel}`.
 }

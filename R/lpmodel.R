@@ -141,90 +141,6 @@ lpmodel.beta.eval <- function(data, obj, i){
               omega = omega.hat))
 }
 
-#' Print the \code{lpmodel} object
-#'
-#' @description This function prints objects that are contained in the
-#'    list of \code{lpmodel}.
-#'
-#' @param x The \code{lpmodel} object.
-#'
-#' @return Print the summary of the objects in \code{lpmodel}.
-#'
-#' @export
-#'
-print.lpmodel <- function(x, data = NULL, ...){
-  # List of variables
-  lpmodel.string <- c("A.obs", "A.shp", "A.tgt", "beta.obs", "beta.shp")
-  lpmodel.ind <- NULL
-  for (i in 1:length(lpmodel.string)){
-    if (!is.null(x[[lpmodel.string[i]]])){
-      lpmodel.ind <- c(lpmodel.ind, i)
-    }
-  }
-  if (length(lpmodel.ind) == 0){
-    cat("'lpmodel' object does not contain the required objects.")
-  } else {
-    cat("Object     Class \tDimension \tLength \n")
-    for (i in 1:length(lpmodel.string)){
-      if (i %in% lpmodel.ind){
-        obj <- x[[lpmodel.string[i]]]
-        # Check class of object
-        class.tmp <- class(obj)
-        # Check length of object
-        if (class.tmp == "list"){
-          class.tmp <- "list  "
-          length.tmp <- length(obj)
-          dimension.str <- dim(as.matrix(obj[[1]]))
-          dimension.tmp <- paste0(dimension.str[1], "x", dimension.str[2])
-        } else if (class.tmp == "function"){
-          # If data is not passed, print "N/A" for dimensions. Otherwise,
-          # compute the output for the output object
-          if (is.null(data)){
-            length.tmp <- "N/A"
-            dimension.tmp <- "N/A"
-          } else {
-            tmp.obj <- obj(data)
-            if (class(tmp.obj) == "list"){
-              length.tmp <- length(tmp.obj)
-            } else {
-              length.tmp <- 1
-            }
-            dimension.str <- dim(as.matrix(tmp.obj))
-            dimension.tmp <- paste0(dimension.str[1], "x", dimension.str[2])
-          }
-        } else if (class.tmp %in% c("data.frame", "matrix", "numeric")){
-          dim.obj <- dim(obj)
-          if (is.null(dim.obj)) {
-            dimension.tmp <- paste0("1x", length(obj))
-          } else {
-            dimension.tmp <- paste0(dim.obj[1], "x", dim.obj[2])
-          }
-          length.tmp <- 1
-        } else {
-          length.tmp <- length(obj)
-          dimension.tmp <- "  "
-        }
-        # Check
-        if (i <= 3){
-          cat(sprintf("%s      %s\t%s\t\t%s\n",
-                      lpmodel.string[i], class.tmp, dimension.tmp, length.tmp))
-        } else {
-          cat(sprintf("%s   %s\t%s\t\t%s\n",
-                      lpmodel.string[i], class.tmp, dimension.tmp, length.tmp))
-        }
-      } else {
-        if (i <= 3){
-          cat(sprintf("%s      -empty-\t-empty-\t\t-empty-\n",
-                      lpmodel.string[i]))
-        } else {
-          cat(sprintf("%s   -empty-\t-empty-\t\t-empty-\n",
-                      lpmodel.string[i]))
-        }
-      }
-    }
-  }
-}
-
 #' Define a \code{lpmodel} object
 #'
 #' @description This function defines the objects required in the
@@ -261,18 +177,191 @@ lpmodel <- function(A.obs = NULL, A.shp = NULL, A.tgt = NULL, beta.obs = NULL,
   return(lpm)
 }
 
-#' Summary of results from \code{lpmodel}
+#' Define an 'lpmodel.natural' form object
+#' 
+#' @description This function defines the objects required in the
+#'    \code{lpinfer} module in the \code{lpmodel.natural} class that allows
+#'    both equality and inequality constraints.
+#'    
+#' @param sense.shp Sense vector for the shape constraints.
+#' @param x.lb Lower bound for the x variable.
+#' @param x.ub Upper bound for the x variable.
+#' @inheritParams lpmodel
+#' 
+#' @return Returns a list of \code{lpmodel} objects in the 
+#'   \code{lpmodel} class.
+#'    
+#' @export
+#' 
+lpmodel.natural <- function(A.obs = NULL, A.shp = NULL, A.tgt = NULL,
+                            beta.obs = NULL, beta.shp = NULL,
+                            sense.shp = NULL, x.lb = NULL, x.ub = NULL) {
+  # ---------------- #
+  # Step 1: Define the lpmodel objects
+  # ---------------- #
+  lpm.natural <- list()
+  lpm.natural$A.obs <- A.obs
+  lpm.natural$A.shp <- A.shp
+  lpm.natural$A.tgt <- A.tgt
+  lpm.natural$beta.obs <- beta.obs
+  lpm.natural$beta.shp <- beta.shp
+  lpm.natural$sense.shp <- sense.shp
+  lpm.natural$x.lb <- x.lb
+  lpm.natural$x.ub <- x.ub
+  
+  # ---------------- #
+  # Step 2: Define the class of the model
+  # ---------------- #
+  class(lpm.natural) <- "lpmodel.natural"
+  
+  return(lpm.natural)
+}
+
+#' Print the `\code{lpmodel}` or `\code{lpmodel.natural}` object
 #'
-#' @description This function uses the summary method on the return list of the
-#'    function \code{lpmodel}. This is a wrapper of the \code{print} command.
+#' @description This function prints objects that are contained in the
+#'    list of `\code{lpmodel}` or `\code{lpmodel.natural}`.
 #'
-#' @param x The \code{lpmodel} object.
+#' @param x The `\code{lpmodel}` object or `\code{lpmodel.natural}` object.
+#'
+#' @return Print the summary of the objects in `\code{lpmodel}` or 
+#'    `\code{lpmodel.natural}`.
+#'
+#' @export
+#'
+lpm.print <- function(x, lpm.string, data = NULL, ...){
+  # List of variables
+  lpmodel.string <- c("A.obs", "A.shp", "A.tgt", "beta.obs", "beta.shp")
+  lpmodel.ind <- NULL
+  for (i in 1:length(lpm.string)){
+    if (!is.null(x[[lpm.string[i]]])){
+      lpmodel.ind <- c(lpmodel.ind, i)
+    }
+  }
+  if (length(lpmodel.ind) == 0){
+    cat("'lpmodel' object does not contain the required objects.")
+  } else {
+    cat("Object     Class \tDimension \tLength \n")
+    for (i in 1:length(lpm.string)){
+      if (i %in% lpmodel.ind){
+        obj <- x[[lpm.string[i]]]
+        # Check class of object
+        class.tmp <- class(obj)
+        # Check length of object
+        if (class.tmp == "list"){
+          class.tmp <- "list  "
+          length.tmp <- length(obj)
+          dimension.str <- dim(as.matrix(obj[[1]]))
+          dimension.tmp <- paste0(dimension.str[1], "x", dimension.str[2])
+        } else if (class.tmp == "function"){
+          # If data is not passed, print "N/A" for dimensions. Otherwise,
+          # compute the output for the output object
+          if (is.null(data)){
+            length.tmp <- "N/A"
+            dimension.tmp <- "N/A"
+          } else {
+            tmp.obj <- obj(data)
+            if (class(tmp.obj) == "list"){
+              length.tmp <- length(tmp.obj)
+            } else {
+              length.tmp <- 1
+            }
+            dimension.str <- dim(as.matrix(tmp.obj))
+            dimension.tmp <- paste0(dimension.str[1], "x", dimension.str[2])
+          }
+        } else if (class.tmp %in% c("data.frame", "matrix", "numeric")){
+          dim.obj <- dim(obj)
+          if (is.null(dim.obj)) {
+            dimension.tmp <- paste0("1x", length(obj))
+          } else {
+            dimension.tmp <- paste0(dim.obj[1], "x", dim.obj[2])
+          }
+          length.tmp <- 1
+        } else {
+          length.tmp <- length(obj)
+          dimension.tmp <- "  "
+        }
+        cat(sprintf(paste0("%s", 
+                           paste(rep(" ", 11 - nchar(lpm.string[i])),
+                                 collapse = ""),
+                           "%s\t%s\t\t%s\n"),
+                    lpm.string[i], class.tmp, dimension.tmp, length.tmp))
+      } else {
+        cat(sprintf(paste0("%s", 
+                           paste(rep(" ", 11 - nchar(lpm.string[i])),
+                                 collapse = ""),
+                           "-empty-\t-empty-\t\t-empty-\n"),
+                    lpm.string[i]))
+      }
+    }
+  }
+}
+
+#' Print the `\code{lpmodel}` object
+#'
+#' @description This function is a wrapper of the `\code{lpm.print}` function
+#'    and prints objects that are contained in the list of `\code{lpmodel}`. 
+#'
+#' @param x The `\code{lpmodel}` object.
+#'
+#' @return Print the summary of the objects in `\code{lpmodel}`.
+#'
+#' @export
+#'
+print.lpmodel <- function(x, data = NULL, ...){
+  # List of variables
+  lpmodel.string <- c("A.obs", "A.shp", "A.tgt", "beta.obs", "beta.shp")
+  lpm.print(x, lpmodel.string, data)
+}
+
+#' Summary of the `\code{lpmodel}` object
+#'
+#' @description This function is a wrapper of the `\code{print.lpmodel}`
+#'    function and prints the same information for the object `\code{lpmodel}`.
+#'
+#' @param x The `\code{lpmodel}` object.
 #' @param ... Additional arguments.
 #'
-#' @return Print the summary of the basic set of results from \code{lpmodel}.
+#' @return Nothing is returned
 #'
 #' @export
 #'
 summary.lpmodel <- function(x, ...){
+  print(x)
+}
+
+#' Print the `\code{lpmodel.natural}` object
+#'
+#' @description This function is a wrapper of the `\code{lpm.print}` function
+#'    and prints objects that are contained in the list of
+#'    `\code{lpmodel.natural}`. 
+#'
+#' @param x The `\code{lpmodel.natural}` object.
+#'
+#' @return Print the summary of the objects in `\code{lpmodel.natural}`.
+#'
+#' @export
+#'
+print.lpmodel.natural <- function(x, data = NULL, ...){
+  # List of variables
+  lpmodel.natural.string <- c("A.obs", "A.shp", "A.tgt", "beta.obs",
+                              "beta.shp", "sense.shp", "x.lb", "x.ub")
+  lpm.print(x, lpmodel.natural.string, data)
+}
+
+#' Summary of the `\code{lpmodel.natural}` object
+#'
+#' @description This function is a wrapper of the `\code{print.lpmodel.natural}`
+#'    function and prints the same information for the object 
+#'    `\code{lpmodel.natural}`.
+#'
+#' @param x The `\code{lpmodel.natural}` object.
+#' @param ... Additional arguments.
+#'
+#' @return Nothing is returned
+#'
+#' @export
+#'
+summary.lpmodel.natural <- function(x, ...){
   print(x)
 }
