@@ -243,13 +243,113 @@ are not required in the `dkqs` procedure.
 
 #### Standard form
 
-For consistency, the `lpmodel` assumes that all the above components
-represent linear constraints that are in standard form. Hence, the
-matrices in the `lpmodel` object are representing linear equality
-constraints. To impose inequality constraints, users need to first
-convert them to standard form by adding appropriate slack and surplus
-variables. To do this, users can use the `standard.form` function in the
-`lpinfer` package.
+For consistency, the tests in this `lpinfer` package assumes that all of
+the components in the `lpmodel` object represent constraints that are
+in standard form. Hence, the matrices in the `lpmodel`
+object are representing equality constraints. To impose inequality
+constraints, users need to first convert them to standard form by adding
+appropriate slack and surplus variables.
+
+This can be done easily with the `standard.lpmodel` function in this
+`lpinfer` package with an object in the `lpmodel.natural` class. The
+`lpmodel.natural` class consists of the following eight components:
+
+-   `A.obs`
+-   `A.shp`
+-   `A.tgt`
+-   `beta.obs`
+-   `beta.shp`
+-   `sense.shp`
+-   `x.lb`
+-   `x.ub`
+
+The first five components are the same as the `lpmodel` class. The
+`sense.shp` vector stores the sense of the shape constraints (i.e. `>=`,
+`=` or `<=`). The two components `x.lb` and `x.ub` correspond to the
+lower and upper bound of the `x` vector respectively.
+
+The procedure to convert an object from the `lpmodel.natural` class into
+the `lpmodel` class is as follows:
+
+1.  Create an object in the `lpmodel.natural` class.
+2.  Apply the `standard.lpmodel` function on this object.
+
+Below is an example of using the `standard.lpmodel` function on the
+object in the `lpmodel.natural` class, which is denoted by `lpmn0` in
+this example.
+
+```r
+### Step 1: Create an object in the `lpmodel.natural` class
+# Obs
+Aobs0 <- matrix(c(1, 2), nrow = 1)
+bobs0 <- c(10)
+
+# Shp
+Ashp0 <- matrix(c(3, 4, 5, 6), nrow = 2, byrow = TRUE)
+bshp0 <- matrix(c(15, 100))
+sshp0 <- matrix(c(">=", "<="))
+
+# Tgt
+Atgt0 <- matrix(c(1, 1), nrow = 1)
+
+# Upper bounds
+xub0 <- c(200, 200)
+
+# Lower bounds
+xlb0 <- c(0.1, 0.1)
+
+# Formulate the `lpmodel.natural` object
+lpmn0 <- lpmodel.natural(A.obs = Aobs0,
+                         A.shp = Ashp0,
+                         A.tgt = Atgt0,
+                         beta.obs = bobs0,
+                         beta.shp = bshp0,
+                         sense.shp = sshp0,
+                         x.ub = xub0,
+                         x.lb = xlb0)
+```
+
+Then, these constraints can be transformed into a `lpmodel` object in
+standard form as follows:
+
+```r
+### Step 2: Apply the `standard.lpmodel` function
+lpm1 <- standard.lpmodel(lpmn0)
+```
+
+The updated `A.shp` and `beta.shp` matrices reflect the updated shape
+constraints and the lower and upper bounds in standard form by
+incorporating slack and surplus variables. The two matrices can be
+viewed as follows:
+
+```r
+print(lpm1$A.shp)
+#>      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8]
+#> [1,]    5    6    1    0    0    0    0    0
+#> [2,]    1    0    0    1    0    0    0    0
+#> [3,]    0    1    0    0    1    0    0    0
+#> [4,]    3    4    0    0    0   -1    0    0
+#> [5,]    1    0    0    0    0    0   -1    0
+#> [6,]    0    1    0    0    0    0    0   -1
+print(lpm1$beta.shp)
+#>       [,1]
+#> [1,] 100.0
+#> [2,] 200.0
+#> [3,] 200.0
+#> [4,]  15.0
+#> [5,]   0.1
+#> [6,]   0.1
+```
+
+-   The first row corresponds to the `<=` constraint in the original
+    `Ashp0` and `bshp0` matrix.
+-   The second and third rows correspond to the upper bounds.
+-   The fourth row corresponds to the `>=` constraint in the original
+    `Ashp0` and `bshp0` matrix.
+-   The last two rows correspond to the lower bounds.
+
+The resulting object `lpm1` is already in standard form and can be
+passed to the tests in this `lpinfer` package.
 
 #### Deterministic or stochastic components
 
