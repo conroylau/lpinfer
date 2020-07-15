@@ -97,11 +97,11 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
          }
       } else {
          beta.var.method <- "function"
+         beta.var.method <- "bootstrapped 'beta.obs' from the function."
          if (cores == 1){
             sigma.return <- sigma.est(n, data, beta.obs.hat, lpmodel, R, progress)
             if (is.null(sigma.beta.obs)){
                sigma.beta.obs <- sigma.return$sigma.hat
-               beta.var.method <- "bootstrapped 'beta.obs' from the function."
             }
             beta.obs.bs <- sigma.return$beta.obs.bs
             beta.n.bs <- full.beta.bs(lpmodel, beta.tgt, beta.obs.bs, R)
@@ -110,7 +110,6 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
                                                R, cores, progress)
             if (is.null(sigma.beta.obs)){
                sigma.beta.obs <- sigma.return$sigma.hat
-               beta.var.method <- "bootstrapped 'beta.obs' from the function."
             }
             beta.obs.bs <- sigma.return$beta.obs.bs
             beta.n.bs <- full.beta.bs(lpmodel, beta.tgt, beta.obs.bs, R)
