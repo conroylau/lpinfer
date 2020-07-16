@@ -68,8 +68,6 @@ Return a list of statistics for the `\code{fsst}` procedure:
   \item{range.n.list}{The list of bootstrap range test statistics}
   \item{solver.name}{Name of the solver used}
   \item{rho}{Input value of rho}
-  \item{rhobar.e}{Regularization parameter used for the Range
-    studentization matrix}
   \item{rhobar.i}{Regularization parameter used for the Cone
     studentization matrix}
   \item{beta.var.method}{Method used in obtaining the asymptotic variance

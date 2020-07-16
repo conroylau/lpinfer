@@ -8,7 +8,7 @@ beta.star.qp(
   data,
   lpmodel,
   beta.tgt,
-  weight.matrix,
+  weight.mat,
   beta.obs.hat,
   beta.sigma,
   solver
@@ -28,7 +28,7 @@ procedure are:
 
 \item{beta.tgt}{Value of beta to be tested.}
 
-\item{weight.matrix}{The option used in the weighting matrix.}
+\item{weight.mat}{Weighting matrix}
 
 \item{beta.obs.hat}{Estimator of \eqn{\widehat{\bm{\beta}_{\mathrm{obs}, n}}}
 based on the given information in \code{lpmodel}.}
@@ -48,11 +48,4 @@ This function computes the vector
 }
 \details{
 This corresponding to solving problem (3) of Torgovitsky (2020).
-  Three options for \code{weight.matrix} are available:
-  \itemize{
-    \item{\code{identity} --- identity matrix}
-    \item{\code{diag} --- the diagonal matrix that takes the diagonal
-       elements of the inverse of the variance matrix}
-    \item{\code{avar} --- inverse of the variance matrix}
-}
 }

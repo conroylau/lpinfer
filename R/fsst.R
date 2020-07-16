@@ -23,8 +23,6 @@
 #'   \item{range.n.list}{The list of bootstrap range test statistics}
 #'   \item{solver.name}{Name of the solver used}
 #'   \item{rho}{Input value of rho}
-#'   \item{rhobar.e}{Regularization parameter used for the Range
-#'     studentization matrix}
 #'   \item{rhobar.i}{Regularization parameter used for the Cone
 #'     studentization matrix}
 #'   \item{beta.var.method}{Method used in obtaining the asymptotic variance
@@ -97,10 +95,10 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
          }
       } else {
          beta.var.method <- "function"
-         beta.var.method <- "bootstrapped 'beta.obs' from the function."
          if (cores == 1){
             sigma.return <- sigma.est(n, data, beta.obs.hat, lpmodel, R, progress)
             if (is.null(sigma.beta.obs)){
+               beta.var.method <- "bootstrapped 'beta.obs' from the function."
                sigma.beta.obs <- sigma.return$sigma.hat
             }
             beta.obs.bs <- sigma.return$beta.obs.bs
@@ -109,6 +107,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
             sigma.return <- sigma.est.parallel(data, beta.obs.hat, lpmodel,
                                                R, cores, progress)
             if (is.null(sigma.beta.obs)){
+               beta.var.method <- "bootstrapped 'beta.obs' from the function."
                sigma.beta.obs <- sigma.return$sigma.hat
             }
             beta.obs.bs <- sigma.return$beta.obs.bs
@@ -141,16 +140,30 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
          # Construct the bootstrap estimates, which are the same for all of them
          beta.star.bs <- beta.n.bs
       } else {
+         # Compute the weighting matrix
+         weight.mat <- fsst.weight.matrix(weight.matrix,
+                                          beta.obs.hat,
+                                          sigma.beta.obs)
+
          # Solve the quadratic program
-         beta.star <- beta.star.qp(data, lpmodel, beta.tgt, weight.matrix,
+         qp.return <- beta.star.qp(data, lpmodel, beta.tgt, weight.mat,
                                    beta.obs.hat, sigma.beta.obs, solver)
+         beta.star <- qp.return$beta.star
+         if (d < p) {
+            x.star <- qp.return$x.star
+         }
 
          # Construct bootstrap estimates of beta.star
          beta.star.bs <- list()
+         x.star.bs <- list()
          for (i in 1:R){
-            beta.star.bs[[i]] <- beta.star.qp(data, lpmodel, beta.tgt,
-                                              weight.matrix, beta.obs.bs[[i]],
-                                              sigma.beta.obs, solver)
+            qp.return.bs <- beta.star.qp(data, lpmodel, beta.tgt,
+                                         weight.mat, beta.obs.bs[[i]],
+                                         sigma.beta.obs, solver)
+            beta.star.bs[[i]] <- qp.return.bs$beta.star
+            if (d < p) {
+               x.star.bs[[i]] <- qp.return.bs$x.star
+            }
          }
       }
 
@@ -164,27 +177,13 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
       # Obtain bootstrap star
       if (d >= p){
          sigma.star <- beta.sigma
-         sigma.star.diff <- matrix(rep(0, p^2), nrow = p)
       } else {
-         # Compute sigma.star of beta.star
+         # Compute sigma.star
          if (cores == 1){
             sigma.star <- sigma.summation(n, beta.star.list, progress, 1)
          } else {
             sigma.star <- sigma.summation.parallel(n, beta.star.list, cores,
                                                    progress, 1)
-         }
-
-         # Compute sigma.star of (beta.star - beta.n)
-         beta.diff.bs <- list()
-         beta.diff.bs[[1]] <- beta.n - beta.star
-         for (i in 1:R){
-            beta.diff.bs[[i+1]] <- beta.n.bs[[i]] - beta.star.bs[[i]]
-         }
-         if (cores == 1){
-            sigma.star.diff <- sigma.summation(n, beta.diff.bs, progress, 2)
-         } else {
-            sigma.star.diff <- sigma.summation.parallel(n, beta.diff.bs, cores,
-                                                        progress, 2)
          }
       }
 
@@ -192,25 +191,16 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
       rhobar.i <- base::norm(sigma.star, type = "f") * rho
       omega.i <- expm::sqrtm(sigma.star + rhobar.i * diag(nrow(sigma.star)))
 
-      if (d >= p){
-         rhobar.e <- NA
-         omega.e <- sigma.star.diff
-      } else {
-         rhobar.e <- base::norm(sigma.star.diff, type = "f") * rho
-         omega.e <- expm::sqrtm(sigma.star.diff + rhobar.e *
-                                   diag(nrow(sigma.star)))
-      }
-
       # ---------------- #
       # Step 5: Test statistic
       # ---------------- #
       # Compute range.n
       if (d >= p){
-         range.n <- list(objval = 0,
-                         x = NA)
+         range.n <- 0
          cone.n <- fsst.cone.lp(n, omega.i, beta.n, beta.star, lpmodel, 1, solver)
       } else {
-         range.n <- fsst.range.lp(n, omega.e, beta.n, beta.star, solver)
+         # range.n <- fsst.range.lp(n, omega.e, beta.n, beta.star, solver)
+         range.n <- fsst.range(n, beta.obs.hat, x.star, lpmodel, weight.mat)
          cone.n <- fsst.cone.lp(n, omega.i, beta.n, beta.star, lpmodel, 0, solver)
       }
 
@@ -241,8 +231,9 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
                                   beta.star, omega.i, 0, solver)$x
 
          # Compute range.n for bootstrap beta
-         range.n.list <- fsst.range.bs(n, omega.e, beta.n, beta.star, R, beta.n.bs,
-                                       beta.star.bs, solver, cores, progress)
+         range.n.list <- fsst.range.bs(n, lpmodel, beta.obs.hat, beta.obs.bs,
+                                       x.star, x.star.bs, weight.mat, R, cores,
+                                       progress)
 
          cone.n.list <- list()
          # Compute cone.n for bootstrap beta
@@ -268,15 +259,16 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
 
       for (i in 1:n.lambda){
          # Compute the p-values
-         pval.return <- fsst.pval(range.n$objval, cone.n$objval, range.n.list,
+         pval.return <- fsst.pval(range.n, cone.n$objval, range.n.list,
                                   cone.n.list[[i]], R)
          df.pval[i,1] <- lambda[i]
          df.pval[i,2] <- pval.return$pval
       }
 
+      # Compute cv.table
       cv.table <- fsst.cv.table(lambda, "lambda",
                                 rep(cone.n$objval, n.lambda),
-                                range.n$objval,
+                                range.n,
                                 cone.n.list, range.n.list)
 
       # ---------------- #
@@ -296,15 +288,13 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
                      call = call,
                      range = range.n,
                      cone = cone.n,
-                     test = max(range.n$objval, cone.n$objval),
+                     test = max(range.n, cone.n$objval),
                      cone.n.list = cone.n.list,
                      range.n.list = range.n.list,
                      solver.name = solver.name,
                      rho = rho,
-                     rhobar.e = rhobar.e,
                      rhobar.i = rhobar.i,
                      beta.var.method = beta.var.method,
-                     omega.e = omega.e,
                      omega.i = omega.i,
                      beta.obs.bs = beta.obs.bs,
                      test.logical = test.logical)
@@ -418,8 +408,7 @@ sigma.est <- function(n, data, beta.obs.hat, lpmodel, R, progress){
 #' @import doParallel doRNG
 #'
 #' @inheritParams fsst
-#' @param beta.obs.hat Estimator of \eqn{\widehat{\bm{\beta}_{\mathrm{obs}, n}}}
-#'   based on the given information in \code{lpmodel}.
+#' @inheritParams sigma.est
 #'
 #' @return Returns the bootstrap estimators and the estimator of the
 #'   asymptotic variance.
@@ -749,40 +738,19 @@ sigma.summation.parallel <- function(n, beta.bs.list, cores, progress,
 #'
 #' @inheritParams fsst
 #' @inheritParams sigma.est
+#' @param weight.mat Weighting matrix
 #'
 #' @details This corresponding to solving problem (3) of Torgovitsky (2020).
-#'   Three options for \code{weight.matrix} are available:
-#'   \itemize{
-#'     \item{\code{identity} --- identity matrix}
-#'     \item{\code{diag} --- the diagonal matrix that takes the diagonal
-#'        elements of the inverse of the variance matrix}
-#'     \item{\code{avar} --- inverse of the variance matrix}
-#' }
 #'
 #' @return Returns the vector \eqn{\widehat{\bm{\beta}}_n^\star}.
 #'   \item{beta.star}{The vector \eqn{\widehat{\bm{\beta}}_n^\star}.}
 #'
 #' @export
 #'
-beta.star.qp <- function(data, lpmodel, beta.tgt, weight.matrix, beta.obs.hat,
+beta.star.qp <- function(data, lpmodel, beta.tgt, weight.mat, beta.obs.hat,
                          beta.sigma, solver){
    # ---------------- #
-   # Step 1: Choose the weighting matrix
-   # ---------------- #
-   weight.matrix <- tolower(weight.matrix)
-
-   if (weight.matrix == "identity"){
-      weight.mat = diag(nrow(as.matrix(beta.obs.hat)))
-   } else if (weight.matrix == "diag"){
-      weight.mat <- diag(diag(solve(beta.sigma)))
-   } else if (weight.matrix == "avar"){
-      weight.mat <- solve(beta.sigma)
-   } else {
-      stop("'weight.matrix' has to be one of 'identity', 'diag' and 'avar'.")
-   }
-
-   # ---------------- #
-   # Step 2: Solve the quadratic program
+   # Step 1: Solve the quadratic program
    # ---------------- #
    # Define the A matrices
    A.obs.hat <- lpmodel.eval(data, lpmodel$A.obs, 1)
@@ -818,7 +786,7 @@ beta.star.qp <- function(data, lpmodel, beta.tgt, weight.matrix, beta.obs.hat,
    ans <- do.call(solver, optim.arg)
 
    # ---------------- #
-   # Step 3: Compute beta.star
+   # Step 2: Compute beta.star
    # ---------------- #
    # Compute x.star
    x.star <- ans$x
@@ -826,80 +794,41 @@ beta.star.qp <- function(data, lpmodel, beta.tgt, weight.matrix, beta.obs.hat,
    # Compute beta.star
    A <- as.matrix(rbind(lpmodel$A.obs, lpmodel$A.shp, lpmodel$A.tgt))
    beta.star <- A %*% x.star
-   return(beta.star)
+   return(list(beta.star = beta.star,
+               x.star = x.star))
 }
 
-#' Computes the solution to the range problem
+#' Computes the statistic to the range problem in the FSST procedure
 #'
-#' @description This function computes the solution to the range problem.
+#' @description This function computes the statistic of the range problem in
+#'    the FSST procedure.
 #'
 #' @importFrom Matrix norm
 #'
 #' @inheritParams fsst
-#' @param omega.e The matrix \eqn{\widehat{\bm{\Omega}}^e_n}, i.e. the
-#'   regularized matrix for
-#'   \eqn{\widehat{\bm{\Sigma}}^{\beta^\star}_{n,\bar{\rho}}}.
+#' @inheritParams beta.star.qp
+#' @inheritParams sigma.est
+#' @param x.star Optimal value from `\code{beta.star.qp}`.
 #'
 #' @return Returns the optimal point and optimal value.
-#'  \item{x}{Optimal point calculated from the optimizer.}
-#'  \item{objval}{Optimal value calculated from the optimizer.}
+#'  \item{range}{The optimal value of the Range component.}
 #'
 #' @export
 #'
-fsst.range.lp <- function(n, omega.e, beta.n, beta.star, solver){
+fsst.range <- function(n, beta.obs.hat, x.star, lpmodel, weight.mat) {
    # ---------------- #
-   # Step 1: Compute the norms
+   # Step 1: Compute the matrix inside the norm
    # ---------------- #
-   # beta.norm
-   beta.norm <- base::norm(beta.n - beta.star, type = "2")
-
-   # Operator norm
-   omega.operator <- Matrix::norm(omega.e, type = "2")
-
-   # ---------------- #
-   # Step 2: Construct the linear program
-   # ---------------- #
-   # Predefine a vector of zeros and ones
-   p <- length(beta.n)
-   ones.p <- rep(1, p)
-   zero.p <- rep(0, p)
-
-   # Update the objective function
-   beta.diff <- (beta.n - beta.star)/beta.norm
-   obj <- c(beta.diff, zero.p, zero.p)
-
-   # Construct the lower bound
-   lb <- c(rep(-Inf, p), rep(0, 2*p))
-
-   # constraints matrix
-   A.mat1 <- cbind(omega.e/omega.operator, -diag(p), diag(p))
-   A.mat2 <- c(zero.p, ones.p, ones.p)
-
-   A.mat <- rbind(A.mat1, A.mat2)
-   rhs.mat <- c(zero.p, 1/omega.operator)
-
-   # Sense
-   sense.mat <- c(rep("=", p), rep("<=", 1))
-
-   # Construct the arguments
-   optim.arg <- list(Af = NULL,
-                     bf = obj,
-                     nf = 1,
-                     A = A.mat,
-                     rhs = rhs.mat,
-                     sense = sense.mat,
-                     modelsense = "max",
-                     lb = lb)
+   A.obs.hat <- lpmodel.eval(data, lpmodel$A.obs, 1)
+   beta.obs.star <- A.obs.hat %*% x.star
+   range.arg <- sqrt(n) * expm::sqrtm(weight.mat) %*% (beta.obs.hat -
+                                                          beta.obs.star)
 
    # ---------------- #
-   # Step 3: Solve the quadartic program
+   # Step 2: Compute the range component
    # ---------------- #
-   ans <- do.call(solver, optim.arg)
-
-   objval <- ans$objval * sqrt(n) * beta.norm
-
-   return(list(x = ans$x,
-               objval = objval))
+   range <- base::norm(range.arg, type = "I")
+   return(range)
 }
 
 #' Computes the solution to the cone problem
@@ -1097,7 +1026,7 @@ beta.r.compute <- function(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
                objval = objval))
 }
 
-#' Computing bootstrap components of `Range`
+#' Computing bootstrap Range components in the FSST procedure
 #'
 #' @description This function computes the bootstrap components of the
 #'   `Range` test statistics.
@@ -1105,7 +1034,9 @@ beta.r.compute <- function(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
 #' @import doParallel doRNG
 #'
 #' @inheritParams fsst
-#' @inheritParams fsst.range.lp
+#' @inheritParams fsst.range
+#' @inheritParams full.beta.bs
+#' @param x.star.bs Bootstrap components of `\code{x.star}`.
 #'
 #' @return A list of bootstrap Range statistics.
 #'   \item{range.n.list}{A list of bootstrap Range statistics
@@ -1113,8 +1044,8 @@ beta.r.compute <- function(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
 #'
 #' @export
 #'
-fsst.range.bs <- function(n, omega.e, beta.n, beta.star, R, beta.n.bs,
-                          beta.star.bs, solver, cores, progress){
+fsst.range.bs <- function(n, lpmodel, beta.obs.hat, beta.obs.bs, x.star,
+                          x.star.bs, weight.mat, R, cores, progress){
    range.n.list <- NULL
 
    ### A. Non-parallel version
@@ -1133,15 +1064,14 @@ fsst.range.bs <- function(n, omega.e, beta.n, beta.star, R, beta.n.bs,
          # ---------------- #
          # Step A1: Compute the replacements
          # ---------------- #
-         beta.bs.1 <- beta.n.bs[[i]] - beta.n
-         beta.bs.2 <- beta.star.bs[[i]] - beta.star
+         beta.bs.1 <- beta.obs.bs[[i]] - beta.obs.hat
 
          # ---------------- #
          # Step A2: Solve the linear program and extract the solution
          # ---------------- #
-         range.n.return <- fsst.range.lp(n, omega.e, beta.bs.1, beta.bs.2,
-                                         solver)
-         range.n.list <- c(range.n.list, range.n.return$objval)
+         range.n.return <- fsst.range(n, beta.bs.1, x.star.bs[[i]] - x.star,
+                                      lpmodel, weight.mat)
+         range.n.list <- c(range.n.list, range.n.return)
 
          # Update progress bar
          if (progress == TRUE) {
@@ -1184,23 +1114,22 @@ fsst.range.bs <- function(n, omega.e, beta.n, beta.star, R, beta.n.bs,
                                   .packages = "lpinfer") %dorng%
          {
             # ---------------- #
-            # Step 1: Compute the replacements
+            # Step B1: Compute the replacements
             # ---------------- #
-            beta.bs.1 <- beta.n.bs[[i]] - beta.n
-            beta.bs.2 <- beta.star.bs[[i]] - beta.star
+            A.obs.hat <- lpmodel.eval(data, lpmodel$A.obs, 1)
+            beta.bs.1 <- beta.obs.bs[[i]] - beta.obs.hat
 
             # ---------------- #
-            # Step 2: Solve the linear program and extract the solution
+            # Step B2: Solve the linear program and extract the solution
             # ---------------- #
-            range.n.return <- fsst.range.lp(n, omega.e, beta.bs.1, beta.bs.2,
-                                            solver)
-            list(range.n.return$objval)
+            range.n.return <- fsst.range(n, beta.bs.1, x.star.bs[[i]] - x.star,
+                                         lpmodel, weight.mat)
+            list(range.n.return)
          }
       range.n.list <- unlist(listans)
    }
 
    return(range.n.list)
-
 }
 
 #' Computing bootstrap components of `Cone`
@@ -1514,7 +1443,9 @@ print.fsst <- function(x, ...){
 #'     \item{Test statistic (Range)}
 #'     \item{\eqn{p}-value}
 #'     \item{Solver used}
-#'     \item{Number of cores used}}
+#'     \item{Number of cores used}
+#'     \item{Table of critical values}
+#'     \item{Regularization parameters}}
 #'
 #' @return Nothing is returned
 #'
@@ -1557,9 +1488,6 @@ summary.fsst <- function(x, ...){
       cat("\nRegularization parameters: \n")
       cat(sprintf("   - Input value of rho: %s\n",
                   round(x$rho, digits = 5)))
-      cat(sprintf(paste0("   - Regularization parameter for the Range ",
-                         "studentization matrix: %s\n"),
-                  round(x$rhobar.e, digits = 5)))
       cat(sprintf(paste0("   - Regularization parameter for the Cone ",
                          "studentization matrix: %s\n"),
                   round(x$rhobar.i, digits = 5)))
@@ -1571,4 +1499,42 @@ summary.fsst <- function(x, ...){
       infeasible.pval.msg()
       cat(sprintf("\nSolver used: %s\n", x$solver.name))
    }
+}
+
+#' Computes the weighting matrix in the FSST procedure
+#'
+#' @description This function returns the weighting matrix in the FSST
+#'   procedure. There are three options available:
+#'   \itemize{
+#'     \item{\code{identity} --- identity matrix}
+#'     \item{\code{diag} --- the diagonal matrix that takes the diagonal
+#'        elements of the inverse of the variance matrix}
+#'     \item{\code{avar} --- inverse of the variance matrix}
+#'   }
+#'
+#' @return The weighting matrix is returned.
+#'    \item{weight.max}{Weighting matrix.}
+#'
+#' @export
+#'
+fsst.weight.matrix <- function(weight.matrix, beta.obs.hat, beta.sigma) {
+   # ---------------- #
+   # Step 1: Convert the string to lower case.
+   # ---------------- #
+   weight.matrix <- tolower(weight.matrix)
+
+   # ---------------- #
+   # Step 2: Create the matrix
+   # ---------------- #
+   if (weight.matrix == "identity") {
+      weight.mat = diag(nrow(as.matrix(beta.obs.hat)))
+   } else if (weight.matrix == "diag") {
+      weight.mat <- diag(diag(solve(beta.sigma)))
+   } else if (weight.matrix == "avar") {
+      weight.mat <- solve(beta.sigma)
+   } else {
+      stop("'weight.matrix' has to be one of 'identity', 'diag' and 'avar'.")
+   }
+
+   return(weight.mat)
 }

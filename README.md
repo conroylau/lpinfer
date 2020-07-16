@@ -1011,7 +1011,6 @@ summary(fsst.full2)
 #> 
 #> Regularization parameters: 
 #>    - Input value of rho: 1e-04
-#>    - Regularization parameter for the Range studentization matrix: NA
 #>    - Regularization parameter for the Cone studentization matrix: 0.00033
 #> 
 #> The asymptotic variance of the observed component of the beta vector is approximated from the function.

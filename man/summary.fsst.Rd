@@ -26,5 +26,7 @@ The following information are printed
     \item{Test statistic (Range)}
     \item{\eqn{p}-value}
     \item{Solver used}
-    \item{Number of cores used}}
+    \item{Number of cores used}
+    \item{Table of critical values}
+    \item{Regularization parameters}}
 }

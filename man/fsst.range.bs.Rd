@@ -6,28 +6,39 @@
 \usage{
 fsst.range.bs(
   n,
-  omega.e,
-  beta.n,
-  beta.star,
+  lpmodel,
+  beta.obs.hat,
+  beta.obs.bs,
+  x.star,
+  x.star.bs,
+  weight.mat,
   R,
-  beta.n.bs,
-  beta.star.bs,
-  solver,
   cores,
   progress
 )
 }
 \arguments{
-\item{omega.e}{The matrix \eqn{\widehat{\bm{\Omega}}^e_n}, i.e. the
-regularized matrix for
-\eqn{\widehat{\bm{\Sigma}}^{\beta^\star}_{n,\bar{\rho}}}.}
+\item{lpmodel}{A list of objects that are used in inference of linear
+programming problems. The list of objects required in the \code{dkqs}
+procedure are:
+\itemize{
+  \item{\code{A.tgt}}
+  \item{\code{A.obs}}
+  \item{\code{beta.obs}}
+}}
+
+\item{beta.obs.hat}{Estimator of \eqn{\widehat{\bm{\beta}_{\mathrm{obs}, n}}}
+based on the given information in \code{lpmodel}.}
+
+\item{beta.obs.bs}{List of bootstrap components of \code{beta.obs}.}
+
+\item{x.star}{Optimal value from `\code{beta.star.qp}`.}
+
+\item{x.star.bs}{Bootstrap components of `\code{x.star}`.}
+
+\item{weight.mat}{Weighting matrix}
 
 \item{R}{Number of bootstraps chosen by the users.}
-
-\item{solver}{The name of the linear and quadratic programming solver that
-are used to obtain the solution to linear and quadratic programs.
-The solvers supported by this module are `\code{cplexAPI}',
-`\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
 
 \item{cores}{Number of cores to be used in the parallelized for-loop.
 Parallelized for-loop is used if \code{cores} is set to be an integer
