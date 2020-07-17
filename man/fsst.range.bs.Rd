@@ -2,7 +2,7 @@
 % Please edit documentation in R/fsst.R
 \name{fsst.range.bs}
 \alias{fsst.range.bs}
-\title{Computing bootstrap components of `Range`}
+\title{Computing bootstrap Range components in the FSST procedure}
 \usage{
 fsst.range.bs(
   n,

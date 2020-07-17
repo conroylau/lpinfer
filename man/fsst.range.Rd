@@ -2,7 +2,7 @@
 % Please edit documentation in R/fsst.R
 \name{fsst.range}
 \alias{fsst.range}
-\title{Computes the solution to the range problem}
+\title{Computes the statistic to the range problem in the FSST procedure}
 \usage{
 fsst.range(n, beta.obs.hat, x.star, lpmodel, weight.mat)
 }
@@ -28,5 +28,6 @@ Returns the optimal point and optimal value.
  \item{range}{The optimal value of the Range component.}
 }
 \description{
-This function computes the solution to the range problem.
+This function computes the statistic of the range problem in
+   the FSST procedure.
 }

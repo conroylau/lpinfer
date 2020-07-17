@@ -11,7 +11,7 @@ The weighting matrix is returned.
    \item{weight.max}{Weighting matrix.}
 }
 \description{
-This function returns the weighting matrix in the FSST 
+This function returns the weighting matrix in the FSST
   procedure. There are three options available:
   \itemize{
     \item{\code{identity} --- identity matrix}
