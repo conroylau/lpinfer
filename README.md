@@ -1461,8 +1461,8 @@ References
 Deb, R., Y. Kitamura, J. K. H. Quah, and Stoye J. 2018. “Revealed Price
 Preference: Theory and Empirical Analysis.” *Working Paper*.
 
-Fang, Zheng, Andres Santos, Azeem Shaikh, and Alexander Torgovitsky.
-2020. *Working Paper*.
+Fang, Z., A. Santos, A. Shaikh, and A. Torgovitsky. 2020. *Working
+Paper*.
 
 Kamat, V. 2019. “Identification with Latent Choice Sets.” *Working
 Paper*.
