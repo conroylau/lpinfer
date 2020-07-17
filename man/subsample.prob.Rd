@@ -32,6 +32,7 @@ bootstrap problem or the first-step problem.}
 }
 \value{
 Returns a list of output that are obtained from the optimizer:
+  \item{Status}{Status of the optimization problem.}
   \item{x}{Optimal point calculated from the optimizer.}
   \item{objval}{Optimal value calculated from the optimizer.}
   \item{larg}{List of arguments passed to the optimizer.}

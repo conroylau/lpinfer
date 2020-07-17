@@ -53,11 +53,12 @@ gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL,
   # ---------------- #
   # Step 3: Result of the linear or quadratic program, and return result
   # ---------------- #
-  params <- list(OutputFlag=0, FeasibilityTol=1e-9)
-  solution <- gurobi::gurobi(model, params)
-
-  return(list(objval = as.numeric(solution$objval),
-              x = as.numeric(solution$x)))
+  params <- list(OutputFlag = 0, FeasibilityTol = 1e-9)
+  result <- gurobi::gurobi(model, params)
+  
+  return(list(status = result$status,
+                       objval = as.numeric(result$objval),
+                       x = as.numeric(result$x)))
 }
 
 #' LP and QP solver by cplexAPI

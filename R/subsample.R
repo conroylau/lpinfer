@@ -3,7 +3,7 @@
 #' @description This function conducts inference and returns the
 #'   \eqn{p}-value using the subsampling procedure.
 #'
-#' @import foreach doMC parallel
+#' @import foreach doMC parallel pracma
 #'
 #' @param lpmodel A list of objects that are used in inference of linear
 #'    programming problems. The list of objects required in the \code{dkqs}
@@ -20,6 +20,9 @@
 #'   of each subsample.
 #' @param replace Boolean variable to indicate whether the function samples
 #'   the data with or without replacement.
+#' @param Rmulti Multiplier for the number of bootstrap replications. The
+#'   product of `\code{Rmulti}' and `\code{R}' refers to the maximum
+#'   number of bootstrap replications.
 #' @inheritParams dkqs
 #' @inheritParams estbounds
 #'
@@ -54,11 +57,14 @@
 #'     where '\code{beta.tgt}' is inside the logical bound. If
 #'     '\code{test.logical}' is 0, it refers to the case where '
 #'     \code{beta.tgt}' is outside the logical bound.}
+#'   \item{df.error}{Table showing the id of the bootstrap replication(s)
+#'     with error(s) and the corresponding error message(s).}
+#'   \item{R.succ}{Number of successful bootstrap replications.}
 #'
 #' @export
 #'
-subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, norm = 2,
-                      phi = 2/3, replace = FALSE, solver = NULL,
+subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
+                      norm = 2, phi = 2/3, replace = FALSE, solver = NULL,
                       cores = 1, progress = TRUE){
 
   # ---------------- #
@@ -68,8 +74,8 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, norm = 2,
   call <- match.call()
 
   # Check the arguments
-  subsample.return <- subsample.check(data, lpmodel, beta.tgt, R, solver,
-                                      cores, norm, phi, replace,
+  subsample.return <- subsample.check(data, lpmodel, beta.tgt, R, Rmulti,
+                                      solver, cores, norm, phi, replace,
                                       progress)
 
   # Update the arguments
@@ -85,6 +91,9 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, norm = 2,
   n = nrow(data)
   m = floor(n^(phi))
 
+  # Compute the maximum number of iterations
+  maxR <- pracma::ceil(R * Rmulti)
+
   ### Case 1: test.logical == 1. Proceed with the calculation because
   ### beta.tgt is inside the logical bounds
   if (test.logical == 1) {
@@ -99,13 +108,13 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, norm = 2,
     # ---------------- #
     if (cores == 1){
       # One core
-      T_subsample <- subsample.onecore(data, R, lpmodel, beta.tgt, norm,
+      T_subsample <- subsample.onecore(data, R, maxR, lpmodel, beta.tgt, norm,
                                        solver, replace, progress, m)
-
     } else {
       # Many cores
-      T_subsample <- subsample.manycores(data, R, lpmodel, beta.tgt, norm,
-                                         solver, cores, replace, progress, m)
+      T_subsample <- subsample.manycores(data, R, maxR, lpmodel, beta.tgt,
+                                         norm, solver, cores, replace,
+                                         progress, m)
     }
 
     # ---------------- #
@@ -143,7 +152,9 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, norm = 2,
                    phi = phi,
                    norm = norm,
                    subsample.size = m,
-                   test.logical = test.logical)
+                   test.logical = test.logical,
+                   df.error = T_subsample$df.error,
+                   R.succ = T_subsample$R.succ)
   } else {
     ### Case 2: test.logical == 0. Set the p-value as 0 directly because
     ### beta.tgt is outside the logical bounds
@@ -178,6 +189,7 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, norm = 2,
 #'   bootstrap problem or the first-step problem.
 #'
 #' @return Returns a list of output that are obtained from the optimizer:
+#'   \item{Status}{Status of the optimization problem.}
 #'   \item{x}{Optimal point calculated from the optimizer.}
 #'   \item{objval}{Optimal value calculated from the optimizer.}
 #'   \item{larg}{List of arguments passed to the optimizer.}
@@ -226,11 +238,13 @@ subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver, i){
   # ---------------- #
   # Model sense
   modelsense.new <- "min"
+
   # Set the objective function and constraints
   if (norm == 1){
     ### L1-norm
     # Objective function - cost matrix
     c.new <- c(rep(0, ncol(A.obs.hat)), rep(1, k), rep(-1, k))
+
     # Constraints
     A.zero.shp <- matrix(rep(0, k*nrow(A.shp.hat)), nrow = nrow(A.shp.hat))
     A.zero.tgt <- matrix(rep(0, k*nrow(A.tgt.hat)), nrow = nrow(A.tgt.hat))
@@ -241,8 +255,10 @@ subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver, i){
 
     # RHS vector
     rhs.new <- c(beta.shp.hat, beta.tgt, Gb)
+
     # Lower bounds
     lb.new <- rep(0, length(c.new))
+
     # Sense
     sense.new <- rep("=", nrow(A.new))
 
@@ -259,10 +275,13 @@ subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver, i){
     ### L2-norm
     # Constraints
     A.new <- rbind(A.shp.hat, A.tgt.hat)
+
     # RHS vector
     rhs.new <- c(beta.shp.hat, beta.tgt)
+
     # Lower bounds
     lb.new <- rep(0, ncol(A.shp.hat))
+
     # Sense
     sense.new <- rep("=", nrow(A.new))
 
@@ -283,15 +302,13 @@ subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver, i){
   # Solve the model
   ans <- do.call(solver, l_arg)
 
-  # Return the results
-  invisible(list(x = ans$x,
+  invisible(list(status = ans$status,
+                 x = ans$x,
                  objval = ans$objval,
                  larg = l_arg,
                  beta = beta.obs.hat,
                  omega = omega.hat))
 }
-
-
 
 #' Subsampling procedure without parallel programming
 #'
@@ -302,16 +319,21 @@ subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver, i){
 #' @inheritParams dkqs
 #' @inheritParams estbounds
 #' @inheritParams subsample
+#' @inheritParams subsample.prob
 #' @param m Size of each subsample.
+#' @param maxR Maximum number of bootstrap replications in case error occured.
 #'
 #' @return Returns a list of output that are obtained from the subsampling
 #'   procedure:
 #'   \item{T.sub}{List of test statistic from the subsampling procedure.}
 #'   \item{pb}{Progress bar object.}
+#'   \item{df.error}{Table showing the id of the bootstrap replication(s)
+#'     with error(s) and the corresponding error message(s).}
+#'   \item{R.succ}{Number of successful bootstrap replications.}
 #'
 #' @export
 #'
-subsample.onecore <- function(data, R, lpmodel, beta.tgt, norm, solver,
+subsample.onecore <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
                               replace, progress, m){
   # ---------------- #
   # Step 1: Initialize the vectors and the progress bar
@@ -319,45 +341,83 @@ subsample.onecore <- function(data, R, lpmodel, beta.tgt, norm, solver,
   # Initialize the vectors
   T.sub <- NULL
   beta.sub <- NULL
+
   # Initialize the progress bar
   if (progress == TRUE){
-    pb <- utils::txtProgressBar(min = 0, max = R, style = 3, width = 20)
+    pb <- utils::txtProgressBar(min = 0, max = maxR, style = 3, width = 20)
     cat("\r")
   } else {
     pb <- NULL
   }
 
+  # Initialize a table to contain the error messages
+  df.error <- data.frame(matrix(vector(), ncol = 2))
+  colnames(df.error) <- c("Iteration", "Error message")
+
   # ---------------- #
   # Step 2: Conduct the subsampling procedure
   # ---------------- #
-  for (i in 1:R){
+  for (i in 1:maxR){
     # (2.1) Re-sample the data
     data.bs <- as.data.frame(data[sample(1:nrow(data), m, replace),])
     rownames(data.bs) <- 1:nrow(data.bs)
 
     # (2.2) Compute the bootstrap estimates
-    # Compute the value of beta_bs_star using the function func_obs
-    sub.return <- subsample.prob(data.bs, lpmodel, beta.tgt, norm, solver, i+1)
-    T.sub <- c(T.sub, sub.return$objval)
-    beta.sub <- cbind(beta.sub, sub.return$beta)
+    result <- tryCatch(
+      expr = {
+        sub.return <- subsample.prob(data.bs, lpmodel, beta.tgt, norm, solver,
+                                     i+1)
+      },
+      error = function(e) {
+        return(list(status = "ERROR",
+                    msg = e))
+      },
+      finally = {
+        sub.return
+      }
+    )
 
-    # (2.3) Update progress bar
+    # (2.3) Store the results or error message depending on the status
+    if (result$status %in% c("ERROR")) {
+      df.error[nrow(df.error) + 1, 1] <- i
+      df.error[nrow(df.error), 2] <- result$msg$message
+    } else {
+      T.sub <- c(T.sub, result$objval)
+      beta.sub <- cbind(beta.sub, result$beta)
+    }
+
+    # (2.4) Update progress bar
     if (progress == TRUE){
-      if (i != R){
-        utils::setTxtProgressBar(pb, i)
-        cat("\r\r")
+      if ((i == maxR) | (length(T.sub) == R)){
+        utils::setTxtProgressBar(pb, maxR)
+        cat("\r\b")
       } else {
         utils::setTxtProgressBar(pb, i)
-        cat("\r\b")
+        cat("\r\r")
       }
     }
+
+    # (2.5) Break the loop if R successful replications are made
+    if (length(T.sub) == R) {
+      break()
+    }
+  }
+
+  # (2.6) Number of successful bootstrap replications
+  R.succ <- length(T.sub)
+
+  # (2.7) Set df.error as NULL if no failed bootstrap replications
+  if (nrow(df.error) == 0) {
+    df.error <- NULL
   }
 
   # ---------------- #
   # Step 3: Return the results
   # ---------------- #
-  return(list(T.sub = T.sub,
-              pb = pb))
+  return(list(df.error = df.error,
+              T.sub = T.sub,
+              pb = pb,
+              R.succ = R.succ))
 }
 
 #' Subsampling procedure with parallel programming
@@ -374,10 +434,13 @@ subsample.onecore <- function(data, R, lpmodel, beta.tgt, norm, solver,
 #'   procedure:
 #'   \item{T.sub}{List of test statistic from the subsampling procedure.}
 #'   \item{pb}{Progress bar object.}
+#'   \item{df.error}{Table showing the id of the bootstrap replication(s)
+#'     with error(s) and the corresponding error message(s).}
+#'   \item{R.succ}{Number of successful bootstrap replications.}
 #'
 #' @export
 #'
-subsample.manycores <- function(data, R, lpmodel, beta.tgt, norm, solver,
+subsample.manycores <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
                                 cores, replace, progress, m){
   # ---------------- #
   # Step 1: Initialize the parallel programming package
@@ -385,6 +448,7 @@ subsample.manycores <- function(data, R, lpmodel, beta.tgt, norm, solver,
   options(warn=-1)
   # Assign dorng
   `%dorng%` <- doRNG::`%dorng%`
+
   # Register core
   doMC::registerDoMC(cores)
 
@@ -399,17 +463,14 @@ subsample.manycores <- function(data, R, lpmodel, beta.tgt, norm, solver,
     # Initialize the counter
     cl <- PtProcess::makeSOCKcluster(8)
     doSNOW::registerDoSNOW(cl)
+
     # Set the counter and progress bar
-    pb <- utils::txtProgressBar(max=R, style=3, width = 20)
+    pb <- utils::txtProgressBar(max = maxR, style = 3, width = 20)
 
     cat("\r")
     progress <- function(n){
       utils::setTxtProgressBar(pb, n)
-      if (n < R) {
-        cat("\r\r")
-      } else {
-        cat("\r\b")
-      }
+      cat("\r\r")
     }
     opts <- list(progress = progress)
   } else {
@@ -426,53 +487,129 @@ subsample.manycores <- function(data, R, lpmodel, beta.tgt, norm, solver,
   # Initialize the lpmodel.bs and beta.obs.var object
   lpmodel.bs <- list()
 
-  # Use a normal for-loop to construct the list of lpmodel objects
-  for (i in 1:R) {
-    # Construct bootstrap data
-    data.bs <- as.data.frame(data[sample(1:nrow(data), m, replace),])
-    rownames(data.bs) <- 1:nrow(data.bs)
-
-    # Assign the lpmodel objects
-    lpmodel.bs[[i]] <- list()
-    lpmodel.bs[[i]]$A.obs <- lpmodel.eval(data.bs, lpmodel$A.obs, i + 1)
-    lpmodel.bs[[i]]$A.shp <- lpmodel.eval(data.bs, lpmodel$A.shp, i + 1)
-    lpmodel.bs[[i]]$A.tgt <- lpmodel.eval(data.bs, lpmodel$A.tgt, i + 1)
-    lpmodel.bs[[i]]$beta.shp <- lpmodel.eval(data.bs, lpmodel$beta.shp, i + 1)
-    beta.obs.return <- lpmodel.beta.eval(data.bs, lpmodel$beta.obs, i + 1)
-    lpmodel.bs[[i]]$beta.obs <- beta.obs.return
-  }
-
   # ---------------- #
-  # Step 3: Conduct the subsampling procedure
+  # Step 3: Subsampling procedure
   # ---------------- #
-  listans = foreach::foreach(i = 1:R, .multicombine = TRUE,
-                             .combine = "comb", .options.snow = opts,
-                             .packages = "lpinfer") %dorng%
-    {
-      ## (3.1) Compute the bootstrap estimates
-      # Compute the value of beta_bs_star using the function func_obs
-      sub.return <- subsample.prob(data.bs, lpmodel.bs[[i]], beta.tgt, norm,
-                                   solver, 1)
-      T.sub <- data.frame(sub.return$objval)
-      beta.sub <- data.frame(c(sub.return$beta))
+  # Initialize the data frames
+  k <- 0
+  error.1 <- NULL
+  error.2 <- NULL
 
-      ## (3.2) Combine the results
-      list(T.sub, beta.sub)
+  # Loop until the number of bootstrap replications match R or if maxR has been
+  # reached
+  while (k != R) {
+    # Denote the starting index and ending index
+    i0 <- k + 1
+    i1 <- min(i0 + (R - k) - 1, maxR)
+
+    # Use a normal for-loop to construct the list of lpmodel objects
+    for (i in i0:i1) {
+      # Construct bootstrap data
+      data.bs <- as.data.frame(data[sample(1:nrow(data), m, replace),])
+      rownames(data.bs) <- 1:nrow(data.bs)
+
+      # Assign the lpmodel objects
+      lpmodel.bs[[i]] <- list()
+      lpmodel.bs[[i]]$A.obs <- lpmodel.eval(data.bs, lpmodel$A.obs, i + 1)
+      lpmodel.bs[[i]]$A.shp <- lpmodel.eval(data.bs, lpmodel$A.shp, i + 1)
+      lpmodel.bs[[i]]$A.tgt <- lpmodel.eval(data.bs, lpmodel$A.tgt, i + 1)
+      lpmodel.bs[[i]]$beta.shp <- lpmodel.eval(data.bs, lpmodel$beta.shp,
+                                               i + 1)
+      beta.obs.return <- lpmodel.beta.eval(data.bs, lpmodel$beta.obs, i + 1)
+      lpmodel.bs[[i]]$beta.obs <- beta.obs.return
     }
 
+    # Subsampling procedure
+    listans = foreach::foreach(i = i0:i1, .multicombine = TRUE,
+                               .combine = "comb", .options.snow = opts,
+                               .packages = "lpinfer") %dorng%
+      {
+        ## (3.1) Compute the bootstrap estimates
+        result <- tryCatch(
+          expr = {
+            sub.return <- subsample.prob(data.bs, lpmodel.bs[[i]], beta.tgt,
+                                         norm, solver, 1)
+          },
+          error = function(e) {
+            return(list(status = "ERROR",
+                        msg = e))
+          },
+          finally = {
+            sub.return
+          }
+        )
+
+        ## (3.2) Store the results or error message depending on the status
+        if (result$status %in% c("ERROR")) {
+          ind <- i
+          ind.msg <- result$msg$message
+          T.sub <- NULL
+          beta.sub <- NULL
+        } else {
+          ind <- NULL
+          ind.msg <- NULL
+          T.sub <- data.frame(result$objval)
+          beta.sub <- data.frame(c(result$beta))
+        }
+
+        list(T.sub, beta.sub, ind, ind.msg)
+      }
+
+    ## (3.3) Extract the results
+    T.sub.temp <- as.vector(unlist(listans[[1]]))
+    beta.sub.temp <- data.frame(matrix(unlist(listans[[2]]),
+                                 ncol = R,
+                                 byrow = FALSE))
+
+    ## (3.4) Combine with the previous results
+    if (i0 == 1) {
+      T.sub <- T.sub.temp
+      beta.sub <- beta.sub.temp
+    } else {
+      T.sub <- c(T.sub, T.sub.temp)
+      beta.sub <- cbind(beta.sub, beta.sub.temp)
+    }
+    k <- length(T.sub)
+
+    ## (3.5) Consolidate the list of error messages
+    if (length(unlist(listans[[3]])) != 0) {
+      error.1.temp <- unlist(listans[[3]])
+      error.2.temp <- unlist(listans[[4]])
+      error.1 <- c(error.1, error.1.temp)
+      error.2 <- c(error.2, error.2.temp)
+    }
+
+    ## (3.6) Break the while-loop if it reached maxR
+    if (i1 == maxR) {
+      break()
+    }
+  }
+  # Close the progress bar
+  cat("\r\b")
+
+  # (3.6) Number of successful bootstrap replications
+  R.succ <- length(T.sub)
+
   # ---------------- #
-  # Step 4: Retrieve results from output
+  # Step 4: Combine the error messages
   # ---------------- #
-  T.sub = as.vector(unlist(listans[[1]]))
-  beta.sub = data.frame(matrix(unlist(listans[[2]]),
-                               ncol = R,
-                               byrow = FALSE))
+  error.length <- length(error.1)
+  if (error.length != 0) {
+    df.error <- data.frame(matrix(vector(), nrow = error.length, ncol = 2))
+    colnames(df.error) <- c("Iteration", "Error message")
+    df.error[,1] <- error.1
+    df.error[,2] <- error.2
+  } else {
+    df.error <- NULL
+  }
 
   # ---------------- #
   # Step 5: Return the results
   # ---------------- #
-  return(list(T.sub = T.sub,
-              pb = pb))
+  return(list(df.error = df.error,
+              T.sub = T.sub,
+              pb = pb,
+              R.succ = R.succ))
 }
 
 #' Print results from \code{subsample}
@@ -517,14 +654,32 @@ summary.subsample <- function(x, ...){
     # Print the p-values
     print(x)
 
-    # Print test statistic, solver used, norm used and number of
-    # cores used
+    # Print test statistic, solver used, norm used, number of
+    # cores used and the number of bootstrap replications
     cat(sprintf("Test statistic: %s\n", round(x$T.n, digits = 5)))
     cat(sprintf("Solver used: %s\n", x$solver))
     cat(sprintf("Norm used: %s\n", x$norm))
     cat(sprintf("Phi used: %s\n", round(x$phi, digits = 5)))
     cat(sprintf("Size of each subsample: %s\n", x$subsample.size))
-    cat(sprintf("Number of cores used: %s\n", x$cores))
+    coremsg <- "Number of %s used: %s\n"
+    ncore <- x$cores
+    if (ncore == 1) {
+      cat(sprintf(coremsg, "core", ncore))
+    } else{
+      cat(sprintf(coremsg, "cores", ncore))
+    }
+    cat(sprintf("Number of successful bootstrap replications: %s\n", x$R.succ))
+
+    # Number of failed bootstrap replications
+    if (!is.null(x$df.error)) {
+      nerr <- nrow(x$df.error)
+      errstring <- "Number of failed bootstrap"
+      if (nerr == 1) {
+        cat(sprintf(paste(errstring, "replication: %s\n"), nerr))
+      } else {
+        cat(sprintf(paste(errstring, "replications: %s\n"), nerr))
+      }
+    }
   } else if (x$test.logical == 0) {
     # Case 2: 'beta.tgt' is outside the logical bound
     infeasible.pval.msg()
@@ -558,7 +713,7 @@ summary.subsample <- function(x, ...){
 #'
 #' @export
 #'
-subsample.check <- function(data, lpmodel, beta.tgt, R, solver, cores,
+subsample.check <- function(data, lpmodel, beta.tgt, R, Rmulti, solver, cores,
                             norm, phi, replace, progress){
 
   # ---------------- #
@@ -589,6 +744,9 @@ subsample.check <- function(data, lpmodel, beta.tgt, R, solver, cores,
   } else if (isFALSE(replace)) {
     check.numrange(phi, "phi", "open", 0, "open", 1)
   }
+
+  # Check Rmulti
+  check.numrange(Rmulti, "Rmulti", "closed", 1, "open", Inf)
 
   # Check other numbers
   check.positiveinteger(R, "R")

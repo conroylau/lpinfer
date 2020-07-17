@@ -7,6 +7,7 @@
 subsample.onecore(
   data,
   R,
+  maxR,
   lpmodel,
   beta.tgt,
   norm,
@@ -20,6 +21,8 @@ subsample.onecore(
 \item{data}{The data being used in the inference.}
 
 \item{R}{Number of bootstraps chosen by the users.}
+
+\item{maxR}{Maximum number of bootstrap replications in case error occured.}
 
 \item{lpmodel}{A list of objects that are used in inference of linear
 programming problems. The list of objects required in the \code{dkqs}
@@ -54,6 +57,9 @@ Returns a list of output that are obtained from the subsampling
   procedure:
   \item{T.sub}{List of test statistic from the subsampling procedure.}
   \item{pb}{Progress bar object.}
+  \item{df.error}{Table showing the id of the bootstrap replication(s)
+    with error(s) and the corresponding error message(s).}
+  \item{R.succ}{Number of successful bootstrap replications.}
 }
 \description{
 This function computes the list of test statistics that are

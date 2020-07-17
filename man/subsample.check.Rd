@@ -9,6 +9,7 @@ subsample.check(
   lpmodel,
   beta.tgt,
   R,
+  Rmulti,
   solver,
   cores,
   norm,
@@ -32,6 +33,10 @@ procedure are:
 \item{beta.tgt}{Value of beta to be tested.}
 
 \item{R}{Number of bootstraps chosen by the users.}
+
+\item{Rmulti}{Multiplier for the number of bootstrap replications. The
+product of `\code{Rmulti}' and `\code{R}' refers to the maximum
+number of bootstrap replications.}
 
 \item{solver}{The name of the linear and quadratic programming solver that
 are used to obtain the solution to linear and quadratic programs.
