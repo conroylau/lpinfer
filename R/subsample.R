@@ -492,8 +492,10 @@ subsample.manycores <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
   # ---------------- #
   # Initialize the data frames
   k <- 0
-  error.1 <- NULL
-  error.2 <- NULL
+  error.21 <- NULL
+  error.22 <- NULL
+  df.error1 <- data.frame(matrix(vector(), ncol = 2))
+  colnames(df.error1) <- c("Iteration", "Error message")
 
   # Loop until the number of bootstrap replications match R or if maxR has been
   # reached
@@ -509,14 +511,31 @@ subsample.manycores <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
       rownames(data.bs) <- 1:nrow(data.bs)
 
       # Assign the lpmodel objects
-      lpmodel.bs[[i]] <- list()
-      lpmodel.bs[[i]]$A.obs <- lpmodel.eval(data.bs, lpmodel$A.obs, i + 1)
-      lpmodel.bs[[i]]$A.shp <- lpmodel.eval(data.bs, lpmodel$A.shp, i + 1)
-      lpmodel.bs[[i]]$A.tgt <- lpmodel.eval(data.bs, lpmodel$A.tgt, i + 1)
-      lpmodel.bs[[i]]$beta.shp <- lpmodel.eval(data.bs, lpmodel$beta.shp,
-                                               i + 1)
-      beta.obs.return <- lpmodel.beta.eval(data.bs, lpmodel$beta.obs, i + 1)
-      lpmodel.bs[[i]]$beta.obs <- beta.obs.return
+      beta.obs.result <- tryCatch(
+        expr <- {
+          lpmodel.bs[[i]] <- list()
+          lpmodel.bs[[i]]$A.obs <- lpmodel.eval(data.bs, lpmodel$A.obs, i + 1)
+          lpmodel.bs[[i]]$A.shp <- lpmodel.eval(data.bs, lpmodel$A.shp, i + 1)
+          lpmodel.bs[[i]]$A.tgt <- lpmodel.eval(data.bs, lpmodel$A.tgt, i + 1)
+          lpmodel.bs[[i]]$beta.shp <- lpmodel.eval(data.bs, lpmodel$beta.shp,
+                                                   i + 1)
+          beta.obs.return <- lpmodel.beta.eval(data.bs, lpmodel$beta.obs, i + 1)
+          lpmodel.bs[[i]]$beta.obs <- beta.obs.return      
+          beta.obs.ls <- list(status = "NOERROR",
+                              lpmodel.bs = lpmodel.bs)
+        },
+        error = function(e) {
+          return(list(status = "ERROR",
+                      msg = e))
+        },
+        finally = {
+          beta.obs.ls
+        }
+      )
+      if (beta.obs.result$status == "ERROR") {
+        df.error1[nrow(df.error1) + 1, 1] <- i
+        df.error1[nrow(df.error1), 2] <- beta.obs.result$msg$message
+      }
     }
 
     # Subsampling procedure
@@ -524,42 +543,50 @@ subsample.manycores <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
                                .combine = "comb", .options.snow = opts,
                                .packages = "lpinfer") %dorng%
       {
-        ## (3.1) Compute the bootstrap estimates
-        result <- tryCatch(
-          expr = {
-            sub.return <- subsample.prob(data.bs, lpmodel.bs[[i]], beta.tgt,
-                                         norm, solver, 1)
-          },
-          error = function(e) {
-            return(list(status = "ERROR",
-                        msg = e))
-          },
-          finally = {
-            sub.return
+        # Only consider the subsample problem if there is no error in forming
+        # the beta.obs parts
+        if (!(i %in% df.error1[,1])) {
+          ## (3.1) Compute the bootstrap estimates
+          result <- tryCatch(
+            expr = {
+              sub.return <- subsample.prob(data.bs, lpmodel.bs[[i]], beta.tgt,
+                                           norm, solver, 1)
+            },
+            error = function(e) {
+              return(list(status = "ERROR",
+                          msg = e))
+            },
+            finally = {
+              sub.return
+            }
+          )
+          
+          ## (3.2) Store the results or error message depending on the status
+          if (result$status %in% c("ERROR")) {
+            ind <- i
+            ind.msg <- result$msg$message
+            T.sub <- NULL
+            beta.sub <- NULL
+          } else {
+            ind <- NULL
+            ind.msg <- NULL
+            T.sub <- data.frame(result$objval)
+            beta.sub <- data.frame(c(result$beta))
           }
-        )
-
-        ## (3.2) Store the results or error message depending on the status
-        if (result$status %in% c("ERROR")) {
-          ind <- i
-          ind.msg <- result$msg$message
-          T.sub <- NULL
-          beta.sub <- NULL
         } else {
           ind <- NULL
           ind.msg <- NULL
-          T.sub <- data.frame(result$objval)
-          beta.sub <- data.frame(c(result$beta))
+          T.sub <- NULL
+          beta.sub <- NULL
         }
-
         list(T.sub, beta.sub, ind, ind.msg)
       }
 
     ## (3.3) Extract the results
     T.sub.temp <- as.vector(unlist(listans[[1]]))
     beta.sub.temp <- data.frame(matrix(unlist(listans[[2]]),
-                                 ncol = R,
-                                 byrow = FALSE))
+                                       ncol = R,
+                                       byrow = FALSE))
 
     ## (3.4) Combine with the previous results
     if (i0 == 1) {
@@ -573,10 +600,10 @@ subsample.manycores <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
 
     ## (3.5) Consolidate the list of error messages
     if (length(unlist(listans[[3]])) != 0) {
-      error.1.temp <- unlist(listans[[3]])
-      error.2.temp <- unlist(listans[[4]])
-      error.1 <- c(error.1, error.1.temp)
-      error.2 <- c(error.2, error.2.temp)
+      error.21.temp <- unlist(listans[[3]])
+      error.22.temp <- unlist(listans[[4]])
+      error.21 <- c(error.21, error.21.temp)
+      error.22 <- c(error.22, error.22.temp)
     }
 
     ## (3.6) Break the while-loop if it reached maxR
@@ -593,15 +620,15 @@ subsample.manycores <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
   # ---------------- #
   # Step 4: Combine the error messages
   # ---------------- #
-  error.length <- length(error.1)
+  error.length <- length(error.21)
+  df.error2 <- data.frame(matrix(vector(), nrow = error.length, ncol = 2))
+  colnames(df.error2) <- c("Iteration", "Error message")
   if (error.length != 0) {
-    df.error <- data.frame(matrix(vector(), nrow = error.length, ncol = 2))
-    colnames(df.error) <- c("Iteration", "Error message")
-    df.error[,1] <- error.1
-    df.error[,2] <- error.2
-  } else {
-    df.error <- NULL
+    df.error2[,1] <- error.21
+    df.error2[,2] <- error.22
   }
+  
+  df.error <- rbind(df.error1, df.error2)
 
   # ---------------- #
   # Step 5: Return the results
