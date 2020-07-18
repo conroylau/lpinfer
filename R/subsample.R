@@ -3,7 +3,7 @@
 #' @description This function conducts inference and returns the
 #'   \eqn{p}-value using the subsampling procedure.
 #'
-#' @import foreach doMC parallel pracma
+#' @import foreach doMC parallel
 #'
 #' @param lpmodel A list of objects that are used in inference of linear
 #'    programming problems. The list of objects required in the \code{dkqs}
@@ -92,7 +92,7 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
   m = floor(n^(phi))
 
   # Compute the maximum number of iterations
-  maxR <- pracma::ceil(R * Rmulti)
+  maxR <- ceiling(R * Rmulti)
 
   ### Case 1: test.logical == 1. Proceed with the calculation because
   ### beta.tgt is inside the logical bounds
