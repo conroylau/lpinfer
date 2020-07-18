@@ -34,7 +34,7 @@ check.dataframe <- function(data){
 check.datafunction <- function(data, f, lpmodel.comp){
   # General warning message
   display.msg <- sprintf(paste0("The function defined in the '%s' component ",
-                                "for 'lpmodel' needs to accept data of class",
+                                "for 'lpmodel' needs to accept data of class ",
                                 "'data.frame'."), lpmodel.comp)
 
   # try-catch
@@ -390,7 +390,7 @@ check.Ab <- function(A, b, Aname, bname){
     ## case of b being a scalar because it is turned into a matrix in the
     ## condition.
     if (dim(as.matrix(b))[2] != 1){
-      stop(sprintf("The argument '%s' has to be a column vector", bname),
+      stop(sprintf("The argument '%s' has to be a column vector.", bname),
            call. = FALSE)
     }
 
@@ -609,7 +609,7 @@ check.lpmodel <- function(data, lpmodel, name.var, A.tgt.cat, A.obs.cat,
   # ---------------- #
   # General message telling the user to provide the "A" matrix and the "beta"
   # vector with the same number of rows
-  msg.row <- paste0("The objects '%s' and '%s' in 'lpmodel' has ",
+  msg.row <- paste0("The objects '%s' and '%s' in 'lpmodel' need ",
                     "to have the same number of rows.")
 
   # Start the check
