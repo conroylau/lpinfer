@@ -66,7 +66,6 @@ Otherwise, the messages will not be displayed.}
 \value{
 Returns a list of output calculated from the function:
   \item{pval}{\eqn{p}-value.}
-  \item{decision}{Decision of the test.}
   \item{T.n}{Test statistic \eqn{T_n}.}
   \item{T.sub}{The list of test statistics from the subsampling procedure.}
   \item{solver}{Solver used in solving the linear and quadratic programs.}

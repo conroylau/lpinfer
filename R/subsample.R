@@ -39,7 +39,6 @@
 #'
 #' @return Returns a list of output calculated from the function:
 #'   \item{pval}{\eqn{p}-value.}
-#'   \item{decision}{Decision of the test.}
 #'   \item{T.n}{Test statistic \eqn{T_n}.}
 #'   \item{T.sub}{The list of test statistics from the subsampling procedure.}
 #'   \item{solver}{Solver used in solving the linear and quadratic programs.}
@@ -117,10 +116,8 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
     # ---------------- #
     # Step 4: Compute the p-value (using the p_eval function in dkqs)
     # ---------------- #
-    print(T_subsample$T.sub)
     pval_return <- pval(T_subsample$T.sub, Treturn$objval)
     pval <- pval_return$p
-    decision <- pval_return$decision
 
     # ---------------- #
     # Step 5: Generate a table of critical values
@@ -140,7 +137,6 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
     # Step 7: Assign the return list
     # ---------------- #
     output <- list(pval = as.numeric(pval),
-                   decision = decision,
                    T.n = as.numeric(Treturn$objval),
                    T.sub = T_subsample$T.sub,
                    solver = solver.name,
@@ -406,11 +402,6 @@ subsample.onecore <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
   # (2.6) Number of successful bootstrap replications
   R.succ <- length(T.sub)
 
-  # (2.7) Set df.error as NULL if no failed bootstrap replications
-  if (nrow(df.error) == 0) {
-    df.error <- NULL
-  }
-
   # ---------------- #
   # Step 3: Return the results
   # ---------------- #
@@ -611,7 +602,7 @@ subsample.manycores <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
       break()
     }
   }
-  # Close the progress bar
+  # Close the progress barprint()
   cat("\r\b")
 
   # (3.6) Number of successful bootstrap replications
