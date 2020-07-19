@@ -476,12 +476,6 @@ subsample.manycores <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
     opts <- NULL
   }
 
-  # Comb function for using parallel programming
-  comb <- function(x, ...) {
-    lapply(seq_along(x), function(i) c(x[[i]], lapply(list(...),
-                                                      function(y) y[[i]])))
-  }
-
   # Initialize the lpmodel.bs and beta.obs.var object
   lpmodel.bs <- list()
 
@@ -541,7 +535,7 @@ subsample.manycores <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
 
     # Subsampling procedure
     listans = foreach::foreach(i = i0:i1, .multicombine = TRUE,
-                               .combine = "comb", .options.snow = opts,
+                               .combine = "para.comb", .options.snow = opts,
                                .packages = "lpinfer") %dorng%
       {
         # Only consider the subsample problem if there is no error in forming

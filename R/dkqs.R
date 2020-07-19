@@ -691,12 +691,6 @@ beta.bs.parallel <- function(data, lpmodel, beta.tgt, R, maxR, J, s.star.list,
     opts <- NULL
   }
 
-  # Comb function for using parallel programming
-  comb <- function(x, ...) {
-    lapply(seq_along(x), function(i) c(x[[i]], lapply(list(...),
-                                                      function(y) y[[i]])))
-  }
-
   # Assign doRnG
   `%dorng%` <- doRNG::`%dorng%`
 
@@ -763,9 +757,8 @@ beta.bs.parallel <- function(data, lpmodel, beta.tgt, R, maxR, J, s.star.list,
       }
     }
 
-    # Bootstrap procedure of DKQS
     listans <- foreach::foreach(i = i0:i1, .multicombine = TRUE,
-                                .combine = "comb", .options.snow = opts,
+                                .combine = "para.comb", .options.snow = opts,
                                 .packages = c("lpinfer", "doRNG")) %dorng%
       {
         # Initialize the parameters that contain the results for each tau

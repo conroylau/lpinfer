@@ -469,12 +469,6 @@ sigma.est.parallel <- function(data, beta.obs.hat, lpmodel, R, cores,
       opts <- NULL
    }
 
-   # Comb function for using parallel programming
-   comb <- function(x, ...) {
-      lapply(seq_along(x), function(i) c(x[[i]], lapply(list(...),
-                                                        function(y) y[[i]])))
-   }
-
    # Assign doRnG
    `%dorng%` <- doRNG::`%dorng%`
 
@@ -504,7 +498,7 @@ sigma.est.parallel <- function(data, beta.obs.hat, lpmodel, R, cores,
    # ---------------- #
    listans <- foreach::foreach(i = 1:R,
                                .multicombine = TRUE,
-                               .combine = "comb",
+                               .combine = "para.comb",
                                .options.snow = opts,
                                .packages = c("lpinfer", "doRNG")) %dorng%
       {
@@ -692,12 +686,6 @@ sigma.summation.parallel <- function(n, beta.bs.list, cores, progress,
       opts <- NULL
    }
 
-   # Comb function for using parallel programming
-   comb <- function(x, ...) {
-      lapply(seq_along(x), function(i) c(x[[i]], lapply(list(...),
-                                                        function(y) y[[i]])))
-   }
-
    # Assign doRnG
    `%dorng%` <- doRNG::`%dorng%`
 
@@ -715,7 +703,7 @@ sigma.summation.parallel <- function(n, beta.bs.list, cores, progress,
    # ---------------- #
    listans <- foreach::foreach(i = 1:R,
                                .multicombine = TRUE,
-                               .combine = "comb",
+                               .combine = "para.comb",
                                .options.snow = opts,
                                .packages = "lpinfer") %dorng%
       {
