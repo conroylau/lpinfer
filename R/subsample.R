@@ -396,10 +396,6 @@ subsample.onecore <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
 
     # (2.5) Break the loop if R successful replications are made
     if (length(T.sub) == R) {
-      if (progress == TRUE) {
-        utils::setTxtProgressBar(pb, maxR)
-        cat("\r\b")
-      }
       break()
     }
   }
