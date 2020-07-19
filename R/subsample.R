@@ -262,7 +262,7 @@ subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver, i){
     # Set the list to pass to the solver
     l_arg <- list(Af = NULL,
                   bf = c.new,
-                  nf = 1,
+                  nf = sqrt(n),
                   A = A.new,
                   rhs = rhs.new,
                   sense = sense.new,
