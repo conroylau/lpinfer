@@ -117,6 +117,7 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
     # ---------------- #
     # Step 4: Compute the p-value (using the p_eval function in dkqs)
     # ---------------- #
+    print(T_subsample$T.sub)
     pval_return <- pval(T_subsample$T.sub, Treturn$objval)
     pval <- pval_return$p
     decision <- pval_return$decision
@@ -285,7 +286,7 @@ subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver, i){
     # Set the list to pass to the solver
     l_arg <- list(Af = GA,
                   bf = Gb,
-                  nf = sqrt(n),
+                  nf = n,
                   A = A.new,
                   rhs = rhs.new,
                   sense = sense.new,
@@ -364,13 +365,15 @@ subsample.onecore <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
       expr = {
         sub.return <- subsample.prob(data.bs, lpmodel, beta.tgt, norm, solver,
                                      i + 1)
+        s.bs.ls <- list(status = "NOERROR",
+                        sub.return = sub.return)
       },
       error = function(e) {
         return(list(status = "ERROR",
                     msg = e))
       },
       finally = {
-        sub.return
+        s.bs.ls
       }
     )
 
@@ -379,8 +382,8 @@ subsample.onecore <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
       df.error[nrow(df.error) + 1, 1] <- i
       df.error[nrow(df.error), 2] <- result$msg$message
     } else {
-      T.sub <- c(T.sub, result$objval)
-      beta.sub <- cbind(beta.sub, result$beta)
+      T.sub <- c(T.sub, sub.return$objval)
+      beta.sub <- cbind(beta.sub, sub.return$beta)
     }
 
     # (2.4) Update progress bar
@@ -546,13 +549,15 @@ subsample.manycores <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
             expr = {
               sub.return <- subsample.prob(data.bs, lpmodel.bs[[i]], beta.tgt,
                                            norm, solver, 1)
+              s.bs.ls <- list(status = "NOERROR",
+                              sub.return = sub.return)
             },
             error = function(e) {
               return(list(status = "ERROR",
                           msg = e))
             },
             finally = {
-              sub.return
+              s.bs.ls
             }
           )
 
@@ -565,8 +570,8 @@ subsample.manycores <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
           } else {
             ind <- NULL
             ind.msg <- NULL
-            T.sub <- data.frame(result$objval)
-            beta.sub <- data.frame(c(result$beta))
+            T.sub <- data.frame(sub.return$objval)
+            beta.sub <- data.frame(c(sub.return$beta))
           }
         } else {
           ind <- NULL
