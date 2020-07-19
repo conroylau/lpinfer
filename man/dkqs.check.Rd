@@ -4,7 +4,7 @@
 \alias{dkqs.check}
 \title{Checks and updates the input}
 \usage{
-dkqs.check(data, lpmodel, beta.tgt, R, tau, solver, cores, progress)
+dkqs.check(data, lpmodel, beta.tgt, R, Rmulti, tau, solver, cores, progress)
 }
 \arguments{
 \item{data}{The data being used in the inference.}
@@ -21,6 +21,10 @@ procedure are:
 \item{beta.tgt}{Value of beta to be tested.}
 
 \item{R}{Number of bootstraps chosen by the users.}
+
+\item{Rmulti}{Multiplier for the number of bootstrap replications. The
+product of `\code{Rmulti}' and `\code{R}' refers to the maximum
+number of bootstrap replications.}
 
 \item{tau}{The value of tau chosen by the user.}
 

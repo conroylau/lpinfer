@@ -4,7 +4,18 @@
 \alias{beta.bs}
 \title{Computes the bootstrap test statistics}
 \usage{
-beta.bs(data, lpmodel, beta.tgt, R, J, s.star.list, tau.list, solver, progress)
+beta.bs(
+  data,
+  lpmodel,
+  beta.tgt,
+  R,
+  maxR,
+  J,
+  s.star.list,
+  tau.list,
+  solver,
+  progress
+)
 }
 \arguments{
 \item{data}{The data being used in the inference.}
@@ -21,6 +32,8 @@ procedure are:
 \item{beta.tgt}{Value of beta to be tested.}
 
 \item{R}{Number of bootstraps chosen by the users.}
+
+\item{maxR}{Maximum number of bootstrap replications in case error occured.}
 
 \item{J}{The number of distinct nonzero values in vector \eqn{\bm{y}}.}
 
@@ -47,6 +60,9 @@ Returns the list of estimates from bootstrap:
  \item{beta.bs.bar.list}{A list of \eqn{\tau_n}-tightened recentered
     bootstrap estimates \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}.}
  \item{pb}{Progress bar object.}
+  \item{df.error}{Table showing the id of the bootstrap replication(s)
+    with error(s) and the corresponding error message(s).}
+  \item{R.succ}{Number of successful bootstrap replications.}
 }
 \description{
 This function computes the bootstrap test statistics.

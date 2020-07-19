@@ -20,9 +20,6 @@
 #'   of each subsample.
 #' @param replace Boolean variable to indicate whether the function samples
 #'   the data with or without replacement.
-#' @param Rmulti Multiplier for the number of bootstrap replications. The
-#'   product of `\code{Rmulti}' and `\code{R}' refers to the maximum
-#'   number of bootstrap replications.
 #' @inheritParams dkqs
 #' @inheritParams estbounds
 #'
@@ -320,8 +317,8 @@ subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver, i){
 #' @inheritParams estbounds
 #' @inheritParams subsample
 #' @inheritParams subsample.prob
+#' @inheritParams beta.bs
 #' @param m Size of each subsample.
-#' @param maxR Maximum number of bootstrap replications in case error occured.
 #'
 #' @return Returns a list of output that are obtained from the subsampling
 #'   procedure:
@@ -399,6 +396,10 @@ subsample.onecore <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
 
     # (2.5) Break the loop if R successful replications are made
     if (length(T.sub) == R) {
+      if (progress == TRUE) {
+        utils::setTxtProgressBar(pb, maxR)
+        cat("\r\b")
+      }
       break()
     }
   }
@@ -414,9 +415,9 @@ subsample.onecore <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
   # ---------------- #
   # Step 3: Return the results
   # ---------------- #
-  return(list(df.error = df.error,
-              T.sub = T.sub,
+  return(list(T.sub = T.sub,
               pb = pb,
+              df.error = df.error,
               R.succ = R.succ))
 }
 
@@ -429,6 +430,7 @@ subsample.onecore <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
 #' @inheritParams estbounds
 #' @inheritParams subsample
 #' @inheritParams subsample.onecore
+#' @inheritParams beta.bs
 #'
 #' @return Returns a list of output that are obtained from the subsampling
 #'   procedure:
@@ -492,10 +494,10 @@ subsample.manycores <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
   # ---------------- #
   # Initialize the data frames
   k <- 0
-  error.21 <- NULL
-  error.22 <- NULL
   df.error1 <- data.frame(matrix(vector(), ncol = 2))
   colnames(df.error1) <- c("Iteration", "Error message")
+  error.21 <- NULL
+  error.22 <- NULL
 
   # Loop until the number of bootstrap replications match R or if maxR has been
   # reached
@@ -520,7 +522,7 @@ subsample.manycores <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
           lpmodel.bs[[i]]$beta.shp <- lpmodel.eval(data.bs, lpmodel$beta.shp,
                                                    i + 1)
           beta.obs.return <- lpmodel.beta.eval(data.bs, lpmodel$beta.obs, i + 1)
-          lpmodel.bs[[i]]$beta.obs <- beta.obs.return      
+          lpmodel.bs[[i]]$beta.obs <- beta.obs.return
           beta.obs.ls <- list(status = "NOERROR",
                               lpmodel.bs = lpmodel.bs)
         },
@@ -532,6 +534,8 @@ subsample.manycores <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
           beta.obs.ls
         }
       )
+      
+      # Record error (if any)
       if (beta.obs.result$status == "ERROR") {
         df.error1[nrow(df.error1) + 1, 1] <- i
         df.error1[nrow(df.error1), 2] <- beta.obs.result$msg$message
@@ -560,7 +564,7 @@ subsample.manycores <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
               sub.return
             }
           )
-          
+
           ## (3.2) Store the results or error message depending on the status
           if (result$status %in% c("ERROR")) {
             ind <- i
@@ -627,15 +631,15 @@ subsample.manycores <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
     df.error2[,1] <- error.21
     df.error2[,2] <- error.22
   }
-  
+
   df.error <- rbind(df.error1, df.error2)
 
   # ---------------- #
   # Step 5: Return the results
   # ---------------- #
-  return(list(df.error = df.error,
-              T.sub = T.sub,
+  return(list(T.sub = T.sub,
               pb = pb,
+              df.error = df.error,
               R.succ = R.succ))
 }
 

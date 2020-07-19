@@ -18,6 +18,9 @@
 #'    }
 #' @param beta.tgt Value of beta to be tested.
 #' @param R Number of bootstraps chosen by the users.
+#' @param Rmulti Multiplier for the number of bootstrap replications. The
+#'   product of `\code{Rmulti}' and `\code{R}' refers to the maximum
+#'   number of bootstrap replications.
 #' @param tau The value of tau chosen by the user.
 #' @param solver The name of the linear and quadratic programming solver that
 #'    are used to obtain the solution to linear and quadratic programs.
@@ -52,14 +55,17 @@
 #'     where '\code{beta.tgt}' is inside the logical bound. If
 #'     '\code{test.logical}' is 0, it refers to the case where '
 #'     \code{beta.tgt}' is outside the logical bound.}
+#'   \item{df.error}{Table showing the id of the bootstrap replication(s)
+#'     with error(s) and the corresponding error message(s).}
+#'   \item{R.succ}{Number of successful bootstrap replications.}
 #'
 #' @details If the value of the test statistic \eqn{T.n} is zero, the
 #'    bootstrap procedure will be skipped.
 #'
 #' @export
 #'
-dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, tau = NULL,
-                 solver = NULL, cores = 1, progress = TRUE){
+dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
+                 tau = NULL, solver = NULL, cores = 1, progress = TRUE){
 
   # ---------------- #
   # Step 1: Update call, check and update the arguments
@@ -68,7 +74,7 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, tau = NULL,
   call <- match.call()
 
   # Check the arguments
-  dkqs.return <- dkqs.check(data, lpmodel, beta.tgt, R, tau, solver,
+  dkqs.return <- dkqs.check(data, lpmodel, beta.tgt, R, Rmulti, tau, solver,
                             cores, progress)
 
   # Update the arguments
@@ -78,6 +84,9 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, tau = NULL,
   solver.name <- dkqs.return$solver.name
   cores <- dkqs.return$cores
   test.logical <- dkqs.return$test.logical
+
+  # Compute the maximum number of iterations
+  maxR <- ceiling(R * Rmulti)
 
   ### Case 1: test.logical == 1. Proceed with the calculation because
   ### beta.tgt is inside the logical bounds
@@ -184,11 +193,11 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, tau = NULL,
       # ---------------- #
       if (cores == 1) {
         # No parallelization
-        T.bs.return <- beta.bs(data, lpmodel, beta.tgt, R, J, s.star.list,
-                               tau.feasible, solver, progress)
+        T.bs.return <- beta.bs(data, lpmodel, beta.tgt, R, maxR, J,
+                               s.star.list, tau.feasible, solver, progress)
       } else {
         # Parallelization
-        T.bs.return <- beta.bs.parallel(data, lpmodel, beta.tgt, R, J,
+        T.bs.return <- beta.bs.parallel(data, lpmodel, beta.tgt, R, maxR, J,
                                         s.star.list, tau.feasible,
                                         solver, progress, cores)
       }
@@ -232,7 +241,9 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, tau = NULL,
                    cores = cores,
                    cv.table = cv.table,
                    call = call,
-                   test.logical = test.logical)
+                   test.logical = test.logical,
+                   df.error = T.bs.return$df.error,
+                   R.succ = T.bs.return$R.succ)
   } else {
     ### Case 2: test.logical == 0. Set the p-value as 0 directly because
     ### beta.tgt is outside the logical bounds
@@ -441,6 +452,7 @@ dkqs.qlp <- function(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
 #'    \eqn{\hat{s}^\ast \equiv A_{\mathrm{obs}}\hat{\bm{x}}_n^\ast}
 #'    in the cone-tightening procedure for each tau.
 #' @param tau.list The list of feasible taus.
+#' @param maxR Maximum number of bootstrap replications in case error occured.
 #' @inheritParams dkqs
 #' @inheritParams dkqs.qlp
 #'
@@ -450,10 +462,13 @@ dkqs.qlp <- function(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
 #'  \item{beta.bs.bar.list}{A list of \eqn{\tau_n}-tightened recentered
 #'     bootstrap estimates \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}.}
 #'  \item{pb}{Progress bar object.}
+#'   \item{df.error}{Table showing the id of the bootstrap replication(s)
+#'     with error(s) and the corresponding error message(s).}
+#'   \item{R.succ}{Number of successful bootstrap replications.}
 #'
 #' @export
 #'
-beta.bs <- function(data, lpmodel, beta.tgt, R, J, s.star.list, tau.list,
+beta.bs <- function(data, lpmodel, beta.tgt, R, maxR, J, s.star.list, tau.list,
                     solver, progress){
   # ---------------- #
   # Step 1: Initialize the vectors and progress counters
@@ -462,7 +477,7 @@ beta.bs <- function(data, lpmodel, beta.tgt, R, J, s.star.list, tau.list,
   beta.bs.bar.list <- NULL
 
   # Initialize the progress bar
-  if (progress == TRUE){
+  if (progress == TRUE) {
     pb <- utils::txtProgressBar(initial = 0, max = R, style = 3, width = 20)
     cat("\r")
   } else {
@@ -472,9 +487,13 @@ beta.bs <- function(data, lpmodel, beta.tgt, R, J, s.star.list, tau.list,
   # Count the total number of taus
   n.tau <- length(tau.list)
 
-  # Initialize the lists
+  # Initialize the lists to store the test statistics
   T.bs <- list()
   beta.bs.bar.list <- list()
+
+  # Initialize a table to contain the error messages
+  df.error <- data.frame(matrix(vector(), ncol = 3))
+  colnames(df.error) <- c("Iteration", "tau", "Error message")
 
   # ---------------- #
   # Step 2: Bootstrap procedure
@@ -482,54 +501,124 @@ beta.bs <- function(data, lpmodel, beta.tgt, R, J, s.star.list, tau.list,
   lpmodel.bs <- lpmodel
 
   # Use the for-loop to construct the bootstrap test statistic
-  for (i in 1:R) {
+  # There are two error-handling parts here. If there is an error from
+  # constructing beta.obs from the bootstrapped data, go to the next bootstrap
+  # replication.
+  # If not, construct the bootstrap estimators for each tau. If there is an
+  # error in the procedure for one of the taus. Go to the next bootstrap
+  # replication.
+  for (i in 1:maxR) {
     data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
     rownames(data.bs) <- 1:nrow(data.bs)
 
-    # Compute the bootstrap test statistic
-    if (class(lpmodel$beta.obs) == "function"){
-      beta.obs.bs <- lpmodel.beta.eval(data.bs, lpmodel$beta.obs, 1)[[1]]
-      beta.obs <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
-    } else if (class(lpmodel$beta.obs) == "list") {
-      beta.obs.bs <- lpmodel.beta.eval(data, lpmodel$beta.obs, i + 1)[[1]]
-      beta.obs <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
-    }
+    ## (2.1) Evaluate beta.obs from bootstrap data
+    beta.obs.result <- tryCatch(
+      expr = {
+        # Compute the bootstrap test statistic
+        if (class(lpmodel$beta.obs) == "function"){
+          beta.obs.bs <- lpmodel.beta.eval(data.bs, lpmodel$beta.obs, 1)[[1]]
+          beta.obs <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
+        } else if (class(lpmodel$beta.obs) == "list") {
+          beta.obs.bs <- lpmodel.beta.eval(data, lpmodel$beta.obs, i + 1)[[1]]
+          beta.obs <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
+        }
+        beta.obs.ls <- list(status = "NOERROR",
+                            beta.obs = beta.obs,
+                            beta.obs.bs = beta.obs.bs)
+      },
+      error = function(e) {
+        return(list(status = "ERROR",
+                    msg = e))
+      },
+      finally = {
+        beta.obs.ls
+      }
+    )
 
-    # Loop through each tau to compute the corresponding bootstrap test
-    # statistics
-    for (j in 1:n.tau) {
-      # Compute beta.bs.bar and test statistic
-      beta.bs.bar <- beta.obs.bs - beta.obs + s.star.list[[j]]
+    ## (2.2) Check if there is any error in forming beta.obs
+    if (beta.obs.result$status == "NOERROR") {
+      # If there is no error, start to construct the estimators for each tau
+      for (j in 1:n.tau) {
+        # Compute beta.bs.bar and test statistic
+        beta.bs.bar <- beta.obs.bs - beta.obs + s.star.list[[j]]
 
-      T.bs.j <- dkqs.qlp(lpmodel.bs, beta.tgt, beta.bs.bar, tau.list[j], "cone",
-                         nrow(data), solver)$objval
-      if (i == 1) {
-        T.bs[[j]] <- T.bs.j
-        beta.bs.bar.list[[j]] <- beta.bs.bar
-      } else {
-        T.bs[[j]] <- c(T.bs[[j]], T.bs.j)
-        beta.bs.bar.list[[j]] <- cbind(beta.bs.bar.list[[j]], beta.bs.bar)
+        # Check if there is any error in the program
+        bstau.result <- tryCatch(
+          expr = {
+            T.bs.j <- dkqs.qlp(lpmodel.bs, beta.tgt, beta.bs.bar, tau.list[j],
+                               "cone", nrow(data), solver)$objval
+            T.bs.ls <- list(status = "NOERROR",
+                            T.bs.j = T.bs.j)
+          },
+          error = function(e) {
+            return(list(status = "ERROR",
+                        msg = e))
+          },
+          finally = {
+            T.bs.ls
+          }
+        )
+
+        # Append the results if no error
+        if (bstau.result$status == "NOERROR") {
+          if (i == 1) {
+            T.bs[[j]] <- T.bs.j
+            beta.bs.bar.list[[j]] <- beta.bs.bar
+          } else {
+            T.bs[[j]] <- c(T.bs[[j]], T.bs.j)
+            beta.bs.bar.list[[j]] <- cbind(beta.bs.bar.list[[j]], beta.bs.bar)
+          }
+        } else {
+          # Break the loop if there is an error in one of the taus
+          break()
+        }
       }
     }
 
-    # Update progress bar
-    if (progress == TRUE){
-      if (i < R){
+    # (2.3) Save the index, tau, and the error message (if any)
+    if (beta.obs.result$status == "ERROR" | bstau.result$status == "ERROR") {
+      df.error[nrow(df.error) + 1, 1] <- i
+      if (beta.obs.result$status != "ERROR") {
+        df.error[nrow(df.error) + 1, 2] <- tau.list[j]
+        df.error[nrow(df.error), 3] <- bstau.result$msg$message
+      } else {
+
+        df.error[nrow(df.error) + 1, 2] <- NA
+        df.error[nrow(df.error), 3] <- beta.obs.result$msg$message
+      }
+    }
+
+    # (2.4) Update progress bar
+    if (progress == TRUE) {
+      if (i < maxR) {
         utils::setTxtProgressBar(pb, i)
         cat("\r\r")
-      } else if ((i == R)) {
+      } else if ((i == maxR)) {
         utils::setTxtProgressBar(pb, i)
         cat("\r\b")
       }
     }
+
+    # (2.5) Break the loop if R successful replications are made
+    if (length(T.bs[[1]]) == R) {
+      if (progress == TRUE) {
+        utils::setTxtProgressBar(pb, maxR)
+        cat("\r\b")
+      }
+      break()
+    }
   }
+
+  # (2.6) Compute the number of successful bootstrap replications
+  R.succ <- length(T.bs[[1]])
 
   # ---------------- #
   # Step 3: Return results
   # ---------------- #
   return(list(T.bs = T.bs,
               beta.bs.bar.list = beta.bs.bar.list,
-              pb = pb))
+              pb = pb,
+              R.succ = R.succ))
 }
 
 #' Computes the bootstrap test statistics with parallelization
@@ -549,10 +638,13 @@ beta.bs <- function(data, lpmodel, beta.tgt, R, J, s.star.list, tau.list,
 #'  \item{beta.bs.bar.set}{A list of \eqn{\tau_n}-tightened recentered
 #'     bootstrap estimates \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}.}
 #'  \item{pb}{Progress bar object.}
+#'   \item{df.error}{Table showing the id of the bootstrap replication(s)
+#'     with error(s) and the corresponding error message(s).}
+#'   \item{R.succ}{Number of successful bootstrap replications.}
 #'
 #' @export
 #'
-beta.bs.parallel <- function(data, lpmodel, beta.tgt, R, J, s.star.list,
+beta.bs.parallel <- function(data, lpmodel, beta.tgt, R, maxR, J, s.star.list,
                              tau.list, solver, progress, cores){
   # ---------------- #
   # Step 1: Register the number of cores and extract information
@@ -582,17 +674,16 @@ beta.bs.parallel <- function(data, lpmodel, beta.tgt, R, J, s.star.list,
 
     # Set the counter and progress bar
     pb <- utils::txtProgressBar(initial = 0,
-                                max = R, style = 3, width = 20)
+                                max = maxR, style = 3, width = 20)
     cat("\r")
     progress <- function(n){
       utils::setTxtProgressBar(pb, n)
-      if (n < R){
+      if (n < maxR){
         cat("\r\r")
-      } else if (n == R) {
+      } else if (n == maxR) {
         cat("\r\b")
       }
     }
-
     opts <- list(progress = progress)
   } else {
     pb <- NULL
@@ -609,77 +700,202 @@ beta.bs.parallel <- function(data, lpmodel, beta.tgt, R, J, s.star.list,
   `%dorng%` <- doRNG::`%dorng%`
 
   # ---------------- #
-  # Step 3: Compute bootstrap estimators
+  # Step 3: Bootstrap procedure
   # ---------------- #
-  # Initialize the bootstrap list here
-  beta.bs.list <- list()
+  # Initialize the parameters and data frame
+  k <- 0
+  df.error1 <- data.frame(matrix(vector(), ncol = 3))
+  colnames(df.error1) <- c("Iteration", "tau", "Error message")
+  error.21 <- NULL
+  error.22 <- NULL
+  error.23 <- NULL
 
   # Set the estimator of beta.obs
+  beta.bs.list <- list()
   beta.bs.list[[1]] <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
 
-  # Compute the bootstrap estimators
-  for (i in 1:R) {
-    if (class(lpmodel$beta.obs) == "function") {
-      data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
-      rownames(data.bs) <- 1:nrow(data.bs)
-      beta.obs.return <- lpmodel.beta.eval(data.bs, lpmodel$beta.obs, 1)
-      beta.bs.list[[i + 1]] <- beta.obs.return[[1]]
-    } else if (class(lpmodel$beta.obs) == "list") {
-      beta.bs.list[[i + 1]] <- lpmodel.beta.eval(data,
-                                                 lpmodel$beta.obs, i + 1)[[1]]
-    }
-  }
-
-  # ---------------- #
-  # Step 4: Bootstrap procedure
-  # ---------------- #
-  listans <- foreach::foreach(i = 1:R, .multicombine = TRUE, .combine = "comb",
-                              .options.snow = opts,
-                              .packages = c("lpinfer", "doRNG")) %dorng%
-    {
-
-      T.bs.list <- NULL
-      beta.bs.bar.list <- list()
-
-      for (j in 1:n.tau) {
-        beta.bs.bar <- beta.bs.list[[i + 1]] - beta.bs.list[[1]] +
-          s.star.list[[j]]
-
-        T.bs <- dkqs.qlp(lpmodel, beta.tgt,  beta.bs.bar, tau.list[j],
-                         "cone", nrow(data), solver)$objval
-        T.bs.list <- c(T.bs.list, T.bs)
-        beta.bs.bar.list[[j]] <- beta.bs.bar
-      }
-
-      list(T.bs.list, beta.bs.bar.list)
-    }
-
-  # ---------------- #
-  # Step 5: Retrieve information from the output
-  # ---------------- #
-  ### Initialize the lists
+  # Initialize list for final results
   T.bs <- list()
   beta.bs.bar.list <- list()
 
-  ### Consolidate the results
-  for (j in 1:n.tau) {
-    # Consolidate the test statistics
-    T.bs[[j]] <- unlist(listans[[1]])[seq(j, n.tau*R, n.tau)]
+  # Loop until the number of bootstrap replications match R or if maxR has been
+  # reached
+  while (k != R) {
+    # Denote the starting index and ending index
+    i0 <- k + 1
+    i1 <- min(i0 + (R - k) - 1, maxR)
 
-    # Consolidate the betas
-    beta.bs.bar.list[[j]] <- listans[[2]][[j]]
-    for (i in 2:R) {
-      beta.bs.bar.list[[j]] <- cbind(beta.bs.bar.list[[j]],
-                                     listans[[2]][[n.tau + i - 1]][[j]])
+    # Use a normal for-loop to construct the list of lpmodel objects
+    for (i in i0:i1) {
+
+      # Compute the bootstrapped beta.obs objects
+      beta.bs.result <- tryCatch(
+        expr = {
+          if (class(lpmodel$beta.obs) == "function") {
+            data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
+            rownames(data.bs) <- 1:nrow(data.bs)
+            beta.obs.return <- lpmodel.beta.eval(data.bs, lpmodel$beta.obs, 1)
+            beta.bs.list[[i + 1]] <- beta.obs.return[[1]]
+          } else if (class(lpmodel$beta.obs) == "list") {
+            beta.bs.list[[i + 1]] <- lpmodel.beta.eval(data,
+                                                       lpmodel$beta.obs, i + 1)[[1]]
+          }
+          beta.bs.ls <- list(status = "NOERROR",
+                             lpmodel.bs = beta.bs.list[[i + 1]])
+        },
+        error = function(e) {
+          return(list(status = "ERROR",
+                      msg = e))
+        },
+        finally = {
+          beta.bs.ls
+        }
+      )
+
+      # Record error (if any)
+      if (beta.bs.result$status == "ERROR") {
+        df.error1[nrow(df.error1) + 1, 1] <- i
+        df.error1[nrow(df.error1), 2] <- NA
+        df.error1[nrow(df.error1), 3] <- beta.bs.result$msg$message
+      }
     }
+
+    # Bootstrap procedure of DKQS
+    listans <- foreach::foreach(i = i0:i1, .multicombine = TRUE,
+                                .combine = "comb", .options.snow = opts,
+                                .packages = c("lpinfer", "doRNG")) %dorng%
+      {
+        # Initialize the parameters that contain the results for each tau
+        T.bs.list <- NULL
+        beta.bs.bar.list <- list()
+
+        # Only consider the subsample problem if there is no error in forming
+        # the beta.obs parts
+        if (!(i %in% df.error1[,1])) {
+          ## (3.1) Compute the bootstrap estimates
+          for (j in 1:n.tau) {
+            result <- tryCatch(
+              expr = {
+                beta.bs.bar <- beta.bs.list[[i + 1]] - beta.bs.list[[1]] +
+                  s.star.list[[j]]
+
+                T.bs <- dkqs.qlp(lpmodel, beta.tgt,  beta.bs.bar, tau.list[j],
+                                  "cone", nrow(data), solver)$objval
+
+                T.bs.list <- c(T.bs.list, T.bs)
+                beta.bs.bar.list[[j]] <- beta.bs.bar
+                beta.bs.ls <- list(status = "NOERROR")
+              },
+              error = function(e) {
+                return(list(status = "ERROR",
+                            msg = e))
+              },
+              finally = {
+              }
+            )
+
+            # Break the loop if there is an error in one of the taus
+            if (result$status %in% c("ERROR")) {
+              break()
+            }
+        }
+
+        ## (3.2) Store the results or error message depending on the status
+        if (result$status %in% c("ERROR")) {
+          ind <- i
+          ind.tau <- j
+          ind.msg <- result$msg$message
+          T.bs.list <- NULL
+          beta.bs.bar.list <- NULL
+        } else {
+          ind <- NULL
+          ind.tau <- NULL
+          ind.msg <- NULL
+          T.bs.list <- T.bs.list
+          beta.bs.bar.list <- beta.bs.bar.list
+        }
+      } else {
+        ind <- NULL
+        ind.tau <- NULL
+        ind.msg <- NULL
+        T.bs.list <- NULL
+        beta.bs.bar.list <- NULL
+      }
+
+      list(T.bs.list, beta.bs.bar.list, ind, ind.tau, ind.msg)
+    }
+
+    ## (3.3) Consolidate the results
+    T.bs.temp <- list()
+    beta.bs.bar.list.temp <- list()
+    for (j in 1:n.tau) {
+      # Consolidate the test statistics
+      T.bs.temp[[j]] <- unlist(listans[[1]])[seq(j, n.tau*R, n.tau)]
+
+      # Consolidate the betas
+      beta.bs.bar.list.temp[[j]] <- listans[[2]][[j]]
+      for (i in 2:R) {
+        beta.bs.bar.list.temp[[j]] <- cbind(beta.bs.bar.list.temp[[j]],
+                                            listans[[2]][[n.tau + i - 1]][[j]])
+      }
+
+      # Consolidate the test statistics
+      if (i0 == 1) {
+        T.bs[[j]] <- T.bs.temp[[j]]
+        beta.bs.bar.list[[j]] <- beta.bs.bar.list.temp[[j]]
+      } else {
+        T.bs[[j]] <- c(T.bs[[j]], T.bs.temp[[j]])
+        beta.bs.bar.list[[j]] <- cbind(beta.bs.bar.list[[j]],
+                                       beta.bs.bar.list.temp[[j]])
+      }
+    }
+
+
+    k <- length(T.bs[[1]])
+
+    ## (3.4) Consolidate the list of error messages
+    if (length(unlist(listans[[3]])) != 0) {
+      error.21.temp <- unlist(listans[[3]])
+      error.22.temp <- unlist(listans[[4]])
+      error.23.temp <- unlist(listans[[5]])
+      error.21 <- c(error.21, error.21.temp)
+      error.22 <- c(error.22, error.22.temp)
+      error.23 <- c(error.23, error.23.temp)
+    }
+
+    ## (3.5) Break the while-loop if it reached maxR
+    if (i1 == maxR) {
+      break()
+    }
+
   }
+  # Close the progress bar
+  cat("\r\b")
+
+  # Number of successful bootstrap replications
+  R.succ <- length(T.bs[[1]])
 
   # ---------------- #
-  # Step 6: Return results
+  # Step 4: Combine the error messages
+  # ---------------- #
+  error.length <- length(error.21)
+  df.error2 <- data.frame(matrix(vector(), nrow = error.length, ncol = 2))
+  colnames(df.error2) <- c("Iteration", "Error message")
+  if (error.length != 0) {
+    df.error2[,1] <- error.21
+    df.error2[,2] <- error.22
+  }
+
+  df.error <- rbind(df.error1, df.error2)
+
+  # ---------------- #
+  # Step 5: Return results
   # ---------------- #
   return(list(T.bs = T.bs,
               beta.bs.bar.list = beta.bs.bar.list,
-              pb = pb))
+              pb = pb,
+              df.error = df.error,
+              R.succ = R.succ))
 }
 
 #' Auxiliary function to calculate the p-value
@@ -777,7 +993,7 @@ tau_constraints <- function(length.tau, coeff.tau, coeff.x, ind.x, rhs, sense,
 #'
 #' @export
 #'
-dkqs.check <- function(data, lpmodel, beta.tgt, R, tau, solver, cores,
+dkqs.check <- function(data, lpmodel, beta.tgt, R, Rmulti, tau, solver, cores,
                        progress){
   # ---------------- #
   # Step 1: Check the arguments
@@ -802,6 +1018,9 @@ dkqs.check <- function(data, lpmodel, beta.tgt, R, tau, solver, cores,
   solver.return <- check.solver(solver, "solver")
   solver <- solver.return$solver
   solver.name <- solver.return$solver.name
+
+  # Check Rmulti
+  check.numrange(Rmulti, "Rmulti", "closed", 1, "open", Inf)
 
   # Check numerics
   check.numeric(beta.tgt, "beta.tgt")
@@ -900,12 +1119,25 @@ summary.dkqs <- function(x, ...){
     # Print the p-values
     print(x)
 
-    # Print maximum feasible tau, test statistic, solver used and number of
-    # cores used
+    # Print maximum feasible tau, test statistic, solver used, number of
+    # cores used and the number of bootstrap replications
     cat(sprintf(" Maximum feasible tau: %s\n", round(x$tau.max, digits = 5)))
     cat(sprintf(" Test statistic: %s\n", round(x$T.n, digits = 5)))
     cat(sprintf(" Solver used: %s\n", x$solver))
     cat(sprintf(" Number of cores used: %s\n", x$cores))
+    cat(sprintf(" Number of successful bootstrap replications: %s\n",
+                x$R.succ))
+
+    # Number of failed bootstrap replications
+    if (!is.null(x$df.error) & nrow(x$df.error) != 0) {
+      nerr <- nrow(x$df.error)
+      errstring <- " Number of failed bootstrap"
+      if (nerr == 1) {
+        cat(sprintf(paste(errstring, "replication: %s\n"), nerr))
+      } else {
+        cat(sprintf(paste(errstring, "replications: %s\n"), nerr))
+      }
+    }
   } else if (x$test.logical == 0) {
     # Case 2: 'beta.tgt' is outside the logical bound
     infeasible.pval.msg()

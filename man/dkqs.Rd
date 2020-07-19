@@ -9,6 +9,7 @@ dkqs(
   lpmodel,
   beta.tgt,
   R = 100,
+  Rmulti = 1.25,
   tau = NULL,
   solver = NULL,
   cores = 1,
@@ -30,6 +31,10 @@ procedure are:
 \item{beta.tgt}{Value of beta to be tested.}
 
 \item{R}{Number of bootstraps chosen by the users.}
+
+\item{Rmulti}{Multiplier for the number of bootstrap replications. The
+product of `\code{Rmulti}' and `\code{R}' refers to the maximum
+number of bootstrap replications.}
 
 \item{tau}{The value of tau chosen by the user.}
 
@@ -69,6 +74,9 @@ Returns a list of output calculated from the function:
     where '\code{beta.tgt}' is inside the logical bound. If
     '\code{test.logical}' is 0, it refers to the case where '
     \code{beta.tgt}' is outside the logical bound.}
+  \item{df.error}{Table showing the id of the bootstrap replication(s)
+    with error(s) and the corresponding error message(s).}
+  \item{R.succ}{Number of successful bootstrap replications.}
 }
 \description{
 This module conducts inference in quadratic programs using
