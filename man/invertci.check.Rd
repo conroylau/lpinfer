@@ -59,6 +59,7 @@ Returns the updated parameters back to the function
 }
 \description{
 This function checks and updates the input from the user for
-   the function \code{invertci}. If there is any invalid input, this function
-   will terminate the procedure and generate appropriate error messages.
+   the function \code{invertci}. If there is any invalid input, this
+   function ill terminate the procedure and generate appropriate error
+   messages.
 }

@@ -30,8 +30,9 @@ procedure are:
 
 \item{weight.mat}{Weighting matrix}
 
-\item{beta.obs.hat}{Estimator of \eqn{\widehat{\bm{\beta}_{\mathrm{obs}, n}}}
-based on the given information in \code{lpmodel}.}
+\item{beta.obs.hat}{Estimator of
+\eqn{\widehat{\bm{\beta}_{\mathrm{obs}, n}}} based on the given
+information in \code{lpmodel}.}
 
 \item{solver}{The name of the linear and quadratic programming solver that
 are used to obtain the solution to linear and quadratic programs.

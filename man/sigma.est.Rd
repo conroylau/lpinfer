@@ -9,8 +9,9 @@
 \arguments{
 \item{data}{The data being used in the inference.}
 
-\item{beta.obs.hat}{Estimator of \eqn{\widehat{\bm{\beta}_{\mathrm{obs}, n}}}
-based on the given information in \code{lpmodel}.}
+\item{beta.obs.hat}{Estimator of
+\eqn{\widehat{\bm{\beta}_{\mathrm{obs}, n}}} based on the given
+information in \code{lpmodel}.}
 
 \item{lpmodel}{A list of objects that are used in inference of linear
 programming problems. The list of objects required in the \code{dkqs}

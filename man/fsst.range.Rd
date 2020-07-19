@@ -7,8 +7,9 @@
 fsst.range(n, beta.obs.hat, x.star, lpmodel, weight.mat)
 }
 \arguments{
-\item{beta.obs.hat}{Estimator of \eqn{\widehat{\bm{\beta}_{\mathrm{obs}, n}}}
-based on the given information in \code{lpmodel}.}
+\item{beta.obs.hat}{Estimator of
+\eqn{\widehat{\bm{\beta}_{\mathrm{obs}, n}}} based on the given
+information in \code{lpmodel}.}
 
 \item{x.star}{Optimal value from `\code{beta.star.qp}`.}
 

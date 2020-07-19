@@ -27,8 +27,9 @@ procedure are:
   \item{\code{beta.obs}}
 }}
 
-\item{beta.obs.hat}{Estimator of \eqn{\widehat{\bm{\beta}_{\mathrm{obs}, n}}}
-based on the given information in \code{lpmodel}.}
+\item{beta.obs.hat}{Estimator of
+\eqn{\widehat{\bm{\beta}_{\mathrm{obs}, n}}} based on the given
+information in \code{lpmodel}.}
 
 \item{beta.obs.bs}{List of bootstrap components of \code{beta.obs}.}
 

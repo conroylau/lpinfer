@@ -21,8 +21,8 @@ procedure.}
 Returns the \eqn{p}-value of the point considered and an updated
    data frame that contains the points and the \eqn{p}-values.
    \item{pval}{\eqn{p}-value of the point.}
-   \item{df_ci}{Updated data frame that consists of the points that have been
-      tested in constructing the confidence intervals.}
+   \item{df_ci}{Updated data frame that consists of the points that have
+      been tested in constructing the confidence intervals.}
 }
 \description{
 This function checks if the \eqn{p}-value for the point
