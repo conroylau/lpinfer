@@ -618,7 +618,8 @@ beta.bs <- function(data, lpmodel, beta.tgt, R, maxR, J, s.star.list, tau.list,
   return(list(T.bs = T.bs,
               beta.bs.bar.list = beta.bs.bar.list,
               pb = pb,
-              R.succ = R.succ))
+              R.succ = R.succ,
+              df.error = df.error))
 }
 
 #' Computes the bootstrap test statistics with parallelization
@@ -1090,7 +1091,7 @@ print.dkqs <- function(x, ...){
 
     # Print the p-values
     if (nrow(df.pval) == 1) {
-      cat(sprintf("p-value: %s\n", df.pval[1,2]))
+      cat(sprintf(" p-value: %s\n", df.pval[1,2]))
     } else {
       print(df.pval, row.names = FALSE)
     }
