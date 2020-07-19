@@ -81,7 +81,8 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
       beta.n <- c(unlist(beta.obs.hat), beta.shp.hat, beta.tgt)
 
       ### 2(b) Estimate sigma.beta.obs and store the boostrap estimates
-      # If the user provided bootstrap estimates of beta, use it to compute sigma
+      # If the user provided bootstrap estimates of beta, use it to compute 
+      # sigma
       if (class(lpmodel$beta.obs) == "list"){
          beta.var.method <- "list"
          if (is.null(sigma.beta.obs)){
@@ -96,7 +97,8 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
       } else {
          beta.var.method <- "function"
          if (cores == 1){
-            sigma.return <- sigma.est(n, data, beta.obs.hat, lpmodel, R, progress)
+            sigma.return <- sigma.est(n, data, beta.obs.hat, lpmodel, R,
+                                      progress)
             if (is.null(sigma.beta.obs)){
                beta.var.method <- "bootstrapped 'beta.obs' from the function."
                sigma.beta.obs <- sigma.return$sigma.hat
@@ -137,7 +139,8 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
       if (d >= p){
          beta.star <- beta.n
 
-         # Construct the bootstrap estimates, which are the same for all of them
+         # Construct the bootstrap estimates, which are the same for all of
+         # them
          beta.star.bs <- beta.n.bs
       } else {
          # Compute the weighting matrix
@@ -197,11 +200,13 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
       # Compute range.n
       if (d >= p){
          range.n <- 0
-         cone.n <- fsst.cone.lp(n, omega.i, beta.n, beta.star, lpmodel, 1, solver)
+         cone.n <- fsst.cone.lp(n, omega.i, beta.n, beta.star, lpmodel, 1,
+                                solver)
       } else {
          # range.n <- fsst.range.lp(n, omega.e, beta.n, beta.star, solver)
          range.n <- fsst.range(n, beta.obs.hat, x.star, lpmodel, weight.mat)
-         cone.n <- fsst.cone.lp(n, omega.i, beta.n, beta.star, lpmodel, 0, solver)
+         cone.n <- fsst.cone.lp(n, omega.i, beta.n, beta.star, lpmodel, 0,
+                                solver)
       }
 
       # ---------------- #
@@ -247,7 +252,8 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
       }
 
       # ---------------- #
-      # Step 7: Compute decision, p-value and the quantiles of the test statistics
+      # Step 7: Compute decision, p-value and the quantiles of the test
+      # statistics
       # ---------------- #
       # Parameters
       quans <- c(.99, .95, .90)
@@ -333,8 +339,9 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
 #'   \eqn{\{\widehat{\bm{\beta}}_b\}^B_{b=1}}.
 #'
 #' @inheritParams fsst
-#' @param beta.obs.hat Estimator of \eqn{\widehat{\bm{\beta}_{\mathrm{obs}, n}}}
-#'   based on the given information in \code{lpmodel}.
+#' @param beta.obs.hat Estimator of
+#'   \eqn{\widehat{\bm{\beta}_{\mathrm{obs}, n}}} based on the given
+#'   information in \code{lpmodel}.
 #'
 #' @return Returns the bootstrap estimators and the estimator of the
 #'   asymptotic variance.
@@ -418,7 +425,8 @@ sigma.est <- function(n, data, beta.obs.hat, lpmodel, R, progress){
 #'
 #' @export
 #'
-sigma.est.parallel <- function(data, beta.obs.hat, lpmodel, R, cores, progress){
+sigma.est.parallel <- function(data, beta.obs.hat, lpmodel, R, cores,
+                               progress){
    # ---------------- #
    # Step 1: Register the number of cores and extract information
    # ---------------- #
@@ -1243,8 +1251,8 @@ fsst.cone.bs <- function(n, omega.i, beta.n, beta.star, lpmodel, R, lambda,
             # ---------------- #
             # Step 2: Solve the linear program and extract the solution
             # ---------------- #
-            cone.n.return <- fsst.cone.lp(n, omega.i, beta.n, beta.new, lpmodel,
-                                          indicator, solver)
+            cone.n.return <- fsst.cone.lp(n, omega.i, beta.n, beta.new,
+                                          lpmodel, indicator, solver)
             list(cone.n.return$objval)
          }
       cone.n.list <- unlist(listans)

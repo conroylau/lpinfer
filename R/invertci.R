@@ -318,8 +318,8 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, df_ci,
 #' @return Returns the \eqn{p}-value of the point considered and an updated
 #'    data frame that contains the points and the \eqn{p}-values.
 #'    \item{pval}{\eqn{p}-value of the point.}
-#'    \item{df_ci}{Updated data frame that consists of the points that have been
-#'       tested in constructing the confidence intervals.}
+#'    \item{df_ci}{Updated data frame that consists of the points that have
+#'       been tested in constructing the confidence intervals.}
 #'
 #' @export
 #'
@@ -796,8 +796,9 @@ summary.bisection.print <- function(df_bis, i){
 #' Checks and updates the input of the function \code{invertci}
 #'
 #' @description This function checks and updates the input from the user for
-#'    the function \code{invertci}. If there is any invalid input, this function
-#'    will terminate the procedure and generate appropriate error messages.
+#'    the function \code{invertci}. If there is any invalid input, this
+#'    function ill terminate the procedure and generate appropriate error
+#'    messages.
 #'
 #' @inheritParams invertci
 #'

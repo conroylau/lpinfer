@@ -733,13 +733,15 @@ beta.bs.parallel <- function(data, lpmodel, beta.tgt, R, maxR, J, s.star.list,
       beta.bs.result <- tryCatch(
         expr = {
           if (class(lpmodel$beta.obs) == "function") {
-            data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
+            data.bs <- as.data.frame(data[sample(1:nrow(data),
+                                                 replace = TRUE),])
             rownames(data.bs) <- 1:nrow(data.bs)
             beta.obs.return <- lpmodel.beta.eval(data.bs, lpmodel$beta.obs, 1)
             beta.bs.list[[i + 1]] <- beta.obs.return[[1]]
           } else if (class(lpmodel$beta.obs) == "list") {
             beta.bs.list[[i + 1]] <- lpmodel.beta.eval(data,
-                                                       lpmodel$beta.obs, i + 1)[[1]]
+                                                       lpmodel$beta.obs,
+                                                       i + 1)[[1]]
           }
           beta.bs.ls <- list(status = "NOERROR",
                              lpmodel.bs = beta.bs.list[[i + 1]])

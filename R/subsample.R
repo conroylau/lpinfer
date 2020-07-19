@@ -340,7 +340,7 @@ subsample.onecore <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
   beta.sub <- NULL
 
   # Initialize the progress bar
-  if (progress == TRUE){
+  if (progress == TRUE) {
     pb <- utils::txtProgressBar(min = 0, max = maxR, style = 3, width = 20)
     cat("\r")
   } else {
@@ -354,7 +354,7 @@ subsample.onecore <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
   # ---------------- #
   # Step 2: Conduct the subsampling procedure
   # ---------------- #
-  for (i in 1:maxR){
+  for (i in 1:maxR) {
     # (2.1) Re-sample the data
     data.bs <- as.data.frame(data[sample(1:nrow(data), m, replace),])
     rownames(data.bs) <- 1:nrow(data.bs)
@@ -363,7 +363,7 @@ subsample.onecore <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
     result <- tryCatch(
       expr = {
         sub.return <- subsample.prob(data.bs, lpmodel, beta.tgt, norm, solver,
-                                     i+1)
+                                     i + 1)
       },
       error = function(e) {
         return(list(status = "ERROR",
@@ -510,14 +510,15 @@ subsample.manycores <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
 
       # Assign the lpmodel objects
       beta.obs.result <- tryCatch(
-        expr <- {
+        expr = {
           lpmodel.bs[[i]] <- list()
           lpmodel.bs[[i]]$A.obs <- lpmodel.eval(data.bs, lpmodel$A.obs, i + 1)
           lpmodel.bs[[i]]$A.shp <- lpmodel.eval(data.bs, lpmodel$A.shp, i + 1)
           lpmodel.bs[[i]]$A.tgt <- lpmodel.eval(data.bs, lpmodel$A.tgt, i + 1)
           lpmodel.bs[[i]]$beta.shp <- lpmodel.eval(data.bs, lpmodel$beta.shp,
                                                    i + 1)
-          beta.obs.return <- lpmodel.beta.eval(data.bs, lpmodel$beta.obs, i + 1)
+          beta.obs.return <- lpmodel.beta.eval(data.bs, lpmodel$beta.obs,
+                                               i + 1)
           lpmodel.bs[[i]]$beta.obs <- beta.obs.return
           beta.obs.ls <- list(status = "NOERROR",
                               lpmodel.bs = lpmodel.bs)
