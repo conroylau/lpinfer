@@ -320,7 +320,7 @@ dkqs.qlp <- function(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
   # Theta parameters
   theta.down <- do.call(solver, list(Af  = NULL,
                                      bf  = lpmodel$A.tgt,
-                                     nf  = n,
+                                     nf  = 1,
                                      A   = ones,
                                      rhs = c(1),
                                      sense = "=",
@@ -328,7 +328,7 @@ dkqs.qlp <- function(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
                                      lb = lb))
   theta.up <- do.call(solver, list(Af  = NULL,
                                    bf  = lpmodel$A.tgt,
-                                   nf  = n,
+                                   nf  = 1,
                                    A   = ones,
                                    rhs = c(1),
                                    sense = "=",
@@ -425,7 +425,7 @@ dkqs.qlp <- function(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
     }
     ans <- do.call(solver, list(Af  = NULL,
                                 bf  = c(1, rep(0, A.tgt.nc)),
-                                nf  = n,
+                                nf  = 1,
                                 A   = lp.lhs.tau,
                                 rhs = lp.rhs.tau,
                                 sense = lp.sense.tau,
@@ -510,7 +510,6 @@ beta.bs <- function(data, lpmodel, beta.tgt, R, maxR, J, s.star.list, tau.list,
   for (i in 1:maxR) {
     data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
     rownames(data.bs) <- 1:nrow(data.bs)
-
     ## (2.1) Evaluate beta.obs from bootstrap data
     beta.obs.result <- tryCatch(
       expr = {
@@ -608,7 +607,7 @@ beta.bs <- function(data, lpmodel, beta.tgt, R, maxR, J, s.star.list, tau.list,
       break()
     }
   }
-
+  
   # (2.6) Compute the number of successful bootstrap replications
   R.succ <- length(T.bs[[1]])
 

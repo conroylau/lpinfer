@@ -49,16 +49,15 @@ gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL,
   model$sense <- sense
   model$modelsense <- modelsense
   model$lb <- lb
-
+  
   # ---------------- #
   # Step 3: Result of the linear or quadratic program, and return result
   # ---------------- #
   params <- list(OutputFlag = 0, FeasibilityTol = 1e-9)
   result <- gurobi::gurobi(model, params)
   
-  return(list(status = result$status,
-                       objval = as.numeric(result$objval),
-                       x = as.numeric(result$x)))
+  return(list(objval = as.numeric(result$objval),
+              x = as.numeric(result$x)))
 }
 
 #' LP and QP solver by cplexAPI
@@ -213,6 +212,7 @@ rcplex.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
   } else {
     objval <- solution$obj
   }
+
   return(list(objval = as.numeric(objval),
               x = as.numeric(solution$xopt)))
 }
@@ -312,6 +312,7 @@ limsolve.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
   }
   # Optimal the optimal value of x
   x <- solution$X
+
   return(list(x = as.numeric(x),
               objval = as.numeric(objval)))
 }
@@ -366,12 +367,12 @@ objective.function <- function(A, b, n, weight = NULL){
   if (is.null(A) == TRUE | sum(A == 0) == length(A)){
     # Linear program coefficients with nonzero vector b
     obj2 <- NULL
-    obj1 <- b
+    obj1 <- b * n
     obj0 <- 0
   } else if (is.null(b) == TRUE | sum(b == 0) == length(b)){
     # Linear program coefficients with nonzero matrix A
     obj2 <- NULL
-    obj1 <- A
+    obj1 <- A * n
     obj0 <- 0
   } else {
     if (is.null(weight)){
@@ -446,10 +447,9 @@ lpsolveapi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
   # ---------------- #
   # Step 4: Solve and obtain solution of LP
   # ---------------- #
-  solve(lprec)
   x <- get.variables(lprec)
   objval <- get.objective(lprec)
-
+  
   # ---------------- #
   # Step 5: Return results
   # ---------------- #
