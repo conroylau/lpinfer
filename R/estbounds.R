@@ -203,7 +203,7 @@ estbounds.original <- function(data, lpmodel, original.sense, solver){
   # ---------------- #
   oarg <- list(Af = NULL,
                bf = A.tgt.matrix,
-               nf = NULL,
+               nf = 1,
                A = A.original,
                rhs = beta.original,
                sense = sense.original,
@@ -351,7 +351,7 @@ estbounds2.L2 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
   step2_qc <- list()
   if (is.null(lpmodel$A.obs) == FALSE){
     step2_qc$Qc <- t(lpmodel$A.obs) %*% lpmodel$A.obs
-    step2_qc$q <- -2*t(lpmodel$A.obs) %*% beta.obs.hat
+    step2_qc$q <- -2 * t(lpmodel$A.obs) %*% beta.obs.hat
     step2_qc$rhs <- Qhat * (1+kappa) - t(beta.obs.hat) %*% beta.obs.hat
     step2_qc$sense <- "<="
   } else {
@@ -611,13 +611,12 @@ mincriterion <- function(data = NULL, lpmodel, norm = 2, solver = NULL){
     # 1-norm
     optim.arg <- list(Af = NULL,
                       bf = c,
-                      nf = NULL,
+                      nf = 1,
                       A = A.new,
                       rhs = beta.new,
                       sense = sense.new,
                       modelsense = "min",
                       lb = lb.new)
-
   } else if (norm == 2){
     if (!is.matrix(lpmodel$A.shp)) {
       A.shp.new <- matrix(lpmodel$A.shp, nrow = 1)
