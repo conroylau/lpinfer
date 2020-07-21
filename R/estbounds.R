@@ -294,7 +294,7 @@ estbounds2.L1 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
                      matrix(rep(0, 2*k*A.tgt.nr), nrow = A.tgt.nr))
   larg$Af <- 0
   larg$bf <- A.tgt.new
-  larg$nf <- 0
+  larg$nf <- 1
 
   # ---------------- #
   # Step 5: Update model sense based on max or min in step 3
@@ -367,7 +367,7 @@ estbounds2.L2 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
   # ---------------- #
   larg$Af <- 0
   larg$bf <- lpmodel$A.tgt
-  larg$nf <- 0
+  larg$nf <- 1
 
   # ---------------- #
   # Step 4: Update model sense based on max or min in step 2
