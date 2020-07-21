@@ -1,16 +1,8 @@
-## Test file for dkqs
 context("Tests for fsst")
 
 # ---------------- #
 # Load packages
 # ---------------- #
-library(modelr)
-library(gurobi)
-library(cplexAPI)
-library(Rcplex)
-library(limSolve)
-library(foreach)
-library(doMC)
 library(lpinfer)
 
 # ---------------- #
@@ -69,9 +61,6 @@ func_two_moment <- function(data){
 # ---------------- #
 # Data preparation and declaration
 # ---------------- #
-# Read data
-data <- sampledata
-
 # Declare parameters
 N <- dim(sampledata)[1]
 J <- length(unique(sampledata[,"Y"])) - 1
@@ -99,7 +88,10 @@ beta_shp <- c(1)
 # ---------------- #
 # Parameters to test
 beta.tgt <- .365
-phi_predefine <- 2/3
+lam1 <- .5
+lam2 <- c(.1, .5)
+rho <- 1e-4
+reps <- 100
 
 # Define the lpmodels
 lpmodel.full <- lpmodel(A.obs    = A_obs_full,
@@ -114,109 +106,594 @@ lpmodel.twom <- lpmodel(A.obs    = A_obs_twom,
                         beta.obs = func_two_moment,
                         beta.shp = beta_shp)
 
-### Define arguments
-farg <- list(data = data,
+# Define arguments
+farg <- list(data = sampledata,
              beta.tgt = beta.tgt,
-             cores = 8,
-             lambda = .5,
-             rho = 1e-4,
+             cores = 1,
+             lambda = lam1,
+             rho = rho,
              n = NULL,
-             R = 10,
+             R = reps,
              weight.matrix = "diag",
              solver = "gurobi",
              progress = TRUE)
 
 # ---------------- #
-# Test whether the function works when `beta.obs' is a function
+# Generate output from FSST
 # ---------------- #
-### Case 1: A single lambda
-# Append full-information arguments
-farg$lpmodel <- lpmodel.full
+# Define the parameters
+i.cores <- list(1, 8)
+j.lpmodel <- list(lpmodel.full, lpmodel.twom)
+k.lambdas <- list(lam1, lam2)
 set.seed(1)
-full_g2 <- do.call(fsst, farg)
-beta.obs.bs.full <- full_g2$beta.obs.bs
+farg$cores = 1
+farg$lpmodel = lpmodel.full
+farg$lambda = lam1
+fsst_g1 = do.call(fsst, farg)
 
-# Append two-moments arguments
-farg$lpmodel <- lpmodel.twom
-set.seed(1)
-twom_g2 <- do.call(fsst, farg)
-beta.obs.bs.twom <- twom_g2$beta.obs.bs
-
-# Check if the p-values are equal in the two approaches
-test_that("p-values for full information and two moments approach",{
-  expect_equal(full_g2$pval, twom_g2$pval)
-})
-
-### Case 2: Single lambda with different cores
-# Cores = 1
-farg$cores <- 1
-farg$lpmodel <- lpmodel.full
-set.seed(1)
-full_core1 <- do.call(fsst, farg)
-
-# Cores = 8
-farg$cores <- 8
-set.seed(1)
-full_core8 <- do.call(fsst, farg)
-
-# Check if the p-values are equal in parallel and non-parallel approaches
-test_that("beta.obs is a function (two m vs full)",{
-  expect_equal(full_core1$pval, full_core8$pval)
-})
-
-### Case 3: Multiple lambda
-farg$lambda <- c(.5, .9)
-
-# Append full-information arguments
-farg$lpmodel <- lpmodel.full
-set.seed(1)
-full_g2_multiple <- do.call(fsst, farg)
-
-# Append two-moments arguments
-farg$lpmodel <- lpmodel.twom
-set.seed(1)
-twom_g2_multiple <- do.call(fsst, farg)
-
-# Check if the p-values are equal in the two approaches
-test_that("Multiple lambdas",{
-  expect_equal(full_g2_multiple$pval, twom_g2_multiple$pval)
-})
+# Generate output
+fsst.out <- list()
+for (i in 1:2) {
+  farg$cores <- i.cores[[i]]
+  fsst.out[[i]] <- list()
+  for (j in 1:2) {
+    farg$lpmodel <- j.lpmodel[[j]]
+    fsst.out[[i]][[j]] <- list()
+    for (k in 1:2) {
+      set.seed(1)
+      farg$lambda <- k.lambdas[[k]]
+      fsst.out[[i]][[j]][[k]] <- do.call(fsst, farg)
+    }
+  }
+}
 
 # ---------------- #
-# Test whether the function works when `beta.obs' is a list
+# Create Gurobi solver
 # ---------------- #
-# Consolidate the `beta.obs` into a list - full information
-lpmodel.full.list <- lpmodel.full
-beta.obs.full.estimator <- lpmodel.beta.eval(data,
-                                             lpmodel.full$beta.obs, 1)[[1]]
-lpmodel.full.list$beta.obs <- c(list(beta.obs.full.estimator),
-                                beta.obs.bs.full)
+gurobi.qlp <- function(Q = NULL, obj, objcon, A, rhs, quadcon = NULL, sense,
+                       modelsense, lb) {
+  # Set up the model
+  model <- list()
+  
+  # Objective function
+  model$Q <- Q
+  model$obj <- obj
+  model$objcon <- objcon
+  
+  # Linear constraints
+  model$A <- A
+  model$rhs <- rhs
+  
+  # Quadrtaic constraints
+  model$quadcon <- quadcon
+  
+  # Model sense and lower bound
+  model$sense <- sense
+  model$modelsense <- modelsense
+  model$lb <- lb
+  
+  # Obtain the results to the optimization problem
+  params <- list(OutputFlag = 0, FeasibilityTol = 1e-9)
+  result <- gurobi::gurobi(model, params)
+  
+  return(result)
+}
 
-# Consolidate the `beta.obs` into a list - two moments
-lpmodel.twom.list <- lpmodel.twom
-beta.obs.twom.estimator <- lpmodel.beta.eval(data,
-                                             lpmodel.twom$beta.obs, 1)[[1]]
-lpmodel.twom.list$beta.obs <- c(list(beta.obs.twom.estimator),
-                                beta.obs.bs.twom)
+# ---------------- #
+# Construct the answer by the programs
+# ---------------- #
+# 1. Obtain the parameters and the matrices
+nx <- ncol(A_tgt)
+ones <- matrix(rep(1, nx), nrow = 1)
+# Asymptotic variance of beta.obs
+n.beta <- list(length(lpmodel.full$beta.obs(sampledata)$beta) +
+                 length(beta_shp) +
+                 length(beta.tgt),
+               length(lpmodel.twom$beta.obs(sampledata)$beta) +
+                 length(beta_shp) +
+                 length(beta.tgt))
+sigma.beta.obs <- list()
+sigma.beta <- list()
+for (j in 1:2) {
+  sigma.beta.obs[[j]] <- j.lpmodel[[j]]$beta.obs(sampledata)$var
+  matrix.temp <- matrix(0L, nrow = n.beta[[j]], ncol = n.beta[[j]])
+  length.temp <- nrow(sigma.beta.obs[[j]])
+  matrix.temp[1:length.temp, 1:length.temp] <- sigma.beta.obs[[j]]
+  sigma.beta[[j]] <- matrix.temp
+}
+# Compute p and d
+d <- list()
+p <- list()
+for (j in 1:2) {
+  p[[j]] <- n.beta[[j]]
+  d[[j]] <- ncol(j.lpmodel[[j]]$A.obs)
+}
 
-# Two moments approach
+# 2. Compute beta.obs
+## Sample beta.obs
+beta.obs <- list()
+for (j in 1:2) {
+  beta.obs[[j]] <- j.lpmodel[[j]]$beta.obs(sampledata)$beta
+}
+## Estimator of asymptotic variance of beta.obs
 set.seed(1)
-farg$lpmodel <- lpmodel.full.list
-farg$lambda <- .5
-full_g2_list <- do.call(fsst, farg)
+beta.bs <- list()
+beta.bs[[1]] <- list()
+beta.bs[[2]] <- list()
+for (i in 1:reps) {
+  data.bs <- as.data.frame(sampledata[sample(1:nrow(sampledata),
+                                             replace = TRUE),])
+  for (j in 1:2) {
+    beta.bs[[j]][[i]] <- j.lpmodel[[j]]$beta.obs(data.bs)$beta
+  }
+}
 
-set.seed(1)
-farg$lpmodel <- lpmodel.twom.list
-twom_g2_list <- do.call(fsst, farg)
+# 3. Solve problem (3) - with the sample estimates and the bootstrap estimates
+## Function to obtain the arguments
+fsst.3.arg <- function(lpmodel, bobs, sigma.mat, weight.matrix) {
+  Aobs <- lpmodel$A.obs
+  # Solve weighting matrix
+  if (weight.matrix == "identity") {
+    Xi <- diag(length(bobs))
+  } else if (weight.matrix == "diag") {
+    Xi <- diag(diag(solve(sigma.mat)))
+  } else if (weight.matrix == "avar") {
+    Xi <- solve(sigma.mat)
+  }
+  # Formulate the arguments
+  args <- list(Q = t(Aobs) %*% Xi %*% Aobs,
+               obj = -2 * t(bobs) %*% Xi %*% Aobs,
+               objcon = t(bobs) %*% Xi %*% bobs,
+               A = rbind(lpmodel$A.shp, lpmodel$A.tgt),
+               rhs = c(lpmodel$beta.shp, beta.tgt),
+               sense = "=",
+               modelsense = "min",
+               lb = rep(0, ncol(lpmodel$A.obs)))
+  return(list(args = args,
+              Xi = Xi))
+}
+## Solve problem (3) for full data and the bootstrap beta
+x.star <- list()
+beta.obs.star <- list()
+beta.star <- list()
+x.star.bs <- list()
+beta.obs.star.bs <- list()
+beta.star.bs <- list()
+Xi <- list()
+for (j in 1:2) {
+  ### Full data
+  fsst.3.args <- fsst.3.arg(j.lpmodel[[j]], beta.obs[[j]], sigma.beta.obs[[j]],
+                            "diag")
+  Xi[[j]] <- fsst.3.args$Xi
+  fsst.3.return <- do.call(gurobi.qlp, fsst.3.args$args)
+  x.star[[j]] <- fsst.3.return$x
+  if (d[[j]] >= p[[j]]) {
+    beta.obs.star[[j]] <- beta.obs[[j]]
+  } else {
+    beta.obs.star[[j]] <- j.lpmodel[[j]]$A.obs %*% x.star[[j]]
+  }
+  beta.star[[j]] <- c(beta.obs.star[[j]], j.lpmodel[[j]]$beta.shp, beta.tgt)
+  ### Bootstrap data
+  x.star.bs[[j]] <- list()
+  beta.obs.star.bs[[j]] <- list()
+  beta.star.bs[[j]] <- list()
+  for (i in 1:reps) {
+    fsst.3.bs.args <- fsst.3.arg(j.lpmodel[[j]], beta.bs[[j]][[i]],
+                                 sigma.beta.obs[[j]], "diag")
+    fsst.3.bs.return <- do.call(gurobi.qlp, fsst.3.bs.args$args)
+    x.star.bs[[j]][[i]] <- fsst.3.bs.return$x
+    if (d[[j]] >= p[[j]]) {
+      beta.obs.star.bs[[j]][[i]] <- beta.bs[[j]][[i]]
+    } else {
+      beta.obs.star.bs[[j]][[i]] <- j.lpmodel[[j]]$A.obs %*% x.star.bs[[j]][[i]]
+    }
+    beta.star.bs[[j]][[i]] <- c(beta.obs.star.bs[[j]][[i]],
+                                j.lpmodel[[j]]$beta.shp,
+                                beta.tgt)
+  }
+}
 
-test_that("beta.obs is a list (full vs two m)",{
-  expect_equal(full_g2_list$pval, twom_g2_list$pval)
+# 4. Standardization
+## Compute studentization matrix
+rhobar <- list()
+student.matrix <- list()
+omega <- list()
+for (j in 1:2) {
+  if (d[[j]] >= p[[j]]) {
+    student.matrix[[j]] <- sigma.beta[[j]]
+  } else {
+    student.matrix[[j]] <- matrix(0, nrow = n.beta[[j]], ncol = n.beta[[j]])
+    for (i in 1:reps) {
+      beta.t <- beta.star.bs[[j]][[i]] - beta.star[[j]]
+      student.matrix[[j]] <- student.matrix[[j]] + beta.t %*% t(beta.t)
+    }
+    student.matrix[[j]] <- N * student.matrix[[j]] / reps
+  }
+  rhobar[[j]] <- base::norm(student.matrix[[j]], type = "f") * rho
+  omega[[j]] <- expm::sqrtm(student.matrix[[j]] + rhobar[[j]] * diag(p[[j]]))
+}
+
+# 5. Test statistic
+## Cone program arguments
+fsst.56.args <- function(lpmodel, p, d, beta.star, omega) {
+  A <- rbind(lpmodel$A.obs, lpmodel$A.shp, lpmodel$A.tgt)
+  ns <- ncol(t(A))
+  nb <- length(beta.star)
+  nx <- ncol(A)
+  args <- list(Q = NULL,
+               obj = c(beta.star, rep(0, p * 2)),
+               objcon = 0,
+               A = rbind(cbind(omega, -diag(p), diag(p)),
+                         c(rep(0, p), rep(1, p * 2)),
+                         cbind(t(A), matrix(0L, nrow = ncol(A), ncol = p * 2))),
+               rhs = c(rep(0, p), 1, rep(0, ncol(A))),
+               sense = c(rep("=", p), rep("<=", 1 + ncol(A))),
+               modelsense = "max",
+               lb = c(rep(-Inf, nb), rep(0, p * 2)))
+  if (d < p) {
+    args1 <- list(Q = NULL,
+                  obj = c(args$obj, rep(0, nx)),
+                  objcon = 0,
+                  A = rbind(args$A,
+                            cbind(-diag(ns),
+                                  matrix(0L, nrow = ncol(A), ncol = p*2),
+                                  A)),
+                  rhs = c(args$rhs, rep(0, ns)),
+                  sense = c(args$sense, rep("=", ns)),
+                  modelsense = "max",
+                  lb = c(args$lb, rep(-Inf, nx)))
+    return(args1)
+  } else {
+    return(args)
+  }
+}
+## Range program
+fsst.range.soln <- function(beta.obs.star, beta.obs, Xi, p, d) {
+  if (d >= p) {
+    range.n <- 0
+  } else {
+    range.n <- base::norm(sqrt(N) * expm::sqrtm(Xi) %*%
+                            (beta.obs - beta.obs.star),
+                          type = "I")
+  }
+  return(range.n)
+}
+## Compute the statistics
+range.n <- list()
+cone.n <- list()
+ts <- list()
+for (j in 1:2) {
+  ### Range
+  range.n[[j]] <- fsst.range.soln(beta.obs.star[[j]], beta.obs[[j]], Xi,
+                                  p[[j]], d[[j]])
+  ### Cone
+  cone.args <- fsst.56.args(j.lpmodel[[j]], p[[j]], d[[j]], beta.star[[j]],
+                            omega[[j]])
+  cone.return <- do.call(gurobi.qlp, cone.args)
+  cone.n[[j]] <- sqrt(N) * cone.return$objval
+  ### Test statistics
+  ts[[j]] <- max(cone.n[[j]], range.n[[j]])
+}
+
+# 6. Restricted estimator
+## Arguments
+fsst.89.args <- function(lpmodel, p, d, beta.star, beta, omega) {
+  A <- rbind(lpmodel$A.obs, lpmodel$A.shp, lpmodel$A.tgt)
+  nbobs <- p - length(c(lpmodel$beta.shp, beta.tgt))
+  args <- list(Q = NULL,
+               obj = c(rep(0, 2 * p + 2 * d + nbobs), 1),
+               objcon = 0,
+               A = rbind(cbind(sqrt(N) * diag(p),
+                               matrix(0L, nrow = p, ncol = d + nbobs),
+                               -omega,
+                               A,
+                               matrix(0L, nrow = p, ncol = 1)),
+                         cbind(matrix(0L, nrow = p, ncol = p + d + nbobs),
+                               diag(p),
+                               matrix(0L, nrow = p, ncol = d),
+                               matrix(1L, nrow = p, ncol = 1)),
+                         cbind(matrix(0L, nrow = p, ncol = p + d + nbobs),
+                               -diag(p),
+                               matrix(0L, nrow = p, ncol = d),
+                               matrix(1L, nrow = p, ncol = 1)),
+                         cbind(-diag(p),
+                               A,
+                               matrix(0L, nrow = p, ncol = p + d + nbobs + 1)),
+                         cbind(diag(p),
+                               matrix(0L, nrow = p, ncol = d),
+                               rbind(-diag(nbobs),
+                                     matrix(0L, nrow = (p - nbobs),
+                                            ncol = nbobs)),
+                               matrix(0L, nrow = p, ncol = p + d + 1))),
+               rhs = c(sqrt(N) * beta, rep(0, p * 3 + nbobs),
+                       c(lpmodel$beta.shp, beta.tgt)),
+               sense = c(rep("=", p), rep(">=", p * 2), rep("=", 2 * p)),
+               modelsense = "min",
+               lb = c(rep(-Inf, p), rep(0, d), rep(-Inf, nbobs), rep(-Inf, p),
+                      rep(0, d + 1)))
+  if (d < p) {
+    args1 <- list(Q = NULL,
+                  obj = args$obj,
+                  objcon = 0,
+                  A = rbind(t(A) %*% args$A[1:p,],
+                            args$A[(p + 1):ncol(args$A)]),
+                  rhs = c(sqrt(N) * t(A) %*% beta.star,
+                          args$rhs[(p + 1):ncol(args$A)]),
+                  sense = c(rep("=", ncol(A)),
+                            args$sense[(p + 1):ncol(args$A)]),
+                  modelsense = args$modelsense,
+                  lb = args$lb)
+    return(args1)
+  } else {
+    return(args)
+  }
+}
+## Obtain the estimators
+beta.r <- list()
+for (j in 1:2) {
+  beta.r.args <- fsst.89.args(j.lpmodel[[j]], p[[j]], d[[j]], beta.star[[j]],
+                              c(beta.obs[[j]],
+                                j.lpmodel[[j]]$beta.shp,
+                                beta.tgt),
+                              omega[[j]])
+  beta.r[[j]] <- do.call(gurobi.qlp, beta.r.args)$x[1:p[[j]]]
+}
+
+# 7. Compute bootstrap components
+range.n.bs <- list()
+cone.n.bs <- list()
+for (j in 1:2) {
+  cone.n.bs[[j]] <- list()
+  for (k in 1:2) {
+    cone.n.bs[[j]][[k]] <- list()
+    for (kk in 1:length(k.lambdas[[k]])) {
+      cone.n.bs[[j]][[k]][[kk]] <- list()
+    }
+  }
+}
+ts.bs <- cone.n.bs
+for (j in 1:2) {
+  range.n.bs[[j]] <- list()
+  for (i in 1:reps) {
+    b1 <- beta.bs[[j]][[i]] - beta.obs[[j]]
+    b2 <- beta.obs.star.bs[[j]][[i]] - beta.obs.star[[j]]
+    range.n.bs[[j]][[i]] <- fsst.range.soln(b1, b2, Xi[[j]], p[[j]], d[[j]])
+    for (k in 1:2) {
+      for (kk in 1:length(k.lambdas[[k]])) {
+        beta.res <- beta.star.bs[[j]][[i]] - beta.star[[j]] +
+          k.lambdas[[k]][kk] * beta.r[[j]]
+        cone.args <- fsst.56.args(j.lpmodel[[j]], p[[j]], d[[j]], beta.res,
+                                  omega[[j]])
+        cone.n.bs[[j]][[k]][[kk]][[i]] <- sqrt(N) * do.call(gurobi.qlp,
+                                                            cone.args)$objval
+        ts.bs[[j]][[k]][[kk]][[i]] <- max(cone.n.bs[[j]][[k]][[kk]][[i]],
+                                          range.n.bs[[j]][[i]])
+      }
+    }
+  }
+}
+
+# 8. Compute pvalues
+pval <- list()
+for (j in 1:2) {
+  pval[[j]] <- list()
+  for (k in 1:2) {
+    pval[[j]][[k]] <- list()
+    for (kk in 1:length(k.lambdas[[k]])) {
+      pval[[j]][[k]][[kk]] <- mean(unlist(ts.bs[[j]][[k]][[kk]]) > ts[[j]])
+    }
+  }
+}
+
+# 9. Critical values
+cv <- list()
+for (j in 1:2) {
+  cv[[j]] <- list()
+  n99 <- ceiling(.99 * reps)
+  n95 <- ceiling(.95 * reps)
+  n90 <- ceiling(.90 * reps)
+  for (k in 1:2) {
+    cv[[j]][[k]] <- list()
+    for (kk in 1:length(k.lambdas[[k]])) {
+      cv[[j]][[k]][[kk]] <- list()
+      # Test statistics
+      cv[[j]][[k]][[kk]][[1]] <- ts[[j]]
+      cv[[j]][[k]][[kk]][[2]] <- sort(unlist(ts.bs[[j]][[k]][[kk]]))[n99]
+      cv[[j]][[k]][[kk]][[3]] <- sort(unlist(ts.bs[[j]][[k]][[kk]]))[n95]
+      cv[[j]][[k]][[kk]][[4]] <- sort(unlist(ts.bs[[j]][[k]][[kk]]))[n90]
+      # Cone
+      cv[[j]][[k]][[kk]][[5]] <- cone.n[[j]]
+      cv[[j]][[k]][[kk]][[6]] <- sort(unlist(cone.n.bs[[j]][[k]][[kk]]))[n99]
+      cv[[j]][[k]][[kk]][[7]] <- sort(unlist(cone.n.bs[[j]][[k]][[kk]]))[n95]
+      cv[[j]][[k]][[kk]][[8]] <- sort(unlist(cone.n.bs[[j]][[k]][[kk]]))[n90]
+    }
+    # Range
+    cv[[j]][[k]][[1]][[9]] <- range.n[[j]]
+    cv[[j]][[k]][[1]][[10]] <- sort(unlist(range.n.bs[[j]]))[n99]
+    cv[[j]][[k]][[1]][[11]] <- sort(unlist(range.n.bs[[j]]))[n95]
+    cv[[j]][[k]][[1]][[12]] <- sort(unlist(range.n.bs[[j]]))[n90]
+  }
+}
+
+
+# ---------------- #
+# Test if the output are equal
+# i: cores, j: lpmodel approach, k: lambdas
+# ---------------- #
+# 1. Full information approach p-values
+test_that("Full information approach",{
+  for (i in 1:2) {
+    j <- 1
+    for (k in 1:2) {
+      for (kk in 1:length(k.lambdas[[k]])) {
+        expect_equal(pval[[j]][[k]][[kk]],
+                     fsst.out[[i]][[j]][[k]]$pval$`p-value`[kk])
+      }
+    }
+  }
 })
 
-test_that("Full information appraoch: function vs list",{
-  expect_equal(full_g2$pval, full_g2_list$pval)
+# 2. Two moments approach p-values
+test_that("Full information approach",{
+  for (i in 1:2) {
+    j <- 2
+    for (k in 1:2) {
+      for (kk in 1:length(k.lambdas[[k]])) {
+        expect_equal(pval[[j]][[k]][[kk]],
+                     fsst.out[[i]][[j]][[k]]$pval$`p-value`[kk])
+      }
+    }
+  }
 })
 
-test_that("Two moments appraoch: function vs list",{
-  expect_equal(twom_g2$pval, twom_g2_list$pval)
+# 3. Full information CV table
+test_that("Full information CV table",{
+  for (i in 1:2) {
+    j <- 1
+    for (k in 1:2) {
+      for (kk in 1:length(k.lambdas[[k]])) {
+        for (l in 1:8) {
+          expect_lte(abs(cv[[j]][[k]][[kk]][[l]] -
+                           fsst.out[[i]][[j]][[k]]$cv.table[l, kk + 2]),
+                     1e-5)
+        }
+      }
+      for (l in 9:12) {
+        expect_lte(abs(cv[[j]][[k]][[1]][[l]] -
+                     fsst.out[[i]][[j]][[k]]$cv.table[l, 3]),
+                   1e-5)
+      }
+    }
+  }
+})
+
+# 4. Two moments CV table
+test_that("Two moments CV table",{
+  for (i in 1:2) {
+    j <- 2
+    for (k in 1:2) {
+      for (kk in 1:length(k.lambdas[[k]])) {
+        for (l in 1:8) {
+          expect_lte(abs(cv[[j]][[k]][[kk]][[l]] -
+                         fsst.out[[i]][[j]][[k]]$cv.table[l, kk + 2]),
+                     1e-5)
+        }
+      }
+      for (l in 9:12) {
+        expect_lte(abs(cv[[j]][[k]][[1]][[l]] -
+                       fsst.out[[i]][[j]][[k]]$cv.table[l, 3]),
+                   1e-5)
+      }
+    }
+  }
+})
+
+# 5. Cores
+test_that("Cores",{
+  for (i in 1:2) {
+    for (j in 1:2) {
+      for (k in 1:2) {
+        expect_equal(i.cores[[i]], fsst.out[[i]][[j]][[k]]$cores)
+      }
+    }
+  }
+})
+
+# 6. Range test statistics
+test_that("Range test statistics",{
+  for (i in 1:2) {
+    for (j in 1:2) {
+      for (k in 1:2) {
+        expect_equal(range.n[[j]], fsst.out[[i]][[j]][[k]]$range)
+      }
+    }
+  }
+})
+
+# 7. Cone test statistics
+test_that("Cone test statistics",{
+  for (i in 1:2) {
+    for (j in 1:2) {
+      for (k in 1:2) {
+        expect_equal(cone.n[[j]], fsst.out[[i]][[j]][[k]]$cone$objval)
+      }
+    }
+  }
+})
+
+# 8. Test statistics
+test_that("Test statistics",{
+  for (i in 1:2) {
+    for (j in 1:2) {
+      for (k in 1:2) {
+        expect_equal(ts[[j]], fsst.out[[i]][[j]][[k]]$test)
+      }
+    }
+  }
+})
+
+# 9. Solver name
+test_that("Solver name",{
+  for (i in 1:2) {
+    for (j in 1:2) {
+      for (k in 1:2) {
+        expect_equal("gurobi", fsst.out[[i]][[j]][[k]]$solver.name)
+      }
+    }
+  }
+})
+
+# 10. Rho parameter
+test_that("Rho parameter",{
+  for (i in 1:2) {
+    for (j in 1:2) {
+      for (k in 1:2) {
+        expect_equal(rho, fsst.out[[i]][[j]][[k]]$rho)
+      }
+    }
+  }
+})
+
+# 11. Regularization parameter
+test_that("Rho parameter",{
+  for (i in 1:2) {
+    for (j in 1:2) {
+      for (k in 1:2) {
+        expect_equal(rhobar[[j]], fsst.out[[i]][[j]][[k]]$rhobar.i)
+      }
+    }
+  }
+})
+
+# 12. Method of obtaining the beta.var matrix
+test_that("Rho parameter",{
+  for (i in 1:2) {
+    for (j in 1:2) {
+      for (k in 1:2) {
+        expect_equal("function", fsst.out[[i]][[j]][[k]]$beta.var.method)
+      }
+    }
+  }
+})
+
+# 13. Test logical
+test_that("Omega.i matrix",{
+  for (i in 1:2) {
+    for (j in 1:2) {
+      for (k in 1:2) {
+        expect_equal(omega[[j]], fsst.out[[i]][[j]][[k]]$omega.i)
+      }
+    }
+  }
+})
+
+# 14. Test logical
+test_that("Test logical",{
+  for (i in 1:2) {
+    for (j in 1:2) {
+      for (k in 1:2) {
+        expect_equal(1, fsst.out[[i]][[j]][[k]]$test.logical)
+      }
+    }
+  }
 })
