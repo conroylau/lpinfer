@@ -422,6 +422,8 @@ check.Ab <- function(A, b, Aname, bname){
 #'   appropriate for the problem considered.
 #'
 #' @param norm Norm used in the problem
+#' @param qc Indicator of whether the problem consists of a quadratic
+#'   constraint.
 #' @inheritParams check.dataframe
 #' @inheritParams check.positiveinteger
 #'
@@ -432,7 +434,7 @@ check.Ab <- function(A, b, Aname, bname){
 #'
 #' @export
 #'
-check.solver <- function(x, name.var, norm = 2){
+check.solver <- function(x, name.var, norm = 2 , qc = FALSE){
   # ---------------- #
   # Step 1: Preparation and hard-coded information
   # ---------------- #
@@ -447,82 +449,97 @@ check.solver <- function(x, name.var, norm = 2){
   limsolve.msg <- "'limSolve' (version 1.5.6 or later)"
   lpsolveapi.msg <- "lpSolveAPI (version 5.5.2.0 or later)"
 
-  # Message for asking the user to use 'gurobi' in 2-norm
-  msg.l2norm <- paste0("This function with a 2-norm in the estimation ",
-                       "procedure is only compatible with 'gurobi'. ",
-                       "Please install ", gurobi.msg, ".")
+  # General error message
+  msg.notcompat <- paste0("This function with a %s-norm in the estimation ",
+                          "is not compatible with '%s'.")
+  msg.install <- "Please install one of the following packages: %s"
 
-  # Message telling the user the solver input is incompatible in 1-norm
-  msg.l1norm <- paste0("This function is incompatible with '", x,
-                       "' when 1-norm is chosen in the estimation ",
-                       "procedure. Please install one of the following ",
-                       "packages: ",
-                       gurobi.msg, "; ",
-                       cplexapi.msg, "; ",
-                       rcplex.msg, "; ",
-                       limsolve.msg, ";",
-                       lpsolveapi.msg, ".")
+  # Message for installing packages
+  ## 1-norm
+  msg.l1packages <- sprintf(msg.install,
+                            paste0(gurobi.msg, "; ",
+                                   cplexapi.msg, "; ",
+                                   rcplex.msg, "; ",
+                                   limsolve.msg, "; ",
+                                   lpsolveapi.msg, "."))
+  ## 2-norm with non-quadratically constrained QP
+  msg.l2packages <- sprintf(msg.install,
+                            paste0(gurobi.msg, "; ",
+                                   cplexapi.msg, "; ",
+                                   rcplex.msg, "; ",
+                                   limsolve.msg, "."))
+  ## 2-norm with quadratically constrained QP
+  msg.l2norm.qc <- paste0("This function with a 2-norm in the estimation ",
+                          "procedure and a quadratically constrained ",
+                          "quadratic program is only compatible with  ",
+                          "'gurobi'. Please install ", gurobi.msg, ".")
 
   # ---------------- #
   # Step 2a: If no solver name is provided by the user
   # ---------------- #
-  if (is.null(x) == TRUE){
+  if (is.null(x) == TRUE) {
     # If 'gurobi' is installed, the 'gurobi' solver will be used for 1-norm &
     # 2-norm
-    if (requireNamespace("gurobi", quietly = TRUE) == TRUE){
+    if (requireNamespace("gurobi", quietly = TRUE) == TRUE) {
       solver = gurobi.optim
       x <- "gurobi"
     } else if (norm == 1) {
       # If 1-norm is used, other solvers will be checked
-      if (requireNamespace("limSolve", quietly = TRUE) == TRUE){
+      if (requireNamespace("limSolve", quietly = TRUE) == TRUE) {
         solver <- limsolve.optim
         x <- "limSolve"
-      } else if (requireNamespace("Rcplex", quietly = TRUE) == TRUE){
+      } else if (requireNamespace("Rcplex", quietly = TRUE) == TRUE) {
         solver <- rcplex.optim
         x <- "Rcplex"
-      } else if (requireNamespace("cplexAPI", quietly = TRUE) == TRUE){
+      } else if (requireNamespace("cplexAPI", quietly = TRUE) == TRUE) {
         solver <- cplexapi.optim
         x <- "cplexAPI"
-      } else if (requireNamespace("lpsolveAPI", quietly = TRUE) == TRUE){
+      } else if (requireNamespace("lpsolveAPI", quietly = TRUE) == TRUE) {
         solver <- lpsolveapi.optim
         x <- "lpSolveAPI"
       }
     } else {
-      if (norm == 1){
-        stop(gsub("\\s+", " ", msg.l1norm), call. = FALSE)
-      } else if (norm == 2){
-        stop(gsub("\\s+", " ", msg.l2norm), call. = FALSE)
+      if (norm == 1) {
+        stop(gsub("\\s+", " ", msg.l1packages), call. = FALSE)
+      } else if (norm == 2 & isFALSE(qc)) {
+        stop(gsub("\\s+", " ", msg.l2packages), call. = FALSE)
+      } else if (norm == 2 & isTRUE(qc)) {
+        stop(gsub("\\s+", " ", msg.l2norm.qc), call. = FALSE)
       }
     }
-  } else if (x == "gurobi"){
+  } else if (x == "gurobi") {
     # ---------------- #
     # Step 2b: If a solver name is provided by the user
     # ---------------- #
     ## Case 1: If the user specified the solver as 'gurobi'
     solver <- gurobi.optim
     x <- "gurobi"
-  } else if (x == "limsolve"){
+  } else if (x == "limsolve" & !(norm == 2 & isTRUE(qc))) {
     ## Case 2: If the user specified the solver as 'limSolve'
     solver <- limsolve.optim
     x <- "limSolve"
-  } else if (x == "rcplex"){
+  } else if (x == "rcplex" & !(norm == 2 & isTRUE(qc))) {
     ## Case 3: If the user specified the solver as 'rcplex'
     solver <- rcplex.optim
     x <- "Rcplex"
-  } else if (x == "cplexapi"){
+  } else if (x == "cplexapi" & !(norm == 2 & isTRUE(qc))) {
     ## Case 4: If the user specified the solver as 'cplexapi'
     solver <- cplexapi.optim
     x <- "cplexAPI"
-  } else if (x == "lpsolveapi" & norm == 1){
+  } else if (x == "lpsolveapi" & norm == 1) {
     ## Case 5: If the user specified the solver as 'lpsolveapi'
     solver <- lpsolveapi.optim
     x <- "lpSolveAPI"
   } else {
     ## Case 6: If the user specified a solver that is not compatible
-    if (norm == 1){
-      stop(gsub("\\s+", " ", msg.l1norm), call. = FALSE)
-    } else if (norm == 2){
-      stop(gsub("\\s+", " ", msg.l2norm), call. = FALSE)
+    if (norm == 1) {
+      stop(gsub("\\s+", " ", paste(sprintf(msg.notcompat, 1, x),
+                                   msg.l1packages)), call. = FALSE)
+    } else if (norm == 2 & isTRUE(qc)) {
+      stop(gsub("\\s+", " ", msg.l2norm.qc), call. = FALSE)
+    } else if (norm == 2 & isFALSE(qc)) {
+      stop(gsub("\\s+", " ", paste(sprintf(msg.notcompat, 2, x),
+                                   msg.l2packages)), call. = FALSE)
     }
   }
 
@@ -663,7 +680,7 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R){
         err.ind <- c(err.ind, 1)
       }
     }
-  
+
     # Category 2: Check if it is a function
     if ("function_mat" %in% mat.cat) {
       if (class(mat) == "function"){
@@ -748,7 +765,7 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R){
         if (length(func.output) != 2){
           stop(msg.vecmat, call. = FALSE)
         } else {
-          # It is safe to consider the 
+          # It is safe to consider the
           for (i in 1:2) {
             if (class(func.output[[i]]) == "numeric") {
               func.output[[i]] <- matrix(func.output[[i]])
@@ -886,15 +903,15 @@ check.vector <- function(vec, vec.name, inside.list){
 
   # Turn it into a matrix if it is not a list
   if (!is.list(vec)) {
-    vec <- as.matrix(vec) 
-  } 
+    vec <- as.matrix(vec)
+  }
   if (nrow(vec) != 1 & ncol(vec) != 1){
     if (inside.list == FALSE){
       stop(sprintf(msg.vector, vec.name, "vector"), call. = FALSE)
     } else {
       stop(sprintf(msg.vector, vec.name, "list of vectors"), call. = FALSE)
     }
-  } 
+  }
 }
 
 #' Check function: check the number of cores
@@ -1033,14 +1050,14 @@ infeasible.pval.msg <- function() {
 }
 
 #' Display warning message for infeasible 'beta.tgt'
-#' 
+#'
 #' @description This function displays the warning message for infeasible
 #'   'beta.tgt'.
-#'   
+#'
 #' @return Nothing is returned.
-#' 
+#'
 #' @export
-#' 
+#'
 infeasible.betatgt.warning <- function() {
   msg <- infeasible.msg.betatgt()$msg.explain
   warning(msg, call. = FALSE, immediate. = TRUE)
