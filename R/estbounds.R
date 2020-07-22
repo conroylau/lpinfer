@@ -637,8 +637,7 @@ mincriterion <- function(data = NULL, lpmodel, norm = 2, solver = NULL){
                       rhs = lpmodel$beta.shp,
                       sense = sense0,
                       modelsense = "min",
-                      lb = lb.zero,
-                      qc = NULL)
+                      lb = lb.zero)
   }
 
   # ---------------- #
