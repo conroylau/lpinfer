@@ -105,14 +105,15 @@ lpmodel.twom <- lpmodel(A.obs    = A_obs_twom,
 
 i.lpmodel <- list(lpmodel.full, lpmodel.twom)
 ni <- length(i.lpmodel)
-
+k.solver <- list("gurobi", "Rcplex", "limSolve")
+nk <- length(k.solver)
 # Define arguments
 farg <- list(data = sampledata,
              solver = "gurobi")
 
 # ---------------- #
 # Generate output from MINCRITERION
-# i: lpmodel/approach, j: norm
+# i: lpmodel/approach, j: norm, k: solver
 # ---------------- #
 mincriterion.out <- list()
 for (i in 1:ni) {
@@ -120,13 +121,17 @@ for (i in 1:ni) {
   mincriterion.out[[i]] <- list()
   for (j in 1:2) {
     farg$norm <- j
-    mincriterion.out[[i]][[j]] <- do.call(mincriterion, farg)
+    mincriterion.out[[i]][[j]] <- list()
+    for (k in 1:nk) {
+      farg$solver <- k.solver[[k]]
+      mincriterion.out[[i]][[j]][[k]] <- do.call(mincriterion, farg)
+    }
   }
 }
 
 # ---------------- #
 # Generate output from ESTBOUNDS
-# i: lpmodel/approach, j: norm
+# i: lpmodel/approach, j: norm, k: solver
 # ---------------- #
 farg$kappa <- kap
 farg$estimate <- TRUE
@@ -137,7 +142,17 @@ for (i in 1:ni) {
   estbounds.out[[i]] <- list()
   for (j in 1:2) {
     farg$norm <- j
-    estbounds.out[[i]][[j]] <- do.call(estbounds, farg)
+    estbounds.out[[i]][[j]] <- list()
+    if (j == 1) {
+      for (k in 1:nk) {
+        farg$solver <- k.solver[[k]]
+        estbounds.out[[i]][[j]][[k]] <- do.call(estbounds, farg)
+      }
+    } else if (j == 2) {
+      k <- 1
+      farg$solver <- k.solver[[k]]
+      estbounds.out[[i]][[j]][[k]] <- do.call(estbounds, farg)
+    }
   }
 }
 
@@ -302,35 +317,32 @@ for (i in 1:ni) {
 test_that("'mincriterion': Q-hat",{
   for (i in 1:ni) {
     for (j in 1:2) {
-      expect_lte(abs(Qhat[[i]][[j]] - mincriterion.out[[i]][[j]]$objval),
-                 1e-10)
+      for (k in 1:nk) {
+        expect_lte(abs(Qhat[[i]][[j]] - mincriterion.out[[i]][[j]][[k]]$objval),
+                   1e-10)
+      }
     }
   }
 })
 
-# 2. x
-test_that("'mincriterion': X",{
-  for (i in 1:ni) {
-    for (j in 1:2) {
-      expect_equal(minx[[i]][[j]], mincriterion.out[[i]][[j]]$x)
-    }
-  }
-})
-
-# 3. Norm
+# 2. Norm
 test_that("'mincriterion': Norm",{
   for (i in 1:ni) {
     for (j in 1:2) {
-      expect_equal(j, mincriterion.out[[i]][[j]]$norm)
+      for (k in 1:nk) {
+        expect_equal(j, mincriterion.out[[i]][[j]][[k]]$norm)
+      }
     }
   }
 })
 
-# 4. Solver
+# 3. Solver
 test_that("'mincriterion': Solver",{
   for (i in 1:ni) {
     for (j in 1:2) {
-      expect_equal("gurobi", mincriterion.out[[i]][[j]]$solver)
+      for (k in 1:nk) {
+        expect_equal(k.solver[[k]], mincriterion.out[[i]][[j]][[k]]$solver)
+      }
     }
   }
 })
@@ -342,7 +354,13 @@ test_that("'mincriterion': Solver",{
 test_that("'estbounds': Lower bounds",{
   for (i in 1:ni) {
     for (j in 1:2) {
-      expect_equal(lb[[i]][[j]], estbounds.out[[i]][[j]]$lb)
+      for (k in 1:nk) {
+        if (j == 1) {
+          expect_equal(lb[[i]][[j]], estbounds.out[[i]][[j]][[k]]$lb)
+        } else if (j == 2) {
+          expect_equal(lb[[i]][[j]], estbounds.out[[i]][[j]][[1]]$lb)
+        }
+      }
     }
   }
 })
@@ -351,7 +369,13 @@ test_that("'estbounds': Lower bounds",{
 test_that("'estbounds': Upper bounds",{
   for (i in 1:ni) {
     for (j in 1:2) {
-      expect_equal(ub[[i]][[j]], estbounds.out[[i]][[j]]$ub)
+      for (k in 1:nk) {
+        if (j == 1) {
+          expect_equal(ub[[i]][[j]], estbounds.out[[i]][[j]][[k]]$ub)
+        } else if (j == 2) {
+          expect_equal(ub[[i]][[j]], estbounds.out[[i]][[j]][[1]]$ub)
+        }
+      }
     }
   }
 })
@@ -360,7 +384,13 @@ test_that("'estbounds': Upper bounds",{
 test_that("'estbounds': Estimate",{
   for (i in 1:ni) {
     for (j in 1:2) {
-      expect_equal(TRUE, estbounds.out[[i]][[j]]$est)
+      for (k in 1:nk) {
+        if (j == 1) {
+          expect_equal(TRUE, estbounds.out[[i]][[j]][[k]]$est)
+        } else if (j == 2) {
+          expect_equal(TRUE, estbounds.out[[i]][[j]][[1]]$est)
+        }
+      }
     }
   }
 })
@@ -369,7 +399,13 @@ test_that("'estbounds': Estimate",{
 test_that("'estbounds': Norm",{
   for (i in 1:ni) {
     for (j in 1:2) {
-      expect_equal(j, estbounds.out[[i]][[j]]$norm)
+      for (k in 1:nk) {
+        if (j == 1) {
+          expect_equal(j, estbounds.out[[i]][[j]][[k]]$norm)
+        } else if (j == 2) {
+          expect_equal(j, estbounds.out[[i]][[j]][[1]]$norm)
+        }
+      }
     }
   }
 })
@@ -378,7 +414,13 @@ test_that("'estbounds': Norm",{
 test_that("'estbounds': Solver",{
   for (i in 1:ni) {
     for (j in 1:2) {
-      expect_equal("gurobi", estbounds.out[[i]][[j]]$solver)
+      for (k in 1:nk) {
+        if (j == 1) {
+          expect_equal(k.solver[[k]], estbounds.out[[i]][[j]][[k]]$solver)
+        } else if (j == 2) {
+          expect_equal(k.solver[[1]], estbounds.out[[i]][[j]][[1]]$solver)
+        }
+      }
     }
   }
 })
