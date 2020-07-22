@@ -434,13 +434,19 @@ estbounds.check <- function(data, lpmodel, kappa, norm, solver, estimate,
     data <- check.dataframe(data)
   }
 
+  # Check norm
+  norm <- check.norm(norm, "norm")
+
   # Check solver
-  solver.return <- check.solver(solver, "solver", norm)
+  if (norm == 1) {
+    solver.return <- check.solver(solver, "solver", norm, FALSE)
+  } else if (norm == 2) {
+    solver.return <- check.solver(solver, "solver", norm, TRUE)
+  }
   solver <- solver.return$solver
   solver.name <- solver.return$solver.name
 
-  # Check numerics
-  norm <- check.norm(norm, "norm")
+  # Check kappa
   kappa <- check.nonnegaetive(kappa, "kappa")
 
   # Check Boolean
@@ -701,13 +707,13 @@ mincriterion.check <- function(data, lpmodel, norm, solver){
     data <- check.dataframe(data)
   }
 
-  # Check solver
-  solver.return <- check.solver(solver, "solver")
-  solver <- solver.return$solver
-  solver.name <- solver.return$solver.name
-
   # Check numerics
   norm <- check.norm(norm, "norm")
+
+  # Check solver
+  solver.return <- check.solver(solver, "solver", norm, FALSE)
+  solver <- solver.return$solver
+  solver.name <- solver.return$solver.name
 
   # ---------------- #
   # Step 2: Return results

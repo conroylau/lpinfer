@@ -4,12 +4,15 @@
 \alias{check.solver}
 \title{Check function: check solvers}
 \usage{
-check.solver(x, name.var, norm = 2)
+check.solver(x, name.var, norm = 2, qc = FALSE)
 }
 \arguments{
 \item{x}{Variable to be checked.}
 
 \item{norm}{Norm used in the problem}
+
+\item{qc}{Indicator of whether the problem consists of a quadratic
+constraint.}
 }
 \value{
 Returns the function name that corresponds to the solver for the
