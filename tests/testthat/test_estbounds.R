@@ -260,7 +260,7 @@ estb.22.args <- function(lpmodel, Qhat, kappa, modelsense) {
                sense = "=",
                rhs = bshp,
                qc = list(list(Qc = t(Aobs) %*% Aobs,
-                         q = -2 * t(Aobs) %*% bobs,
+                         q = as.vector(-2 * t(Aobs) %*% bobs),
                          rhs = Qhat * (1 + kappa) - t(bobs) %*% bobs,
                          sense = "<=")),
                modelsense = modelsense,
@@ -380,7 +380,24 @@ test_that("'estbounds': Upper bounds",{
   }
 })
 
-# 3. Estimate
+# 3. Checking the value of the mincriterion
+test_that("'estbounds': Checking the value of the mincriterion",{
+  for (i in 1:ni) {
+    for (j in 1:2) {
+      for (k in 1:nk) {
+        if (j == 1) {
+          expect_equal(Qhat[[i]][[j]],
+                       estbounds.out[[i]][[j]][[k]]$mincriterion)
+        } else if (j == 2) {
+          expect_equal(Qhat[[i]][[j]],
+                       estbounds.out[[i]][[j]][[1]]$mincriterion)
+        }
+      }
+    }
+  }
+})
+
+# 4. Estimate
 test_that("'estbounds': Estimate",{
   for (i in 1:ni) {
     for (j in 1:2) {
@@ -395,7 +412,7 @@ test_that("'estbounds': Estimate",{
   }
 })
 
-# 4. Norm
+# 5. Norm
 test_that("'estbounds': Norm",{
   for (i in 1:ni) {
     for (j in 1:2) {
@@ -410,7 +427,7 @@ test_that("'estbounds': Norm",{
   }
 })
 
-# 5. Solver
+# 6. Solver
 test_that("'estbounds': Solver",{
   for (i in 1:ni) {
     for (j in 1:2) {

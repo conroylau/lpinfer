@@ -28,6 +28,8 @@
 #' @return Returns the bounds subject to the shape constraints.
 #'   \item{ub}{Upper bound with shape constraints}
 #'   \item{lb}{Lower bound with shape constraints}
+#'   \item{minc}{Objective value of the first-stage problem (i.e.
+#'     '\code{mincriterion}').}
 #'   \item{est}{Indicator of whether estimation is involved in the
 #'   estimation}
 #'   \item{call}{The function that has been called.}
@@ -89,34 +91,34 @@ estbounds <- function(data = NULL, lpmodel, kappa = 1e-5, norm = 2,
     if (norm == 1){
       ## L1-norm
       # Stage one of the problem
-      estbounds11 <- mincriterion(data, lpmodel, norm, solver.name)
+      minc <- mincriterion(data, lpmodel, norm, solver.name)
 
       # Return stop message if there is no feasible solution for stage one
       # of the problem
-      if (is.numeric(estbounds11$objval) == FALSE){
+      if (is.numeric(minc$objval) == FALSE){
         stop("The constraints in the estimation problem are contradictory.
              Please ensure that the constraints are correctly specified.")
       }
       # Stage two of the problem
-      estbounds_ub <- estbounds2.L1(data, estbounds11, lpmodel, "max", kappa,
+      estbounds_ub <- estbounds2.L1(data, minc, lpmodel, "max", kappa,
                                     solver)
-      estbounds_lb <- estbounds2.L1(data, estbounds11, lpmodel, "min", kappa,
+      estbounds_lb <- estbounds2.L1(data, minc, lpmodel, "min", kappa,
                                     solver)
     } else if (norm == 2){
       ## L2-norm
       # Stage one of the problem
-      estbounds21 <- mincriterion(data, lpmodel, norm, solver.name)
+      minc <- mincriterion(data, lpmodel, norm, solver.name)
 
       # Return stop message if there is no feasible solution for stage one
       # of the problem
-      if (is.numeric(estbounds21$objval) == FALSE){
+      if (is.numeric(minc$objval) == FALSE){
         stop("The constraints in the estimation problem are contradictory.
              Please ensure that the constraints are correctly specified.")
       }
       # Stage two of the problem
-      estbounds_ub <- estbounds2.L2(data, estbounds21, lpmodel, "max", kappa,
+      estbounds_ub <- estbounds2.L2(data, minc, lpmodel, "max", kappa,
                                     solver)
-      estbounds_lb <- estbounds2.L2(data, estbounds21, lpmodel, "min", kappa,
+      estbounds_lb <- estbounds2.L2(data, minc, lpmodel, "min", kappa,
                                     solver)
     }
 
@@ -132,6 +134,7 @@ estbounds <- function(data = NULL, lpmodel, kappa = 1e-5, norm = 2,
   # ---------------- #
   output = list(ub = ub,
                 lb = lb,
+                mincriterion = minc$objval,
                 est = est,
                 call = call,
                 norm = norm,

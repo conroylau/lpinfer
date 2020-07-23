@@ -51,6 +51,8 @@ Otherwise, the messages will not be displayed.}
 Returns the bounds subject to the shape constraints.
   \item{ub}{Upper bound with shape constraints}
   \item{lb}{Lower bound with shape constraints}
+  \item{minc}{Objective value of the first-stage problem (i.e.
+    '\code{mincriterion}').}
   \item{est}{Indicator of whether estimation is involved in the
   estimation}
   \item{call}{The function that has been called.}
