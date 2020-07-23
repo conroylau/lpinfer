@@ -351,7 +351,7 @@ estbounds2.L2 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
   step2_qc <- list()
   if (is.null(lpmodel$A.obs) == FALSE){
     step2_qc$Qc <- t(lpmodel$A.obs) %*% lpmodel$A.obs
-    step2_qc$q <- -2 * t(lpmodel$A.obs) %*% beta.obs.hat
+    step2_qc$q <- as.vector(-2 * t(lpmodel$A.obs) %*% beta.obs.hat)
     step2_qc$rhs <- Qhat * (1+kappa) - t(beta.obs.hat) %*% beta.obs.hat
     step2_qc$sense <- "<="
   } else {
