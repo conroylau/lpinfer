@@ -1827,8 +1827,23 @@ summary.fsst <- function(x, ...){
                          "studentization matrix: %s\n"),
                   round(x$rhobar.i, digits = 5)))
       cat(sprintf(paste0("\nThe asymptotic variance of the observed component ",
-                         "of the beta vector is approximated from the %s."),
+                         "of the beta vector is approximated from the %s.\n"),
                   x$beta.var.method))
+
+      # Number of successful bootstrap replications
+      cat(sprintf("\nNumber of successful bootstrap replications: %s\n",
+                  x$R.succ))
+
+      # Number of failed bootstrap replications
+      if (!is.null(x$df.error) & nrow(x$df.error) != 0) {
+         nerr <- nrow(x$df.error)
+         errstring <- " Number of failed bootstrap"
+         if (nerr == 1) {
+            cat(sprintf(paste(errstring, "replication: %s\n"), nerr))
+         } else {
+            cat(sprintf(paste(errstring, "replications: %s\n"), nerr))
+         }
+      }
    } else if (x$test.logical == 0) {
       # Case 2: 'beta.tgt' is outside the logical bound
       infeasible.pval.msg()
