@@ -104,6 +104,9 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
             i1 <- R
             iseq <- 1:maxR
          } else {
+            # Remove the problematic entries
+            beta.obs.bs[error.id] <- NULL
+            # Update the sequence of indices
             i0 <- min(maxR, R.succ + 1 + nrow(df.error))
             i1 <- min(maxR, (R - R.succ))
             iseq <- i0:i1
@@ -127,6 +130,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          } else {
             beta.var.method <- "function"
             if (cores == 1){
+
                beta.obs.return <- fsst.beta.bs(n, data, beta.obs.hat, lpmodel,
                                                R, maxR, progress, df.error,
                                                iseq)
@@ -144,12 +148,13 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                   sigma.return <- sigma.summation(n, beta.obs.list, progress, 0)
                   sigma.beta.obs <- sigma.return$sigma.hat
                }
+
                beta.n.bs <- full.beta.bs(lpmodel, beta.tgt, beta.obs.bs, R)
             } else {
                sigma.return <- sigma.est.parallel(data, beta.obs.hat, lpmodel,
                                                   R, maxR, cores, progress)
                if (is.null(sigma.beta.obs)){
-                  beta.var.method <- patse0("bootstrapped 'beta.obs' ",
+                  beta.var.method <- paste0("bootstrapped 'beta.obs' ",
                                             "from the function.")
                   sigma.beta.obs <- sigma.return$sigma.hat
                }
@@ -166,6 +171,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          zero.22 <- matrix(rep(0, n.beta23^2), nrow = n.beta23)
          beta.sigma <- rbind(cbind(sigma.beta.obs, zero.12),
                              cbind(zero.21, zero.22))
+
 
          # ---------------- #
          # Step 3: Estimate beta.star, x.star and their bootstrap counterparts
@@ -283,6 +289,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          df.error <- range.return$df.error
          new.error.bs <- range.return$new.error
          R.succ <- length(range.n.list)
+         error.id <- range.return$error.id
          if (new.error.bs > 1) {
             next
          }
@@ -300,6 +307,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
             # any errors
             df.error <- cone.return$df.error
             new.error.bs <- cone.return$new.error
+            error.id <- cone.return$error.id
             if (new.error.bs > 1) {
                break()
             }
@@ -667,7 +675,7 @@ fsst.beta.bs <- function(n, data, beta.obs.hat, lpmodel, R, maxR, progress,
 
       # (2.3) Update progress bar
       if (progress == TRUE) {
-         if ((i == maxR) | (length(beta.obs.bs) == R)){
+         if ((i == maxR) & (length(beta.obs.bs) == R)){
             utils::setTxtProgressBar(pb, maxR/10)
             cat("\r\b")
          } else {
@@ -1175,7 +1183,8 @@ fsst.beta.star <- function(data, lpmodel, beta.n, beta.n.bs, beta.tgt,
                x.star = x.star,
                x.star.bs = x.star.bs,
                df.error = df.error,
-               new.error = new.error))
+               new.error = new.error,
+               error.id = error.id))
 }
 
 #' Computes \eqn{\widehat{\bm{\beta}}^r_n}
@@ -1350,7 +1359,7 @@ fsst.range.bs <- function(n, lpmodel, beta.obs.hat, beta.obs.bs, x.star,
             df.error[nrow(df.error), 4] <- range.result$msg$message
             error.id <- c(error.id, i)
          }
-         
+
          # Update progress bar
          if (progress == TRUE) {
             utils::setTxtProgressBar(pb, (3.5*n)/10 + 3*i/10)
