@@ -4,7 +4,7 @@
 \alias{sigma.est}
 \title{Computing bootstrap and variance estimators}
 \usage{
-\method{sigma}{est}(n, data, beta.obs.hat, lpmodel, R, progress)
+\method{sigma}{est}(n, data, beta.obs.hat, beta.obs.bs, progress)
 }
 \arguments{
 \item{data}{The data being used in the inference.}
@@ -13,27 +13,22 @@
 \eqn{\widehat{\bm{\beta}_{\mathrm{obs}, n}}} based on the given
 information in \code{lpmodel}.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear
-programming problems. The list of objects required in the \code{dkqs}
-procedure are:
-\itemize{
-  \item{\code{A.tgt}}
-  \item{\code{A.obs}}
-  \item{\code{beta.obs}}
-}}
-
-\item{R}{Number of bootstraps chosen by the users.}
-
 \item{progress}{The boolean variable for whether the result messages
 should be displayed in the inference procedure. If it is set as
 \code{TRUE}, the messages are displayed throughout the procedure.
 Otherwise, the messages will not be displayed.}
+
+\item{df.error}{Table showing the id of the bootstrap replication(s)
+with error(s) and the corresponding error message(s).}
 }
 \value{
 Returns the bootstrap estimators and the estimator of the
   asymptotic variance.
-    \item{sigma.mat}{Estimator of the asympototic variance}
-    \item{beta.obs.bs}{List of bootstrap betas}
+    \item{sigma.mat}{Estimator of the asympototic variance.}
+    \item{beta.obs.bs}{List of bootstrap betas.}
+  \item{R.succ}{Number of successful bootstrap replications.}
+    \item{df.error}{Updated table showing the id of the bootstrap
+      replication(s) with error(s) and the corresponding error message(s).}
 }
 \description{
 Based on the function \code{beta.obs} from the object

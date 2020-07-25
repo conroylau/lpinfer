@@ -9,6 +9,7 @@ fsst.check(
   lpmodel,
   beta.tgt,
   R,
+  Rmulti,
   lambda,
   rho,
   n,
@@ -33,6 +34,10 @@ procedure are:
 \item{beta.tgt}{Value of beta to be tested.}
 
 \item{R}{Number of bootstraps chosen by the users.}
+
+\item{Rmulti}{Multiplier for the number of bootstrap replications. The
+product of `\code{Rmulti}' and `\code{R}' refers to the maximum
+number of bootstrap replications.}
 
 \item{lambda}{Parameter used in the cone bootstrap sattistics}
 

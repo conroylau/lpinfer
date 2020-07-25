@@ -32,22 +32,25 @@
 #'     where '\code{beta.tgt}' is inside the logical bound. If
 #'     '\code{test.logical}' is 0, it refers to the case where '
 #'     \code{beta.tgt}' is outside the logical bound.}
+#'   \item{df.error}{Table showing the id of the bootstrap replication(s)
+#'     with error(s) and the corresponding error message(s).}
+#'   \item{R.succ}{Number of successful bootstrap replications.}
 #'
 #' @export
 #'
-fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
-                 rho = 1e-4, n = NULL, weight.matrix = "diag",
+fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
+                 lambda = .5, rho = 1e-4, n = NULL, weight.matrix = "diag",
                  solver = NULL, cores = 1, progress = TRUE){
 
    # ---------------- #
-   # Step 1: Update call, check and update the arguments
+   # Step 1: Update call, check and update the arguments; initialize df.error
    # ---------------- #
    # Obtain call information
    call <- match.call()
 
    # Check the arguments
-   fsst.return <- fsst.check(data, lpmodel, beta.tgt, R, lambda, rho, n,
-                             weight.matrix, solver, cores, progress)
+   fsst.return <- fsst.check(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho,
+                             n, weight.matrix, solver, cores, progress)
 
    # Update the arguments
    data <- fsst.return$data
@@ -55,6 +58,13 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
    solver.name <- fsst.return$solver.name
    cores <- fsst.return$cores
    test.logical <- fsst.return$test.logical
+
+   # Compute the maximum number of iterations
+   maxR <- ceiling(R * Rmulti)
+
+   # Initialize a table to contain the error messages
+   df.error <- data.frame(matrix(vector(), ncol = 4))
+   colnames(df.error) <- c("Iteration", "Step", "lambda", "Error message")
 
    ### Case 1: test.logical == 1. Proceed with the calculation because
    ### beta.tgt is inside the logical bounds
@@ -69,6 +79,10 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
       # Rearrange the lambda terms
       lambda <- sort(lambda, decreasing = FALSE)
 
+      # Define R.succ (-1 refers to the initial trial)
+      R.succ <- -1
+      beta.obs.bs <- list()
+
       # ---------------- #
       # Step 2: Obtain beta.obs, the list of bootstrap estimators and the
       # variance estimator
@@ -80,104 +94,120 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
       beta.shp.hat <- lpmodel.eval(data, lpmodel$beta.shp, 1)
       beta.n <- c(unlist(beta.obs.hat), beta.shp.hat, beta.tgt)
 
-      ### 2(b) Estimate sigma.beta.obs and store the boostrap estimates
-      # If the user provided bootstrap estimates of beta, use it to compute 
-      # sigma
-      if (class(lpmodel$beta.obs) == "list"){
-         beta.var.method <- "list"
-         if (is.null(sigma.beta.obs)){
-            sigma.beta.obs <- sigma.summation(n, lpmodel$beta.obs, progress, 0)
-            beta.var.method <- "bootstrapped values of the input list"
-         }
-         beta.obs.bs <- lpmodel$beta.obs[2:(R+1)]
-         beta.n.bs <- list()
-         for (i in 1:R){
-            beta.n.bs[[i]] <- c(beta.obs.bs[[i]], beta.shp.hat, beta.tgt)
-         }
-      } else {
-         beta.var.method <- "function"
-         if (cores == 1){
-            sigma.return <- sigma.est(n, data, beta.obs.hat, lpmodel, R,
-                                      progress)
-            if (is.null(sigma.beta.obs)){
-               beta.var.method <- "bootstrapped 'beta.obs' from the function."
-               sigma.beta.obs <- sigma.return$sigma.hat
-            }
-            beta.obs.bs <- sigma.return$beta.obs.bs
-            beta.n.bs <- full.beta.bs(lpmodel, beta.tgt, beta.obs.bs, R)
+      # This while loop is used to re-draw the data if there are some
+      # problematic draws in the bootstrap iterations
+      while (R.succ < R & (R.succ + nrow(df.error)) < maxR) {
+         # Set the index set for the bootstrap replications
+         if (R.succ == -1) {
+            # -1 corresponds to the initial bootstrap replications
+            i0 <- 1
+            i1 <- R
+            iseq <- 1:maxR
          } else {
-            sigma.return <- sigma.est.parallel(data, beta.obs.hat, lpmodel,
-                                               R, cores, progress)
-            if (is.null(sigma.beta.obs)){
-               beta.var.method <- "bootstrapped 'beta.obs' from the function."
-               sigma.beta.obs <- sigma.return$sigma.hat
-            }
-            beta.obs.bs <- sigma.return$beta.obs.bs
-            beta.n.bs <- full.beta.bs(lpmodel, beta.tgt, beta.obs.bs, R)
+            i0 <- min(maxR, R.succ + 1 + nrow(df.error))
+            i1 <- min(maxR, (R - R.succ))
+            iseq <- i0:i1
          }
-      }
 
-      ### 2(c) Compute the beta.sigma
-      n.beta1 <- nrow(sigma.beta.obs)
-      n.beta23 <- length(c(beta.shp.hat, beta.tgt))
-      zero.12 <- matrix(rep(0, n.beta1*n.beta23), nrow = n.beta1)
-      zero.21 <- t(zero.12)
-      zero.22 <- matrix(rep(0, n.beta23^2), nrow = n.beta23)
-      beta.sigma <- rbind(cbind(sigma.beta.obs, zero.12),
-                          cbind(zero.21, zero.22))
+         ### 2(b) Estimate sigma.beta.obs and store the boostrap estimates
+         # If the user provided bootstrap estimates of beta, use it to compute
+         # sigma
+         if (class(lpmodel$beta.obs) == "list"){
+            beta.var.method <- "list"
+            if (is.null(sigma.beta.obs)){
+               sigma.beta.obs <- sigma.summation(n, lpmodel$beta.obs,
+                                                 progress, 0)
+               beta.var.method <- "bootstrapped values of the input list"
+            }
+            beta.obs.bs <- lpmodel$beta.obs[2:(R+1)]
+            beta.n.bs <- list()
+            for (i in 1:R){
+               beta.n.bs[[i]] <- c(beta.obs.bs[[i]], beta.shp.hat, beta.tgt)
+            }
+         } else {
+            beta.var.method <- "function"
+            if (cores == 1){
+               beta.obs.return <- fsst.beta.bs(n, data, beta.obs.hat, lpmodel,
+                                               R, maxR, progress, df.error,
+                                               iseq)
 
-      # ---------------- #
-      # Step 3: Estimate beta.star
-      # ---------------- #
-      p <- length(beta.n)
-      if (!is.matrix(lpmodel$A.tgt)) {
-         d <- length(lpmodel$A.tgt)
-      } else {
-         d <- ncol(lpmodel$A.tgt)
-      }
+               # Merge it with the beta.obs.bs that has been computed earlier
+               beta.obs.bs.new <- beta.obs.return$beta.obs.bs
+               beta.obs.bs <- c(beta.obs.bs, beta.obs.bs.new)
+               beta.obs.list <- c(list(beta.obs.hat), beta.obs.bs)
 
-      if (d >= p){
-         beta.star <- beta.n
+               # If sigma.beta is not provided by the function, compute it
+               # from the bootstrap betas
+               if (is.null(sigma.beta.obs)) {
+                  beta.var.method <- paste0("bootstrapped 'beta.obs' ",
+                                            "from the function.")
+                  sigma.return <- sigma.summation(n, beta.obs.list, progress, 0)
+                  sigma.beta.obs <- sigma.return$sigma.hat
+               }
+               beta.n.bs <- full.beta.bs(lpmodel, beta.tgt, beta.obs.bs, R)
+            } else {
+               sigma.return <- sigma.est.parallel(data, beta.obs.hat, lpmodel,
+                                                  R, maxR, cores, progress)
+               if (is.null(sigma.beta.obs)){
+                  beta.var.method <- patse0("bootstrapped 'beta.obs' ",
+                                            "from the function.")
+                  sigma.beta.obs <- sigma.return$sigma.hat
+               }
+               beta.obs.bs <- sigma.return$beta.obs.bs
+               beta.n.bs <- full.beta.bs(lpmodel, beta.tgt, beta.obs.bs, R)
+            }
+         }
 
-         # Construct the bootstrap estimates, which are the same for all of
-         # them
-         beta.star.bs <- beta.n.bs
-      } else {
+         ### 2(c) Compute the beta.sigma
+         n.beta1 <- nrow(sigma.beta.obs)
+         n.beta23 <- length(c(beta.shp.hat, beta.tgt))
+         zero.12 <- matrix(rep(0, n.beta1*n.beta23), nrow = n.beta1)
+         zero.21 <- t(zero.12)
+         zero.22 <- matrix(rep(0, n.beta23^2), nrow = n.beta23)
+         beta.sigma <- rbind(cbind(sigma.beta.obs, zero.12),
+                             cbind(zero.21, zero.22))
+
+         # ---------------- #
+         # Step 3: Estimate beta.star, x.star and their bootstrap counterparts
+         # ---------------- #
+         p <- length(beta.n)
+         if (!is.matrix(lpmodel$A.tgt)) {
+            d <- length(lpmodel$A.tgt)
+         } else {
+            d <- ncol(lpmodel$A.tgt)
+         }
+
          # Compute the weighting matrix
          weight.mat <- fsst.weight.matrix(weight.matrix,
                                           beta.obs.hat,
                                           sigma.beta.obs)
 
-         # Solve the quadratic program
-         qp.return <- beta.star.qp(data, lpmodel, beta.tgt, weight.mat,
-                                   beta.obs.hat, sigma.beta.obs, solver)
-         beta.star <- qp.return$beta.star
-         if (d < p) {
-            x.star <- qp.return$x.star
+         beta.star.return <- fsst.beta.star(data, lpmodel, beta.n, beta.n.bs,
+                                            beta.tgt, weight.mat, beta.obs.hat,
+                                            beta.obs.bs, R, sigma.beta.obs,
+                                            solver, df.error, p, d)
+         beta.star <- beta.star.return$beta.star
+         beta.star.bs <- beta.star.return$beta.star.bs
+         x.star <- beta.star.return$x.star
+         x.star.bs <- beta.star.return$x.star.bs
+
+         # Update the list of errors and restart the loop if necessary
+         df.error <- beta.star.return$df.error
+         new.error <- beta.star.return$new.error
+         R.succ <- length(beta.star.bs)
+         if (new.error > 1) {
+            next
          }
 
-         # Construct bootstrap estimates of beta.star
-         beta.star.bs <- list()
-         x.star.bs <- list()
-         for (i in 1:R){
-            qp.return.bs <- beta.star.qp(data, lpmodel, beta.tgt,
-                                         weight.mat, beta.obs.bs[[i]],
-                                         sigma.beta.obs, solver)
-            beta.star.bs[[i]] <- qp.return.bs$beta.star
-            if (d < p) {
-               x.star.bs[[i]] <- qp.return.bs$x.star
-            }
-         }
+         # Consolidate the bootstrap estimators into a list
+         beta.star.l <- list(beta.star = beta.star)
+         beta.star.list <- c(beta.star.l, beta.star.bs)
       }
-
-      # Consolidate the bootstrap estimators into a list
-      beta.star.l <- list(beta.star = beta.star)
-      beta.star.list <- c(beta.star.l, beta.star.bs)
 
       # ---------------- #
       # Step 4: Studentization
       # ---------------- #
-      # Obtain bootstrap star
+      # Obtain the star version of the sigma matrix
       if (d >= p){
          sigma.star <- beta.sigma
       } else {
@@ -203,7 +233,6 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
          cone.n <- fsst.cone.lp(n, omega.i, beta.n, beta.star, lpmodel, 1,
                                 solver)
       } else {
-         # range.n <- fsst.range.lp(n, omega.e, beta.n, beta.star, solver)
          range.n <- fsst.range(n, beta.obs.hat, x.star, lpmodel, weight.mat)
          cone.n <- fsst.cone.lp(n, omega.i, beta.n, beta.star, lpmodel, 0,
                                 solver)
@@ -218,16 +247,25 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
                                   beta.star, omega.i, 1, solver)$x
 
          # Compute range.n for bootstrap beta
-         range.n.list <- rep(0, R)
+         range.n.list <- rep(0, R.succ)
 
-         cone.n.list <- list()
          # Compute cone.n for bootstrap beta
+         cone.n.list <- list()
          for (i in 1:length(lambda)){
-            cone.n.temp <- fsst.cone.bs(n, omega.i, beta.n, beta.star, lpmodel,
-                                        R, lambda[i], 1, beta.star.bs, beta.r,
-                                        beta.star.list, solver, cores, progress,
-                                        length(lambda), i)
-            cone.n.list[[i]] <- cone.n.temp
+            cone.return <- fsst.cone.bs(n, omega.i, beta.n, beta.star, lpmodel,
+                                        R.succ, lambda[i], 1, beta.star.bs,
+                                        beta.r, beta.star.list, solver, cores,
+                                        progress, length(lambda), i, df.error)
+            cone.n.list[[i]] <- cone.return$cone.n.list
+
+            # Update the list of errors and restart the loop if necessary
+            df.error <- cone.return$df.error
+            new.error.bs <- cone.return$new.error
+            R.succ <- length(cone.n.list[[1]])
+            if (new.error.bs > 1) {
+               next
+            }
+
          }
 
       } else {
@@ -236,19 +274,42 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
                                   beta.star, omega.i, 0, solver)$x
 
          # Compute range.n for bootstrap beta
-         range.n.list <- fsst.range.bs(n, lpmodel, beta.obs.hat, beta.obs.bs,
+         range.return <- fsst.range.bs(n, lpmodel, beta.obs.hat, beta.obs.bs,
                                        x.star, x.star.bs, weight.mat, R, cores,
-                                       progress)
+                                       progress, df.error)
+         range.n.list <- range.return$range.n.list
 
-         cone.n.list <- list()
-         # Compute cone.n for bootstrap beta
-         for (i in 1:length(lambda)){
-            cone.n.temp <- fsst.cone.bs(n, omega.i, beta.n, beta.star, lpmodel,
-                                        R, lambda[i], 0, beta.star.bs, beta.r,
-                                        beta.star.list, solver, cores, progress,
-                                        length(lambda), i)
-            cone.n.list[[i]] <- cone.n.temp
+         # Update the list of errors and restart the loop if necessary
+         df.error <- range.return$df.error
+         new.error.bs <- range.return$new.error
+         R.succ <- length(range.n.list)
+         if (new.error.bs > 1) {
+            next
          }
+
+         # Compute cone.n for bootstrap beta
+         cone.n.list <- list()
+         for (i in 1:length(lambda)){
+            cone.return <- fsst.cone.bs(n, omega.i, beta.n, beta.star, lpmodel,
+                                        R.succ, lambda[i], 0, beta.star.bs,
+                                        beta.r, beta.star.list, solver, cores,
+                                        progress, length(lambda), i, df.error)
+            cone.n.list[[i]] <- cone.return$cone.n.list
+
+            # Update the list of errors and break the for-loop if there is
+            # any errors
+            df.error <- cone.return$df.error
+            new.error.bs <- cone.return$new.error
+            if (new.error.bs > 1) {
+               break()
+            }
+            new.error.bs <- 0
+         }
+      }
+
+      # Restasrt the loop if necessary
+      if (new.error.bs > 1) {
+         next
       }
 
       # ---------------- #
@@ -262,7 +323,6 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
       # Initialize the data frames
       df.pval <- data.frame(matrix(vector(), nrow = n.lambda, ncol = 2))
       colnames(df.pval) <- c("lambda", "p-value")
-
       for (i in 1:n.lambda){
          # Compute the p-values
          pval.return <- fsst.pval(range.n, cone.n$objval, range.n.list,
@@ -303,7 +363,9 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
                      beta.var.method = beta.var.method,
                      omega.i = omega.i,
                      beta.obs.bs = beta.obs.bs,
-                     test.logical = test.logical)
+                     test.logical = test.logical,
+                     R.succ = R.succ,
+                     df.error = df.error)
    } else {
       ### Case 2: test.logical == 0. Set the p-value as 0 directly because
       ### beta.tgt is outside the logical bounds
@@ -339,62 +401,46 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, lambda = .5,
 #'   \eqn{\{\widehat{\bm{\beta}}_b\}^B_{b=1}}.
 #'
 #' @inheritParams fsst
+#' @inheritParams beta.bs
 #' @param beta.obs.hat Estimator of
 #'   \eqn{\widehat{\bm{\beta}_{\mathrm{obs}, n}}} based on the given
 #'   information in \code{lpmodel}.
+#' @param df.error Table showing the id of the bootstrap replication(s)
+#'   with error(s) and the corresponding error message(s).
 #'
 #' @return Returns the bootstrap estimators and the estimator of the
 #'   asymptotic variance.
-#'     \item{sigma.mat}{Estimator of the asympototic variance}
-#'     \item{beta.obs.bs}{List of bootstrap betas}
+#'     \item{sigma.mat}{Estimator of the asympototic variance.}
+#'     \item{beta.obs.bs}{List of bootstrap betas.}
+#'   \item{R.succ}{Number of successful bootstrap replications.}
+#'     \item{df.error}{Updated table showing the id of the bootstrap
+#'       replication(s) with error(s) and the corresponding error message(s).}
 #'
 #' @export
 #'
-sigma.est <- function(n, data, beta.obs.hat, lpmodel, R, progress){
+sigma.est <- function(n, data, beta.obs.hat, beta.obs.bs, progress) {
 
    # ---------------- #
    # Step 1: Initialize the matrix and progress bar
    # ---------------- #
    sigma.sum <- matrix(rep(0, length(beta.obs.hat)^2),
                        nrow = length(beta.obs.hat))
-   beta.obs.bs <- list()
 
-   # Initialize the progress bar
-   if (progress == TRUE){
-      pb <- utils::txtProgressBar(initial = 0, max = R, style = 3, width = 20)
-      cat("\r")
-   } else {
-      pb <- NULL
-   }
+   R.eff <- length(beta.obs.bs)
 
-   for (i in 1:R){
-      # ---------------- #
-      # Step 2: Obtain the bootstrap beta
-      # ---------------- #
-      # Obtain the bootstrap  beta
-      data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
-      rownames(data.bs) <- 1:nrow(data.bs)
-      beta.obs.bs[[i]] <- lpmodel.beta.eval(data.bs, lpmodel$beta.obs, 1)[[1]]
+   for (i in 1:R.eff) {
       beta.product <- beta.obs.bs[[i]] - beta.obs.hat
-
       if (!is.matrix(beta.product)) {
          beta.product <- matrix(beta.product, nrow = 1)
       }
 
-      # ---------------- #
-      # Step 3: Compute the matrix product
-      # ---------------- #
+      # Compute the matrix product
       sigma.sum <- sigma.sum + (beta.product) %*% t(beta.product)
-
-      # Update progress bar
-      if (progress == TRUE) {
-         utils::setTxtProgressBar(pb, i/10)
-         cat("\r\r")
-      }
    }
 
    # Compute sigma hat
-   sigma.hat <- sigma.sum*n/R
+   sigma.hat <- sigma.sum*n/R.eff
+
    return(list(sigma.hat = sigma.hat,
                beta.obs.bs = beta.obs.bs))
 }
@@ -415,6 +461,7 @@ sigma.est <- function(n, data, beta.obs.hat, lpmodel, R, progress){
 #' @import doParallel doRNG
 #'
 #' @inheritParams fsst
+#' @inheritParams beta.bs
 #' @inheritParams sigma.est
 #'
 #' @return Returns the bootstrap estimators and the estimator of the
@@ -425,7 +472,7 @@ sigma.est <- function(n, data, beta.obs.hat, lpmodel, R, progress){
 #'
 #' @export
 #'
-sigma.est.parallel <- function(data, beta.obs.hat, lpmodel, R, cores,
+sigma.est.parallel <- function(data, beta.obs.hat, lpmodel, R, maxR, cores,
                                progress){
    # ---------------- #
    # Step 1: Register the number of cores and extract information
@@ -544,6 +591,103 @@ full.beta.bs <- function(lpmodel, beta.tgt, beta.obs.bs, R){
       beta.bs[[i]] <- c(beta.obs.bs[[i]], lpmodel$beta.shp, beta.tgt)
    }
    return(beta.bs)
+}
+
+#' Computing the bootstrap betas
+#'
+#' @description This function computes the bootstrap betas
+#'
+#' @inheritParams dkqs
+#' @inheritParams beta.bs
+#' @inheritParams fsst
+#' @param iseq The sequences of betas to iterate over
+#' @param beta.obs.hat Estimator of
+#'   \eqn{\widehat{\bm{\beta}_{\mathrm{obs}, n}}} based on the given
+#'   information in \code{lpmodel}.
+#' @param df.error Table showing the id of the bootstrap replication(s)
+#'   with error(s) and the corresponding error message(s).
+#'
+#' @return Returns the bootstrap estimators.
+#'   \item{beta.obs.bs}{List of bootstrap betas.}
+#'   \item{R.succ}{Number of successful bootstrap replications.}
+#'   \item{df.error}{Updated table showing the id of the bootstrap
+#'       replication(s) with error(s) and the corresponding error message(s).}
+#'
+#' @export
+#'
+fsst.beta.bs <- function(n, data, beta.obs.hat, lpmodel, R, maxR, progress,
+                         df.error, iseq){
+
+   # ---------------- #
+   # Step 1: Initialize the beta.obs.bs list and progress bar
+   # ---------------- #
+   beta.obs.bs <- list()
+
+   # Initialize the progress bar
+   if (progress == TRUE) {
+      pb <- utils::txtProgressBar(initial = 0, max = maxR, style = 3,
+                                  width = 20)
+      cat("\r")
+   } else {
+      pb <- NULL
+   }
+
+   # ---------------- #
+   # Step 2: Obtain the bootstrap beta and compute the matrix product
+   # ---------------- #
+   for (i in iseq) {
+      # Obtain the bootstrap data
+      data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
+      rownames(data.bs) <- 1:nrow(data.bs)
+
+      ## (2.1) Evaluate beta.obs from bootstrap data
+      beta.obs.result <- tryCatch(
+         expr = {
+            beta.obs.bs.temp <- lpmodel.beta.eval(data.bs,
+                                                  lpmodel$beta.obs,
+                                                  1)[[1]]
+            beta.obs.ls <- list(status = "NOERROR",
+                                beta.obs.bs = beta.obs.bs.temp)
+         },
+         error = function(e) {
+            return(list(status = "ERROR",
+                        msg = e))
+         },
+         finally = {
+         }
+      )
+
+      ## (2.2) Check if there is any error in forming beta.obs
+      if (beta.obs.result$status == "NOERROR") {
+         beta.obs.bs[[i]] <- beta.obs.result$beta.obs.bs
+      } else {
+         df.error[nrow(df.error) + 1, 2] <- "beta.obs"
+         df.error[nrow(df.error), 4] <- beta.obs.result$msg$message
+      }
+
+      # (2.3) Update progress bar
+      if (progress == TRUE) {
+         if ((i == maxR) | (length(beta.obs.bs) == R)){
+            utils::setTxtProgressBar(pb, maxR/10)
+            cat("\r\b")
+         } else {
+            utils::setTxtProgressBar(pb, i/10)
+            cat("\r\r")
+         }
+      }
+
+      # (2.4) Break the loop if R successful replications are made
+      if (length(beta.obs.bs) == R) {
+         break()
+      }
+   }
+   # Compute the number of successful bootstrap replicatinos
+   R.succ <- length(beta.obs.bs)
+
+   return(list(beta.obs.bs = beta.obs.bs,
+               R.succ = R.succ,
+               df.error = df.error))
+
 }
 
 #' Computing the variance estimator
@@ -927,6 +1071,113 @@ fsst.cone.lp <- function(n, omega.i, beta.n, beta.star, lpmodel, indicator,
                objval = objval))
 }
 
+#' Compute bootstrap components of \eqn{\widehat{\bm{\beta}}^\star}
+#'
+#' @description This function computes the bootstrap components of
+#'   \eqn{\widehat{\bm{\beta}}^\star}.
+#'
+#' @inheritParams fsst
+#' @inheritParams beta.bs
+#' @inheritParams beta.star.qp
+#' @inheritParams weight.matrix
+#' @param p Length of the beta vector.
+#' @param d Number of columns of the A matrix.
+#'
+#' @return Return the following list of objects:
+#'   \item{beta.star}{This corresponds to \eqn{\widehat{\bm{\beta}}^\star}.}
+#'   \item{beta.star.bs}{This corresponds to the bootstrap counterparts of
+#'     \eqn{\widehat{\bm{\beta}}^\star}.}
+#'   \item{x.star}{This corresponds to \eqn{\bm{x}^\star}, which is the
+#'     solution to the quadratic program '\code{beta.star.qp}'.}
+#'   \item{x.star.bs}{This corresponds to the bootstrap counterparts of
+#'     \eqn{\bm{x}^\star}.}
+#'   \item{df.error}{Table showing the id of the bootstrap replication(s)
+#'     with error(s) and the corresponding error message(s).}
+#'   \item{new.error}{Number of new errors.}
+#'   \item{error.id}{Indices of the bootstrap replications that give errors.}
+#'
+#' @export
+#'
+fsst.beta.star <- function(data, lpmodel, beta.n, beta.n.bs, beta.tgt,
+                           weight.mat, beta.obs.hat, beta.obs.bs, R,
+                           sigma.beta.obs, solver, df.error, p, d) {
+
+   # Original number of problematic bootstrap draws
+   error0 <- nrow(df.error)
+
+   # List of error indices
+   error.id <- NULL
+
+   # Case 1: d >= p - All star components are the same as the non-star
+   # components and the x.star objects are not used in the latter parts
+   if (d >= p) {
+      beta.star <- beta.n
+      beta.star.bs <- beta.n.bs
+      x.star <- NULL
+      x.star.bs <- NULL
+      # There is no error in simply defining new objects
+      df.error <- df.error
+   } else {
+      # Case 2: d < p - Need to compute beta.star, x.star and their bootstrap
+      # counterparts
+      # Solve the quadratic program to get beta.star and x.star
+      qp.return <- beta.star.qp(data, lpmodel, beta.tgt, weight.mat,
+                                beta.obs.hat, sigma.beta.obs, solver)
+      beta.star <- qp.return$beta.star
+      x.star <- qp.return$x.star
+
+      # Construct bootstrap estimates of beta.star
+      beta.star.bs <- list()
+      x.star.bs <- list()
+
+      # Compute the maximum number of iterations remaining
+      R.length <- length(beta.obs.bs)
+
+      for (i in 1:R.length) {
+         # Evaluate beta.star from bootstrap data
+         qp.result <- tryCatch(
+            expr = {
+               qp.return.bs <- beta.star.qp(data, lpmodel, beta.tgt,
+                                            weight.mat, beta.obs.bs[[i]],
+                                            sigma.beta.obs, solver)
+               qp.return.ls <- list(status = "NOERROR",
+                                    qp.return.bs = qp.return.bs)
+            },
+            error = function(e) {
+               return(list(status = "ERROR",
+                           msg = e))
+            },
+            finally = {
+            }
+         )
+
+         # Check if there is any error in forming beta.obs
+         if (qp.result$status == "NOERROR") {
+            beta.star.bs[[i]] <- qp.result$qp.return.bs$beta.star
+            x.star.bs[[i]] <- qp.result$qp.return.bs$x.star
+         } else {
+            df.error[nrow(df.error) + 1, 2] <- "beta.star.bs"
+            df.error[nrow(df.error), 4] <- qp.result$msg$message
+            error.id <- c(error.id, i)
+         }
+      }
+   }
+
+   # Check if there are new errors
+   error1 <- nrow(df.error)
+   new.error <- error1 - error0
+
+   # Updated list of beta.obs that are non-problematic
+   beta.obs.bs[error.id] <- NULL
+
+   return(list(beta.star = beta.star,
+               beta.star.bs = beta.star.bs,
+               x.star = x.star,
+               x.star.bs = x.star.bs,
+               df.error = df.error,
+               new.error = new.error))
+}
+
 #' Computes \eqn{\widehat{\bm{\beta}}^r_n}
 #'
 #' @description This function computes the restricted estimator
@@ -1032,17 +1283,27 @@ beta.r.compute <- function(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
 #' @inheritParams fsst
 #' @inheritParams fsst.range
 #' @inheritParams full.beta.bs
+#' @inheritParams fsst.beta.star
 #' @param x.star.bs Bootstrap components of `\code{x.star}`.
 #'
-#' @return A list of bootstrap Range statistics.
+#' @return Returns the following list of objects:
 #'   \item{range.n.list}{A list of bootstrap Range statistics
 #'     \eqn{\{\mathrm{Range}_{n,b}\}^B_{b=1}}}
+#'   \item{df.error}{Table showing the id of the bootstrap replication(s)
+#'     with error(s) and the corresponding error message(s).}
+#'   \item{df.error}{Table showing the id of the bootstrap replication(s)
+#'     with error(s) and the corresponding error message(s).}
+#'   \item{new.error}{Number of new errors.}
+#'   \item{error.id}{Indices of the bootstrap replications that give errors.}
 #'
 #' @export
 #'
 fsst.range.bs <- function(n, lpmodel, beta.obs.hat, beta.obs.bs, x.star,
-                          x.star.bs, weight.mat, R, cores, progress){
+                          x.star.bs, weight.mat, R, cores, progress,
+                          df.error){
    range.n.list <- NULL
+   error0 <- nrow(df.error)
+   error.id <- NULL
 
    ### A. Non-parallel version
    if (cores == 1){
@@ -1055,26 +1316,55 @@ fsst.range.bs <- function(n, lpmodel, beta.obs.hat, beta.obs.bs, x.star,
          pb <- NULL
       }
 
-      # Initialize the for-loop
-      for (i in 1:R){
-         # ---------------- #
-         # Step A1: Compute the replacements
-         # ---------------- #
-         beta.bs.1 <- beta.obs.bs[[i]] - beta.obs.hat
+      # Compute the maximum number of iterations remaining
+      R.length <- length(beta.obs.bs)
 
-         # ---------------- #
-         # Step A2: Solve the linear program and extract the solution
-         # ---------------- #
-         range.n.return <- fsst.range(n, beta.bs.1, x.star.bs[[i]] - x.star,
-                                      lpmodel, weight.mat)
-         range.n.list <- c(range.n.list, range.n.return)
+      for (i in 1:R.length) {
+         # Evaluate beta.star from bootstrap data
+         range.result <- tryCatch(
+            expr = {
+               # ---------------- #
+               # Step A1: Compute the replacements
+               # ---------------- #
+               beta.bs.1 <- beta.obs.bs[[i]] - beta.obs.hat
+               x.star.bs.1 <- x.star.bs[[i]] - x.star
 
+               range.n.return <- fsst.range(n, beta.bs.1, x.star.bs.1,
+                                            lpmodel, weight.mat)
+               range.return.ls <- list(status = "NOERROR",
+                                       range.n.return = range.n.return)
+            },
+            error = function(e) {
+               return(list(status = "ERROR",
+                           msg = e))
+            },
+            finally = {
+            }
+         )
+
+         # Check if there is any error in forming beta.obs
+         if (range.result$status == "NOERROR") {
+            range.n.list <- c(range.n.list, range.result$range.n.return)
+         } else {
+            df.error[nrow(df.error) + 1, 2] <- "range.bs"
+            df.error[nrow(df.error), 4] <- range.result$msg$message
+            error.id <- c(error.id, i)
+         }
+         
          # Update progress bar
          if (progress == TRUE) {
             utils::setTxtProgressBar(pb, (3.5*n)/10 + 3*i/10)
             cat("\r\r")
          }
       }
+
+      # Check if there are new errors
+      error1 <- nrow(df.error)
+      new.error <- error1 - error0
+
+      # Updated list of range that are non-problematic
+      range.n.list[error.id] <- NULL
+
    } else {
       ### B. Parallel version
       if (progress == TRUE){
@@ -1125,7 +1415,10 @@ fsst.range.bs <- function(n, lpmodel, beta.obs.hat, beta.obs.bs, x.star,
       range.n.list <- unlist(listans)
    }
 
-   return(range.n.list)
+   return(list(range.n.list = range.n.list,
+               df.error = df.error,
+               new.error = new.error,
+               error.id = error.id))
 }
 
 #' Computing bootstrap components of `Cone`
@@ -1137,26 +1430,35 @@ fsst.range.bs <- function(n, lpmodel, beta.obs.hat, beta.obs.bs, x.star,
 #'
 #' @inheritParams fsst
 #' @inheritParams fsst.cone.lp
+#' @inheritParams fsst.beta.star
 #' @param length.lambda The length of the `\code{lambda}` vector.
 #' @param lambda.i The current value of `\code{lambda}` being considered
 #'
-#' @return A list of bootstrap Range statistics.
+#' @return Returns the following list of objects:
 #'   \item{range.n.list}{A list of bootstrap Range statistics
 #'     \eqn{\{\mathrm{Cone}_{n,b}\}^B_{b=1}}}
+#'   \item{df.error}{Table showing the id of the bootstrap replication(s)
+#'     with error(s) and the corresponding error message(s).}
+#'   \item{new.error}{Number of new errors.}
+#'   \item{error.id}{Indices of the bootstrap replications that give errors.}
 #'
 #' @export
 #'
-fsst.cone.bs <- function(n, omega.i, beta.n, beta.star, lpmodel, R, lambda,
-                         indicator, beta.star.bs, beta.r, beta.star.list,
-                         solver, cores, progress, length.lambda, lambda.i){
+fsst.cone.bs <- function(n, omega.i, beta.n, beta.star, lpmodel, R.succ,
+                         lambda,  indicator, beta.star.bs, beta.r,
+                         beta.star.list, solver, cores, progress,
+                         length.lambda, lambda.i, df.error){
    cone.n.list <- NULL
+   error0 <- nrow(df.error)
+   error.id <- NULL
 
    if (cores == 1){
       # Initialize progress bar
-      if (progress == TRUE){
+      if (progress == TRUE) {
          lambda.bar.i0 <- .35*(lambda.i-1)/length.lambda
-         pb <- utils::txtProgressBar(initial = R*.65 + R*lambda.bar.i0,
-                                     max = R,
+         pb <- utils::txtProgressBar(initial = R.succ*.65 +
+                                        R.succ*lambda.bar.i0,
+                                     max = R.succ,
                                      style = 3,
                                      width = 20)
          cat("\r")
@@ -1164,30 +1466,60 @@ fsst.cone.bs <- function(n, omega.i, beta.n, beta.star, lpmodel, R, lambda,
          pb <- NULL
       }
 
-      for (i in 1:R){
-         # ---------------- #
-         # Step 1: Compute the replacements
-         # ---------------- #
-         beta.new <- beta.star.list[[i+1]] - beta.star + lambda*beta.r
+      for (i in 1:R.succ) {
+         # Evaluate beta.star from bootstrap data
+         cone.result <- tryCatch(
+            expr = {
 
-         # ---------------- #
-         # Step 2: Solve the linear program and extract the solution
-         # ---------------- #
-         cone.n.return <- fsst.cone.lp(n, omega.i, beta.n, beta.new, lpmodel,
-                                       indicator, solver)
-         cone.n.list <- c(cone.n.list, cone.n.return$objval)
+               # ---------------- #
+               # Step 1: Compute the replacements
+               # ---------------- #
+               beta.new <- beta.star.list[[i+1]] - beta.star + lambda*beta.r
+
+               cone.n.return <- fsst.cone.lp(n, omega.i, beta.n, beta.new,
+                                             lpmodel, indicator, solver)
+               cone.return.ls <- list(status = "NOERROR",
+                                      cone.n.return = cone.n.return)
+            },
+            error = function(e) {
+               return(list(status = "ERROR",
+                           msg = e))
+            },
+            finally = {
+            }
+         )
 
          # Update progress bar
          if (progress == TRUE) {
-            utils::setTxtProgressBar(pb, R*.65 + R*lambda.bar.i0 +
+            utils::setTxtProgressBar(pb,
+                                     R.succ*.65 +
+                                        R.succ*lambda.bar.i0 +
                                         i*.35/length.lambda)
-            if ((i == R) & (length.lambda == lambda.i)) {
+            if ((i == R.succ) & (length.lambda == lambda.i)) {
                cat("\r\b")
             } else {
                cat("\r\r")
             }
          }
+
+         # Check if there is any error in forming beta.obs
+         if (cone.result$status == "NOERROR") {
+            cone.n.list <- c(cone.n.list, cone.result$cone.n.return$objval)
+         } else {
+            df.error[nrow(df.error) + 1, 2] <- "cone.bs"
+            df.error[nrow(df.error) + 1, 3] <- lambda
+            df.error[nrow(df.error), 4] <- cone.result$msg$message
+            error.id <- c(error.id, i)
+         }
       }
+
+      # Check if there are new errors
+      error1 <- nrow(df.error)
+      new.error <- error1 - error0
+
+      # Updated list of range that are non-problematic
+      cone.n.list[error.id] <- NULL
+
    } else {
       options(warn=-1)
 
@@ -1246,7 +1578,10 @@ fsst.cone.bs <- function(n, omega.i, beta.n, beta.star, lpmodel, R, lambda,
       cone.n.list <- unlist(listans)
    }
 
-   return(cone.n.list)
+   return(list(cone.n.list = cone.n.list,
+               new.error = new.error,
+               df.error = df.error,
+               error.id = error.id))
 }
 
 #' Auxiliary function to calculate the p-value of `\code{fsst}`
@@ -1302,6 +1637,7 @@ fsst.pval <- function(range.n, cone.n, range.n.list, cone.n.list, R,
 #'    generates appropriate error messages.
 #'
 #' @inheritParams fsst
+#' @inheritParams dkqs
 #'
 #' @return Returns the list of updated parameters as follows:
 #'   \item{data}{Upated data in class \code{data.frame}}
@@ -1314,7 +1650,7 @@ fsst.pval <- function(range.n, cone.n, range.n.list, cone.n.list, R,
 #'
 #' @export
 #'
-fsst.check <- function(data, lpmodel, beta.tgt, R, lambda, rho, n,
+fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
                        weight.matrix, solver, cores, progress){
 
    # ---------------- #
@@ -1355,6 +1691,9 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, lambda, rho, n,
    check.numeric(beta.tgt, "beta.tgt")
    check.positiveinteger(R, "R")
    cores <- check.cores(cores)
+
+   # Check Rmulti
+   check.numrange(Rmulti, "Rmulti", "closed", 1, "open", Inf)
 
    # ---------------- #
    # Step 5: Check lambda

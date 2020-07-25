@@ -4,7 +4,7 @@
 \alias{sigma.est.parallel}
 \title{Computing bootstrap and variance estimators with parallel programming}
 \usage{
-\method{sigma}{est.parallel}(data, beta.obs.hat, lpmodel, R, cores, progress)
+\method{sigma}{est.parallel}(data, beta.obs.hat, lpmodel, R, maxR, cores, progress)
 }
 \arguments{
 \item{data}{The data being used in the inference.}
@@ -23,6 +23,8 @@ procedure are:
 }}
 
 \item{R}{Number of bootstraps chosen by the users.}
+
+\item{maxR}{Maximum number of bootstrap replications in case error occured.}
 
 \item{cores}{Number of cores to be used in the parallelized for-loop.
 Parallelized for-loop is used if \code{cores} is set to be an integer

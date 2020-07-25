@@ -14,7 +14,8 @@ fsst.range.bs(
   weight.mat,
   R,
   cores,
-  progress
+  progress,
+  df.error
 )
 }
 \arguments{
@@ -51,9 +52,15 @@ should be displayed in the inference procedure. If it is set as
 Otherwise, the messages will not be displayed.}
 }
 \value{
-A list of bootstrap Range statistics.
+Returns the following list of objects:
   \item{range.n.list}{A list of bootstrap Range statistics
     \eqn{\{\mathrm{Range}_{n,b}\}^B_{b=1}}}
+  \item{df.error}{Table showing the id of the bootstrap replication(s)
+    with error(s) and the corresponding error message(s).}
+  \item{df.error}{Table showing the id of the bootstrap replication(s)
+    with error(s) and the corresponding error message(s).}
+  \item{new.error}{Number of new errors.}
+  \item{error.id}{Indices of the bootstrap replications that give errors.}
 }
 \description{
 This function computes the bootstrap components of the

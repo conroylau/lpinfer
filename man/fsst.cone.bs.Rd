@@ -10,7 +10,7 @@ fsst.cone.bs(
   beta.n,
   beta.star,
   lpmodel,
-  R,
+  R.succ,
   lambda,
   indicator,
   beta.star.bs,
@@ -20,7 +20,8 @@ fsst.cone.bs(
   cores,
   progress,
   length.lambda,
-  lambda.i
+  lambda.i,
+  df.error
 )
 }
 \arguments{
@@ -36,8 +37,6 @@ procedure are:
   \item{\code{A.obs}}
   \item{\code{beta.obs}}
 }}
-
-\item{R}{Number of bootstraps chosen by the users.}
 
 \item{lambda}{Parameter used in the cone bootstrap sattistics}
 
@@ -63,9 +62,13 @@ Otherwise, the messages will not be displayed.}
 \item{lambda.i}{The current value of `\code{lambda}` being considered}
 }
 \value{
-A list of bootstrap Range statistics.
+Returns the following list of objects:
   \item{range.n.list}{A list of bootstrap Range statistics
     \eqn{\{\mathrm{Cone}_{n,b}\}^B_{b=1}}}
+  \item{df.error}{Table showing the id of the bootstrap replication(s)
+    with error(s) and the corresponding error message(s).}
+  \item{new.error}{Number of new errors.}
+  \item{error.id}{Indices of the bootstrap replications that give errors.}
 }
 \description{
 This function computes the bootstrap components of the
