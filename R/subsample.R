@@ -369,7 +369,6 @@ subsample.onecore <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
                     msg = e))
       },
       finally = {
-        s.bs.ls
       }
     )
 
@@ -516,7 +515,6 @@ subsample.manycores <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
                       msg = e))
         },
         finally = {
-          beta.obs.ls
         }
       )
       
@@ -548,7 +546,6 @@ subsample.manycores <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
                           msg = e))
             },
             finally = {
-              s.bs.ls
             }
           )
 
