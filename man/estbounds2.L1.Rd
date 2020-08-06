@@ -2,45 +2,43 @@
 % Please edit documentation in R/estbounds.R
 \name{estbounds2.L1}
 \alias{estbounds2.L1}
-\title{Estimates the bounds with shape contraints (Stage 2 with \eqn{\ell^1}-norm)}
+\title{Estimates the bounds with shape constraints (stage 2 with 1-norm)}
 \usage{
 estbounds2.L1(data, firststepsoln, lpmodel, modelsense, kappa, solver)
 }
 \arguments{
-\item{data}{The data being used in the inference.}
+\item{data}{Data used in the tests.}
 
 \item{firststepsoln}{List of solutions to the first step problem.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear
-programming problems. The list of objects required in the \code{dkqs}
-procedure are:
-\itemize{
-  \item{\code{A.tgt}}
-  \item{\code{A.obs}}
-  \item{\code{A.shp}}
-  \item{\code{beta.obs}}
-  \item{\code{beta.shp}}
-}}
+\item{lpmodel}{The \code{lpmodel} object used in the test that consists of
+the following objects:
+ \itemize{
+   \item{\code{A.tgt}}
+   \item{\code{A.obs}}
+   \item{\code{A.shp}}
+   \item{\code{beta.obs}}
+   \item{\code{beta.shp}}
+ }}
 
 \item{modelsense}{The indicator of whether the model is to max or min an
 objective function.}
 
-\item{kappa}{Parameter used in the second step of the two-step procedure
-for obtaining the solution subject to the shape constraints. It can be
-any nonnegative number.}
+\item{kappa}{Tuning parameter used in the second step of the two-step
+procedure for obtaining the bounds subject to the shape constraints.
+It can be any nonnegative number.}
 
-\item{solver}{The name of the linear and quadratic programming solver that
+\item{solver}{Name of the linear and quadratic programming solver that
 are used to obtain the solution to linear and quadratic programs.
-The solvers supported by this module are `\code{cplexAPI}',
-`\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
+The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
+\code{limSolve} and \code{Rcplex}.}
 }
 \value{
 Returns the solution to the second step of the two-step procedure.
- \item{objval}{Optimal value calculated from the optimizer.}
- \item{x}{Optimal point calculated from the optimizer.}
+ \item{objval}{Optimal objective value.}
+ \item{x}{Optimal point.}
 }
 \description{
 This function evaluates the solution to stage 2 of the
-   two-step procedure obtaining the estimated bound. \eqn{\ell^1}-norm
-   is used in the constraint
+   two-step procedure to obtain the estimated bound with the 1-norm.
 }

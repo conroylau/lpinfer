@@ -7,26 +7,14 @@
 \method{summary}{fsst}(x, ...)
 }
 \arguments{
-\item{x}{Object returned from \code{fsst}.}
+\item{x}{Objects returned from \code{fsst}.}
 
 \item{...}{Additional arguments.}
 }
 \value{
-Nothing is returned
+Nothing is returned.
 }
 \description{
-This function uses the summary method on the return list of the
-   function \code{fsst}. This is a wrapper of the \code{print} command.
-}
-\details{
-The following information are printed
-  \itemize{
-    \item{Test statistic (Max of Cone and Range)}
-    \item{Test statistic (Cone)}
-    \item{Test statistic (Range)}
-    \item{\eqn{p}-value}
-    \item{Solver used}
-    \item{Number of cores used}
-    \item{Table of critical values}
-    \item{Regularization parameters}}
+This function prints a summary of the results obtained from
+  \code{fsst}.
 }

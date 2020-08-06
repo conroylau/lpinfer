@@ -2,14 +2,16 @@
 % Please edit documentation in R/checks.R
 \name{check.solver}
 \alias{check.solver}
-\title{Check function: check solvers}
+\title{Check function: solvers}
 \usage{
 check.solver(x, name.var, norm = 2, qc = FALSE)
 }
 \arguments{
 \item{x}{Variable to be checked.}
 
-\item{norm}{Norm used in the problem}
+\item{name.var}{Name of the variable.}
+
+\item{norm}{Norm used in the problem (if applicable).}
 
 \item{qc}{Indicator of whether the problem consists of a quadratic
 constraint.}
@@ -18,9 +20,9 @@ constraint.}
 Returns the function name that corresponds to the solver for the
   problem.
    \item{solver}{Function for the solver used.}
-   \item{solver_name}{Name of the solver used in lower case.}
+   \item{solver.name}{Name of the solver used in lower case.}
 }
 \description{
 This function checks the solver used is supported and is
-  appropriate for the problem considered.
+  appropriate for the testing function.
 }

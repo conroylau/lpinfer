@@ -7,15 +7,14 @@
 \method{summary}{estbounds}(x, ...)
 }
 \arguments{
-\item{x}{Object returned from \code{estbounds}.}
+\item{x}{Objects returned from \code{estbounds}.}
 
 \item{...}{Additional arguments.}
 }
 \value{
-Nothing is returned. This function prints results from
-   \code{estbounds}.
+Nothing is returned.
 }
 \description{
-This function uses the summary method on the return list of the
-   function \code{estbounds}.
+This function prints a summary of the results obtained from
+  \code{estbounds}.
 }

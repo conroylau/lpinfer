@@ -2,7 +2,8 @@
 % Please edit documentation in R/fsst.R
 \name{fsst.cone.bs}
 \alias{fsst.cone.bs}
-\title{Computing bootstrap components of `Cone`}
+\title{Computes the bootstrap estimates of the cone component of the test
+  statistics}
 \usage{
 fsst.cone.bs(
   n,
@@ -13,64 +14,69 @@ fsst.cone.bs(
   R.succ,
   lambda,
   indicator,
-  beta.star.bs,
   beta.r,
   beta.star.list,
   solver,
-  cores,
   progress,
-  length.lambda,
-  lambda.i,
   df.error
 )
 }
 \arguments{
+\item{n}{Sample size (only required if \code{data} is omitted in the input).}
+
 \item{omega.i}{The matrix \eqn{\widehat{\bm{\Omega}}^i_n}, i.e. the
 regularized matrix for
 \eqn{\widehat{\bm{\Sigma}}^{\beta^\star}_{n,\bar{\rho}}}.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear
-programming problems. The list of objects required in the \code{dkqs}
-procedure are:
-\itemize{
-  \item{\code{A.tgt}}
-  \item{\code{A.obs}}
-  \item{\code{beta.obs}}
-}}
+\item{beta.n}{Sample \eqn{\widehat{\bm{\beta}}_n} vector that is defined as
+\eqn{\widehat{\bm{\beta}}_n \equiv (\widehat{\bm{\beta}}_{{\rm obs},n},
+\bm{\beta}_{{\rm shp},n}, \bm{\beta}_{{\rm tgt}})'}.}
 
-\item{lambda}{Parameter used in the cone bootstrap sattistics}
+\item{beta.star}{This corresponds to the starred version of the
+\code{beta.n} vector, i.e. \eqn{\widehat{\bm{\beta}}^\star_n}.}
+
+\item{lpmodel}{The \code{lpmodel} object used in the test. The following
+components are required in the \code{lpmodel} for the FSST test:
+ \itemize{
+   \item{\code{A.tgt}}
+   \item{\code{A.obs}}
+   \item{\code{A.shp}}
+   \item{\code{beta.obs}}
+   \item{\code{beta.shp}}
+ }}
+
+\item{lambda}{Parameter used to obtain the restricted estimator
+\eqn{\widehat{\bm{\beta}}^r_n}.}
 
 \item{indicator}{A binary variable that equals to 1 for \eqn{d \geq p} and
 equals to 0 for \eqn{d < p}.}
 
-\item{solver}{The name of the linear and quadratic programming solver that
+\item{beta.r}{This corresponds to the restricted estimator.}
+
+\item{beta.star.list}{This corresponds to the bootstrap estimates of
+\code{beta.star}.}
+
+\item{solver}{Name of the linear and quadratic programming solver that
 are used to obtain the solution to linear and quadratic programs.
-The solvers supported by this module are `\code{cplexAPI}',
-`\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
+The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
+\code{limSolve} and \code{Rcplex}.}
 
-\item{cores}{Number of cores to be used in the parallelized for-loop.
-Parallelized for-loop is used if \code{cores} is set to be an integer
-greater than or equal to 2.}
+\item{progress}{The boolean variable for whether the progress bars should
+be displayed. If it is set as \code{TRUE}, the progress bars will be
+displayed while the code is running.}
 
-\item{progress}{The boolean variable for whether the result messages
-should be displayed in the inference procedure. If it is set as
-\code{TRUE}, the messages are displayed throughout the procedure.
-Otherwise, the messages will not be displayed.}
-
-\item{length.lambda}{The length of the `\code{lambda}` vector.}
-
-\item{lambda.i}{The current value of `\code{lambda}` being considered}
+\item{df.error}{Table showing the id of the bootstrap replication(s)
+with error(s) and the corresponding error message(s).}
 }
 \value{
-Returns the following list of objects:
-  \item{range.n.list}{A list of bootstrap Range statistics
-    \eqn{\{\mathrm{Cone}_{n,b}\}^B_{b=1}}}
+Return the following list of objects:
+  \item{cone.n.list}{List of bootstrap cone components.}
   \item{df.error}{Table showing the id of the bootstrap replication(s)
     with error(s) and the corresponding error message(s).}
   \item{new.error}{Number of new errors.}
   \item{error.id}{Indices of the bootstrap replications that give errors.}
 }
 \description{
-This function computes the bootstrap components of the
-  `Cone` test statistics.
+This function computes the bootstrap estimates of the cone
+  components.
 }

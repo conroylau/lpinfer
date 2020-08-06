@@ -2,7 +2,7 @@
 % Please edit documentation in R/subsample.R
 \name{subsample}
 \alias{subsample}
-\title{Computes the \eqn{p}-value of the subsampling procedure}
+\title{Conducts inference using the subsampling procedure}
 \usage{
 subsample(
   data = NULL,
@@ -14,16 +14,14 @@ subsample(
   phi = 2/3,
   replace = FALSE,
   solver = NULL,
-  cores = 1,
   progress = TRUE
 )
 }
 \arguments{
-\item{data}{The data being used in the inference.}
+\item{data}{Data used in the tests.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear
- programming problems. The list of objects required in the \code{dkqs}
- procedure are:
+\item{lpmodel}{The \code{lpmodel} object used in the test. The following
+components are required in the \code{lpmodel} for the subsampling test:
  \itemize{
    \item{\code{A.tgt}}
    \item{\code{A.obs}}
@@ -31,55 +29,51 @@ subsample(
    \item{\code{beta.obs}}
    \item{\code{beta.shp}}
  }
-matrix of the estimator \eqn{\hat{\beta}_{\mathrm{obs}}}.}
+matrix of the estimator \eqn{\hat{\bm{\beta}}_{\mathrm{obs}}}.}
 
 \item{beta.tgt}{Value of beta to be tested.}
 
-\item{R}{Number of bootstraps chosen by the users.}
+\item{R}{Number of bootstrap replications.}
 
 \item{Rmulti}{Multiplier for the number of bootstrap replications. The
-product of `\code{Rmulti}' and `\code{R}' refers to the maximum
-number of bootstrap replications.}
+product of \code{Rmulti} and \code{R} refers to the maximum
+number of bootstrap replications to be conducted if there are errors.}
 
-\item{norm}{Norm used in the optimization problem.}
+\item{norm}{Norm used in the optimization problem. It can be either a 1-norm
+or a 2-norm.}
 
-\item{phi}{Power for the sample. \eqn{n^\phi} represents the size
-of each subsample.}
+\item{phi}{Tuning parameter for the subsampling test. The size of each
+subsample is \eqn{n^\phi} where \eqn{\phi \in [0,1]}.}
 
 \item{replace}{Boolean variable to indicate whether the function samples
 the data with or without replacement.}
 
-\item{solver}{The name of the linear and quadratic programming solver that
+\item{solver}{Name of the linear and quadratic programming solver that
 are used to obtain the solution to linear and quadratic programs.
-The solvers supported by this module are `\code{cplexAPI}',
-`\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
+The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
+\code{limSolve} and \code{Rcplex}.}
 
-\item{cores}{Number of cores to be used in the parallelized for-loop.
-Parallelized for-loop is used if \code{cores} is set to be an integer
-greater than or equal to 2.}
-
-\item{progress}{The boolean variable for whether the result messages
-should be displayed in the inference procedure. If it is set as
-\code{TRUE}, the messages are displayed throughout the procedure.
-Otherwise, the messages will not be displayed.}
+\item{progress}{The boolean variable for whether the progress bars should
+be displayed. If it is set as \code{TRUE}, the progress bars will be
+displayed while the code is running.}
 }
 \value{
 Returns a list of output calculated from the function:
   \item{pval}{\eqn{p}-value.}
   \item{T.n}{Test statistic \eqn{T_n}.}
-  \item{T.sub}{The list of test statistics from the subsampling procedure.}
-  \item{solver}{Solver used in solving the linear and quadratic programs.}
-  \item{cores}{Number of cores used.}
+  \item{T.sub}{List of bootstrap estimates of the test statistics
+    from the subsampling procedure.}
+  \item{solver}{Solver used.}
   \item{cv.table}{Table of critical values.}
   \item{call}{The function that has been called.}
   \item{phi}{The \eqn{\phi} parameter used.}
   \item{norm}{Norm used.}
   \item{subsample.size}{Size of subsample}
   \item{test.logical}{Indicator variable for whether the computation has
-    been conducted. If '\code{test.logical}' is 1, it refers to the case
-    where '\code{beta.tgt}' is inside the logical bound. If
-    '\code{test.logical}' is 0, it refers to the case where '
-    \code{beta.tgt}' is outside the logical bound.}
+    been conducted. If \code{test.logical} is 1, it refers to the case
+    where \code{beta.tgt} is inside the logical bound. If
+    \code{test.logical} is 0, it refers to the case where
+    \code{beta.tgt} is outside the logical bound.}
   \item{df.error}{Table showing the id of the bootstrap replication(s)
     with error(s) and the corresponding error message(s).}
   \item{R.succ}{Number of successful bootstrap replications.}
@@ -93,11 +87,11 @@ There are three possible combinations for the parameters
 \code{phi} and \code{replace}:
 \itemize{
   \item{If \code{replace} is set as \code{FALSE}, it refers to the
-    subsampling procedure. In this case, \code{phi} has to be in the
+    subsampling procedure. In this case, \code{phi} has to be inside the
     interval \eqn{(0, 1)}.}
   \item{If \code{replace} is set as \code{TRUE} and \code{phi} is set as 1,
     then it refers to the bootstrap procedure.}
-  \item{If \code{replace} is set as \code{TRUE} and \code{phi} is in the
+  \item{If \code{replace} is set as \code{TRUE} and \code{phi} is inside the
     interval \eqn{(0, 1)}, then it refers to the \eqn{m} out of \eqn{n}
     bootstrap procedure, where \eqn{m} is the size of the subsample and
     \eqn{n} is the total number of observations.}

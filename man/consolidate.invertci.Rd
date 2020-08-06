@@ -11,5 +11,5 @@ Returns the consolidate table.
 }
 \description{
 This function is used to consolidate the summary table for
-  display via the `\code{summary}` command.
+  display via the \code{summary} command.
 }

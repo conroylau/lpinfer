@@ -2,16 +2,16 @@
 % Please edit documentation in R/optim.R
 \name{cplexapi.optim}
 \alias{cplexapi.optim}
-\title{LP and QP solver by cplexAPI}
+\title{LP and QP solver by \code{cplexAPI}}
 \usage{
 cplexapi.optim(Af, bf, nf, A, rhs, sense, modelsense, lb, weight = NULL)
 }
 \value{
 Returns the optimal point and optimal value.
- \item{x}{Optimal point calculated from the optimizer.}
- \item{objval}{Optimal value calculated from the optimizer.}
+ \item{objval}{Optimal objective value.}
+ \item{x}{Optimal point.}
 }
 \description{
 This function computes the solution to the quadratic and linear
-   programs using the `\code{cplexAPI}' package.
+   programs using the \code{cplexAPI} package.
 }

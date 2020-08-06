@@ -2,7 +2,7 @@
 % Please edit documentation in R/lpmodel.R
 \name{lpmodel.natural}
 \alias{lpmodel.natural}
-\title{Define an 'lpmodel.natural' form object}
+\title{Define an \code{lpmodel.natural} form object}
 \usage{
 lpmodel.natural(
   A.obs = NULL,
@@ -16,28 +16,28 @@ lpmodel.natural(
 )
 }
 \arguments{
-\item{A.obs}{A matrix, list or function}
+\item{A.obs}{A matrix, list or function.}
 
-\item{A.shp}{A matrix, list or function}
+\item{A.shp}{A matrix, list or function.}
 
-\item{A.tgt}{A matrix, list or function}
+\item{A.tgt}{A matrix, list or function.}
 
-\item{beta.obs}{A vector, list or function}
+\item{beta.obs}{A vector, list or function.}
 
-\item{beta.shp}{A vector, list or function}
+\item{beta.shp}{A vector, list or function.}
 
 \item{sense.shp}{Sense vector for the shape constraints.}
 
-\item{x.lb}{Lower bound for the x variable.}
+\item{x.lb}{Lower bound for the \eqn{\bm{x}} variable.}
 
-\item{x.ub}{Upper bound for the x variable.}
+\item{x.ub}{Upper bound for the \eqn{\bm{x}} variable.}
 }
 \value{
-Returns a list of \code{lpmodel} objects in the 
+Returns a list of \code{lpmodel} objects in the
   \code{lpmodel} class.
 }
 \description{
 This function defines the objects required in the
-   \code{lpinfer} module in the \code{lpmodel.natural} class that allows
+   \code{lpinfer} package in the \code{lpmodel.natural} class that allows
    both equality and inequality constraints.
 }

@@ -2,33 +2,36 @@
 % Please edit documentation in R/fsst.R
 \name{fsst.range}
 \alias{fsst.range}
-\title{Computes the statistic to the range problem in the FSST procedure}
+\title{Computes the range component of the test statistics}
 \usage{
 fsst.range(n, beta.obs.hat, x.star, lpmodel, weight.mat)
 }
 \arguments{
+\item{n}{Sample size (only required if \code{data} is omitted in the input).}
+
 \item{beta.obs.hat}{Estimator of
-\eqn{\widehat{\bm{\beta}_{\mathrm{obs}, n}}} based on the given
+\eqn{\widehat{\bm{\beta}}_{\mathrm{obs}, n}} based on the given
 information in \code{lpmodel}.}
 
-\item{x.star}{Optimal value from `\code{beta.star.qp}`.}
+\item{x.star}{Optimal value from \code{beta.star.qp}.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear
-programming problems. The list of objects required in the \code{dkqs}
-procedure are:
-\itemize{
-  \item{\code{A.tgt}}
-  \item{\code{A.obs}}
-  \item{\code{beta.obs}}
-}}
+\item{lpmodel}{The \code{lpmodel} object used in the test. The following
+components are required in the \code{lpmodel} for the FSST test:
+ \itemize{
+   \item{\code{A.tgt}}
+   \item{\code{A.obs}}
+   \item{\code{A.shp}}
+   \item{\code{beta.obs}}
+   \item{\code{beta.shp}}
+ }}
 
-\item{weight.mat}{Weighting matrix}
+\item{weight.mat}{Weighting matrix.}
 }
 \value{
 Returns the optimal point and optimal value.
- \item{range}{The optimal value of the Range component.}
+ \item{range}{Range component of the test statistic.}
 }
 \description{
-This function computes the statistic of the range problem in
-   the FSST procedure.
+This function computes the range component of the test
+  statistics in the FSST procedure.
 }

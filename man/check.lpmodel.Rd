@@ -2,7 +2,7 @@
 % Please edit documentation in R/checks.R
 \name{check.lpmodel}
 \alias{check.lpmodel}
-\title{Check function: check \code{lpmodel}}
+\title{Check function: \code{lpmodel}}
 \usage{
 check.lpmodel(
   data,
@@ -17,7 +17,7 @@ check.lpmodel(
 )
 }
 \arguments{
-\item{data}{The data being used in the inference.}
+\item{data}{Data used in the tests.}
 
 \item{lpmodel}{An \code{lpmodel} object.}
 
@@ -33,7 +33,7 @@ check.lpmodel(
 
 \item{beta.shp.cat}{Category of the \code{beta.shp} object.}
 
-\item{R}{Number of bootstraps chosen by the users.}
+\item{R}{Number of bootstrap replications.}
 }
 \value{
 Returns the updated \code{lpmodel} object.
@@ -57,8 +57,8 @@ categories for the each of the object:
  \item{\code{function_obs_var}: This refers to the case where
    the object is a function that produces a list that contains a matrix
    and a vector. This is typically the case for \code{beta.obs} when
-   the testing procedure requires both the observed value of \code{beta.obs}
-   and the estimator of the asymptotic variance.}
+   the testing procedure requires both the observed value of
+   \code{beta.obs} and the estimator of the asymptotic variance.}
 }
  Each object can belong to one of more categories.
 }

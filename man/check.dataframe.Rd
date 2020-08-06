@@ -2,16 +2,17 @@
 % Please edit documentation in R/checks.R
 \name{check.dataframe}
 \alias{check.dataframe}
-\title{Check function: data}
+\title{Check function: data frame}
 \usage{
 check.dataframe(data)
 }
 \arguments{
-\item{data}{A \code{data} object to be checked.}
+\item{data}{A \code{data} object.}
 }
 \value{
 Returns the object as a \code{data.frame}.
 }
 \description{
-This function force the data input as a \code{data.frame}.
+This function coerce the data provided from the user as a
+  \code{data.frame}.
 }

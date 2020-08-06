@@ -12,10 +12,9 @@
 \item{...}{Additional arguments.}
 }
 \value{
-Nothing is returned. This function prints results from
-   \code{mincriterion}.
+Nothing is returned.
 }
 \description{
-This function uses the print method on the return list of the
-   function \code{mincriterion}.
+This function prints a summary of the results obtained from
+  \code{mincriterion}.
 }

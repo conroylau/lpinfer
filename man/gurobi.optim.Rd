@@ -2,7 +2,7 @@
 % Please edit documentation in R/optim.R
 \name{gurobi.optim}
 \alias{gurobi.optim}
-\title{LP and QP solver by Gurobi}
+\title{LP and QP solver by \code{Gurobi}}
 \usage{
 gurobi.optim(
   Af,
@@ -22,11 +22,11 @@ gurobi.optim(
 
 \item{bf}{The vector that is involved in the objective function.}
 
-\item{nf}{The number of observations in the dataframe.}
+\item{nf}{The number of observations in the data frame.}
 
 \item{A}{The constraint matrix.}
 
-\item{rhs}{The RHS vector for the linear constraints.}
+\item{rhs}{The rhs vector for the linear constraints.}
 
 \item{sense}{The sense of the linear constraints.}
 
@@ -37,14 +37,16 @@ objective function.}
 
 \item{qc}{List of quadratic constraint(s). There can be multiple quadratic
 constraints. Each constraint has to be a list.}
+
+\item{weight}{Weighting matrix.}
 }
 \value{
 Returns the optimal point and optimal value.
- \item{x}{Optimal point calculated from the optimizer.}
- \item{objval}{Optimal value calculated from the optimizer.}
+ \item{objval}{Optimal objective value.}
+ \item{x}{Optimal point.}
 }
 \description{
 This function computes the solution to the quadratic or linear
-   program using the `\code{Gurobi}' package. This function can have linear
+   program using the \code{Gurobi} package. This function can have linear
    and/or quadratic constraints.
 }

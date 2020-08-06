@@ -2,32 +2,37 @@
 % Please edit documentation in R/fsst.R
 \name{full.beta.bs}
 \alias{full.beta.bs}
-\title{Construct the full beta vector}
+\title{Construct the full beta vector in the FSST procedure.}
 \usage{
 full.beta.bs(lpmodel, beta.tgt, beta.obs.bs, R)
 }
 \arguments{
-\item{lpmodel}{A list of objects that are used in inference of linear
-programming problems. The list of objects required in the \code{dkqs}
-procedure are:
-\itemize{
-  \item{\code{A.tgt}}
-  \item{\code{A.obs}}
-  \item{\code{beta.obs}}
-}}
+\item{lpmodel}{The \code{lpmodel} object used in the test. The following
+components are required in the \code{lpmodel} for the FSST test:
+ \itemize{
+   \item{\code{A.tgt}}
+   \item{\code{A.obs}}
+   \item{\code{A.shp}}
+   \item{\code{beta.obs}}
+   \item{\code{beta.shp}}
+ }}
 
 \item{beta.tgt}{Value of beta to be tested.}
 
-\item{beta.obs.bs}{List of bootstrap components of \code{beta.obs}.}
+\item{beta.obs.bs}{Bootstrap estimates of \code{beta.obs}.}
 
-\item{R}{Number of bootstraps chosen by the users.}
+\item{R}{Number of bootstrap replications.}
 }
 \value{
 List of full beta vectors
   \item{beta.bs}{List of full beta vector
-  \eqn{\{\widehat{\bm{\beta}_{n,b}}}\}^B_{b=1}}
+  \eqn{\{\widehat{\bm{\beta}}_{n,b}\}^B_{b=1}}.}
 }
 \description{
 This function concatenate the \code{beta.obs}, \code{beta.shp}
-  and \code{beta.tgt} components to form the full \code{beta} vector.
+  and \code{beta.tgt} components to form the full \code{beta} vector. In
+  particular, the full vector is defined as
+  \eqn{\widehat{\bm{\beta}}_n} vector that is defined as
+  \eqn{\widehat{\bm{\beta}}_n \equiv (\widehat{\bm{\beta}}_{{\rm obs},n},
+  \bm{\beta}_{{\rm shp},n}, \bm{\beta}_{{\rm tgt}})'}.
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/optim.R
 \name{rcplex.optim}
 \alias{rcplex.optim}
-\title{LP and QP solver by Rcplex}
+\title{LP and QP solver by \code{Rcplex}}
 \usage{
 rcplex.optim(Af, bf, nf, A, rhs, sense, modelsense, lb, weight = NULL)
 }
@@ -11,11 +11,11 @@ rcplex.optim(Af, bf, nf, A, rhs, sense, modelsense, lb, weight = NULL)
 
 \item{bf}{The vector that is involved in the objective function.}
 
-\item{nf}{The number of observations in the dataframe.}
+\item{nf}{The number of observations in the data frame.}
 
 \item{A}{The constraint matrix.}
 
-\item{rhs}{The RHS vector for the linear constraints.}
+\item{rhs}{The rhs vector for the linear constraints.}
 
 \item{sense}{The sense of the linear constraints.}
 
@@ -23,13 +23,15 @@ rcplex.optim(Af, bf, nf, A, rhs, sense, modelsense, lb, weight = NULL)
 objective function.}
 
 \item{lb}{The lower lound vector.}
+
+\item{weight}{Weighting matrix.}
 }
 \value{
 Returns the optimal point and optimal value.
- \item{x}{Optimal point calculated from the optimizer.}
- \item{objval}{Optimal value calculated from the optimizer.}
+ \item{objval}{Optimal objective value.}
+ \item{x}{Optimal point.}
 }
 \description{
 This function computes the solution to the linear and quadratic
-   programs using the `\code{Rcplex}' package.
+   programs using the \code{Rcplex} package.
 }

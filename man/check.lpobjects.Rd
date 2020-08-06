@@ -2,12 +2,12 @@
 % Please edit documentation in R/checks.R
 \name{check.lpobjects}
 \alias{check.lpobjects}
-\title{Check function: check matrices and vectors in lpmodel}
+\title{Check function: matrices and vectors in \code{lpmodel}}
 \usage{
 check.lpobjects(data, mat, mat.name, mat.cat, R)
 }
 \arguments{
-\item{data}{The data being used in the inference.}
+\item{data}{Data used in the tests.}
 
 \item{mat}{The matrix object in \code{lpmodel}.}
 
@@ -15,7 +15,7 @@ check.lpobjects(data, mat, mat.name, mat.cat, R)
 
 \item{mat.cat}{Category of the matrix object.}
 
-\item{R}{Number of bootstraps chosen by the users.}
+\item{R}{Number of bootstrap replications.}
 }
 \value{
 Returns two objects:
@@ -27,6 +27,6 @@ This function checks if the matrix objects in \code{lpmodel}
    are in the correct format.
 }
 \details{
-See the details for the function `\code{check.lpmodel}` for the
-  details on the strings for each category.
+See the details section for the function \code{check.lpmodel}
+  for more details on the strings for each category.
 }

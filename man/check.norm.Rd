@@ -8,20 +8,22 @@ check.norm(x, name.var)
 }
 \arguments{
 \item{x}{Variable to be checked.}
+
+\item{name.var}{Name of the variable.}
 }
 \value{
 Nothing is returned.
 }
 \description{
 This function checks whether the the norm used in the
-  problem is an L1 or L2 norm. If not, an error message is displayed.
+  problem is a 1-norm or a 2-norm. If not, an error message is displayed.
 }
 \details{
-The following input for \code{norm} will be interpreted as the 1-
-  norm:
+The following input for \code{norm} will be interpreted as the
+  1-norm:
   \itemize{
-    \item{\code{1} (numeric)}
-    \item{\code{"1"} (string)}
+    \item{\code{1} (\code{numeric})}
+    \item{\code{"1"} (\code{string})}
     \item{\code{"L1"}}
     \item{\code{"one"}}
     \item{\code{"o"}}
@@ -29,14 +31,14 @@ The following input for \code{norm} will be interpreted as the 1-
   }
   The following input for \code{norm} will be interpreted as the 2-norm:
   \itemize{
-    \item{\code{2} (numeric)}
-    \item{\code{"2"} (string)}
+    \item{\code{2} (\code{numeric})}
+    \item{\code{"2"} (\code{string})}
     \item{\code{"L2"}}
     \item{\code{"two"}}
     \item{\code{"t"}}
     \item{\code{"e"}}
     \item{\code{"euclidean"}}
   }
-  Note that capitalization is not an issue here as the text will be brought
+  Capitalization is not an issue here as the text will be brought
   to the lower case.
 }

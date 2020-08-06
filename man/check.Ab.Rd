@@ -2,23 +2,24 @@
 % Please edit documentation in R/checks.R
 \name{check.Ab}
 \alias{check.Ab}
-\title{Check function: Constraint matrix and the corresponding RHS vector}
+\title{Check function: constraint matrix and the corresponding rhs vector}
 \usage{
 check.Ab(A, b, Aname, bname)
 }
 \arguments{
 \item{A}{Constraint matrix.}
 
-\item{b}{Corresponding vector.}
+\item{b}{Corresponding rhs vector.}
 
-\item{Aname}{Variable name of constraint matrix.}
+\item{Aname}{Name of the constraint matrix.}
 
-\item{bname}{Variable name of the corresponding vector.}
+\item{bname}{Name of the corresponding rhs vector.}
 }
 \value{
-Returns the updated matrix and vector or print stop message.
-   \item{A_updated}{Updated constraint matrix.}
-   \item{b_updated}{Updated rhs vector.}
+Returns the updated matrix and rhs vector or print a
+   stop message.
+   \item{A}{Updated constraint matrix.}
+   \item{b}{Updated rhs vector.}
 }
 \description{
 This function checks the constraint matrix \eqn{\bm{A}} and

@@ -7,14 +7,15 @@
 lpmodel.eval(data, obj, i)
 }
 \arguments{
-\item{data}{Data frame}
+\item{data}{Data frame.}
 
-\item{obj}{Object in lpmodel}
+\item{obj}{Object in lpmodel.}
 
-\item{i}{Index}
+\item{i}{Index.}
 }
 \value{
 Returns an object at iteration \code{i}.
+'
 }
 \description{
 This function returns the matrix or vector depending on the

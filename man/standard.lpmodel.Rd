@@ -2,19 +2,18 @@
 % Please edit documentation in R/lpsf.R
 \name{standard.lpmodel}
 \alias{standard.lpmodel}
-\title{Obtains standard form of linear program for constraints in `lpmodel`}
+\title{Obtains standard form of linear program for constraints in \code{lpmodel}}
 \usage{
 standard.lpmodel(lpm.natural)
 }
 \arguments{
-\item{lpm.natural}{A `\code{lpmodel.natural}` object.}
+\item{lpm.natural}{A \code{lpmodel.natural} object.}
 }
 \value{
-Returns a `\code{lpmodel}` object.
-  \item{lpmodel}{A `\code{lpmodel}` object.}
+Returns a \code{lpmodel} object.
+  \item{lpmodel}{A \code{lpmodel} object.}
 }
 \description{
 This function is uses the \code{standard.form} function to
-   convert a `\code{lpmodel.natural}` object into a
-   `\code{lpmodel}` object.
+   convert a \code{lpmodel.natural} object into a \code{lpmodel} object.
 }

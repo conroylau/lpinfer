@@ -7,32 +7,23 @@
 check.betatgt(data, lpmodel, beta.tgt, solver)
 }
 \arguments{
-\item{data}{The data being used in the inference.}
+\item{data}{Data used in the tests.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear
-programming problems. The list of objects required in the \code{dkqs}
-procedure are:
-\itemize{
-  \item{\code{A.tgt}}
-  \item{\code{A.obs}}
-  \item{\code{beta.obs}}
-}}
+\item{lpmodel}{An \code{lpmodel} object.}
 
 \item{beta.tgt}{Value of beta to be tested.}
 
-\item{solver}{The name of the linear and quadratic programming solver that
-are used to obtain the solution to linear and quadratic programs.
-The solvers supported by this module are `\code{cplexAPI}',
-`\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
+\item{solver}{A linear or quadratic programming solver. The exact solver
+that is supported depends on the test chosen.}
 }
 \value{
 Returns an indicator to show whether the \code{beta.tgt} is within
   the logical bound or not.
-  \item{beta.tgt.logical}{Equals 1 if it is within the logical bound.
+  \item{beta.tgt.logi}{Equals 1 if it is within the logical bound.
   Equals 0 otherwise.}
 }
 \description{
 This function checks whether the parameter \code{beta.tgt}
-  specified is within the logical bound. If it is not the logical
+  specified is within the logical bounds. If it is not within the logical
   bound, then reject immediately.
 }

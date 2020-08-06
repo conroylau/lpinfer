@@ -2,18 +2,20 @@
 % Please edit documentation in R/lpmodel.R
 \name{print.lpmodel.natural}
 \alias{print.lpmodel.natural}
-\title{Print the `\code{lpmodel.natural}` object}
+\title{Print the \code{lpmodel.natural} object}
 \usage{
 \method{print}{lpmodel.natural}(x, data = NULL, ...)
 }
 \arguments{
-\item{x}{The `\code{lpmodel.natural}` object.}
+\item{x}{The \code{lpmodel.natural} object.}
+
+\item{data}{Data used in the tests.}
 }
 \value{
-Print the summary of the objects in `\code{lpmodel.natural}`.
+Nothing is returned.
 }
 \description{
-This function is a wrapper of the `\code{lpm.print}` function
-   and prints objects that are contained in the list of
-   `\code{lpmodel.natural}`.
+This function is a wrapper of the \code{lpm.print} function
+   and prints the details of the components in the \code{lpmodel.natural}
+   object.
 }

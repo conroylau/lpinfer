@@ -2,54 +2,52 @@
 % Please edit documentation in R/dkqs.R
 \name{dkqs.check}
 \alias{dkqs.check}
-\title{Checks and updates the input}
+\title{Checks and updates the input in \code{dkqs}}
 \usage{
-dkqs.check(data, lpmodel, beta.tgt, R, Rmulti, tau, solver, cores, progress)
+dkqs.check(data, lpmodel, beta.tgt, R, Rmulti, tau, solver, progress)
 }
 \arguments{
-\item{data}{The data being used in the inference.}
+\item{data}{Data used in the tests.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear
-programming problems. The list of objects required in the \code{dkqs}
-procedure are:
-\itemize{
-  \item{\code{A.tgt}}
-  \item{\code{A.obs}}
-  \item{\code{beta.obs}}
-}}
+\item{lpmodel}{The \code{lpmodel} object used in the test. The following
+components are required in the \code{lpmodel} for the DKQS test:
+ \itemize{
+   \item{\code{A.tgt}}
+   \item{\code{A.obs}}
+   \item{\code{beta.obs}}
+ }}
 
 \item{beta.tgt}{Value of beta to be tested.}
 
-\item{R}{Number of bootstraps chosen by the users.}
+\item{R}{Number of bootstrap replications.}
 
 \item{Rmulti}{Multiplier for the number of bootstrap replications. The
-product of `\code{Rmulti}' and `\code{R}' refers to the maximum
-number of bootstrap replications.}
+product of \code{Rmulti} and \code{R} refers to the maximum
+number of bootstrap replications to be conducted if there are errors.}
 
-\item{tau}{The value of tau chosen by the user.}
+\item{tau}{Value of the tuning parameter \eqn{\tau} in the DKQS
+procedure.}
 
-\item{solver}{The name of the linear and quadratic programming solver that
+\item{solver}{Name of the linear and quadratic programming solver that
 are used to obtain the solution to linear and quadratic programs.
-The solvers supported by this module are `\code{cplexAPI}',
-`\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
+The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
+\code{limSolve} and \code{Rcplex}.}
 
-\item{cores}{Number of cores to be used in the parallelized for-loop.
-Parallelized for-loop is used if \code{cores} is set to be an integer
-greater than or equal to 2.}
-
-\item{progress}{The boolean variable for whether the result messages
-should be displayed in the inference procedure. If it is set as
-\code{TRUE}, the messages are displayed throughout the procedure.
-Otherwise, the messages will not be displayed.}
+\item{progress}{The boolean variable for whether the progress bars should
+be displayed. If it is set as \code{TRUE}, the progress bars will be
+displayed while the code is running.}
 }
 \value{
-Returns the list of updated parameters as follows:
-  \item{data}{Upated data in class \code{data.frame}}
-  \item{lpmodel}{A list of linear programming objects in this
-     `\code{lpinfer}` package.}
-  \item{solver}{Updated name of solver in lower case.}
-  \item{cores}{Updated number of cores to be used in the parallelization
-     of the for-loop in the bootstrap procedure.}
+Returns the updated parameters back to the function
+\code{dkqs}. The following information are updated:
+   \itemize{
+      \item{\code{data}}
+      \item{\code{lpmodel}}
+      \item{\code{seed}}
+      \item{\code{solver}}
+      \item{\code{solver.name}}
+      \item{\code{test.logical}}
+   }
 }
 \description{
 This function checks and updates the input of the user. If

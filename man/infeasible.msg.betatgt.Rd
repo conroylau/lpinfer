@@ -2,18 +2,18 @@
 % Please edit documentation in R/checks.R
 \name{infeasible.msg.betatgt}
 \alias{infeasible.msg.betatgt}
-\title{General message to be printed in the summary function}
+\title{General message for infeasible \code{beta.tgt}}
 \usage{
 infeasible.msg.betatgt()
 }
 \value{
 Returns a string of the message.
-  \item{msg.explain}{Message to explain why the p-value is zero.}
-  \item{msg.pval}{Message indicating that the p-value is zero.}
+  \item{msg.explain}{Message to explain why the \eqn{p}-value is zero.}
+  \item{msg.pval}{Message indicating that the \eqn{p}-value is zero.}
 }
 \description{
 This function prints the message to inform the user that
-  the p-value is directly set to 0 because they have specified a
-  '\code{beta.tgt}' parameter that is infeasible, i.e. outside the logical
+  the \eqn{p}-value is directly set to 0 because they have specified a
+  \code{beta.tgt} parameter that is infeasible, i.e. outside the logical
   bounds of the program.
 }

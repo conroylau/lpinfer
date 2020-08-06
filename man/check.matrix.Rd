@@ -2,7 +2,7 @@
 % Please edit documentation in R/checks.R
 \name{check.matrix}
 \alias{check.matrix}
-\title{Check function: check matrix}
+\title{Check function: matrix}
 \usage{
 check.matrix(mat, mat.name, mat.cat, inside.list)
 }
@@ -14,7 +14,10 @@ check.matrix(mat, mat.name, mat.cat, inside.list)
 \item{inside.list}{Indicator variables of whether the object that is
 being checked is inside a list or not.}
 }
+\value{
+Nothing is returned.
+}
 \description{
-This function checks if the matrix objects in \code{lpmodel}
-   are in the correct format.
+This function checks if the matrix objects in the
+   \code{lpmodel} object are in the correct format.
 }

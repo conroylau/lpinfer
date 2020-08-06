@@ -2,29 +2,26 @@
 % Please edit documentation in R/fsst.R
 \name{sigma.summation}
 \alias{sigma.summation}
-\title{Computing the variance estimator}
+\title{Computes the asymptotic variance estimator}
 \usage{
-\method{sigma}{summation}(n, beta.bs.list, progress, ind.times)
+\method{sigma}{summation}(n, beta.bs.list)
 }
 \arguments{
+\item{n}{Sample size.}
+
 \item{beta.bs.list}{List of bootstrap estimators
 \eqn{\{\widehat{\bm{\beta}}_b\}^B_{b=1}}.}
-
-\item{progress}{The boolean variable for whether the result messages
-should be displayed in the inference procedure. If it is set as
-\code{TRUE}, the messages are displayed throughout the procedure.
-Otherwise, the messages will not be displayed.}
 }
 \value{
-Returns the bootstrap estimators and the estimator of the
-  asymptotic variance.
-    \item{sigma.mat}{Estimator of the asympototic variance}
+Returns the estimator of the asymptotic variance.
+    \item{sigma.mat}{Estimator of the asymptotic variance.}
 }
 \description{
-Based on the bootstrap estimators
+Based on the bootstrap estimates
   \eqn{\{\widehat{\bm{\beta}}_b\}^B_{b=1}}, this function computes the
   asympototic variance estimator of the boostrap estimator, i.e.
-    \deqn{\frac{n}{B} \sum^B_{i=1} \left(\widehat{\bm{\beta}}_b -
-    \widehat{\bm{\beta}}\right)  \left(\widehat{\bm{\beta}}_b -
-    \widehat{\bm{\beta}}\right)'.}
+  \deqn{\frac{n}{B} \sum^B_{i=1} \left(\widehat{\bm{\beta}}_b -
+  \widehat{\bm{\beta}}\right)  \left(\widehat{\bm{\beta}}_b -
+  \widehat{\bm{\beta}}\right)'}. This function supports parallel
+ programming via the \code{future.apply} package.
 }

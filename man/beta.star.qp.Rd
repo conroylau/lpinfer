@@ -2,7 +2,7 @@
 % Please edit documentation in R/fsst.R
 \name{beta.star.qp}
 \alias{beta.star.qp}
-\title{Computing \eqn{\widehat{\bm{\beta}}_n^\star}}
+\title{Computes the starred components of \eqn{\widehat{\bm{\beta}}}}
 \usage{
 beta.star.qp(
   data,
@@ -15,29 +15,26 @@ beta.star.qp(
 )
 }
 \arguments{
-\item{data}{The data being used in the inference.}
+\item{data}{Data used in the tests.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear
-programming problems. The list of objects required in the \code{dkqs}
-procedure are:
-\itemize{
-  \item{\code{A.tgt}}
-  \item{\code{A.obs}}
-  \item{\code{beta.obs}}
-}}
+\item{lpmodel}{The \code{lpmodel} object used in the test. The following
+components are required in the \code{lpmodel} for the FSST test:
+ \itemize{
+   \item{\code{A.tgt}}
+   \item{\code{A.obs}}
+   \item{\code{A.shp}}
+   \item{\code{beta.obs}}
+   \item{\code{beta.shp}}
+ }}
 
 \item{beta.tgt}{Value of beta to be tested.}
 
-\item{weight.mat}{Weighting matrix}
+\item{weight.mat}{Weighting matrix.}
 
-\item{beta.obs.hat}{Estimator of
-\eqn{\widehat{\bm{\beta}_{\mathrm{obs}, n}}} based on the given
-information in \code{lpmodel}.}
-
-\item{solver}{The name of the linear and quadratic programming solver that
+\item{solver}{Name of the linear and quadratic programming solver that
 are used to obtain the solution to linear and quadratic programs.
-The solvers supported by this module are `\code{cplexAPI}',
-`\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
+The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
+\code{limSolve} and \code{Rcplex}.}
 }
 \value{
 Returns the vector \eqn{\widehat{\bm{\beta}}_n^\star}.
@@ -45,7 +42,8 @@ Returns the vector \eqn{\widehat{\bm{\beta}}_n^\star}.
 }
 \description{
 This function computes the vector
-  \eqn{\widehat{\bm{\beta}}_n^\star} for the case where \eqn{d<p}.
+  \eqn{\widehat{\bm{\beta}}_n^\star} for the case where \eqn{d<p} in the
+  FSST test.
 }
 \details{
 This corresponding to solving problem (3) of Torgovitsky (2020).

@@ -12,19 +12,8 @@
 \item{...}{Additional arguments.}
 }
 \value{
-Print the basic set of results from \code{dkqs}.
+Nothing is returned.
 }
 \description{
-This function uses the print method on the return list of the
-   function \code{dkqs}.
-}
-\details{
-The following information are printed:
- \itemize{
-    \item{Test statistic}
-    \item{\eqn{p}-value}
-    \item{\eqn{\tau}}
-    \item{Solver used}
-    \item{Number of cores used}
- }
+This function prints the \eqn{p}-values from \code{dkqs}.
 }

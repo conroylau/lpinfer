@@ -7,25 +7,25 @@
 standard.form(A, b, sense, lb = NULL, obj = NULL)
 }
 \arguments{
-\item{A}{Matrix that represents the constraints}
+\item{A}{Matrix that represents the constraints.}
 
-\item{b}{RHS vector that represents the constraints}
+\item{b}{RHS vector that represents the constraints.}
 
-\item{sense}{Sense of the constraints}
+\item{sense}{Sense of the constraints.}
 
-\item{lb}{Lower bound of the vectors}
+\item{lb}{Lower bound of the variables.}
 
-\item{obj}{Objective function}
+\item{obj}{Objective function.}
 }
 \value{
-Returns the bounds subject to the shape constraints.
-  \item{A}{Matrix representing the constraints in standard form}
-  \item{b}{RHS vector representing the constraints in standard form}
-  \item{lb}{Lower bound of the variables}
-  \item{obj}{Objective function}
+Returns the following four objects:
+  \item{A}{Matrix representing the constraints in standard form.}
+  \item{b}{RHS vector representing the constraints in standard form.}
+  \item{lb}{Lower bound of the variables.}
+  \item{obj}{Objective function.}
 }
 \description{
 This function is mainly a wrapper of the \code{simplex}
    function from the \code{boot} package. It returns the standard form
-   of the constraints matrix in a linear program.
+   of the constraints matrix of a linear program.
 }

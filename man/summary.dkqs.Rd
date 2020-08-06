@@ -7,14 +7,14 @@
 \method{summary}{dkqs}(x, ...)
 }
 \arguments{
-\item{x}{Object returned from \code{dkqs}.}
+\item{x}{Objects returned from \code{dkqs}.}
 
 \item{...}{Additional arguments.}
 }
 \value{
-Print the summary of the basic set of results from \code{dkqs}.
+Nothing is returned.
 }
 \description{
-This function uses the summary method on the return list of the
-   function \code{dkqs}. This is a wrapper of the \code{print} command.
+This function prints a summary of the results obtained from
+  \code{dkqs}.
 }

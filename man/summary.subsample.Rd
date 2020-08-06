@@ -15,6 +15,6 @@
 Nothing is returned.
 }
 \description{
-This function uses the summary method on the return list of
-   the function \code{subsample}.
+This function prints a summary of the results obtained from
+  \code{subsample}.
 }

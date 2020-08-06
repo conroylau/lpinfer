@@ -2,12 +2,12 @@
 % Please edit documentation in R/lpmodel.R
 \name{summary.lpmodel}
 \alias{summary.lpmodel}
-\title{Summary of the `\code{lpmodel}` object}
+\title{Summary of the \code{lpmodel} object}
 \usage{
 \method{summary}{lpmodel}(x, ...)
 }
 \arguments{
-\item{x}{The `\code{lpmodel}` object.}
+\item{x}{The \code{lpmodel} object.}
 
 \item{...}{Additional arguments.}
 }
@@ -15,6 +15,6 @@
 Nothing is returned
 }
 \description{
-This function is a wrapper of the `\code{print.lpmodel}`
-   function and prints the same information for the object `\code{lpmodel}`.
+This function is a wrapper of the \code{print.lpmodel}
+   function and prints the same information for the object \code{lpmodel}.
 }

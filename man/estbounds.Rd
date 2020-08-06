@@ -15,44 +15,43 @@ estbounds(
 )
 }
 \arguments{
-\item{data}{The data being used in the inference.}
+\item{data}{Data used in the tests.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear
-programming problems. The list of objects required in the \code{dkqs}
-procedure are:
-\itemize{
-  \item{\code{A.tgt}}
-  \item{\code{A.obs}}
-  \item{\code{A.shp}}
-  \item{\code{beta.obs}}
-  \item{\code{beta.shp}}
-}}
+\item{lpmodel}{The \code{lpmodel} object used in the test that consists of
+the following objects:
+ \itemize{
+   \item{\code{A.tgt}}
+   \item{\code{A.obs}}
+   \item{\code{A.shp}}
+   \item{\code{beta.obs}}
+   \item{\code{beta.shp}}
+ }}
 
-\item{kappa}{Parameter used in the second step of the two-step procedure
-for obtaining the solution subject to the shape constraints. It can be
-any nonnegative number.}
+\item{kappa}{Tuning parameter used in the second step of the two-step
+procedure for obtaining the bounds subject to the shape constraints.
+It can be any nonnegative number.}
 
-\item{norm}{Norm used in the optimization problem.}
+\item{norm}{Norm used in the optimization problem. It can be either a 1-norm
+or a 2-norm.}
 
-\item{estimate}{Boolean variable to indicate whether the estimated
-problem should be considered.}
+\item{estimate}{Boolean variable to indicate whether the bounds should be
+estimated or not.}
 
-\item{solver}{The name of the linear and quadratic programming solver that
+\item{solver}{Name of the linear and quadratic programming solver that
 are used to obtain the solution to linear and quadratic programs.
-The solvers supported by this module are `\code{cplexAPI}',
-`\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
+The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
+\code{limSolve} and \code{Rcplex}.}
 
-\item{progress}{The boolean variable for whether the result messages
-should be displayed in the inference procedure. If it is set as
-\code{TRUE}, the messages are displayed throughout the procedure.
-Otherwise, the messages will not be displayed.}
+\item{progress}{The boolean variable for whether the progress bars should
+be displayed. If it is set as \code{TRUE}, the progress bars will be
+displayed while the code is running.}
 }
 \value{
 Returns the bounds subject to the shape constraints.
   \item{ub}{Upper bound with shape constraints}
   \item{lb}{Lower bound with shape constraints}
-  \item{minc}{Objective value of the first-stage problem (i.e.
-    '\code{mincriterion}').}
+  \item{mincriterion}{Objective value of the first-stage problem (i.e.
+     \code{mincriterion}).}
   \item{est}{Indicator of whether estimation is involved in the
   estimation}
   \item{call}{The function that has been called.}
@@ -60,9 +59,30 @@ Returns the bounds subject to the shape constraints.
   \item{solver}{Name of the solver used.}
 }
 \description{
-This function computes the bound of the linear program
-   subject to shape constraints. This function also offers an option
-   to estimate the shape constraints using a two-step procedure and
-   some tolerance level. \eqn{\ell^1}-norm and \eqn{\ell^2}-norm are
-   supported in the estimation procedure.
+This function computes the bound of the estimation problem
+   subject to shape constraints. This function offers an option to estimate
+   the shape constraints using a two-step procedure with the 1-norm or
+   2-norm.
+}
+\details{
+The following input for \code{norm} will be interpreted as the
+  1-norm:
+  \itemize{
+    \item{\code{1} (\code{numeric})}
+    \item{\code{"1"} (\code{string})}
+    \item{\code{"L1"}}
+    \item{\code{"one"}}
+    \item{\code{"o"}}
+    \item{\code{"taxicab"}}
+  }
+  The following input for \code{norm} will be interpreted as the 2-norm:
+  \itemize{
+    \item{\code{2} (\code{numeric})}
+    \item{\code{"2"} (\code{string})}
+    \item{\code{"L2"}}
+    \item{\code{"two"}}
+    \item{\code{"t"}}
+    \item{\code{"e"}}
+    \item{\code{"euclidean"}}
+  }
 }

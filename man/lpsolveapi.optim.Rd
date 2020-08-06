@@ -2,7 +2,7 @@
 % Please edit documentation in R/optim.R
 \name{lpsolveapi.optim}
 \alias{lpsolveapi.optim}
-\title{lpSolveAPI solver for linear programs}
+\title{LP solver by \code{lpSolveAPI}}
 \usage{
 lpsolveapi.optim(
   Af,
@@ -21,11 +21,11 @@ lpsolveapi.optim(
 
 \item{bf}{The vector that is involved in the objective function.}
 
-\item{nf}{The number of observations in the dataframe.}
+\item{nf}{The number of observations in the data frame.}
 
 \item{A}{The constraint matrix.}
 
-\item{rhs}{The RHS vector for the linear constraints.}
+\item{rhs}{The rhs vector for the linear constraints.}
 
 \item{sense}{The sense of the linear constraints.}
 
@@ -33,18 +33,20 @@ lpsolveapi.optim(
 objective function.}
 
 \item{lb}{The lower lound vector.}
+
+\item{weight}{Weighting matrix.}
 }
 \value{
 Returns the optimal objective value and the corresponding argument
   to the linear program.
- \item{x}{Optimal point calculated from the linear program}
- \item{larg}{Arguments for the linear program.}
+ \item{objval}{Optimal objective value.}
+ \item{x}{Optimal point.}
 }
 \description{
 This function computes the solution to the linear program
-   using the `\code{lpsolveAPI}' package.
+   using the \code{lpsolveAPI} package.
 }
 \details{
-The package `\code{lpSolveAPI}' cannot be used to solve quadratic
+The package \code{lpSolveAPI} cannot be used to solve quadratic
   programs.
 }

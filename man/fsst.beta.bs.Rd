@@ -2,47 +2,62 @@
 % Please edit documentation in R/fsst.R
 \name{fsst.beta.bs}
 \alias{fsst.beta.bs}
-\title{Computing the bootstrap betas}
+\title{Computing the bootstrap estimates of \code{beta.obs}}
 \usage{
-fsst.beta.bs(n, data, beta.obs.hat, lpmodel, R, maxR, progress, df.error, iseq)
+fsst.beta.bs(
+  n,
+  data,
+  beta.obs.hat,
+  lpmodel,
+  R,
+  maxR,
+  progress,
+  df.error,
+  iseq,
+  seed
+)
 }
 \arguments{
-\item{data}{The data being used in the inference.}
+\item{n}{Sample size (only required if \code{data} is omitted in the input).}
+
+\item{data}{Data used in the tests.}
 
 \item{beta.obs.hat}{Estimator of
-\eqn{\widehat{\bm{\beta}_{\mathrm{obs}, n}}} based on the given
+\eqn{\widehat{\bm{\beta}}_{\mathrm{obs}, n}} based on the given
 information in \code{lpmodel}.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear
-programming problems. The list of objects required in the \code{dkqs}
-procedure are:
-\itemize{
-  \item{\code{A.tgt}}
-  \item{\code{A.obs}}
-  \item{\code{beta.obs}}
-}}
+\item{lpmodel}{The \code{lpmodel} object used in the test. The following
+components are required in the \code{lpmodel} for the FSST test:
+ \itemize{
+   \item{\code{A.tgt}}
+   \item{\code{A.obs}}
+   \item{\code{A.shp}}
+   \item{\code{beta.obs}}
+   \item{\code{beta.shp}}
+ }}
 
-\item{R}{Number of bootstraps chosen by the users.}
+\item{R}{Number of bootstrap replications.}
 
-\item{maxR}{Maximum number of bootstrap replications in case error occured.}
-
-\item{progress}{The boolean variable for whether the result messages
-should be displayed in the inference procedure. If it is set as
-\code{TRUE}, the messages are displayed throughout the procedure.
-Otherwise, the messages will not be displayed.}
+\item{progress}{The boolean variable for whether the progress bars should
+be displayed. If it is set as \code{TRUE}, the progress bars will be
+displayed while the code is running.}
 
 \item{df.error}{Table showing the id of the bootstrap replication(s)
 with error(s) and the corresponding error message(s).}
 
-\item{iseq}{The sequences of betas to iterate over}
+\item{iseq}{The list of indices or betas to iterate over.}
+
+\item{seed}{The \code{.Random.seed} obtained in the beginning of the code.}
 }
 \value{
 Returns the bootstrap estimators.
   \item{beta.obs.bs}{List of bootstrap betas.}
-  \item{R.succ}{Number of successful bootstrap replications.}
   \item{df.error}{Updated table showing the id of the bootstrap
       replication(s) with error(s) and the corresponding error message(s).}
+  \item{R.eval}{Number of bootstrap replications that has been conducted.}
+  \item{R.succ}{Number of successful bootstrap replications.}
 }
 \description{
-This function computes the bootstrap betas
+This function computes the bootstrap estimates of
+  \code{beta.obs}.
 }

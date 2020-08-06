@@ -7,17 +7,18 @@
 lpmodel.beta.eval(data, obj, i)
 }
 \arguments{
-\item{data}{Data frame}
+\item{data}{Data frame.}
 
-\item{obj}{Object in lpmodel}
+\item{obj}{Object in lpmodel.}
 
-\item{i}{Index}
+\item{i}{Index.}
 }
 \value{
-Returns the point estimate and the asymptotic variane of the
+Returns the point estimate and the asymptotic variance of the
    \code{beta.obs} object.
-   \item{beta.obs}{Point estimate of \eqn{\widehat{\bm{\beta}}_{\rm obs}}}
-   \item{omega}{Asymptotic variance of \eqn{\widehat{\bm{\beta}}_{\rm obs}}}
+   \item{beta.obs}{Point estimate of \eqn{\widehat{\bm{\beta}}_{\rm obs}}.}
+   \item{omega}{Estimator of the asymptotic variance for
+   \eqn{\widehat{\bm{\beta}}_{\rm obs}}.}
 }
 \description{
 This function returns the matrix or vector depending on the
@@ -30,5 +31,7 @@ This function returns the matrix or vector depending on the
         returned.}
      \item{\code{list} --- If the object is a list, then the \eqn{i}th
         element will be returned.}
+     \item{\code{matrix} or \code{numeric} --- If the object is a matrix
+        or a vector, then it will be directly returned.}
   }
 }

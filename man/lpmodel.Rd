@@ -2,7 +2,7 @@
 % Please edit documentation in R/lpmodel.R
 \name{lpmodel}
 \alias{lpmodel}
-\title{Define a \code{lpmodel} object}
+\title{Defines a \code{lpmodel} object}
 \usage{
 lpmodel(
   A.obs = NULL,
@@ -13,21 +13,20 @@ lpmodel(
 )
 }
 \arguments{
-\item{A.obs}{A matrix, list or function}
+\item{A.obs}{A matrix, list or function.}
 
-\item{A.shp}{A matrix, list or function}
+\item{A.shp}{A matrix, list or function.}
 
-\item{A.tgt}{A matrix, list or function}
+\item{A.tgt}{A matrix, list or function.}
 
-\item{beta.obs}{A vector, list or function}
+\item{beta.obs}{A vector, list or function.}
 
-\item{beta.shp}{A vector, list or function}
+\item{beta.shp}{A vector, list or function.}
 }
 \value{
-Returns a list of \code{lpmodel} objects in the \code{lpmodel}
-   class.
+Returns a \code{lpmodel} object.
 }
 \description{
 This function defines the objects required in the
-   \code{lpinfer} module in the \code{lpmodel} class.
+   \code{lpinfer} package in the \code{lpmodel} class.
 }

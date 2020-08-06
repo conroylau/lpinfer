@@ -8,9 +8,11 @@ functions}
 objective.function(A, b, n, weight = NULL)
 }
 \arguments{
-\item{A}{The matrix \eqn{\bm{A}},}
+\item{A}{The matrix \eqn{\bm{A}}.}
 
 \item{n}{The sample size \eqn{n}.}
+
+\item{weight}{Weighting matrix.}
 
 \item{beta}{The column vector \eqn{\bm{\beta}}.}
 }
@@ -20,15 +22,15 @@ Returns the following three quantities: \code{obj2} is the
   linear term and \code{obj0} is the constant term. More explicitly, their
   form are given as follows:
   \item{obj2}{This is the coefficient for the second-order term. It is
-    returned as \code{NULL} for linear programs and \eqn{n\bm{A}'\bm{A}} for
-    quadratic programs.}
+    returned as \code{NULL} for linear programs and
+    \eqn{n\bm{A}'\bm{W}\bm{A}} for quadratic programs.}
   \item{obj1}{This is the coefficient term of the linear term. For quadratic
-    programs, it is returned as \eqn{-2n\bm{A}'\bm{\beta}}.}
+    programs, it is returned as \eqn{-2n\bm{\beta}'\bm{W}\bm{A}}.}
   \item{obj0}{This is the constant term of the linear program. For quadratic
-    programs, it is returned as \eqn{n\bm{\beta}'\bm{\beta}}.}
+    programs, it is returned as \eqn{n\bm{\beta}'\bm{W}\bm{\beta}}.}
 }
 \description{
-This function computes the matrics in the objective functions
+This function computes the matrices in the objective functions
    for linear programs. This function takes matrix \eqn{\bm{A}} and
    \eqn{\bm{\beta}} as input and computes the coefficients of the objective
    function.
@@ -36,15 +38,19 @@ This function computes the matrics in the objective functions
 \details{
 \itemize{
   \item{\strong{Quadratic programs} ---
-     Given inputs \eqn{\bm{A} \in \mathbf{R}^{m\times m}} and
-     \eqn{\bm{b} \in \mathbf{R}^m}, the equation of the objective function
-     of the quadratic program can be written as
-     \deqn{n (\bm{A}\bm{x} -\bm{\beta})'(\bm{A}\bm{x}-\bm{\beta})
-     = n\bm{x}'\bm{A}'\bm{A}\bm{x} - 2n\bm{A}'\bm{\beta}\bm{x} +
-     n\bm{\beta}'\bm{\beta}.}}
+     Given inputs \eqn{\bm{A} \in \mathbf{R}^{m\times m}},
+     \eqn{\bm{b} \in \mathbf{R}^m} and
+     \eqn{\bm{W} \in \mathbf{R}^{m\times m}}, the equation of the objective
+     function of the quadratic program can be written as
+     \deqn{n (\bm{A}\bm{x} -\bm{\beta})'\bm{W}(\bm{A}\bm{x}-\bm{\beta})
+     = n\bm{x}'\bm{A}'\bm{W}\bm{A}\bm{x} - 2n\bm{\beta}'\bm{W}\bm{A}\bm{x} +
+     n\bm{\beta}'\bm{W}\bm{\beta}.}
+     If the \eqn{\bm{W}} matrix is not specified, then it will be taken as
+     an identity matrix of order \eqn{m},}
   \item{\strong{Linear programs} ---
      For all linear problems that are considered in this code, one of
      \eqn{\bm{A}} and \eqn{\bm{b}} is \code{NULL} or is a zero vector. The
-     term that is nonzero and nonnull will be used as \code{obj1}.}
+     term that is nonzero and nonnull will be multiplied by \eqn{n} and
+     used as \code{obj1}.}
 }
 }

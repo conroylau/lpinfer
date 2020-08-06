@@ -16,5 +16,5 @@ Nothing is returned. An error message is printed.
 }
 \description{
 This is a general function to produce the error messages in
-  checking the objects
+  the check functions.
 }

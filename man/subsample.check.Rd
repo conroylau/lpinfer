@@ -2,7 +2,7 @@
 % Please edit documentation in R/subsample.R
 \name{subsample.check}
 \alias{subsample.check}
-\title{Checks and updates the input from \code{subsample}}
+\title{Checks and updates the input in \code{subsample}}
 \usage{
 subsample.check(
   data,
@@ -11,7 +11,6 @@ subsample.check(
   R,
   Rmulti,
   solver,
-  cores,
   norm,
   phi,
   replace,
@@ -19,46 +18,41 @@ subsample.check(
 )
 }
 \arguments{
-\item{data}{The data being used in the inference.}
+\item{data}{Data used in the tests.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear
-programming problems. The list of objects required in the \code{dkqs}
-procedure are:
-\itemize{
-  \item{\code{A.tgt}}
-  \item{\code{A.obs}}
-  \item{\code{beta.obs}}
-}}
+\item{lpmodel}{The \code{lpmodel} object used in the test. The following
+components are required in the \code{lpmodel} for the DKQS test:
+ \itemize{
+   \item{\code{A.tgt}}
+   \item{\code{A.obs}}
+   \item{\code{beta.obs}}
+ }}
 
 \item{beta.tgt}{Value of beta to be tested.}
 
-\item{R}{Number of bootstraps chosen by the users.}
+\item{R}{Number of bootstrap replications.}
 
 \item{Rmulti}{Multiplier for the number of bootstrap replications. The
-product of `\code{Rmulti}' and `\code{R}' refers to the maximum
-number of bootstrap replications.}
+product of \code{Rmulti} and \code{R} refers to the maximum
+number of bootstrap replications to be conducted if there are errors.}
 
-\item{solver}{The name of the linear and quadratic programming solver that
+\item{solver}{Name of the linear and quadratic programming solver that
 are used to obtain the solution to linear and quadratic programs.
-The solvers supported by this module are `\code{cplexAPI}',
-`\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
+The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
+\code{limSolve} and \code{Rcplex}.}
 
-\item{cores}{Number of cores to be used in the parallelized for-loop.
-Parallelized for-loop is used if \code{cores} is set to be an integer
-greater than or equal to 2.}
+\item{norm}{Norm used in the optimization problem. It can be either a 1-norm
+or a 2-norm.}
 
-\item{norm}{Norm used in the optimization problem.}
-
-\item{phi}{Power for the sample. \eqn{n^\phi} represents the size
-of each subsample.}
+\item{phi}{Tuning parameter for the subsampling test. The size of each
+subsample is \eqn{n^\phi} where \eqn{\phi \in [0,1]}.}
 
 \item{replace}{Boolean variable to indicate whether the function samples
 the data with or without replacement.}
 
-\item{progress}{The boolean variable for whether the result messages
-should be displayed in the inference procedure. If it is set as
-\code{TRUE}, the messages are displayed throughout the procedure.
-Otherwise, the messages will not be displayed.}
+\item{progress}{The boolean variable for whether the progress bars should
+be displayed. If it is set as \code{TRUE}, the progress bars will be
+displayed while the code is running.}
 }
 \value{
 Returns the updated parameters and objects back to the function
@@ -66,9 +60,9 @@ Returns the updated parameters and objects back to the function
    \itemize{
       \item{\code{data}}
       \item{\code{lpmodel}}
+      \item{\code{seed}}
       \item{\code{solver}}
       \item{\code{solver.name}}
-      \item{\code{cores}}
       \item{\code{norm}}
       \item{\code{test.logical}}
    }

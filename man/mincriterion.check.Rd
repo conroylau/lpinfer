@@ -2,30 +2,30 @@
 % Please edit documentation in R/estbounds.R
 \name{mincriterion.check}
 \alias{mincriterion.check}
-\title{Checks and updates the input of the function \code{mincriterion}}
+\title{Checks and updates the input in \code{mincriterion}}
 \usage{
 mincriterion.check(data, lpmodel, norm, solver)
 }
 \arguments{
-\item{data}{The data being used in the inference.}
+\item{data}{Data used in the tests.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear
-programming problems. The list of objects required in the \code{dkqs}
-procedure are:
-\itemize{
-  \item{\code{A.tgt}}
-  \item{\code{A.obs}}
-  \item{\code{A.shp}}
-  \item{\code{beta.obs}}
-  \item{\code{beta.shp}}
-}}
+\item{lpmodel}{The \code{lpmodel} object used in the test that consists of
+the following objects:
+ \itemize{
+   \item{\code{A.tgt}}
+   \item{\code{A.obs}}
+   \item{\code{A.shp}}
+   \item{\code{beta.obs}}
+   \item{\code{beta.shp}}
+ }}
 
-\item{norm}{Norm used in the optimization problem.}
+\item{norm}{Norm used in the optimization problem. It can be either a 1-norm
+or a 2-norm.}
 
-\item{solver}{The name of the linear and quadratic programming solver that
+\item{solver}{Name of the linear and quadratic programming solver that
 are used to obtain the solution to linear and quadratic programs.
-The solvers supported by this module are `\code{cplexAPI}',
-`\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
+The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
+\code{limSolve} and \code{Rcplex}.}
 }
 \value{
 Returns the updated parameters back to the function

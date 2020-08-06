@@ -7,8 +7,8 @@
 construct.cv.table(
   param,
   param.name,
-  test.sample.list,
-  test.bs.list,
+  ts.sample.list,
+  ts.bs.list,
   levels = c(0.99, 0.95, 0.9),
   digits = 5
 )
@@ -18,9 +18,9 @@ construct.cv.table(
 
 \item{param.name}{Name of the tuning parameter.}
 
-\item{test.sample.list}{A vector or sample test statistics.}
+\item{ts.sample.list}{A vector or sample test statistics.}
 
-\item{test.bs.list}{A vector or a list of bootstrap test statistics.}
+\item{ts.bs.list}{A vector or a list of bootstrap test statistics.}
 
 \item{levels}{Confidence levels.}
 
@@ -28,11 +28,11 @@ construct.cv.table(
 }
 \value{
 Returns a table of critical values.
-  \code{cv.table}{Table of critical values.}
+  \item{cv.table}{Table of critical values.}
 }
 \description{
 This function generates a table of critical values for the
-  testing methods. By default, it produces the critical values at the 90%,
-  95% and 99% level. The table can be retrieved from \code{cv.table} in the
-  output of the functions.
+  testing methods. By default, the table includes the sample test statistic,
+  and critical values at the 90\%, 95\% and 99\% level. The table can be
+  retrieved from \code{cv.table} in the output of the functions.
 }

@@ -2,35 +2,36 @@
 % Please edit documentation in R/estbounds.R
 \name{estbounds.original}
 \alias{estbounds.original}
-\title{Computes the true bounds with shape contraints}
+\title{Computes the true bounds with shape constraints}
 \usage{
 estbounds.original(data, lpmodel, original.sense, solver)
 }
 \arguments{
-\item{data}{The data being used in the inference.}
+\item{data}{Data used in the tests.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear
-programming problems. The list of objects required in the \code{dkqs}
-procedure are:
-\itemize{
-  \item{\code{A.tgt}}
-  \item{\code{A.obs}}
-  \item{\code{beta.obs}}
-}}
+\item{lpmodel}{The \code{lpmodel} object used in the test that consists of
+the following objects:
+ \itemize{
+   \item{\code{A.tgt}}
+   \item{\code{A.obs}}
+   \item{\code{A.shp}}
+   \item{\code{beta.obs}}
+   \item{\code{beta.shp}}
+ }}
 
-\item{original.sense}{Sense of the contraints to compute the true bound.}
+\item{original.sense}{Sense of the constraints for the true bounds.}
 
-\item{solver}{The name of the linear and quadratic programming solver that
+\item{solver}{Name of the linear and quadratic programming solver that
 are used to obtain the solution to linear and quadratic programs.
-The solvers supported by this module are `\code{cplexAPI}',
-`\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
+The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
+\code{limSolve} and \code{Rcplex}.}
 }
 \value{
 Returns the solution to the linear program.
- \item{objval}{Optimal value calculated from the optimizer.}
- \item{x}{Optimal point calculated from the optimizer.}
+ \item{objval}{Optimal objective value.}
+ \item{x}{Optimal point.}
 }
 \description{
-The function computes the true bound subject to the shape
+This function computes the true bounds subject to the shape
    constraints without approximation.
 }

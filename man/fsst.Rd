@@ -2,7 +2,7 @@
 % Please edit documentation in R/fsst.R
 \name{fsst}
 \alias{fsst}
-\title{Conducts inference using the `\code{fsst}` procedure}
+\title{Conducts inference using the FSST procedure}
 \usage{
 fsst(
   data = NULL,
@@ -15,78 +15,82 @@ fsst(
   n = NULL,
   weight.matrix = "diag",
   solver = NULL,
-  cores = 1,
   progress = TRUE
 )
 }
 \arguments{
-\item{data}{The data being used in the inference.}
+\item{data}{Data used in the tests.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear
-programming problems. The list of objects required in the \code{dkqs}
-procedure are:
-\itemize{
-  \item{\code{A.tgt}}
-  \item{\code{A.obs}}
-  \item{\code{beta.obs}}
-}}
+\item{lpmodel}{The \code{lpmodel} object used in the test. The following
+components are required in the \code{lpmodel} for the FSST test:
+ \itemize{
+   \item{\code{A.tgt}}
+   \item{\code{A.obs}}
+   \item{\code{A.shp}}
+   \item{\code{beta.obs}}
+   \item{\code{beta.shp}}
+ }}
 
 \item{beta.tgt}{Value of beta to be tested.}
 
-\item{R}{Number of bootstraps chosen by the users.}
+\item{R}{Number of bootstrap replications.}
 
 \item{Rmulti}{Multiplier for the number of bootstrap replications. The
-product of `\code{Rmulti}' and `\code{R}' refers to the maximum
-number of bootstrap replications.}
+product of \code{Rmulti} and \code{R} refers to the maximum
+number of bootstrap replications to be conducted if there are errors.}
 
-\item{lambda}{Parameter used in the cone bootstrap sattistics}
+\item{lambda}{Parameter used to obtain the restricted estimator
+\eqn{\widehat{\bm{\beta}}^r_n}.}
 
-\item{rho}{Parameter used in the studentization of matrices}
+\item{rho}{Parameter used in the studentization of matrices.}
 
-\item{weight.matrix}{The option used in the weighting matrix.}
+\item{n}{Sample size (only required if \code{data} is omitted in the input).}
 
-\item{solver}{The name of the linear and quadratic programming solver that
+\item{weight.matrix}{The option used in the weighting matrix. There are
+three options available:
+\itemize{
+  \item{\code{identity} --- identity matrix}
+  \item{\code{diag} --- the diagonal matrix that takes the diagonal
+     elements of the inverse of the variance matrix}
+  \item{\code{avar} --- inverse of the variance matrix}
+}}
+
+\item{solver}{Name of the linear and quadratic programming solver that
 are used to obtain the solution to linear and quadratic programs.
-The solvers supported by this module are `\code{cplexAPI}',
-`\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
+The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
+\code{limSolve} and \code{Rcplex}.}
 
-\item{cores}{Number of cores to be used in the parallelized for-loop.
-Parallelized for-loop is used if \code{cores} is set to be an integer
-greater than or equal to 2.}
-
-\item{progress}{The boolean variable for whether the result messages
-should be displayed in the inference procedure. If it is set as
-\code{TRUE}, the messages are displayed throughout the procedure.
-Otherwise, the messages will not be displayed.}
+\item{progress}{The boolean variable for whether the progress bars should
+be displayed. If it is set as \code{TRUE}, the progress bars will be
+displayed while the code is running.}
 }
 \value{
-Return a list of statistics for the `\code{fsst}` procedure:
-  \item{pval}{\eqn{p}-value}
+Returns the following information:
+  \item{pval}{\eqn{p}-value.}
   \item{cv.table}{Table of sample and bootstrap Cone and Range test
-    statistics}
-  \item{cores}{Number of cores used}
-  \item{call}{Information used to call the function}
-  \item{range}{The range test statistic}
-  \item{cone}{The cone test statistic}
-  \item{test}{Test statistic used}
-  \item{cone.n.list}{The list of bootstrap cone test statistics}
-  \item{range.n.list}{The list of bootstrap range test statistics}
-  \item{solver.name}{Name of the solver used}
-  \item{rho}{Input value of rho}
+    statistics.}
+  \item{call}{Information used to call the function.}
+  \item{range}{The sample range test statistic.}
+  \item{cone}{The sample cone test statistic.}
+  \item{test}{Sample test statistic.}
+  \item{cone.n.list}{List of bootstrap cone test statistics.}
+  \item{range.n.list}{List of bootstrap range test statistics.}
+  \item{solver.name}{Name of the solver used.}
+  \item{rho}{Input value of rho.}
   \item{rhobar.i}{Regularization parameter used for the Cone
-    studentization matrix}
-  \item{beta.var.method}{Method used in obtaining the asymptotic variance
-    of \code{beta.obs}}
+    studentization matrix.}
+  \item{var.method}{Method used in obtaining the asymptotic variance
+    of \code{beta.obs}.}
   \item{test.logical}{Indicator variable for whether the computation has
-    been conducted. If '\code{test.logical}' is 1, it refers to the case
-    where '\code{beta.tgt}' is inside the logical bound. If
-    '\code{test.logical}' is 0, it refers to the case where '
-    \code{beta.tgt}' is outside the logical bound.}
+    been conducted. If \code{test.logical} is 1, it refers to the case
+    where \code{beta.tgt} is inside the logical bound. If
+    \code{test.logical} is 0, it refers to the case where
+    \code{beta.tgt} is outside the logical bound.}
   \item{df.error}{Table showing the id of the bootstrap replication(s)
     with error(s) and the corresponding error message(s).}
   \item{R.succ}{Number of successful bootstrap replications.}
 }
 \description{
 This module conducts inference in linear programs using the
-  `\code{fsst}` procedure by Fang, Santos, Shaikh and Torgovitsky (2020).
+  \code{fsst} procedure by Fang, Santos, Shaikh and Torgovitsky (2020).
 }

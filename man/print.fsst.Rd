@@ -12,12 +12,8 @@
 \item{...}{Additional arguments.}
 }
 \value{
-Nothing is returned
+Nothing is returned.
 }
 \description{
-This function uses the print method on the return list of the
-   function \code{fsst}.
-}
-\details{
-The p-value is printed
+This function prints the \eqn{p}-values from \code{fsst}.
 }

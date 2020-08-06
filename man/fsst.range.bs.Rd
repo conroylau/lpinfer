@@ -2,7 +2,7 @@
 % Please edit documentation in R/fsst.R
 \name{fsst.range.bs}
 \alias{fsst.range.bs}
-\title{Computing bootstrap Range components in the FSST procedure}
+\title{Bootstrap procedure of computing the range component}
 \usage{
 fsst.range.bs(
   n,
@@ -13,56 +13,57 @@ fsst.range.bs(
   x.star.bs,
   weight.mat,
   R,
-  cores,
   progress,
   df.error
 )
 }
 \arguments{
-\item{lpmodel}{A list of objects that are used in inference of linear
-programming problems. The list of objects required in the \code{dkqs}
-procedure are:
-\itemize{
-  \item{\code{A.tgt}}
-  \item{\code{A.obs}}
-  \item{\code{beta.obs}}
-}}
+\item{n}{Sample size (only required if \code{data} is omitted in the input).}
+
+\item{lpmodel}{The \code{lpmodel} object used in the test. The following
+components are required in the \code{lpmodel} for the FSST test:
+ \itemize{
+   \item{\code{A.tgt}}
+   \item{\code{A.obs}}
+   \item{\code{A.shp}}
+   \item{\code{beta.obs}}
+   \item{\code{beta.shp}}
+ }}
 
 \item{beta.obs.hat}{Estimator of
-\eqn{\widehat{\bm{\beta}_{\mathrm{obs}, n}}} based on the given
+\eqn{\widehat{\bm{\beta}}_{\mathrm{obs}, n}} based on the given
 information in \code{lpmodel}.}
 
-\item{beta.obs.bs}{List of bootstrap components of \code{beta.obs}.}
+\item{beta.obs.bs}{Bootstrap estimates of \code{beta.obs}.}
 
-\item{x.star}{Optimal value from `\code{beta.star.qp}`.}
+\item{x.star}{Optimal value from \code{beta.star.qp}.}
 
-\item{x.star.bs}{Bootstrap components of `\code{x.star}`.}
+\item{x.star.bs}{Bootstrap estimates of \code{x.star}.}
 
-\item{weight.mat}{Weighting matrix}
+\item{weight.mat}{Weighting matrix.}
 
-\item{R}{Number of bootstraps chosen by the users.}
+\item{R}{Number of bootstrap replications.}
 
-\item{cores}{Number of cores to be used in the parallelized for-loop.
-Parallelized for-loop is used if \code{cores} is set to be an integer
-greater than or equal to 2.}
+\item{progress}{The boolean variable for whether the progress bars should
+be displayed. If it is set as \code{TRUE}, the progress bars will be
+displayed while the code is running.}
 
-\item{progress}{The boolean variable for whether the result messages
-should be displayed in the inference procedure. If it is set as
-\code{TRUE}, the messages are displayed throughout the procedure.
-Otherwise, the messages will not be displayed.}
+\item{df.error}{Table showing the id of the bootstrap replication(s)
+with error(s) and the corresponding error message(s).}
+
+\item{p}{Length of the vector \eqn{\bm{\beta}}.}
+
+\item{d}{Number of columns of the \eqn{\bm{A}} matrix.}
 }
 \value{
-Returns the following list of objects:
-  \item{range.n.list}{A list of bootstrap Range statistics
-    \eqn{\{\mathrm{Range}_{n,b}\}^B_{b=1}}}
-  \item{df.error}{Table showing the id of the bootstrap replication(s)
-    with error(s) and the corresponding error message(s).}
+Return the following list of objects:
+  \item{range.n.list}{List of bootstrap range components.}
   \item{df.error}{Table showing the id of the bootstrap replication(s)
     with error(s) and the corresponding error message(s).}
   \item{new.error}{Number of new errors.}
   \item{error.id}{Indices of the bootstrap replications that give errors.}
 }
 \description{
-This function computes the bootstrap components of the
-  `Range` test statistics.
+This function computes the bootstrap estimates of the range
+  components.
 }

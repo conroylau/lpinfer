@@ -2,18 +2,22 @@
 % Please edit documentation in R/lpmodel.R
 \name{lpm.print}
 \alias{lpm.print}
-\title{Print the `\code{lpmodel}` or `\code{lpmodel.natural}` object}
+\title{Print the \code{lpmodel} or \code{lpmodel.natural} object}
 \usage{
 lpm.print(x, lpm.string, data = NULL, ...)
 }
 \arguments{
-\item{x}{The `\code{lpmodel}` object or `\code{lpmodel.natural}` object.}
+\item{x}{The \code{lpmodel} object or \code{lpmodel.natural} object.}
+
+\item{lpm.string}{The string that contains the name of the variables
+available in the \code{lpmodel} object.}
+
+\item{data}{Data used in the tests.}
 }
 \value{
-Print the summary of the objects in `\code{lpmodel}` or 
-   `\code{lpmodel.natural}`.
+Nothing is returned.
 }
 \description{
-This function prints objects that are contained in the
-   list of `\code{lpmodel}` or `\code{lpmodel.natural}`.
+This function prints the details of the components that are
+   contained in the \code{lpmodel} or \code{lpmodel.natural} object.
 }

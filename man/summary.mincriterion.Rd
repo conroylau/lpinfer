@@ -7,13 +7,12 @@
 \method{summary}{mincriterion}(x, ...)
 }
 \arguments{
-\item{x}{Object returned from \code{mincriterion}.}
+\item{x}{Objects returned from \code{mincriterion}.}
 
 \item{...}{Additional arguments.}
 }
 \value{
-Nothing is returned. This function prints results from
-   \code{mincriterion}.
+Nothing is returned.
 }
 \description{
 This function uses the summary method on the return list of the

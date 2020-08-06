@@ -7,16 +7,9 @@
 check.betatgt.lp(data, lpmodel, beta.tgt, modelsense, solver)
 }
 \arguments{
-\item{data}{The data being used in the inference.}
+\item{data}{Data used in the tests.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear
-programming problems. The list of objects required in the \code{dkqs}
-procedure are:
-\itemize{
-  \item{\code{A.tgt}}
-  \item{\code{A.obs}}
-  \item{\code{beta.obs}}
-}}
+\item{lpmodel}{An \code{lpmodel} object.}
 
 \item{beta.tgt}{Value of beta to be tested.}
 
@@ -25,10 +18,8 @@ maximization or minimization problem. If it is "max", then it is referring
 to a maximization problem. Otherwise, it is referring to a minimization
 problem.}
 
-\item{solver}{The name of the linear and quadratic programming solver that
-are used to obtain the solution to linear and quadratic programs.
-The solvers supported by this module are `\code{cplexAPI}',
-`\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
+\item{solver}{A linear or quadratic programming solver. The exact solver
+that is supported depends on the test chosen.}
 }
 \value{
 Returns the solution to the linear program.
@@ -36,7 +27,6 @@ Returns the solution to the linear program.
   logical upper bound or the logical lower bound.}
 }
 \description{
-This function checks whether the parameter \code{beta.tgt}
-  specified is within the logical bound. If it is not the logical
-  bound, then reject immediately.
+This function solves the linear program that is used to find
+  the logical bounds in \code{check.betatgt} function.
 }

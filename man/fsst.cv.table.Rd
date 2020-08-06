@@ -2,7 +2,7 @@
 % Please edit documentation in R/cvtable.R
 \name{fsst.cv.table}
 \alias{fsst.cv.table}
-\title{Wrapper for the '\code{fsst}' procedure}
+\title{Wrapper for the \code{cv.table} function for the FSST procedure}
 \usage{
 fsst.cv.table(
   param,
@@ -34,10 +34,10 @@ fsst.cv.table(
 }
 \value{
 Returns a table of critical values.
-  \code{cv.table}{Table of critical values.}
+  \item{cv.table}{Table of critical values.}
 }
 \description{
-This is a wrapper of the `\code{fsst}` procedure in order to
+This is a wrapper of the \code{cv.table} function in order to
   produce a table that consists of the critical values for the test
-  statistics, cone component and the range component.
+  statistics, cone component and the range component for the FSST procedure.
 }

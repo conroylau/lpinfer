@@ -2,7 +2,7 @@
 % Please edit documentation in R/checks.R
 \name{infeasible.betatgt.warning}
 \alias{infeasible.betatgt.warning}
-\title{Display warning message for infeasible 'beta.tgt'}
+\title{Display warning message for infeasible \code{beta.tgt}}
 \usage{
 infeasible.betatgt.warning()
 }
@@ -11,5 +11,5 @@ Nothing is returned.
 }
 \description{
 This function displays the warning message for infeasible
-  'beta.tgt'.
+  \code{beta.tgt}.
 }

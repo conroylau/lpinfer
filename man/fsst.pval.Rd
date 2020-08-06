@@ -2,22 +2,24 @@
 % Please edit documentation in R/fsst.R
 \name{fsst.pval}
 \alias{fsst.pval}
-\title{Auxiliary function to calculate the p-value of `\code{fsst}`}
+\title{Calculates the \eqn{p}-value for the FSST procedure}
 \usage{
 fsst.pval(range.n, cone.n, range.n.list, cone.n.list, R, alpha = 0.05)
 }
 \arguments{
-\item{range.n}{The point estimate for the `Range` test statistics.}
+\item{range.n}{The range component of the sample test statistic.}
 
-\item{cone.n}{The point estimate for the `Cone` test statistics.}
+\item{cone.n}{The cone component of the sample test statistic.}
 
-\item{range.n.list}{The bootstrap test estimates for the `Range` test
-statistics.}
+\item{range.n.list}{The bootstrap estimates of the range component in the
+test statistics.}
 
-\item{cone.n.list}{The bootstrap test estimates for the `Cone` test
-statistics.}
+\item{cone.n.list}{The bootstrap estimates of the cone component in the
+test statistics.}
 
-\item{R}{Number of bootstraps chosen by the users.}
+\item{R}{Number of bootstrap replications.}
+
+\item{alpha}{Significance level.}
 }
 \value{
 Returns the \eqn{p}-value and the decision.
@@ -26,5 +28,5 @@ Returns the \eqn{p}-value and the decision.
 }
 \description{
 This function computes the \eqn{p}-value of the test based on
-   the bootstrap estimates.
+   the bootstrap estimates for the FSST procedure.
 }

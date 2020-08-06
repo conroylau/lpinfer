@@ -2,20 +2,20 @@
 % Please edit documentation in R/lpmodel.R
 \name{summary.lpmodel.natural}
 \alias{summary.lpmodel.natural}
-\title{Summary of the `\code{lpmodel.natural}` object}
+\title{Summary of the \code{lpmodel.natural} object}
 \usage{
 \method{summary}{lpmodel.natural}(x, ...)
 }
 \arguments{
-\item{x}{The `\code{lpmodel.natural}` object.}
+\item{x}{The \code{lpmodel.natural} object.}
 
 \item{...}{Additional arguments.}
 }
 \value{
-Nothing is returned
+Nothing is returned.
 }
 \description{
-This function is a wrapper of the `\code{print.lpmodel.natural}`
-   function and prints the same information for the object 
-   `\code{lpmodel.natural}`.
+This function is a wrapper of the \code{print.lpmodel.natural}
+   function and prints the same information as the object
+   \code{lpmodel.natural}.
 }

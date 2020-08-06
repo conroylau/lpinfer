@@ -2,7 +2,7 @@
 % Please edit documentation in R/checks.R
 \name{infeasible.pval.msg}
 \alias{infeasible.pval.msg}
-\title{Wrapper for '\code{infeasible.msg.betatgt}'}
+\title{Wrapper for \code{infeasible.msg.betatgt}}
 \usage{
 infeasible.pval.msg()
 }
@@ -10,7 +10,7 @@ infeasible.pval.msg()
 Nothing is returned.
 }
 \description{
-This function is a wrapper for '\code{infeasible.msg.betatgt}'
-  to print that p-value is zero in the `\code{print}' or '\code{summary}'
-  messages.
+This function is a wrapper for the
+  \code{infeasible.msg.betatgt} function to print that \eqn{p}-value is
+  zero in the \code{print} or \code{summary} messages.
 }

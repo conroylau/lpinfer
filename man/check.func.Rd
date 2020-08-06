@@ -9,24 +9,29 @@ check.func(f, A, data, name.var, name.A, mat.type)
 \arguments{
 \item{f}{Function to be tested}
 
-\item{A}{Matrix that will be contains dimensional information for the
-output of f}
+\item{A}{Matrix that contains the information about the dimension for the
+output of f.}
 
-\item{data}{Data frame that will be passed to the function}
+\item{data}{A data frame.}
 
-\item{name.A}{Name of the matrix}
+\item{name.var}{Name of the variable.}
 
-\item{mat.type}{Type of the matrix to be checked}
+\item{name.A}{Name of the matrix \code{A}.}
+
+\item{mat.type}{Type of the matrix to be checked.}
 }
 \value{
 Returns the output of the function in the format of \code{numeric}
-  and the correct dimension. If \code{mat.type} is \code{col}, then a
-  column vector is returned. If \code{mat.type} is \code{matrix}, then a
-  square matrix is returned.
+  and the correct dimension.
+  \itemize{
+     \item If \code{mat.type} is \code{col}, then a column vector is
+     returned.
+     \item If \code{mat.type} is \code{matrix}, then a square matrix is
+     returned.}
 }
 \description{
-This function checks the class of the function provided by
-  the user is \code{function}, and whether the output produced by the
-  function is \code{numeric} and has the correct dimension. If not, an
-  error message is displayed.
+This function checks whether the class of the function
+  provided by the user is \code{function}, and whether the output
+  produced by the function is \code{numeric} with the correct dimension.
+  If not, an error message is displayed.
 }

@@ -2,12 +2,14 @@
 % Please edit documentation in R/checks.R
 \name{check.numrange}
 \alias{check.numrange}
-\title{Check function: number within a range}
+\title{Check function: range of a variable}
 \usage{
 check.numrange(x, name.var, left.type, left, right.type, right)
 }
 \arguments{
 \item{x}{Variable to be checked.}
+
+\item{name.var}{Name of the variable.}
 
 \item{left.type}{Type of the left interval (\code{open} or \code{closed})}
 

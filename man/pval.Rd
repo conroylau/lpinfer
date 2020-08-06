@@ -2,21 +2,18 @@
 % Please edit documentation in R/dkqs.R
 \name{pval}
 \alias{pval}
-\title{Auxiliary function to calculate the p-value}
+\title{Calculates the \eqn{p}-value}
 \usage{
-pval(T.bs, T.n, alpha = 0.05)
+pval(T.bs, T.n)
 }
 \arguments{
-\item{T.n}{The test statistics obtained from quadratic program (5).}
+\item{T.n}{Sample test statistics.}
 
-\item{alpha}{The significance level.}
-
-\item{T_bs}{The test statistics obtained from bootstrap.}
+\item{T_bs}{Bootstrap estimates of the test statistic.}
 }
 \value{
 Returns the \eqn{p}-value:
   \item{p}{\eqn{p}-value.}
-  \item{decision}{Decision to reject or not.}
 }
 \description{
 This function computes the \eqn{p}-value of the test based on

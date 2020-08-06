@@ -2,51 +2,55 @@
 % Please edit documentation in R/dkqs.R
 \name{dkqs.qlp}
 \alias{dkqs.qlp}
-\title{Formulating and solving linear and quadratic programs}
+\title{Formulates and solves the linear and quadratic programs in the \code{dkqs}
+procedure}
 \usage{
 dkqs.qlp(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n, solver)
 }
 \arguments{
-\item{lpmodel}{A list of objects that are used in inference of linear
-programming problems. The list of objects required in the \code{dkqs}
-procedure are:
-\itemize{
-  \item{\code{A.tgt}}
-  \item{\code{A.obs}}
-  \item{\code{beta.obs}}
-}}
+\item{lpmodel}{The \code{lpmodel} object used in the test. The following
+components are required in the \code{lpmodel} for the DKQS test:
+ \itemize{
+   \item{\code{A.tgt}}
+   \item{\code{A.obs}}
+   \item{\code{beta.obs}}
+ }}
 
 \item{beta.tgt}{Value of beta to be tested.}
 
-\item{beta.obs.hat}{The value of \eqn{\hat{\beta}_{\mathrm{obs}}} based on
-that is either the value of the observed.}
+\item{beta.obs.hat}{The value of sample \eqn{\hat{\bm{\beta}}_{\mathrm{obs}}}
+from the \code{lpmodel} object.}
 
-\item{tau}{The value of tau to be used in the linear program.}
+\item{tau}{The value of the tuning parameter tau to be used in the
+\code{dkqs} procedure.}
 
 \item{problem}{The problem that the function will be solved.}
 
-\item{n}{The number of observations in the dataframe.}
+\item{n}{Number of observations for the data.}
 
-\item{solver}{Name of the solver that solves the linear and quadratic
-programs.}
+\item{solver}{Name of the linear and quadratic programming solver that
+are used to obtain the solution to linear and quadratic programs.
+The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
+\code{limSolve} and \code{Rcplex}.}
 }
 \value{
 Returns the optimal point and optimal value.
- \item{x}{Optimal point calculated from the optimizer.}
- \item{objval}{Optimal value calculated from the optimizer.}
+ \item{objval}{Optimal objective value.}
+ \item{x}{Optimal point.}
 }
 \description{
-This function formulates the matrices and vectors, and
-   solves the quadratic programs (4) or linear programs (5) and (6) in
-   Torgovitsky (2019).
+This function formulates the matrices and vectors used in
+   the \code{dkqs} test and solves the quadratic programs (4) or linear
+   programs (5) and (6) in Torgovitsky (2019).
 }
 \details{
 The argument \code{problem} must be one of the followings:
 \itemize{
-  \item{\code{test} --- this computes the quadratic program for the test
-    statistic, i.e. quadratic program (4) in Torgovitsky (2019)}
-  \item{\code{cone} --- this computes the quadratic program for the
-    bootstrap test statistics, i.e. quadratic program (5) in
+  \item{\code{test} --- this computes the solution to the quadratic program
+    that solves the test statistic, i.e. quadratic program (4) in
+    Torgovitsky (2019)}
+  \item{\code{cone} --- this computes the solution to the quadratic program
+    for the bootstrap test statistics, i.e. quadratic program (5) in
     Torgovitsky (2019)}
   \item{\code{tau} --- this computes the value of tau based on the
     procedure suggested by Kamat (2018), i.e. linear program (6) in

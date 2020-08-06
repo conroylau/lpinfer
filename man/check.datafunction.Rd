@@ -17,8 +17,9 @@ check.datafunction(data, f, lpmodel.comp)
 Nothing is returned.
 }
 \description{
-This function checks whether there will be any error if a
-  \code{data.frame} is being passed to a user-defined function.
+This function checks whether there will be any error if an
+  object of class \code{data.frame} is being passed to a
+  user-defined function.
 }
 \details{
 An error message will be displayed.

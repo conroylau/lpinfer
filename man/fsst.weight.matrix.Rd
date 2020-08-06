@@ -6,6 +6,23 @@
 \usage{
 fsst.weight.matrix(weight.matrix, beta.obs.hat, beta.sigma)
 }
+\arguments{
+\item{weight.matrix}{The option used in the weighting matrix. There are
+three options available:
+\itemize{
+  \item{\code{identity} --- identity matrix}
+  \item{\code{diag} --- the diagonal matrix that takes the diagonal
+     elements of the inverse of the variance matrix}
+  \item{\code{avar} --- inverse of the variance matrix}
+}}
+
+\item{beta.obs.hat}{Estimator of
+\eqn{\widehat{\bm{\beta}}_{\mathrm{obs}, n}} based on the given
+information in \code{lpmodel}.}
+
+\item{beta.sigma}{Estimator of the asymptotic variance for
+\eqn{\bm{\beta}_{\rm obs}}.}
+}
 \value{
 The weighting matrix is returned.
    \item{weight.max}{Weighting matrix.}

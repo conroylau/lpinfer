@@ -2,49 +2,50 @@
 % Please edit documentation in R/subsample.R
 \name{subsample.prob}
 \alias{subsample.prob}
-\title{Formulate and solve the subsampling problem}
+\title{Formulates and solves the subsampling problem}
 \usage{
-subsample.prob(data, lpmodel, beta.tgt, norm, solver, i)
+subsample.prob(data, lpmodel, beta.tgt, norm, solver)
 }
 \arguments{
-\item{data}{The data being used in the inference.}
+\item{data}{Data used in the tests.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear
-programming problems. The list of objects required in the \code{dkqs}
-procedure are:
-\itemize{
-  \item{\code{A.tgt}}
-  \item{\code{A.obs}}
-  \item{\code{beta.obs}}
-}}
+\item{lpmodel}{The \code{lpmodel} object used in the test. The following
+components are required in the \code{lpmodel} for the subsampling test:
+ \itemize{
+   \item{\code{A.tgt}}
+   \item{\code{A.obs}}
+   \item{\code{A.shp}}
+   \item{\code{beta.obs}}
+   \item{\code{beta.shp}}
+ }
+matrix of the estimator \eqn{\hat{\bm{\beta}}_{\mathrm{obs}}}.}
 
 \item{beta.tgt}{Value of beta to be tested.}
 
-\item{norm}{Norm used in the optimization problem.}
+\item{norm}{Norm used in the optimization problem. It can be either a 1-norm
+or a 2-norm.}
 
-\item{solver}{The name of the linear and quadratic programming solver that
+\item{solver}{Name of the linear and quadratic programming solver that
 are used to obtain the solution to linear and quadratic programs.
-The solvers supported by this module are `\code{cplexAPI}',
-`\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
-
-\item{i}{Index that represents whether the current problem is the
-bootstrap problem or the first-step problem.}
+The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
+\code{limSolve} and \code{Rcplex}.}
 }
 \value{
-Returns a list of output that are obtained from the optimizer:
-  \item{Status}{Status of the optimization problem.}
-  \item{x}{Optimal point calculated from the optimizer.}
-  \item{objval}{Optimal value calculated from the optimizer.}
+Returns the following list of outputs:
+  \item{status}{Status of the optimization problem.}
+  \item{x}{Optimal point.}
+  \item{objval}{Optimal objective value.}
   \item{larg}{List of arguments passed to the optimizer.}
   \item{beta}{The beta vector \eqn{\widehat{\bm{\beta}}_{\mathrm{obs}}}
-    used in the optimization problem that is calculated from the
-    \code{func_obs} function with data \code{data}.}
+    used in the optimization problem that is obtained from the
+    \code{beta.obs} component of the \code{lpmodel} object.}
   \item{omega}{The Omega matrix \eqn{\widehat{\bm{\Omega}}_n} used in the
-    optimization problem that is calculated from the \code{func_obs}
-    function with data \code{data}.}
+    optimization problem that is obtained from the \code{beta.obs}
+    component of the \code{lpmodel} object.}
 }
 \description{
-Based on the sample data given by the data frame \code{data},
-  this function formulates and solves linear/quadratic program in the
-  subsampling procedure.
+This function formulates and solves the linear or quadratic
+  program in the subsampling procedure. If the user chooses a 1-norm, this
+  function solves a linear program. If the user chooses a 2-norm, this
+  function solves a quadratic program.
 }

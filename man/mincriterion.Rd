@@ -2,36 +2,36 @@
 % Please edit documentation in R/estbounds.R
 \name{mincriterion}
 \alias{mincriterion}
-\title{First-stage of the estimation procedure for \code{estbounds}}
+\title{First-stage estimation procedure for \code{estbounds}}
 \usage{
 mincriterion(data = NULL, lpmodel, norm = 2, solver = NULL)
 }
 \arguments{
-\item{data}{The data being used in the inference.}
+\item{data}{Data used in the tests.}
 
-\item{lpmodel}{A list of objects that are used in inference of linear
-programming problems. The list of objects required in the \code{dkqs}
-procedure are:
-\itemize{
-  \item{\code{A.tgt}}
-  \item{\code{A.obs}}
-  \item{\code{A.shp}}
-  \item{\code{beta.obs}}
-  \item{\code{beta.shp}}
-}}
+\item{lpmodel}{The \code{lpmodel} object used in the test that consists of
+the following objects:
+ \itemize{
+   \item{\code{A.tgt}}
+   \item{\code{A.obs}}
+   \item{\code{A.shp}}
+   \item{\code{beta.obs}}
+   \item{\code{beta.shp}}
+ }}
 
-\item{norm}{Norm used in the optimization problem.}
+\item{norm}{Norm used in the optimization problem. It can be either a 1-norm
+or a 2-norm.}
 
-\item{solver}{The name of the linear and quadratic programming solver that
+\item{solver}{Name of the linear and quadratic programming solver that
 are used to obtain the solution to linear and quadratic programs.
-The solvers supported by this module are `\code{cplexAPI}',
-`\code{gurobi}', `\code{limSolve}' and `\code{Rcplex}'.}
+The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
+\code{limSolve} and \code{Rcplex}.}
 }
 \value{
 Returns the solution to the first step of the two-step procedure
    and argument for the linear program.
- \item{objval}{Optimal value calculated from the optimizer.}
- \item{x}{Optimal point calculated from the optimizer.}
+ \item{objval}{Optimal objective value.}
+ \item{x}{Optimal point.}
  \item{larg}{Arguments for the estimation program.}
  \item{norm}{Norm used in the estimation problem.}
  \item{solver}{The solver used in the estimation problem}
@@ -39,7 +39,7 @@ Returns the solution to the first step of the two-step procedure
 }
 \description{
 This function evaluates the solution to stage 1 of the
-   two-step procedure obtaining the estimated bound. This function can
+   two-step procedure to obtain the estimated bounds. This function can
    be used to evaluate both the estimation problem with the 1-norm or
    the 2-norm.
 }

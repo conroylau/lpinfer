@@ -15,6 +15,5 @@
 Nothing is returned.
 }
 \description{
-This function uses the print method on the return list of the
-   function \code{subsample}.
+This function prints the \eqn{p}-values from \code{subsample}.
 }

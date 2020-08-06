@@ -2,18 +2,24 @@
 % Please edit documentation in R/checks.R
 \name{check.nonnegaetive}
 \alias{check.nonnegaetive}
-\title{Check function: Nonnegative number}
+\title{Check function: nonnegative number}
 \usage{
 check.nonnegaetive(x, name.var)
 }
 \arguments{
 \item{x}{Variable to be checked.}
+
+\item{name.var}{Name of the variable.}
 }
 \value{
 Nothing is returned.
 }
 \description{
-This function checks whether the class of the variable
-  is \code{numeric}, has length 1 and is a nonnegative number. If not, an
-  error message is displayed.
+This function checks whether variable satisfies the following
+  requirements:
+  \itemize{
+    \item{The class of the variable is \code{numeric}.}
+    \item{The length of the variable is 1.}
+    \item{The variable is nonnegative.}
+  }
 }
