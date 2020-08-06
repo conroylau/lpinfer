@@ -46,6 +46,8 @@ require(PtProcess)
 require(doSNOW)
 require(doRNG)
 require(doParallel)
+require(future)
+RNGkind(kind = "L'Ecuyer-CMRG")
 ```
 
 ## Introduction
@@ -345,7 +347,6 @@ dkqs(data = sampledata,
      R = 100,
      tau = sqrt(log(N)/N),
      solver = "gurobi",
-     cores = 1,
      progress = FALSE)
 ```
 
@@ -357,9 +358,6 @@ where
 * `R` refers to the total number of bootstraps.
 * `tau` refers to the tuning parameter tau. This will be explained 
 [here](#choosing-the-tau-parameter). It can be a scalar or a vector.
-* `cores` refers to the number of cores to be used in the parallelized for-loop
-for computing the bootstrap test statistics. See [here](#parallel-programming) 
-for more details.
 * `progress` refers to the boolean variable for whether the progress bar
 should be printed in the testing procedure.
 
@@ -417,7 +415,6 @@ dkqs.full1 <- dkqs(data = sampledata,
                    R = 100,
                    tau = sqrt(log(N)/N),
                    solver = "gurobi",
-                   cores = 1,
                    progress = FALSE)
 print(dkqs.full1)
 ```
@@ -433,7 +430,6 @@ dkqs.full2 <- dkqs(data = sampledata,
                    R = 100,
                    tau = c(.1, .2, .3, .5),
                    solver = "gurobi",
-                   cores = 1,
                    progress = FALSE)
 print(dkqs.full2)
 ```
@@ -491,7 +487,6 @@ dkqs.full3 <- dkqs(data = sampledata,
                    R = 100,
                    tau =  sqrt(log(N)/N),
                    solver = "gurobi",
-                   cores = 1,
                    progress = FALSE)
 print(dkqs.full3)
 ```
@@ -512,7 +507,6 @@ subsample(data = sampledata,
           beta.tgt = 0.375,
           R = 100,
           solver = "gurobi",
-          cores = 1,
           norm = 2,
           phi = 2/3,
           replace = FALSE,
@@ -569,7 +563,6 @@ subsample.full <- subsample(data = sampledata,
                             beta.tgt = 0.375,
                             R = 100,
                             solver = "gurobi",
-                            cores = 1,
                             norm = 2,
                             phi = 2/3,
                             replace = FALSE,
@@ -595,7 +588,6 @@ subsample.bootstrap <- subsample(data = sampledata,
                                  beta.tgt = 0.375,
                                  R = 100,
                                  solver = "gurobi",
-                                 cores = 1,
                                  norm = 2,
                                  phi = 1,
                                  replace = TRUE,
@@ -613,7 +605,6 @@ subsample.bootstrap2 <- subsample(data = sampledata,
                                   beta.tgt = 0.375,
                                   R = 100,
                                   solver = "gurobi",
-                                  cores = 1,
                                   norm = 2,
                                   phi = 2/3,
                                   replace = TRUE,
@@ -639,7 +630,6 @@ fsst(data = sampledata,
      n = nrow(sampledata),
      weight.matrix = "diag",
      solver = "gurobi",
-     cores = 1,
      progress = FALSE)
 ```
 where 
@@ -696,7 +686,6 @@ fsst.full1 <- fsst(data = sampledata,
                    n = nrow(sampledata),
                    weight.matrix = "diag",
                    solver = "gurobi",
-                   cores = 1,
                    progress = FALSE)
 print(fsst.full1)
 ```
@@ -715,7 +704,6 @@ fsst.full2 <- fsst(data = sampledata,
                    n = nrow(sampledata),
                    weight.matrix = "diag",
                    solver = "gurobi",
-                   cores = 1,
                    progress = FALSE)
 print(fsst.full2)
 ```
@@ -848,7 +836,6 @@ subsample.args <- list(data = sampledata,
                        R = 100,
                        phi = .75,
                        solver = "gurobi",
-                       cores = 1,
                        progress = FALSE)
 ```
 
@@ -931,53 +918,74 @@ summary(invertci.subsample2, alphas = 0.05)
 
 ## Parallel Programming
 
-The `lpinfer` package supports the use of parallel programming in 
-computing the bootstrap test statistics to reduce the computational time. 
-To use parallel programming, specify the number of cores that you would like 
-to use in the argument `cores`. If you do not want to use parallel programming, 
-you may input 1 or any other non-numeric variables in `cores`.
+The `lpinfer` package supports parallel programming through the `future` 
+package.  The `future` package is freely available on CRAN and can be installed 
+directly via the `install.packages` command in R.
 
-For best performance, it is advisable to specify the number of cores to be 
-less than or equal to the cores that you have on your machine.
+To implement parallel programming, users need to first install and load the
+`future` package. Then, specify the number of workers to be used via the
+`plan` function before running any functions from the `lpinfer` package
+via the `plan` function after loading the `future` package. 
+
+Below is an example of running the `dkqs` function with parallel programming
+by the `future` package:
+``` {r dkqs.eg.cores, eval = FALSE}
+library(future)
+plan(multisession, workers = 8)
+set.seed(1)
+dkqs.full1 <- dkqs(data = sampledata,
+                   lpmodel = lpm.full,
+                   beta.tgt = .375,
+                   R = 1000,
+                   tau = sqrt(log(N)/N),
+                   solver = "gurobi",
+                   progress = FALSE)
+print(dkqs.full1)
+```
 
 The computational time for using multiple cores should be
 shorter than using a single core for a large number of bootstraps. This is
 illustrated by the example via the `dkqs` procedure below:
 
-```{r eg.cores, eval = TRUE}
+```{r dkqs.eg.cores2, eval = TRUE}
+library(future)
 dkqs.args <- list(data = sampledata,
                   lpmodel = lpm.full,
                   beta.tgt = .375,
-                  R = 100,
+                  R = 5000,
                   tau = sqrt(log(N)/N),
                   solver = "gurobi",
                   progress = FALSE)
 
-# Run dkqs with one core
-dkqs.args$cores <- 1
-t10 <- Sys.time()
+# Run dkqs with one worker
+plan(multisession, workers = 1)
+t1 <- Sys.time()
 set.seed(1)
 do.call(dkqs, dkqs.args)
-t11 <- Sys.time()
-time1 <- t11 - t10
+t2 <- Sys.time()
+time1 <- t2 - t1
 
-# Run dkqs with eight cores
-dkqs.args$cores = 8
-t80 <- Sys.time()
+# Run dkqs with three workers
+plan(multisession, workers = 3)
+t1 <- Sys.time()
 set.seed(1)
 do.call(dkqs, dkqs.args)
-t81 <- Sys.time()
-time8 <- t81 - t80
+t2 <- Sys.time()
+time3 <- t2 - t1
 
 # Print the time used
 print(sprintf("Time used with 1 core: %s", time1))
-print(sprintf("Time used with 8 cores: %s", time8))
+print(sprintf("Time used with 3 cores: %s", time3))
 ```
+
+Note that there are different options available for the `plan` command. The 
+availability of the options may depend on the operating systems used. Please 
+refer to the instructions from the `future` pakage for more details.
 
 ## Help, Feature Requests and Bug Reports
 Please post an issue on the 
-[GitHub repository](https://github.com/conroylau/lpinfer/issues). We 
-are happy to help.
+[issues page](https://github.com/conroylau/lpinfer/issues) of the GitHub 
+repository. We are happy to help.
 
 ## References
 
