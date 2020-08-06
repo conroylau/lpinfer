@@ -1650,10 +1650,23 @@ print.fsst <- function(x, ...) {
       # Case 1: 'beta.tgt' is within the logical bound
       # Print the p-values
       df.pval <- x$pval
-      if (nrow(df.pval) == 1){
-         cat(sprintf("p-value: %s\n", df.pval[1,2]))
+      if (nrow(df.pval) == 1) {
+         pv <- "p-value"
+         # Indicates if it is obtained by a data-driven lambda
+         if (!is.null(x$lambda.data)) {
+            pv <- paste(pv, "(by data-driven 'lambda')")
+         }
+         cat(sprintf("%s: %s\n", pv, df.pval[1,2]))
       } else {
+         # Label the data-driven lambda with a "*" if it is used
+         dfl <- fsst.label.lambda(df.pval$`lambda`, x$lambda.data)
+         df.pval$`lambda` <- dfl$lambdas
          print(df.pval, row.names = FALSE)
+
+         # Print the message for data-driven lambda if necessary
+         if (!is.null(dfl$msg)) {
+            cat(dfl$msg)
+         }
       }
    } else {
       # Case 2: 'beta.tgt' is outside the logical bound
@@ -1684,17 +1697,25 @@ summary.fsst <- function(x, ...) {
       cv.tab[,1] <- paste0("   ", cv.tab[,1], " ")
       cv.tab[,2] <- paste0(cv.tab[,2], "  ")
       colnames(cv.tab)[2] <- paste0(colnames(cv.tab)[2], "  ")
+      # Label the data-driven lambda with a "*" if it is used
+      cvlambda <- as.numeric(colnames(cv.tab)[-c(1, 2)])
+      cvlambda <- fsst.label.lambda(cvlambda, x$lambda.data)
+      colnames(cv.tab)[-c(1, 2)] <- cvlambda$lambdas
       print(cv.tab, row.names = FALSE)
 
       # Print the p-values
       df.pval <- x$pval
       n.pval <- nrow(df.pval)
-      if (n.pval == 1){
-         cat(sprintf("\np-value: %s\n", df.pval[1,2]))
+      if (n.pval == 1) {
+         cat("\n")
+         print.fsst(x)
       } else {
          cat("\np-values:\n")
-         df.pval.2 <- data.frame(matrix(vector(), nrow = 1, ncol = n.pval+1))
-         colnames(df.pval.2) <- c("    lambda    ", df.pval$lambda)
+         df.pval.2 <- data.frame(matrix(vector(), nrow = 1, ncol = n.pval + 1))
+         # Label the data-driven lambda with a "*" if it is used
+         dfl <- df.pval$lambda
+         dfl <- fsst.label.lambda(dfl, x$lambda.data)
+         colnames(df.pval.2) <- c("    lambda    ", dfl$lambdas)
          df.pval.2[1,] <- c("    p-value   ", df.pval[,2])
          print(df.pval.2, row.names = FALSE)
       }
@@ -1726,6 +1747,11 @@ summary.fsst <- function(x, ...) {
          } else {
             cat(sprintf(paste(errstring, "replications: %s\n"), nerr))
          }
+      }
+
+      # Print the message for data-driven lambda if necessary
+      if (!is.null(cvlambda$msg)) {
+         cat(cvlambda$msg)
       }
    } else if (x$test.logical == 0) {
       # Case 2: 'beta.tgt' is outside the logical bound
@@ -1800,4 +1826,32 @@ fsst.lambda <- function(n, omega.i, beta.n, beta.star, lpmodel, R.succ,
                new.error = new.error,
                df.error = df.error,
                error.id = error.id))
+}
+
+#' Indicates the data-driven \code{lambda} in the output
+#'
+#' @description This function labels the data-driven \code{lambda} in the
+#'   \code{print} or \code{summary} output and returns an indicative message.
+#'   This only affects the output messages, but not the objects returned.
+#'
+#' @param lambdas The vector of \code{lambda}.
+#' @param lambda.data Data-driven lambda.
+#'
+#' @return Returns the updated vector of \code{lambda} where the data-driven
+#'   \code{lambda} is labelled with a star and the corresponding message
+#'   \item{lambdas}{Updated \code{lambda}.}
+#'   \item{msg}{Indicative message.}
+#'
+#' @export
+#'
+fsst.label.lambda <- function(lambdas, lambda.data) {
+   if (!is.null(lambda.data)) {
+      lambdas[lambdas %in% lambda.data] <- paste(lambda.data, "*")
+      msg <- "\n* refers to the data-driven 'lambda' parameter.\n"
+   } else {
+      msg <- NULL
+   }
+
+   return(list(lambdas = lambdas,
+               msg = msg))
 }

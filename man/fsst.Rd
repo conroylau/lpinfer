@@ -10,7 +10,7 @@ fsst(
   beta.tgt,
   R = 100,
   Rmulti = 1.25,
-  lambda = 0.5,
+  lambda = NA,
   rho = 1e-04,
   n = NULL,
   weight.matrix = "diag",
@@ -44,7 +44,8 @@ number of bootstrap replications to be conducted if there are errors.}
 be included if \code{NA} is included as part of the vector for
 \code{lambda}. For instance, if \code{lambda} is set as \code{c(0.1, NA)},
 then both 0.1 and the data-driven \code{lambda} will be applied in the
-FSST procedure.}
+FSST procedure. The default is to use the data-driven approach for
+\code{lambda}.}
 
 \item{rho}{Parameter used in the studentization of matrices.}
 

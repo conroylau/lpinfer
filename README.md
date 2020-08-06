@@ -1030,7 +1030,9 @@ fsst.full3 <- fsst(data = sampledata,
 print(fsst.full3)
 #>  lambda p-value
 #>     0.1    0.95
-#>     1.0    0.22
+#>     1 *    0.22
+#> 
+#> * refers to the data-driven 'lambda' parameter.
 ```
 
 In the FSST procedure, the default is to use the data-driven `lambda`.

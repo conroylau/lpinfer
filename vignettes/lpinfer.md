@@ -2,17 +2,17 @@
 title: 'lpinfer: An R Package for Inference in Linear Programs'
 author: ''
 output:
-  github_document:
-    keep_html: yes
-    toc: yes
-    df_print: paged
-  pdf_document:
-    toc: yes
-    df_print: paged
   md_document:
     preserve_yaml: yes
     toc: yes
     df_print: paged  
+  pdf_document:
+    toc: yes
+    df_print: paged
+  github_document:
+    keep_html: yes
+    toc: yes
+    df_print: paged
   html_document:
     keep_md: yes
     toc: yes
@@ -1053,7 +1053,9 @@ fsst.full3 <- fsst(data = sampledata,
 print(fsst.full3)
 #>  lambda p-value
 #>     0.1    0.95
-#>     1.0    0.22
+#>     1 *    0.22
+#> 
+#> * refers to the data-driven 'lambda' parameter.
 ```
 
 In the FSST procedure, the default is to use the data-driven `lambda`.
