@@ -1,8 +1,9 @@
-#' Check function: data
+#' Check function: data frame
 #'
-#' @description This function force the data input as a \code{data.frame}.
+#' @description This function coerce the data provided from the user as a
+#'   \code{data.frame}.
 #'
-#' @param data A \code{data} object to be checked.
+#' @param data A \code{data} object.
 #'
 #' @return Returns the object as a \code{data.frame}.
 #'
@@ -18,8 +19,9 @@ check.dataframe <- function(data){
 
 #' Check function: passing data to function
 #'
-#' @description This function checks whether there will be any error if a
-#'   \code{data.frame} is being passed to a user-defined function.
+#' @description This function checks whether there will be any error if an
+#'   object of class \code{data.frame} is being passed to a
+#'   user-defined function.
 #'
 #' @param data The data object in the class \code{data.frame}.
 #' @param f User-defined function in \code{lpmodel}.
@@ -60,7 +62,7 @@ check.datafunction <- function(data, f, lpmodel.comp){
 #'   error message is displayed.
 #'
 #' @param x Variable to be checked.
-#' @inheritParams check.dataframe
+#' @param name.var Name of the variable.
 #'
 #' @return Nothing is returned.
 #'
@@ -78,14 +80,18 @@ check.positiveinteger <- function(x, name.var){
   return(x)
 }
 
-#' Check function: Nonnegative number
+#' Check function: nonnegative number
 #'
-#' @description This function checks whether the class of the variable
-#'   is \code{numeric}, has length 1 and is a nonnegative number. If not, an
-#'   error message is displayed.
+#' @description This function checks whether variable satisfies the following
+#'   requirements:
+#'   \itemize{
+#'     \item{The class of the variable is \code{numeric}.}
+#'     \item{The length of the variable is 1.}
+#'     \item{The variable is nonnegative.}
+#'   }
 #'
 #' @param x Variable to be checked.
-#' @inheritParams check.dataframe
+#' @inheritParams check.positiveinteger
 #'
 #' @return Nothing is returned.
 #'
@@ -141,7 +147,7 @@ check.boolean <- function(x, name.var){
   }
 }
 
-#' Check function: number within a range
+#' Check function: range of a variable
 #'
 #' @description This function checks whether the variable is within a
 #'   certain interval. If not, an error message is displayed.
@@ -197,13 +203,13 @@ check.numrange <- function(x, name.var, left.type, left, right.type, right){
 #' Check function: norm
 #'
 #' @description This function checks whether the the norm used in the
-#'   problem is an L1 or L2 norm. If not, an error message is displayed.
+#'   problem is a 1-norm or a 2-norm. If not, an error message is displayed.
 #'
-#' @details The following input for \code{norm} will be interpreted as the 1-
-#'   norm:
+#' @details The following input for \code{norm} will be interpreted as the
+#'   1-norm:
 #'   \itemize{
-#'     \item{\code{1} (numeric)}
-#'     \item{\code{"1"} (string)}
+#'     \item{\code{1} (\code{numeric})}
+#'     \item{\code{"1"} (\code{string})}
 #'     \item{\code{"L1"}}
 #'     \item{\code{"one"}}
 #'     \item{\code{"o"}}
@@ -211,15 +217,15 @@ check.numrange <- function(x, name.var, left.type, left, right.type, right){
 #'   }
 #'   The following input for \code{norm} will be interpreted as the 2-norm:
 #'   \itemize{
-#'     \item{\code{2} (numeric)}
-#'     \item{\code{"2"} (string)}
+#'     \item{\code{2} (\code{numeric})}
+#'     \item{\code{"2"} (\code{string})}
 #'     \item{\code{"L2"}}
 #'     \item{\code{"two"}}
 #'     \item{\code{"t"}}
 #'     \item{\code{"e"}}
 #'     \item{\code{"euclidean"}}
 #'   }
-#'   Note that capitalization is not an issue here as the text will be brought
+#'   Capitalization is not an issue here as the text will be brought
 #'   to the lower case.
 #'
 #' @inheritParams check.dataframe
@@ -255,24 +261,27 @@ check.norm <- function(x, name.var){
 
 #' Check function: function
 #'
-#' @description This function checks the class of the function provided by
-#'   the user is \code{function}, and whether the output produced by the
-#'   function is \code{numeric} and has the correct dimension. If not, an
-#'   error message is displayed.
+#' @description This function checks whether the class of the function
+#'   provided by the user is \code{function}, and whether the output
+#'   produced by the function is \code{numeric} with the correct dimension.
+#'   If not, an error message is displayed.
 #'
 #' @param f Function to be tested
-#' @param A Matrix that will be contains dimensional information for the
-#'    output of f
-#' @param data Data frame that will be passed to the function
-#' @param name.A Name of the matrix
-#' @param mat.type Type of the matrix to be checked
+#' @param A Matrix that contains the information about the dimension for the
+#'    output of f.
+#' @param data A data frame.
+#' @param name.A Name of the matrix \code{A}.
+#' @param mat.type Type of the matrix to be checked.
 #' @inheritParams check.dataframe
 #' @inheritParams check.positiveinteger
 #'
 #' @return Returns the output of the function in the format of \code{numeric}
-#'   and the correct dimension. If \code{mat.type} is \code{col}, then a
-#'   column vector is returned. If \code{mat.type} is \code{matrix}, then a
-#'   square matrix is returned.
+#'   and the correct dimension.
+#'   \itemize{
+#'      \item If \code{mat.type} is \code{col}, then a column vector is
+#'      returned.
+#'      \item If \code{mat.type} is \code{matrix}, then a square matrix is
+#'      returned.}
 #'
 #' @export
 #'
@@ -327,19 +336,20 @@ check.func <- function(f, A, data, name.var, name.A, mat.type){
   return(out)
 }
 
-#' Check function: Constraint matrix and the corresponding RHS vector
+#' Check function: constraint matrix and the corresponding rhs vector
 #'
 #' @description This function checks the constraint matrix \eqn{\bm{A}} and
 #'    the corresponding vector \eqn{\bm{\beta}}.
 #'
 #' @param A Constraint matrix.
-#' @param b Corresponding vector.
-#' @param Aname Variable name of constraint matrix.
-#' @param bname Variable name of the corresponding vector.
+#' @param b Corresponding rhs vector.
+#' @param Aname Name of the constraint matrix.
+#' @param bname Name of the corresponding rhs vector.
 #'
-#' @return Returns the updated matrix and vector or print stop message.
-#'    \item{A_updated}{Updated constraint matrix.}
-#'    \item{b_updated}{Updated rhs vector.}
+#' @return Returns the updated matrix and rhs vector or print a
+#'    stop message.
+#'    \item{A}{Updated constraint matrix.}
+#'    \item{b}{Updated rhs vector.}
 #'
 #' @export
 #'
@@ -416,12 +426,12 @@ check.Ab <- function(A, b, Aname, bname){
               b = b))
 }
 
-#' Check function: check solvers
+#' Check function: solvers
 #'
 #' @description This function checks the solver used is supported and is
-#'   appropriate for the problem considered.
+#'   appropriate for the testing function.
 #'
-#' @param norm Norm used in the problem
+#' @param norm Norm used in the problem (if applicable).
 #' @param qc Indicator of whether the problem consists of a quadratic
 #'   constraint.
 #' @inheritParams check.dataframe
@@ -430,7 +440,7 @@ check.Ab <- function(A, b, Aname, bname){
 #' @return Returns the function name that corresponds to the solver for the
 #'   problem.
 #'    \item{solver}{Function for the solver used.}
-#'    \item{solver_name}{Name of the solver used in lower case.}
+#'    \item{solver.name}{Name of the solver used in lower case.}
 #'
 #' @export
 #'
@@ -550,7 +560,7 @@ check.solver <- function(x, name.var, norm = 2 , qc = FALSE){
               solver.name = x))
 }
 
-#' Check function: check \code{lpmodel}
+#' Check function: \code{lpmodel}
 #'
 #' @description This function checks if the object \code{lpmodel} is in the
 #'    correct format.
@@ -577,8 +587,8 @@ check.solver <- function(x, name.var, norm = 2 , qc = FALSE){
 #'  \item{\code{function_obs_var}: This refers to the case where
 #'    the object is a function that produces a list that contains a matrix
 #'    and a vector. This is typically the case for \code{beta.obs} when
-#'    the testing procedure requires both the observed value of \code{beta.obs}
-#'    and the estimator of the asymptotic variance.}
+#'    the testing procedure requires both the observed value of
+#'    \code{beta.obs} and the estimator of the asymptotic variance.}
 #' }
 #'  Each object can belong to one of more categories.
 #'
@@ -643,7 +653,7 @@ check.lpmodel <- function(data, lpmodel, name.var, A.tgt.cat, A.obs.cat,
   return(lpmodel)
 }
 
-#' Check function: check matrices and vectors in lpmodel
+#' Check function: matrices and vectors in \code{lpmodel}
 #'
 #' @description This function checks if the matrix objects in \code{lpmodel}
 #'    are in the correct format.
@@ -653,8 +663,8 @@ check.lpmodel <- function(data, lpmodel, name.var, A.tgt.cat, A.obs.cat,
 #' @param mat.cat Category of the matrix object.
 #' @inheritParams dkqs
 #'
-#' @details See the details for the function `\code{check.lpmodel}` for the
-#'   details on the strings for each category.
+#' @details See the details section for the function \code{check.lpmodel}
+#'   for more details on the strings for each category.
 #'
 #' @return Returns two objects:
 #'    \item{mat}{The updated object in \code{lpmodel}.}
@@ -708,8 +718,8 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R){
         # Check if the length of the list is R+1
         if (length(mat) != (R+1)){
           stop(sprintf(paste0("The object '%s' in 'lpmodel' needs to have ",
-                              "exactly %s elements",
-                              mat.name, R+1)),
+                              "exactly %s elements"),
+                              mat.name, R+1),
                call. = FALSE)
         }
 
@@ -828,15 +838,17 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R){
   }
 }
 
-#' Check function: check matrix
+#' Check function: matrix
 #'
-#' @description This function checks if the matrix objects in \code{lpmodel}
-#'    are in the correct format.
+#' @description This function checks if the matrix objects in the
+#'    \code{lpmodel} object are in the correct format.
 #'
 #' @param mat The matrix object in \code{lpmodel}.
 #' @param mat.name Name of the matrix object in \code{lpmodel}.
 #' @param inside.list Indicator variables of whether the object that is
 #'    being checked is inside a list or not.
+#'
+#' @return Nothing is returned.
 #'
 #' @export
 #'
@@ -886,7 +898,7 @@ check.matrix <- function(mat, mat.name, mat.cat, inside.list){
   }
 }
 
-#' Check function: check vector
+#' Check function: vector
 #'
 #' @description This function checks if the matrix objects in \code{lpmodel}
 #'    are in the correct format.
@@ -895,6 +907,8 @@ check.matrix <- function(mat, mat.name, mat.cat, inside.list){
 #' @param vec.name Name of the vector object in \code{lpmodel}.
 #' @param inside.list Indicator variables of whether the object that is
 #'    being checked is inside a list or not.
+#'
+#' @return Nothing is returned.
 #'
 #' @export
 #'
@@ -936,14 +950,17 @@ check.cores <- function(x){
 #' Check function: check if \code{beta.tgt} is within the logical bound
 #'
 #' @description This function checks whether the parameter \code{beta.tgt}
-#'   specified is within the logical bound. If it is not the logical
+#'   specified is within the logical bounds. If it is not within the logical
 #'   bound, then reject immediately.
 #'
 #' @inheritParams dkqs
+#' @param lpmodel An \code{lpmodel} object.
+#' @param solver A linear or quadratic programming solver. The exact solver
+#'   that is supported depends on the test chosen.
 #'
 #' @return Returns an indicator to show whether the \code{beta.tgt} is within
 #'   the logical bound or not.
-#'   \item{beta.tgt.logical}{Equals 1 if it is within the logical bound.
+#'   \item{beta.tgt.logi}{Equals 1 if it is within the logical bound.
 #'   Equals 0 otherwise.}
 #'
 #' @export
@@ -967,11 +984,10 @@ check.betatgt <- function(data, lpmodel, beta.tgt, solver) {
 
 #' Construct the linear program for the function \code{check.betatgt}
 #'
-#' @description This function checks whether the parameter \code{beta.tgt}
-#'   specified is within the logical bound. If it is not the logical
-#'   bound, then reject immediately.
+#' @description This function solves the linear program that is used to find
+#'   the logical bounds in \code{check.betatgt} function.
 #'
-#' @inheritParams dkqs
+#' @inheritParams check.betatgt
 #' @param modelsense String that indicates whether the program is a
 #'   maximization or minimization problem. If it is "max", then it is referring
 #'   to a maximization problem. Otherwise, it is referring to a minimization
@@ -1013,16 +1029,16 @@ check.betatgt.lp <- function(data, lpmodel, beta.tgt, modelsense, solver) {
   return(ans$objval)
 }
 
-#' General message to be printed in the summary function
+#' General message for infeasible \code{beta.tgt}
 #'
 #' @description This function prints the message to inform the user that
-#'   the p-value is directly set to 0 because they have specified a
-#'   '\code{beta.tgt}' parameter that is infeasible, i.e. outside the logical
+#'   the \eqn{p}-value is directly set to 0 because they have specified a
+#'   \code{beta.tgt} parameter that is infeasible, i.e. outside the logical
 #'   bounds of the program.
 #'
 #' @return Returns a string of the message.
-#'   \item{msg.explain}{Message to explain why the p-value is zero.}
-#'   \item{msg.pval}{Message indicating that the p-value is zero.}
+#'   \item{msg.explain}{Message to explain why the \eqn{p}-value is zero.}
+#'   \item{msg.pval}{Message indicating that the \eqn{p}-value is zero.}
 #'
 #' @export
 #'
@@ -1034,11 +1050,11 @@ infeasible.msg.betatgt <- function() {
               msg.pval = msg.pval))
 }
 
-#' Wrapper for '\code{infeasible.msg.betatgt}'
+#' Wrapper for \code{infeasible.msg.betatgt}
 #'
-#' @description This function is a wrapper for '\code{infeasible.msg.betatgt}'
-#'   to print that p-value is zero in the `\code{print}' or '\code{summary}'
-#'   messages.
+#' @description This function is a wrapper for the
+#'   \code{infeasible.msg.betatgt} function to print that \eqn{p}-value is
+#'   zero in the \code{print} or \code{summary} messages.
 #'
 #' @return Nothing is returned.
 #'
@@ -1049,10 +1065,10 @@ infeasible.pval.msg <- function() {
   cat(msg$msg.pval)
 }
 
-#' Display warning message for infeasible 'beta.tgt'
+#' Display warning message for infeasible \code{beta.tgt}
 #'
 #' @description This function displays the warning message for infeasible
-#'   'beta.tgt'.
+#'   \code{beta.tgt}.
 #'
 #' @return Nothing is returned.
 #'
@@ -1066,7 +1082,7 @@ infeasible.betatgt.warning <- function() {
 #' General error for checking the objects
 #'
 #' @description This is a general function to produce the error messages in
-#'   checking the objects
+#'   the check functions.
 #'
 #' @param name.var Name of the object.
 #' @param needs.to.be What the object is supposed to be.

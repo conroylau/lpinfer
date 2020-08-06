@@ -3,24 +3,24 @@
 #' @import scales
 #'
 #' @description This function generates a table of critical values for the
-#'   testing methods. By default, it produces the critical values at the 90%,
-#'   95% and 99% level. The table can be retrieved from \code{cv.table} in the
-#'   output of the functions.
+#'   testing methods. By default, the table includes the sample test statistic,
+#'   and critical values at the 90\%, 95\% and 99\% level. The table can be
+#'   retrieved from \code{cv.table} in the output of the functions.
 #'
 #' @param param Tuning parameter of the testing procedure.
 #' @param param.name Name of the tuning parameter.
-#' @param test.sample.list A vector or sample test statistics.
-#' @param test.bs.list A vector or a list of bootstrap test statistics.
+#' @param ts.sample.list A vector or sample test statistics.
+#' @param ts.bs.list A vector or a list of bootstrap test statistics.
 #' @param levels Confidence levels.
 #' @param digits Number of digits in the test statistics.
 #'
 #' @return Returns a table of critical values.
-#'   \code{cv.table}{Table of critical values.}
+#'   \item{cv.table}{Table of critical values.}
 #'
 #' @export
 #'
-construct.cv.table <- function(param, param.name, test.sample.list,
-                               test.bs.list, levels = c(.99, .95, .9),
+construct.cv.table <- function(param, param.name, ts.sample.list,
+                               ts.bs.list, levels = c(.99, .95, .9),
                                digits = 5) {
   # ---------------- #
   # Step 1: Compute the required the parameters and the data frame
@@ -43,12 +43,12 @@ construct.cv.table <- function(param, param.name, test.sample.list,
   # Construct the table
   for (i in 1:n.param) {
     # Construct the quantiles
-    if (is.list(test.bs.list)) {
-      test.level.list <- quan.stat(test.bs.list[[i]], levels)
+    if (is.list(ts.bs.list)) {
+      test.level.list <- quan.stat(ts.bs.list[[i]], levels)
     } else {
-      test.level.list <- quan.stat(test.bs.list, levels)
+      test.level.list <- quan.stat(ts.bs.list, levels)
     }
-    cv.table[1, i + 1] <- round(test.sample.list[i], digits = digits)
+    cv.table[1, i + 1] <- round(ts.sample.list[i], digits = digits)
     for (j in 1:n.levels)
       cv.table[j + 1, i + 1] <- round(test.level.list[j], digits = digits)
   }
@@ -59,11 +59,11 @@ construct.cv.table <- function(param, param.name, test.sample.list,
   return(cv.table)
 }
 
-#' Wrapper for the '\code{fsst}' procedure
+#' Wrapper for the \code{cv.table} function for the FSST procedure
 #'
-#' @description This is a wrapper of the `\code{fsst}` procedure in order to
+#' @description This is a wrapper of the \code{cv.table} function in order to
 #'   produce a table that consists of the critical values for the test
-#'   statistics, cone component and the range component.
+#'   statistics, cone component and the range component for the FSST procedure.
 #'
 #' @param cone.n.list A list of sample cone test statistics.
 #' @param range.n.list A list of sample range test statistics.
@@ -72,7 +72,7 @@ construct.cv.table <- function(param, param.name, test.sample.list,
 #' @inheritParams construct.cv.table
 #'
 #' @return Returns a table of critical values.
-#'   \code{cv.table}{Table of critical values.}
+#'   \item{cv.table}{Table of critical values.}
 #'
 #' @export
 #'
@@ -136,17 +136,17 @@ fsst.cv.table <- function(param, param.name, cone.n.list, range.n.list,
 #'
 #' @description This function is used to evaluate the test statistics at
 #'   different standard quantiles. By default, it evaluates the test
-#'   statistics at the quantiles - 90%, 95% and 99%.
+#'   statistics at the quantiles --- 90\%, 95\% and 99\%.
 #'
 #' @importFrom pracma ceil
 #'
-#' @param stat Test statistics
-#' @param quan Quantiles
+#' @param stat Test statistics.
+#' @param quan Quantiles.
 #'
 #' @return Return the quantile of the test statistics in the order of the
-#'   `\code{quan}` vector.
+#'   \code{quan} vector.
 #'   \item{stat.quan}{Quantile of the test statistics in the order of the
-#'   `\code{quan}` vector.}
+#'   \code{quan} vector.}
 #'
 #' @export
 #'

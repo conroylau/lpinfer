@@ -1,14 +1,12 @@
 #' Estimate bounds with shape restrictions
 #'
-#' @description This function computes the bound of the linear program
-#'    subject to shape constraints. This function also offers an option
-#'    to estimate the shape constraints using a two-step procedure and
-#'    some tolerance level. \eqn{\ell^1}-norm and \eqn{\ell^2}-norm are
-#'    supported in the estimation procedure.
+#' @description This function computes the bound of the estimation problem
+#'    subject to shape constraints. This function offers an option to estimate
+#'    the shape constraints using a two-step procedure with the 1-norm or
+#'    2-norm.
 #'
-#' @param lpmodel A list of objects that are used in inference of linear
-#'    programming problems. The list of objects required in the \code{dkqs}
-#'    procedure are:
+#' @param lpmodel The \code{lpmodel} object used in the test that consists of
+#'   the following objects:
 #'    \itemize{
 #'      \item{\code{A.tgt}}
 #'      \item{\code{A.obs}}
@@ -16,20 +14,42 @@
 #'      \item{\code{beta.obs}}
 #'      \item{\code{beta.shp}}
 #'    }
-#' @param norm Norm used in the optimization problem.
-#' @param kappa Parameter used in the second step of the two-step procedure
-#'    for obtaining the solution subject to the shape constraints. It can be
-#'    any nonnegative number.
-#' @param estimate Boolean variable to indicate whether the estimated
-#'    problem should be considered.
+#' @param norm Norm used in the optimization problem. It can be either a 1-norm
+#'   or a 2-norm.
+#' @param kappa Tuning parameter used in the second step of the two-step
+#'    procedure for obtaining the bounds subject to the shape constraints.
+#'    It can be any nonnegative number.
+#' @param estimate Boolean variable to indicate whether the bounds should be
+#'    estimated or not.
 #' @inheritParams dkqs
 #' @inheritParams invertci
+#'
+#' @details The following input for \code{norm} will be interpreted as the
+#'   1-norm:
+#'   \itemize{
+#'     \item{\code{1} (\code{numeric})}
+#'     \item{\code{"1"} (\code{string})}
+#'     \item{\code{"L1"}}
+#'     \item{\code{"one"}}
+#'     \item{\code{"o"}}
+#'     \item{\code{"taxicab"}}
+#'   }
+#'   The following input for \code{norm} will be interpreted as the 2-norm:
+#'   \itemize{
+#'     \item{\code{2} (\code{numeric})}
+#'     \item{\code{"2"} (\code{string})}
+#'     \item{\code{"L2"}}
+#'     \item{\code{"two"}}
+#'     \item{\code{"t"}}
+#'     \item{\code{"e"}}
+#'     \item{\code{"euclidean"}}
+#'   }
 #'
 #' @return Returns the bounds subject to the shape constraints.
 #'   \item{ub}{Upper bound with shape constraints}
 #'   \item{lb}{Lower bound with shape constraints}
-#'   \item{minc}{Objective value of the first-stage problem (i.e.
-#'     '\code{mincriterion}').}
+#'   \item{mincriterion}{Objective value of the first-stage problem (i.e.
+#'      \code{mincriterion}).}
 #'   \item{est}{Indicator of whether estimation is involved in the
 #'   estimation}
 #'   \item{call}{The function that has been called.}
@@ -145,19 +165,18 @@ estbounds <- function(data = NULL, lpmodel, kappa = 1e-5, norm = 2,
   return(output)
 }
 
-#' Computes the true bounds with shape contraints
+#' Computes the true bounds with shape constraints
 #'
-#' @description The function computes the true bound subject to the shape
+#' @description This function computes the true bounds subject to the shape
 #'    constraints without approximation.
 #'
-#' @param original.sense Sense of the contraints to compute the true bound.
-#' @inheritParams dkqs
+#' @param original.sense Sense of the constraints for the true bounds.
 #' @inheritParams invertci
 #' @inheritParams estbounds
 #'
 #' @return Returns the solution to the linear program.
-#'  \item{objval}{Optimal value calculated from the optimizer.}
-#'  \item{x}{Optimal point calculated from the optimizer.}
+#'  \item{objval}{Optimal objective value.}
+#'  \item{x}{Optimal point.}
 #'
 #' @export
 #'
@@ -225,11 +244,10 @@ estbounds.original <- function(data, lpmodel, original.sense, solver){
                  x = ans$x))
 }
 
-#' Estimates the bounds with shape contraints (Stage 2 with \eqn{\ell^1}-norm)
+#' Estimates the bounds with shape constraints (stage 2 with 1-norm)
 #'
 #' @description This function evaluates the solution to stage 2 of the
-#'    two-step procedure obtaining the estimated bound. \eqn{\ell^1}-norm
-#'    is used in the constraint
+#'    two-step procedure to obtain the estimated bound with the 1-norm.
 #'
 #' @param firststepsoln List of solutions to the first step problem.
 #' @inheritParams gurobi.optim
@@ -237,8 +255,8 @@ estbounds.original <- function(data, lpmodel, original.sense, solver){
 #' @inheritParams dkqs
 #'
 #' @return Returns the solution to the second step of the two-step procedure.
-#'  \item{objval}{Optimal value calculated from the optimizer.}
-#'  \item{x}{Optimal point calculated from the optimizer.}
+#'  \item{objval}{Optimal objective value.}
+#'  \item{x}{Optimal point.}
 #'
 #' @export
 #'
@@ -316,11 +334,10 @@ estbounds2.L1 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
               x = step2.ans$x))
 }
 
-#' Estimates the bounds with shape contraints (Stage 2 with \eqn{\ell^2}-norm)
+#' Estimates the bounds with shape constraints (Stage 2 with 2-norm)
 #'
 #' @description This function evaluates the solution to stage 2 of the
-#'    two-step procedure obtaining the estimated bound. \eqn{\ell^2}-norm
-#'    is used in the constraint
+#'    two-step procedure to obtain the estimated bound with the 2-norm.
 #'
 #' @param firststepsoln List of solutions to the first step problem.
 #' @inheritParams gurobi.optim
@@ -328,8 +345,8 @@ estbounds2.L1 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
 #' @inheritParams dkqs
 #'
 #' @return Returns the solution to the second step of the two-step procedure.
-#'  \item{objval}{Optimal value calculated from the optimizer.}
-#'  \item{x}{Optimal point calculated from the optimizer.}
+#'  \item{objval}{Optimal objective value.}
+#'  \item{x}{Optimal point.}
 #'
 #' @export
 #'
@@ -389,7 +406,7 @@ estbounds2.L2 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
               x = step2_ans$x))
 }
 
-#' Checks and updates the input of the function \code{estbounds}
+#' Checks and updates the input in \code{estbounds}
 #'
 #' @description This function checks and updates the input from the user for
 #'    the function \code{estbounds}. If there is any invalid input, this
@@ -397,7 +414,6 @@ estbounds2.L2 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
 #'    messages.
 #'
 #' @inheritParams estbounds
-#' @inheritParams dkqs
 #' @inheritParams invertci
 #'
 #' @return Returns the updated parameters and objects back to the function
@@ -494,14 +510,13 @@ print.estbounds <- function(x, ...){
 
 #' Summary of results from \code{estbounds}
 #'
-#' @description This function uses the summary method on the return list of the
-#'    function \code{estbounds}.
+#' @description This function prints a summary of the results obtained from
+#'   \code{estbounds}.
 #'
-#' @param x Object returned from \code{estbounds}.
+#' @param x Objects returned from \code{estbounds}.
 #' @param ... Additional arguments.
 #'
-#' @return Nothing is returned. This function prints results from
-#'    \code{estbounds}.
+#' @return Nothing is returned.
 #'
 #' @export
 #'
@@ -519,10 +534,10 @@ summary.estbounds <- function(x, ...){
   cat(sprintf("Solver: %s \n", x$solver))
 }
 
-#' First-stage of the estimation procedure for \code{estbounds}
+#' First-stage estimation procedure for \code{estbounds}
 #'
 #' @description This function evaluates the solution to stage 1 of the
-#'    two-step procedure obtaining the estimated bound. This function can
+#'    two-step procedure to obtain the estimated bounds. This function can
 #'    be used to evaluate both the estimation problem with the 1-norm or
 #'    the 2-norm.
 #'
@@ -531,8 +546,8 @@ summary.estbounds <- function(x, ...){
 #'
 #' @return Returns the solution to the first step of the two-step procedure
 #'    and argument for the linear program.
-#'  \item{objval}{Optimal value calculated from the optimizer.}
-#'  \item{x}{Optimal point calculated from the optimizer.}
+#'  \item{objval}{Optimal objective value.}
+#'  \item{x}{Optimal point.}
 #'  \item{larg}{Arguments for the estimation program.}
 #'  \item{norm}{Norm used in the estimation problem.}
 #'  \item{solver}{The solver used in the estimation problem}
@@ -663,7 +678,7 @@ mincriterion <- function(data = NULL, lpmodel, norm = 2, solver = NULL){
   return(output)
 }
 
-#' Checks and updates the input of the function \code{mincriterion}
+#' Checks and updates the input in \code{mincriterion}
 #'
 #' @description This function checks and updates the input from the user for
 #'    the function \code{mincriterion}. If there is any invalid input, this
@@ -729,14 +744,13 @@ mincriterion.check <- function(data, lpmodel, norm, solver){
 
 #' Print results from \code{mincriterion}
 #'
-#' @description This function uses the print method on the return list of the
-#'    function \code{mincriterion}.
+#' @description This function prints a summary of the results obtained from
+#'   \code{mincriterion}.
 #'
 #' @param x Object returned from \code{mincriterion}.
 #' @param ... Additional arguments.
 #'
-#' @return Nothing is returned. This function prints results from
-#'    \code{mincriterion}.
+#' @return Nothing is returned.
 #'
 #' @export
 #'
@@ -750,11 +764,10 @@ print.mincriterion <- function(x, ...){
 #' @description This function uses the summary method on the return list of the
 #'    function \code{mincriterion}.
 #'
-#' @param x Object returned from \code{mincriterion}.
+#' @param x Objects returned from \code{mincriterion}.
 #' @param ... Additional arguments.
 #'
-#' @return Nothing is returned. This function prints results from
-#'    \code{mincriterion}.
+#' @return Nothing is returned.
 #'
 #' @export
 #'

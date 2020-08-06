@@ -1,59 +1,54 @@
 context("Tests for estbounds and mincriterion")
-
+rm(list = ls())
 # ---------------- #
 # Load packages
 # ---------------- #
 library(lpinfer)
+library(future)
+library(future.apply)
 
 # ---------------- #
 # Define functions to match the moments
 # ---------------- #
-### Full information approach
-# Function for Omega_hat
-var_full_info <- function(data){
-  len <- length(unique(data[,"Y"]))
-  return(diag(len))
-}
-
-# Function for beta_hat
+# Full information approach
 func_full_info <- function(data){
   # Initialize beta
   beta <- NULL
+
   # Find the unique elements of Y, sorting in ascending order
   y_list <- sort(unique(data[,"Y"]))
+
   # Count total number of rows of data and y_list
   n <- dim(sampledata)[1]
   yn <- length(y_list)
+
   # Generate each entry of beta_obs
   for (i in 1:yn) {
     beta_i <- sum((data[,"Y"] == y_list[i]) * (data[,"D"] == 1))/n
     beta <- c(beta,c(beta_i))
   }
   beta <- as.matrix(beta)
+
   # Variance
-  var <- var_full_info(sampledata)
+  var <- diag(length(unique(data[,"Y"])))
   return(list(beta = beta,
               var = var))
 }
 
-### Two moments approach
-# Function for Omega_hat
-var_two_moment <- function(data){
-  return(diag(2))
-}
-
-# Function for beta_hat
+# Two moments approach
 func_two_moment <- function(data){
   # Initialize beta
   beta <- matrix(c(0,0), nrow = 2)
+
   # Count total number of rows of data and y_list
   n <- dim(sampledata)[1]
-  # Moment 1 E[YD]
+
+  # Computes the two moments E[YD] and E[D]
   beta[1] <- sum(data[,"Y"] * data[,"D"])/n
-  # Moment 2 E[D]
   beta[2] <- sum(data[,"D"])/n
+
   # Variance
-  var <- var_two_moment(sampledata)
+  var <- diag(2)
   return(list(beta = beta,
               var = var))
 }
@@ -116,6 +111,7 @@ farg <- list(data = sampledata,
 # i: lpmodel/approach, j: norm, k: solver
 # ---------------- #
 mincriterion.out <- list()
+plan(multisession, workers = 8)
 for (i in 1:ni) {
   farg$lpmodel <- i.lpmodel[[i]]
   mincriterion.out[[i]] <- list()
@@ -163,35 +159,35 @@ gurobi.qlp <- function(Q = NULL, obj, objcon, A, rhs,
                        qc = NULL, sense, modelsense, lb) {
   # Set up the model
   model <- list()
-  
+
   # Objective function
   model$Q <- Q
   model$obj <- obj
   model$objcon <- objcon
-  
+
   # Linear constraints
   model$A <- A
   model$rhs <- rhs
-  
+
   # Quadrtaic constraints
   model$quadcon <- qc
-  
+
   # Model sense and lower bound
   model$sense <- sense
   model$modelsense <- modelsense
   model$lb <- lb
-  
+
   # Obtain the results to the optimization problem
   params <- list(OutputFlag = 0, FeasibilityTol = 1e-9)
   result <- gurobi::gurobi(model, params)
-  
+
   return(result)
 }
 
 # ---------------- #
 # Construct the answer by the programs
 # ---------------- #
-# 1. Create arguments 
+# 1. Create arguments
 ## Arguments function for step 1 of the 1-norm problem
 estb.11.args <- function(lpmodel) {
   Aobs <- lpmodel$A.obs

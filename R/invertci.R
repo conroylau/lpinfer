@@ -952,7 +952,7 @@ invertci.check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max.iter,
 #' Function to consolidate the print the summary table for the interations
 #'
 #' @description This function is used to consolidate the summary table for
-#'   display via the `\code{summary}` command.
+#'   display via the \code{summary} command.
 #'
 #' @inheritParams bisec.print
 #'

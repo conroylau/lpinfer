@@ -99,7 +99,7 @@ A_shp_dkqs <- matrix(rep(1, ncol(A_obs_full)), nrow = 1)
 beta_shp_dkqs <- c(1)
 
 # ---------------- #
-# Part 6: Define lpmodel
+# Part 6: Define the 'lpmodel' objects
 # ---------------- #
 # Full info approach
 lpmodel.full <- lpmodel(A.obs = A_obs_full,
@@ -116,7 +116,7 @@ lpmodel.twom <- lpmodel(A.obs = A_obs_twom,
                         beta.obs = func_two_moment)
 
 # ---------------- #
-# Step 7: Demonstrate the use of mincriterion
+# Step 7: Run the estbounds functions
 # ---------------- #
 # 1-norm
 min1a <- mincriterion(data = data,
