@@ -11,18 +11,8 @@
 # ---------------- #
 # Part 1: Load required packages
 # ---------------- #
-library(modelr)
-library(gurobi)
-library(e1071)
-library(cplexAPI)
-library(Rcplex)
-library(ddpcr)
-library(limSolve)
-library(foreach)
-library(doMC)
-library(parallel)
-library(PtProcess)
-library(doSNOW)
+library(lpinfer)
+library(future)
 
 # ---------------- #
 # Part 2: Data preparation
@@ -80,7 +70,7 @@ betaobs.fullinfo <- function(data){
 }
 
 # ---------------- #
-# Part 5: Define the lpmodel object
+# Part 5: Define the 'lpmodel' object
 # ---------------- #
 lpm.full <- lpmodel(A.obs    = Aobs.full,
                     A.tgt    = Atgt,
@@ -89,10 +79,10 @@ lpm.full <- lpmodel(A.obs    = Aobs.full,
                     beta.shp = 1)
 
 # ---------------- #
-# Part 6: Run the fsst module to compute p-value
+# Part 6: Run the FSST test
 # ---------------- #
 set.seed(1)
-fsst.full1 <- fsst(data = sampledata, 
+fsst.full1 <- fsst(data = sampledata,
                    lpmodel = lpm.full,
                    beta.tgt = 0.375,
                    R = 100,
@@ -101,7 +91,6 @@ fsst.full1 <- fsst(data = sampledata,
                    n = nrow(sampledata),
                    weight.matrix = "diag",
                    solver = "gurobi",
-                   cores = 1,
                    progress = TRUE)
 print(fsst.full1)
 summary(fsst.full1)
@@ -110,7 +99,7 @@ summary(fsst.full1)
 # Part 7: Run the fsst module to compute multiple p-values
 # ---------------- #
 set.seed(1)
-fsst.full2 <- fsst(data = sampledata, 
+fsst.full2 <- fsst(data = sampledata,
                    lpmodel = lpm.full,
                    beta.tgt = 0.375,
                    R = 100,
@@ -119,7 +108,6 @@ fsst.full2 <- fsst(data = sampledata,
                    n = nrow(sampledata),
                    weight.matrix = "diag",
                    solver = "gurobi",
-                   cores = 1,
                    progress = TRUE)
 print(fsst.full2)
 summary(fsst.full2)

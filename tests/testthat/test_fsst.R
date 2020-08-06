@@ -1,9 +1,13 @@
 context("Tests for fsst")
+rm(list = ls())
 
 # ---------------- #
 # Load packages
 # ---------------- #
 library(lpinfer)
+library(future)
+library(future.apply)
+library(dplyr)
 
 # =========================================================================== #
 # Case 1: d > p
@@ -11,14 +15,7 @@ library(lpinfer)
 # ---------------- #
 # Define functions to match the moments
 # ---------------- #
-### Full information approach
-# Function for Omega_hat
-var_full_info <- function(data){
-  len <- length(unique(data[,"Y"]))
-  return(diag(len))
-}
-
-# Function for beta_hat
+## Full information approach
 func_full_info <- function(data){
   # Initialize beta
   beta <- NULL
@@ -34,29 +31,22 @@ func_full_info <- function(data){
   }
   beta <- as.matrix(beta)
   # Variance
-  var <- var_full_info(data)
+  var <- diag(length(unique(data[,"Y"])))
   return(list(beta = beta,
               var = var))
 }
 
-### Two moments approach
-# Function for Omega_hat
-var_two_moment <- function(data){
-  return(diag(2))
-}
-
-# Function for beta_hat
+## Two moments approach
 func_two_moment <- function(data){
   # Initialize beta
   beta <- matrix(c(0,0), nrow = 2)
   # Count total number of rows of data and y_list
   n <- dim(data)[1]
-  # Moment 1 E[YD]
+  # Computes the two moments E[YD] and E[D]
   beta[1] <- sum(data[,"Y"] * data[,"D"])/n
-  # Moment 2 E[D]
   beta[2] <- sum(data[,"D"])/n
   # Variance
-  var <- var_two_moment(data)
+  var <- diag(length(beta))
   return(list(beta = beta,
               var = var))
 }
@@ -112,7 +102,6 @@ lpmodel.twom <- lpmodel(A.obs    = A_obs_twom,
 # Define arguments
 farg <- list(data = sampledata,
              beta.tgt = beta.tgt,
-             cores = 1,
              lambda = lam1,
              rho = rho,
              n = NULL,
@@ -128,21 +117,17 @@ farg <- list(data = sampledata,
 i.cores <- list(1, 8)
 j.lpmodel <- list(lpmodel.full, lpmodel.twom)
 k.lambdas <- list(lam1, lam2)
-set.seed(1)
-farg$cores = 1
-farg$lpmodel = lpmodel.full
-farg$lambda = lam1
-fsst_g1 = do.call(fsst, farg)
 
 # Generate output
 fsst.out <- list()
-for (i in 1:2) {
-  farg$cores <- i.cores[[i]]
+for (i in seq_along(i.cores)) {
+  plan(multisession, workers = i.cores[[i]])
   fsst.out[[i]] <- list()
-  for (j in 1:2) {
+  for (j in seq_along(j.lpmodel)) {
     farg$lpmodel <- j.lpmodel[[j]]
     fsst.out[[i]][[j]] <- list()
-    for (k in 1:2) {
+    for (k in seq_along(k.lambdas)) {
+      RNGkind(kind = "L'Ecuyer-CMRG")
       set.seed(1)
       farg$lambda <- k.lambdas[[k]]
       fsst.out[[i]][[j]][[k]] <- do.call(fsst, farg)
@@ -157,28 +142,28 @@ gurobi.qlp <- function(Q = NULL, obj, objcon, A, rhs, quadcon = NULL, sense,
                        modelsense, lb) {
   # Set up the model
   model <- list()
-  
+
   # Objective function
   model$Q <- Q
   model$obj <- obj
   model$objcon <- objcon
-  
+
   # Linear constraints
   model$A <- A
   model$rhs <- rhs
-  
+
   # Quadrtaic constraints
   model$quadcon <- quadcon
-  
+
   # Model sense and lower bound
   model$sense <- sense
   model$modelsense <- modelsense
   model$lb <- lb
-  
+
   # Obtain the results to the optimization problem
   params <- list(OutputFlag = 0, FeasibilityTol = 1e-9)
   result <- gurobi::gurobi(model, params)
-  
+
   return(result)
 }
 
@@ -218,17 +203,24 @@ beta.obs <- list()
 for (j in 1:2) {
   beta.obs[[j]] <- j.lpmodel[[j]]$beta.obs(sampledata)$beta
 }
+## Function to draw bootstrap data and the corresponding estimate of 'beta.obs'
+fsst.bs.fn <- function(x, data, lpmodel) {
+  data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
+  beta <- lpmodel$beta.obs(data.bs)$beta
+  return(beta)
+}
 ## Estimator of asymptotic variance of beta.obs
 set.seed(1)
+RNGkind(kind = "L'Ecuyer-CMRG")
+seed <- .Random.seed
+
 beta.bs <- list()
-beta.bs[[1]] <- list()
-beta.bs[[2]] <- list()
-for (i in 1:reps) {
-  data.bs <- as.data.frame(sampledata[sample(1:nrow(sampledata),
-                                             replace = TRUE),])
-  for (j in 1:2) {
-    beta.bs[[j]][[i]] <- j.lpmodel[[j]]$beta.obs(data.bs)$beta
-  }
+for (j in seq_along(j.lpmodel)) {
+  beta.bs[[j]] <- future.apply::future_lapply(1:reps,
+                                              FUN = fsst.bs.fn,
+                                              future.seed = seed,
+                                              data = sampledata,
+                                              lpmodel = j.lpmodel[[j]])
 }
 
 # 3. Solve problem (3) - with the sample estimates and the bootstrap estimates
@@ -529,7 +521,7 @@ for (j in 1:2) {
 # ---------------- #
 # 1. Full information approach p-values
 test_that("'d > p': Full information approach",{
-  for (i in 1:2) {
+  for (i in seq_along(i.cores)) {
     j <- 1
     for (k in 1:2) {
       for (kk in 1:length(k.lambdas[[k]])) {
@@ -542,7 +534,7 @@ test_that("'d > p': Full information approach",{
 
 # 2. Two moments approach p-values
 test_that("'d > p': Full information approach",{
-  for (i in 1:2) {
+  for (i in seq_along(i.cores)) {
     j <- 2
     for (k in 1:2) {
       for (kk in 1:length(k.lambdas[[k]])) {
@@ -555,7 +547,7 @@ test_that("'d > p': Full information approach",{
 
 # 3. Full information CV table
 test_that("'d > p': Full information CV table",{
-  for (i in 1:2) {
+  for (i in seq_along(i.cores)) {
     j <- 1
     for (k in 1:2) {
       for (kk in 1:length(k.lambdas[[k]])) {
@@ -576,7 +568,7 @@ test_that("'d > p': Full information CV table",{
 
 # 4. Two moments CV table
 test_that("'d > p': Two moments CV table",{
-  for (i in 1:2) {
+  for (i in seq_along(i.cores)) {
     j <- 2
     for (k in 1:2) {
       for (kk in 1:length(k.lambdas[[k]])) {
@@ -595,20 +587,9 @@ test_that("'d > p': Two moments CV table",{
   }
 })
 
-# 5. Cores
-test_that("'d > p': Cores",{
-  for (i in 1:2) {
-    for (j in 1:2) {
-      for (k in 1:2) {
-        expect_equal(i.cores[[i]], fsst.out[[i]][[j]][[k]]$cores)
-      }
-    }
-  }
-})
-
-# 6. Range test statistics
+# 5. Range test statistics
 test_that("'d > p': Range test statistics",{
-  for (i in 1:2) {
+  for (i in seq_along(i.cores)) {
     for (j in 1:2) {
       for (k in 1:2) {
         expect_equal(range.n[[j]], fsst.out[[i]][[j]][[k]]$range)
@@ -617,9 +598,9 @@ test_that("'d > p': Range test statistics",{
   }
 })
 
-# 7. Cone test statistics
+# 6. Cone test statistics
 test_that("'d > p': Cone test statistics",{
-  for (i in 1:2) {
+  for (i in seq_along(i.cores)) {
     for (j in 1:2) {
       for (k in 1:2) {
         expect_equal(cone.n[[j]], fsst.out[[i]][[j]][[k]]$cone$objval)
@@ -628,9 +609,9 @@ test_that("'d > p': Cone test statistics",{
   }
 })
 
-# 8. Test statistics
+# 7. Test statistics
 test_that("'d > p': Test statistics",{
-  for (i in 1:2) {
+  for (i in seq_along(i.cores)) {
     for (j in 1:2) {
       for (k in 1:2) {
         expect_equal(ts[[j]], fsst.out[[i]][[j]][[k]]$test)
@@ -639,9 +620,9 @@ test_that("'d > p': Test statistics",{
   }
 })
 
-# 9. Solver name
+# 8. Solver name
 test_that("'d > p': Solver name",{
-  for (i in 1:2) {
+  for (i in seq_along(i.cores)) {
     for (j in 1:2) {
       for (k in 1:2) {
         expect_equal("gurobi", fsst.out[[i]][[j]][[k]]$solver.name)
@@ -650,9 +631,9 @@ test_that("'d > p': Solver name",{
   }
 })
 
-# 10. Rho parameter
+# 9. Rho parameter
 test_that("'d > p': Rho parameter",{
-  for (i in 1:2) {
+  for (i in seq_along(i.cores)) {
     for (j in 1:2) {
       for (k in 1:2) {
         expect_equal(rho, fsst.out[[i]][[j]][[k]]$rho)
@@ -661,9 +642,9 @@ test_that("'d > p': Rho parameter",{
   }
 })
 
-# 11. Regularization parameter
+# 10. Regularization parameter
 test_that("'d > p': Regularization parameter",{
-  for (i in 1:2) {
+  for (i in seq_along(i.cores)) {
     for (j in 1:2) {
       for (k in 1:2) {
         expect_equal(rhobar[[j]], fsst.out[[i]][[j]][[k]]$rhobar.i)
@@ -672,20 +653,20 @@ test_that("'d > p': Regularization parameter",{
   }
 })
 
-# 12. Method of obtaining the beta.var matrix
+# 11. Method of obtaining the beta.var matrix
 test_that("'d > p': Method of obtaining beta.var",{
-  for (i in 1:2) {
+  for (i in seq_along(i.cores)) {
     for (j in 1:2) {
       for (k in 1:2) {
-        expect_equal("function", fsst.out[[i]][[j]][[k]]$beta.var.method)
+        expect_equal("function", fsst.out[[i]][[j]][[k]]$var.method)
       }
     }
   }
 })
 
-# 13. Test logical
+# 12. Test logical
 test_that("'d > p': Omega.i matrix",{
-  for (i in 1:2) {
+  for (i in seq_along(i.cores)) {
     for (j in 1:2) {
       for (k in 1:2) {
         expect_equal(omega[[j]], fsst.out[[i]][[j]][[k]]$omega.i)
@@ -694,9 +675,9 @@ test_that("'d > p': Omega.i matrix",{
   }
 })
 
-# 14. Test logical
+# 13. Test logical
 test_that("'d > p': Test logical",{
-  for (i in 1:2) {
+  for (i in seq_along(i.cores)) {
     for (j in 1:2) {
       for (k in 1:2) {
         expect_equal(1, fsst.out[[i]][[j]][[k]]$test.logical)
@@ -723,7 +704,7 @@ btgt2 <- .21242552380635624
 farg2 <- list(lpmodel = lpm,
               beta.tgt = btgt2,
               R = reps,
-              lambda = lam2,
+              lambda = lambda2,
               rho = rho2,
               weight.matrix = "avar",
               solver = "gurobi",
@@ -734,10 +715,11 @@ farg2 <- list(lpmodel = lpm,
 # Compute solution using FSST
 # ---------------- #
 fsst.out2 <- list()
-for (i in 1:2) {
-  farg2$cores <- i.cores[[i]]
+for (i in seq_along(i.cores)) {
+  plan(multisession, workers = i.cores[[i]])
   fsst.out2[[i]] <- do.call(fsst, farg2)
 }
+
 
 # ---------------- #
 # Define arguments and produce output
@@ -821,7 +803,7 @@ for (i in 1:reps) {
   b1 <- lpm$beta.obs[[i + 1]] - bobs2
   b2 <- beta.obs.star.bs2[[i]] - bobs.star2
   range.n.bs2[[i]] <- fsst.range.soln(b1, b2, Xi2, p2, d2)
-  
+
   ## Cone
   beta.res2 <- beta.star.bs2[[i]] - beta.star2 + lambda2 * beta.r2
   cone.args2 <- fsst.56.args(lpm, p2, d2, beta.res2, omega2)
@@ -856,86 +838,79 @@ cv2 <- c(ts2,
 # ---------------- #
 # 1. p-value
 test_that("'d <= p': p-value",{
-  for (i in 1:2) {
+  for (i in seq_along(i.cores)) {
     expect_equal(pval2, fsst.out2[[i]]$pval$`p-value`[1])
   }
 })
 
 # 2. Full information CV table
 test_that("'d <= p': CV table",{
-  for (i in 1:2) {
+  for (i in seq_along(i.cores)) {
     for (l in 1:12) {
       expect_lte(abs(cv2[l] - fsst.out2[[i]]$cv.table[l, 3]), 1e-5)
     }
   }
 })
 
-# 3. Cores
-test_that("'d <= p': Cores",{
-  for (i in 1:2) {
-    expect_equal(i.cores[[i]], fsst.out2[[i]]$cores)
-  }
-})
-
-# 4. Range test statistics
+# 3. Range test statistics
 test_that("'d <= p': Range test statistics",{
-  for (i in 1:2) {
+  for (i in seq_along(i.cores)) {
     expect_equal(range.n2, fsst.out2[[i]]$range)
   }
 })
 
-# 5. Cone test statistics
+# 4. Cone test statistics
 test_that("'d <= p': Cone test statistics",{
-  for (i in 1:2) {
+  for (i in seq_along(i.cores)) {
     expect_equal(cone.n2, fsst.out2[[i]]$cone$objval)
   }
 })
 
-# 6. Test statistics
+# 5. Test statistics
 test_that("'d <= p': Test statistics",{
-  for (i in 1:2) {
+  for (i in seq_along(i.cores)) {
     expect_equal(ts2, fsst.out2[[i]]$test)
   }
 })
 
-# 7. Solver name
+# 6. Solver name
 test_that("'d <= p': Solver name",{
-  for (i in 1:2) {
+  for (i in seq_along(i.cores)) {
     expect_equal("gurobi", fsst.out2[[i]]$solver.name)
   }
 })
 
-# 8. Rho parameter
+# 7. Rho parameter
 test_that("'d <= p': Rho parameter",{
-  for (i in 1:2) {
+  for (i in seq_along(i.cores)) {
     expect_equal(rho2, fsst.out2[[i]]$rho)
   }
 })
 
-# 9. Regularization parameter
+# 8. Regularization parameter
 test_that("'d <= p': Regularization parameter",{
-  for (i in 1:2) {
+  for (i in seq_along(i.cores)) {
     expect_equal(rhobar2, fsst.out2[[i]]$rhobar.i)
   }
 })
 
-# 10. Method of obtaining the beta.var matrix
+# 9. Method of obtaining the beta.var matrix
 test_that("'d <= p': Method of obtaining beta.var",{
-  for (i in 1:2) {
-    expect_equal("list", fsst.out2[[i]]$beta.var.method)
+  for (i in seq_along(i.cores)) {
+    expect_equal("list", fsst.out2[[i]]$var.method)
   }
 })
 
-# 11. Test logical
+# 10. Test logical
 test_that("'d <= p': Omega.i matrix",{
-  for (i in 1:2) {
+  for (i in seq_along(i.cores)) {
     expect_equal(omega2, fsst.out2[[i]]$omega.i)
   }
 })
 
-# 12. Test logical
+# 11. Test logical
 test_that("'d <= p': Test logical",{
-  for (i in 1:2) {
+  for (i in seq_along(i.cores)) {
     expect_equal(1, fsst.out2[[i]]$test.logical)
   }
 })

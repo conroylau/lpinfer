@@ -14,11 +14,12 @@
 #'         or in a vector, then it will be directly returned.}
 #'   }
 #'
-#' @param data Data frame
-#' @param obj Object in lpmodel
-#' @param i Index
+#' @param data Data frame.
+#' @param obj Object in lpmodel.
+#' @param i Index.
 #'
 #' @return Returns an object at iteration \code{i}.
+#''
 #' @export
 #'
 lpmodel.eval <- function(data, obj, i){
@@ -49,16 +50,19 @@ lpmodel.eval <- function(data, obj, i){
 #'         returned.}
 #'      \item{\code{list} --- If the object is a list, then the \eqn{i}th
 #'         element will be returned.}
+#'      \item{\code{matrix} or \code{numeric} --- If the object is a matrix
+#'         or a vector, then it will be directly returned.}
 #'   }
 #'
-#' @param data Data frame
-#' @param obj Object in lpmodel
-#' @param i Index
+#' @param data Data frame.
+#' @param obj Object in lpmodel.
+#' @param i Index.
 #'
-#' @return Returns the point estimate and the asymptotic variane of the
+#' @return Returns the point estimate and the asymptotic variance of the
 #'    \code{beta.obs} object.
-#'    \item{beta.obs}{Point estimate of \eqn{\widehat{\bm{\beta}}_{\rm obs}}}
-#'    \item{omega}{Asymptotic variance of \eqn{\widehat{\bm{\beta}}_{\rm obs}}}
+#'    \item{beta.obs}{Point estimate of \eqn{\widehat{\bm{\beta}}_{\rm obs}}.}
+#'    \item{omega}{Estimator of the asymptotic variance for
+#'    \eqn{\widehat{\bm{\beta}}_{\rm obs}}.}
 #'
 #' @export
 #'
@@ -141,19 +145,18 @@ lpmodel.beta.eval <- function(data, obj, i){
               omega = omega.hat))
 }
 
-#' Define a \code{lpmodel} object
+#' Defines a \code{lpmodel} object
 #'
 #' @description This function defines the objects required in the
-#'    \code{lpinfer} module in the \code{lpmodel} class.
+#'    \code{lpinfer} package in the \code{lpmodel} class.
 #'
-#' @param A.obs A matrix, list or function
-#' @param A.shp A matrix, list or function
-#' @param A.tgt A matrix, list or function
-#' @param beta.obs A vector, list or function
-#' @param beta.shp A vector, list or function
+#' @param A.obs A matrix, list or function.
+#' @param A.shp A matrix, list or function.
+#' @param A.tgt A matrix, list or function.
+#' @param beta.obs A vector, list or function.
+#' @param beta.shp A vector, list or function.
 #'
-#' @return Returns a list of \code{lpmodel} objects in the \code{lpmodel}
-#'    class.
+#' @return Returns a \code{lpmodel} object.
 #'
 #' @export
 #'
@@ -177,22 +180,22 @@ lpmodel <- function(A.obs = NULL, A.shp = NULL, A.tgt = NULL, beta.obs = NULL,
   return(lpm)
 }
 
-#' Define an 'lpmodel.natural' form object
-#' 
+#' Define an \code{lpmodel.natural} form object
+#'
 #' @description This function defines the objects required in the
-#'    \code{lpinfer} module in the \code{lpmodel.natural} class that allows
+#'    \code{lpinfer} package in the \code{lpmodel.natural} class that allows
 #'    both equality and inequality constraints.
-#'    
+#'
 #' @param sense.shp Sense vector for the shape constraints.
-#' @param x.lb Lower bound for the x variable.
-#' @param x.ub Upper bound for the x variable.
+#' @param x.lb Lower bound for the \eqn{\bm{x}} variable.
+#' @param x.ub Upper bound for the \eqn{\bm{x}} variable.
 #' @inheritParams lpmodel
-#' 
-#' @return Returns a list of \code{lpmodel} objects in the 
+#'
+#' @return Returns a list of \code{lpmodel} objects in the
 #'   \code{lpmodel} class.
-#'    
+#'
 #' @export
-#' 
+#'
 lpmodel.natural <- function(A.obs = NULL, A.shp = NULL, A.tgt = NULL,
                             beta.obs = NULL, beta.shp = NULL,
                             sense.shp = NULL, x.lb = NULL, x.ub = NULL) {
@@ -208,24 +211,26 @@ lpmodel.natural <- function(A.obs = NULL, A.shp = NULL, A.tgt = NULL,
   lpm.natural$sense.shp <- sense.shp
   lpm.natural$x.lb <- x.lb
   lpm.natural$x.ub <- x.ub
-  
+
   # ---------------- #
   # Step 2: Define the class of the model
   # ---------------- #
   class(lpm.natural) <- "lpmodel.natural"
-  
+
   return(lpm.natural)
 }
 
-#' Print the `\code{lpmodel}` or `\code{lpmodel.natural}` object
+#' Print the \code{lpmodel} or \code{lpmodel.natural} object
 #'
-#' @description This function prints objects that are contained in the
-#'    list of `\code{lpmodel}` or `\code{lpmodel.natural}`.
+#' @description This function prints the details of the components that are
+#'    contained in the \code{lpmodel} or \code{lpmodel.natural} object.
 #'
-#' @param x The `\code{lpmodel}` object or `\code{lpmodel.natural}` object.
+#' @param x The \code{lpmodel} object or \code{lpmodel.natural} object.
+#' @param lpm.string The string that contains the name of the variables
+#'    available in the \code{lpmodel} object.
+#' @inheritParams dkqs
 #'
-#' @return Print the summary of the objects in `\code{lpmodel}` or 
-#'    `\code{lpmodel.natural}`.
+#' @return Nothing is returned.
 #'
 #' @export
 #'
@@ -281,13 +286,13 @@ lpm.print <- function(x, lpm.string, data = NULL, ...){
           length.tmp <- length(obj)
           dimension.tmp <- "  "
         }
-        cat(sprintf(paste0("%s", 
+        cat(sprintf(paste0("%s",
                            paste(rep(" ", 11 - nchar(lpm.string[i])),
                                  collapse = ""),
                            "%s\t%s\t\t%s\n"),
                     lpm.string[i], class.tmp, dimension.tmp, length.tmp))
       } else {
-        cat(sprintf(paste0("%s", 
+        cat(sprintf(paste0("%s",
                            paste(rep(" ", 11 - nchar(lpm.string[i])),
                                  collapse = ""),
                            "-empty-\t-empty-\t\t-empty-\n"),
@@ -297,14 +302,15 @@ lpm.print <- function(x, lpm.string, data = NULL, ...){
   }
 }
 
-#' Print the `\code{lpmodel}` object
+#' Print the \code{lpmodel} object
 #'
-#' @description This function is a wrapper of the `\code{lpm.print}` function
-#'    and prints objects that are contained in the list of `\code{lpmodel}`. 
+#' @description This function is a wrapper of the \code{lpm.print} function
+#'    and prints the details of the components in the \code{lpmodel} object.
 #'
-#' @param x The `\code{lpmodel}` object.
+#' @param x The \code{lpmodel} object.
+#' @inheritParams dkqs
 #'
-#' @return Print the summary of the objects in `\code{lpmodel}`.
+#' @return Nothing is returned.
 #'
 #' @export
 #'
@@ -314,12 +320,12 @@ print.lpmodel <- function(x, data = NULL, ...){
   lpm.print(x, lpmodel.string, data)
 }
 
-#' Summary of the `\code{lpmodel}` object
+#' Summary of the \code{lpmodel} object
 #'
-#' @description This function is a wrapper of the `\code{print.lpmodel}`
-#'    function and prints the same information for the object `\code{lpmodel}`.
+#' @description This function is a wrapper of the \code{print.lpmodel}
+#'    function and prints the same information for the object \code{lpmodel}.
 #'
-#' @param x The `\code{lpmodel}` object.
+#' @param x The \code{lpmodel} object.
 #' @param ... Additional arguments.
 #'
 #' @return Nothing is returned
@@ -330,15 +336,16 @@ summary.lpmodel <- function(x, ...){
   print(x)
 }
 
-#' Print the `\code{lpmodel.natural}` object
+#' Print the \code{lpmodel.natural} object
 #'
-#' @description This function is a wrapper of the `\code{lpm.print}` function
-#'    and prints objects that are contained in the list of
-#'    `\code{lpmodel.natural}`. 
+#' @description This function is a wrapper of the \code{lpm.print} function
+#'    and prints the details of the components in the \code{lpmodel.natural}
+#'    object.
 #'
-#' @param x The `\code{lpmodel.natural}` object.
+#' @param x The \code{lpmodel.natural} object.
+#' @inheritParams dkqs
 #'
-#' @return Print the summary of the objects in `\code{lpmodel.natural}`.
+#' @return Nothing is returned.
 #'
 #' @export
 #'
@@ -349,19 +356,103 @@ print.lpmodel.natural <- function(x, data = NULL, ...){
   lpm.print(x, lpmodel.natural.string, data)
 }
 
-#' Summary of the `\code{lpmodel.natural}` object
+#' Summary of the \code{lpmodel.natural} object
 #'
-#' @description This function is a wrapper of the `\code{print.lpmodel.natural}`
-#'    function and prints the same information for the object 
-#'    `\code{lpmodel.natural}`.
+#' @description This function is a wrapper of the \code{print.lpmodel.natural}
+#'    function and prints the same information as the object
+#'    \code{lpmodel.natural}.
 #'
-#' @param x The `\code{lpmodel.natural}` object.
+#' @param x The \code{lpmodel.natural} object.
 #' @param ... Additional arguments.
 #'
-#' @return Nothing is returned
+#' @return Nothing is returned.
 #'
 #' @export
 #'
 summary.lpmodel.natural <- function(x, ...){
   print(x)
+}
+
+#' Check if there is any list in the \code{lpmodel} object
+#'
+#' @description This is a function to check if there is any components in the
+#'   \code{lpmodel} object with class \code{list}.
+#'
+#' @param lpmodel A \code{lpmodel} object.
+#'
+#' @return Returns the following objects:
+#'   \item{list}{Boolean variable that indicates whether there is any object
+#'      with the class \code{list} in the \code{lpmodel} object.}
+#'   \item{name}{Names of the components with class \code{list} in the
+#'     \code{lpmodel} object.}
+#'   \item{consol}{Consolidated and updated \code{lpmodel} object that lists
+#'     the \code{lpmodel} by observation instead of by component (if
+#'     applicable).}
+#'   \item{len}{Length of the component in the \code{lpmodel} object that
+#'     is a list (if applicable).}
+#'
+#' @export
+#'
+lpmodel.anylist <- function(lpmodel) {
+  # Initialize the variables to be returned
+  any.list <- FALSE
+  name.list <- NULL
+  len <- NULL
+
+  # Check the objects in 'lpmodel' one-by-one
+  names <- c("A.obs", "A.shp", "A.tgt", "beta.obs", "beta.shp")
+  for (i in names) {
+    if (class(lpmodel[[i]]) == "list") {
+      any.list <- TRUE
+      if (is.null(len)) {
+        len <- length(lpmodel[[i]])
+      } else {
+        len <- min(len, length(lpmodel[[i]]))
+      }
+      name.list <- c(name.list, i)
+    }
+  }
+
+  # Assign the component as the list of the bootstrap replications if they
+  # are passed by the user. Otherwise, set the component as NULL.
+  if (isTRUE(any.list)) {
+    consol <- Map(list,
+                  A.obs = lpmodel.extractlist(lpmodel$A.obs, len),
+                  A.shp = lpmodel.extractlist(lpmodel$A.shp, len),
+                  A.tgt = lpmodel.extractlist(lpmodel$A.tgt, len),
+                  beta.obs = lpmodel.extractlist(lpmodel$beta.obs, len),
+                  beta.shp = lpmodel.extractlist(lpmodel$beta.shp, len))
+  } else {
+    consol <- NULL
+    len <- NULL
+  }
+
+  return(list(list = any.list,
+              name = name.list,
+              consol = consol,
+              len = len))
+}
+
+#' Extracts the bootstrap replications of the \code{lpmodel} object
+#'
+#' @description This function extracts the bootstrap replications in the
+#'   \code{lpmodel} object if the object is a \code{list}. Otherwise, this
+#'   function returns \code{NULL}.
+#'
+#' @param obj A component in the \code{lpmodel} object.
+#' @param len Length of the list.
+#'
+#' @return Returns one object.
+#'   \item{result}{Either a \code{list} or \code{NULL}.}
+#'
+#' @export
+#'
+lpmodel.extractlist <- function(obj, len) {
+  if (class(obj) == "list") {
+    result <- obj[-1]
+  } else {
+    result <- rep(list(NULL), len - 1)
+  }
+
+  return(result)
 }

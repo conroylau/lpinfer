@@ -1,37 +1,54 @@
-#' Conducts inference using the `\code{fsst}` procedure
+#' Conducts inference using the FSST procedure
 #'
 #' @description This module conducts inference in linear programs using the
-#'   `\code{fsst}` procedure by Fang, Santos, Shaikh and Torgovitsky (2020).
+#'   \code{fsst} procedure by Fang, Santos, Shaikh and Torgovitsky (2020).
 #'
 #' @import expm
 #'
 #' @inheritParams dkqs
-#' @param lambda Parameter used in the cone bootstrap sattistics
-#' @param rho Parameter used in the studentization of matrices
-#' @param weight.matrix The option used in the weighting matrix.
+#' @param lpmodel The \code{lpmodel} object used in the test. The following
+#'   components are required in the \code{lpmodel} for the FSST test:
+#'    \itemize{
+#'      \item{\code{A.tgt}}
+#'      \item{\code{A.obs}}
+#'      \item{\code{A.shp}}
+#'      \item{\code{beta.obs}}
+#'      \item{\code{beta.shp}}
+#'    }
+#' @param lambda Parameter used to obtain the restricted estimator
+#'    \eqn{\widehat{\bm{\beta}}^r_n}.
+#' @param rho Parameter used in the studentization of matrices.
+#' @param n Sample size (only required if \code{data} is omitted in the input).
+#' @param weight.matrix The option used in the weighting matrix. There are
+#'   three options available:
+#'   \itemize{
+#'     \item{\code{identity} --- identity matrix}
+#'     \item{\code{diag} --- the diagonal matrix that takes the diagonal
+#'        elements of the inverse of the variance matrix}
+#'     \item{\code{avar} --- inverse of the variance matrix}
+#'   }
 #'
-#' @return Return a list of statistics for the `\code{fsst}` procedure:
-#'   \item{pval}{\eqn{p}-value}
+#' @return Returns the following information:
+#'   \item{pval}{\eqn{p}-value.}
 #'   \item{cv.table}{Table of sample and bootstrap Cone and Range test
-#'     statistics}
-#'   \item{cores}{Number of cores used}
-#'   \item{call}{Information used to call the function}
-#'   \item{range}{The range test statistic}
-#'   \item{cone}{The cone test statistic}
-#'   \item{test}{Test statistic used}
-#'   \item{cone.n.list}{The list of bootstrap cone test statistics}
-#'   \item{range.n.list}{The list of bootstrap range test statistics}
-#'   \item{solver.name}{Name of the solver used}
-#'   \item{rho}{Input value of rho}
+#'     statistics.}
+#'   \item{call}{Information used to call the function.}
+#'   \item{range}{The sample range test statistic.}
+#'   \item{cone}{The sample cone test statistic.}
+#'   \item{test}{Sample test statistic.}
+#'   \item{cone.n.list}{List of bootstrap cone test statistics.}
+#'   \item{range.n.list}{List of bootstrap range test statistics.}
+#'   \item{solver.name}{Name of the solver used.}
+#'   \item{rho}{Input value of rho.}
 #'   \item{rhobar.i}{Regularization parameter used for the Cone
-#'     studentization matrix}
-#'   \item{beta.var.method}{Method used in obtaining the asymptotic variance
-#'     of \code{beta.obs}}
+#'     studentization matrix.}
+#'   \item{var.method}{Method used in obtaining the asymptotic variance
+#'     of \code{beta.obs}.}
 #'   \item{test.logical}{Indicator variable for whether the computation has
-#'     been conducted. If '\code{test.logical}' is 1, it refers to the case
-#'     where '\code{beta.tgt}' is inside the logical bound. If
-#'     '\code{test.logical}' is 0, it refers to the case where '
-#'     \code{beta.tgt}' is outside the logical bound.}
+#'     been conducted. If \code{test.logical} is 1, it refers to the case
+#'     where \code{beta.tgt} is inside the logical bound. If
+#'     \code{test.logical} is 0, it refers to the case where
+#'     \code{beta.tgt} is outside the logical bound.}
 #'   \item{df.error}{Table showing the id of the bootstrap replication(s)
 #'     with error(s) and the corresponding error message(s).}
 #'   \item{R.succ}{Number of successful bootstrap replications.}
@@ -40,7 +57,7 @@
 #'
 fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                  lambda = .5, rho = 1e-4, n = NULL, weight.matrix = "diag",
-                 solver = NULL, cores = 1, progress = TRUE){
+                 solver = NULL, progress = TRUE){
 
    # ---------------- #
    # Step 1: Update call, check and update the arguments; initialize df.error
@@ -50,14 +67,14 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
 
    # Check the arguments
    fsst.return <- fsst.check(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho,
-                             n, weight.matrix, solver, cores, progress)
+                             n, weight.matrix, solver, progress)
 
-   # Update the arguments
+   # Update the arguments and seed
    data <- fsst.return$data
    solver <- fsst.return$solver
    solver.name <- fsst.return$solver.name
-   cores <- fsst.return$cores
    test.logical <- fsst.return$test.logical
+   seed <- fsst.return$seed
 
    # Compute the maximum number of iterations
    maxR <- ceiling(R * Rmulti)
@@ -96,7 +113,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
 
       # This while loop is used to re-draw the data if there are some
       # problematic draws in the bootstrap iterations
-      while (R.succ < R & (R.succ + nrow(df.error)) < maxR) {
+      while ((R.succ < R) & ((R.succ + nrow(df.error)) < maxR)) {
          # Set the index set for the bootstrap replications
          if (R.succ == -1) {
             # -1 corresponds to the initial bootstrap replications
@@ -106,6 +123,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          } else {
             # Remove the problematic entries
             beta.obs.bs[error.id] <- NULL
+
             # Update the sequence of indices
             i0 <- min(maxR, R.succ + 1 + nrow(df.error))
             i1 <- min(maxR, (R - R.succ))
@@ -116,11 +134,10 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          # If the user provided bootstrap estimates of beta, use it to compute
          # sigma
          if (class(lpmodel$beta.obs) == "list"){
-            beta.var.method <- "list"
+            var.method <- "list"
             if (is.null(sigma.beta.obs)){
-               sigma.beta.obs <- sigma.summation(n, lpmodel$beta.obs,
-                                                 progress, 0)
-               beta.var.method <- "bootstrapped values of the input list"
+               sigma.beta.obs <- sigma.summation(n, lpmodel$beta.obs)
+               var.method <- "bootstrapped values of the input list"
             }
             beta.obs.bs <- lpmodel$beta.obs[2:(R+1)]
             beta.n.bs <- list()
@@ -128,39 +145,25 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                beta.n.bs[[i]] <- c(beta.obs.bs[[i]], beta.shp.hat, beta.tgt)
             }
          } else {
-            beta.var.method <- "function"
-            if (cores == 1){
+            var.method <- "function"
 
-               beta.obs.return <- fsst.beta.bs(n, data, beta.obs.hat, lpmodel,
-                                               R, maxR, progress, df.error,
-                                               iseq)
+            beta.obs.return <- fsst.beta.bs(n, data, beta.obs.hat, lpmodel,
+                                            R, maxR, progress, df.error,
+                                            iseq, seed)
 
-               # Merge it with the beta.obs.bs that has been computed earlier
-               beta.obs.bs.new <- beta.obs.return$beta.obs.bs
-               beta.obs.bs <- c(beta.obs.bs, beta.obs.bs.new)
-               beta.obs.list <- c(list(beta.obs.hat), beta.obs.bs)
+            # Merge it with the beta.obs.bs that has been computed earlier
+            beta.obs.bs.new <- beta.obs.return$beta.obs.bs
+            beta.obs.bs <- c(beta.obs.bs, beta.obs.bs.new)
+            beta.obs.list <- c(list(beta.obs.hat), beta.obs.bs)
 
-               # If sigma.beta is not provided by the function, compute it
-               # from the bootstrap betas
-               if (is.null(sigma.beta.obs)) {
-                  beta.var.method <- paste0("bootstrapped 'beta.obs' ",
-                                            "from the function.")
-                  sigma.return <- sigma.summation(n, beta.obs.list, progress, 0)
-                  sigma.beta.obs <- sigma.return$sigma.hat
-               }
-
-               beta.n.bs <- full.beta.bs(lpmodel, beta.tgt, beta.obs.bs, R)
-            } else {
-               sigma.return <- sigma.est.parallel(data, beta.obs.hat, lpmodel,
-                                                  R, maxR, cores, progress)
-               if (is.null(sigma.beta.obs)){
-                  beta.var.method <- paste0("bootstrapped 'beta.obs' ",
-                                            "from the function.")
-                  sigma.beta.obs <- sigma.return$sigma.hat
-               }
-               beta.obs.bs <- sigma.return$beta.obs.bs
-               beta.n.bs <- full.beta.bs(lpmodel, beta.tgt, beta.obs.bs, R)
+            # If sigma.beta is not provided by the function, compute it
+            # from the bootstrap betas
+            if (is.null(sigma.beta.obs)) {
+               var.method <- paste0("bootstrapped 'beta.obs' ",
+                                         "from the function.")
+               sigma.beta.obs <- sigma.summation(n, beta.obs.list)
             }
+            beta.n.bs <- full.beta.bs(lpmodel, beta.tgt, beta.obs.bs, R)
          }
 
          ### 2(c) Compute the beta.sigma
@@ -188,10 +191,11 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                                           beta.obs.hat,
                                           sigma.beta.obs)
 
-         beta.star.return <- fsst.beta.star(data, lpmodel, beta.n, beta.n.bs,
-                                            beta.tgt, weight.mat, beta.obs.hat,
-                                            beta.obs.bs, R, sigma.beta.obs,
-                                            solver, df.error, p, d)
+         beta.star.return <- fsst.beta.star.bs(data, lpmodel, beta.n,
+                                               beta.n.bs, beta.tgt, weight.mat,
+                                               beta.obs.hat, beta.obs.bs, R,
+                                               sigma.beta.obs, solver,
+                                               df.error, p, d)
          beta.star <- beta.star.return$beta.star
          beta.star.bs <- beta.star.return$beta.star.bs
          x.star <- beta.star.return$x.star
@@ -217,13 +221,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       if (d >= p){
          sigma.star <- beta.sigma
       } else {
-         # Compute sigma.star
-         if (cores == 1){
-            sigma.star <- sigma.summation(n, beta.star.list, progress, 1)
-         } else {
-            sigma.star <- sigma.summation.parallel(n, beta.star.list, cores,
-                                                   progress, 1)
-         }
+         sigma.star <- sigma.summation(n, beta.star.list)
       }
 
       # Compute the matrix square root
@@ -259,30 +257,31 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          cone.n.list <- list()
          for (i in 1:length(lambda)){
             cone.return <- fsst.cone.bs(n, omega.i, beta.n, beta.star, lpmodel,
-                                        R.succ, lambda[i], 1, beta.star.bs,
-                                        beta.r, beta.star.list, solver, cores,
-                                        progress, length(lambda), i, df.error)
+                                        R.succ, lambda[i], 1, beta.r,
+                                        beta.star.list, solver,
+                                        progress, df.error)
             cone.n.list[[i]] <- cone.return$cone.n.list
 
             # Update the list of errors and restart the loop if necessary
             df.error <- cone.return$df.error
             new.error.bs <- cone.return$new.error
-            R.succ <- length(cone.n.list[[1]])
+            R.succ <- length(cone.n.list[[i]])
             if (new.error.bs > 1) {
                next
             }
 
          }
-
       } else {
+
          # Compute the restricted estimator
          beta.r <- beta.r.compute(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
                                   beta.star, omega.i, 0, solver)$x
 
          # Compute range.n for bootstrap beta
          range.return <- fsst.range.bs(n, lpmodel, beta.obs.hat, beta.obs.bs,
-                                       x.star, x.star.bs, weight.mat, R, cores,
+                                       x.star, x.star.bs, weight.mat, R,
                                        progress, df.error)
+
          range.n.list <- range.return$range.n.list
 
          # Update the list of errors and restart the loop if necessary
@@ -290,17 +289,18 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          new.error.bs <- range.return$new.error
          R.succ <- length(range.n.list)
          error.id <- range.return$error.id
+
          if (new.error.bs > 1) {
-            next
+            break()
          }
 
          # Compute cone.n for bootstrap beta
          cone.n.list <- list()
          for (i in 1:length(lambda)){
             cone.return <- fsst.cone.bs(n, omega.i, beta.n, beta.star, lpmodel,
-                                        R.succ, lambda[i], 0, beta.star.bs,
-                                        beta.r, beta.star.list, solver, cores,
-                                        progress, length(lambda), i, df.error)
+                                        R.succ, lambda[i], 0, beta.r,
+                                        beta.star.list, solver,
+                                        progress, df.error)
             cone.n.list[[i]] <- cone.return$cone.n.list
 
             # Update the list of errors and break the for-loop if there is
@@ -346,19 +346,11 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                                 cone.n.list, range.n.list)
 
       # ---------------- #
-      # Step 8: Close the progress bar
-      # ---------------- #
-      if (progress == TRUE){
-         cat("                                                \n\b\r")
-      }
-
-      # ---------------- #
-      # Step 9: Assign the return list and return output
+      # Step 8: Assign the return list and return output
       # ---------------- #
       # Assign the list of objects returned
       output <- list(pval = df.pval,
                      cv.table = cv.table,
-                     cores = cores,
                      call = call,
                      range = range.n,
                      cone = cone.n,
@@ -368,7 +360,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                      solver.name = solver.name,
                      rho = rho,
                      rhobar.i = rhobar.i,
-                     beta.var.method = beta.var.method,
+                     var.method = var.method,
                      omega.i = omega.i,
                      beta.obs.bs = beta.obs.bs,
                      test.logical = test.logical,
@@ -378,7 +370,6 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       ### Case 2: test.logical == 0. Set the p-value as 0 directly because
       ### beta.tgt is outside the logical bounds
       output <- list(pval = 0,
-                     cores = cores,
                      call = call,
                      solver.name = solver.name,
                      rho = rho,
@@ -395,201 +386,21 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
    return(output)
 }
 
-#' Computing bootstrap and variance estimators
-#'
-#' @description Based on the function \code{beta.obs} from the object
-#'   \code{lpmodel}, this function computes the bootstrap estimates and
-#'   the asympototic variance estimator of the boostrap estimator. The
-#'   asymptotic variance estimator is computed as
-#'     \deqn{\frac{n}{B} \sum^B_{i=1} \left(\widehat{\bm{\beta}}_b -
-#'     \widehat{\bm{\beta}}\right)  \left(\widehat{\bm{\beta}}_b -
-#'     \widehat{\bm{\beta}}\right)'}
-#'   for some suitable estimators \eqn{\widehat{\bm{\beta}}} and the
-#'   corresponding bootstrap estimators
-#'   \eqn{\{\widehat{\bm{\beta}}_b\}^B_{b=1}}.
-#'
-#' @inheritParams fsst
-#' @inheritParams beta.bs
-#' @param beta.obs.hat Estimator of
-#'   \eqn{\widehat{\bm{\beta}_{\mathrm{obs}, n}}} based on the given
-#'   information in \code{lpmodel}.
-#' @param df.error Table showing the id of the bootstrap replication(s)
-#'   with error(s) and the corresponding error message(s).
-#'
-#' @return Returns the bootstrap estimators and the estimator of the
-#'   asymptotic variance.
-#'     \item{sigma.mat}{Estimator of the asympototic variance.}
-#'     \item{beta.obs.bs}{List of bootstrap betas.}
-#'   \item{R.succ}{Number of successful bootstrap replications.}
-#'     \item{df.error}{Updated table showing the id of the bootstrap
-#'       replication(s) with error(s) and the corresponding error message(s).}
-#'
-#' @export
-#'
-sigma.est <- function(n, data, beta.obs.hat, beta.obs.bs, progress) {
-
-   # ---------------- #
-   # Step 1: Initialize the matrix and progress bar
-   # ---------------- #
-   sigma.sum <- matrix(rep(0, length(beta.obs.hat)^2),
-                       nrow = length(beta.obs.hat))
-
-   R.eff <- length(beta.obs.bs)
-
-   for (i in 1:R.eff) {
-      beta.product <- beta.obs.bs[[i]] - beta.obs.hat
-      if (!is.matrix(beta.product)) {
-         beta.product <- matrix(beta.product, nrow = 1)
-      }
-
-      # Compute the matrix product
-      sigma.sum <- sigma.sum + (beta.product) %*% t(beta.product)
-   }
-
-   # Compute sigma hat
-   sigma.hat <- sigma.sum*n/R.eff
-
-   return(list(sigma.hat = sigma.hat,
-               beta.obs.bs = beta.obs.bs))
-}
-
-#' Computing bootstrap and variance estimators with parallel programming
-#'
-#' @description Based on the function \code{beta.obs} from the object
-#'   \code{lpmodel}, this function computes the bootstrap estimates and
-#'   the asympototic variance estimator of the boostrap estimator. The
-#'   asymptotic variance estimator is computed as
-#'     \deqn{\frac{n}{B} \sum^B_{i=1} \left(\widehat{\bm{\beta}}_b -
-#'     \widehat{\bm{\beta}}\right)  \left(\widehat{\bm{\beta}}_b -
-#'     \widehat{\bm{\beta}}\right)'}
-#'   for some suitable estimators \eqn{\widehat{\bm{\beta}}} and the
-#'   corresponding bootstrap estimators
-#'   \eqn{\{\widehat{\bm{\beta}}_b\}^B_{b=1}}.
-#'
-#' @import doParallel doRNG
-#'
-#' @inheritParams fsst
-#' @inheritParams beta.bs
-#' @inheritParams sigma.est
-#'
-#' @return Returns the bootstrap estimators and the estimator of the
-#'   asymptotic variance.
-#'     \item{sigma.mat}{Estimator of the asympototic variance}
-#'     \item{beta.obs.bs}{List of bootstrap betas}
-#'     \item{pb}{Progress bar object}
-#'
-#' @export
-#'
-sigma.est.parallel <- function(data, beta.obs.hat, lpmodel, R, maxR, cores,
-                               progress){
-   # ---------------- #
-   # Step 1: Register the number of cores and extract information
-   # ---------------- #
-   options(warn = -1)
-
-   # Register core
-   doMC::registerDoMC(cores)
-
-   # Compute dimension
-   if (class(lpmodel$beta.obs) == "function"){
-      beta.obs.nr <- length(lpmodel$beta.obs(data))
-   } else if (class(lpmodel$beta.obs) == "list"){
-      beta.obs.nr <- lpmodel$beta.obs[[1]]
-   }
-   n <- nrow(data)
-
-   # ---------------- #
-   # Step 2: Initialize progress bar, comb function and assign doRNG
-   # ---------------- #
-   if (progress == TRUE){
-      # Initialize the counter
-      cl <- PtProcess::makeSOCKcluster(8)
-      doSNOW::registerDoSNOW(cl)
-
-      # Set the counter and progress bar
-      pb <- utils::txtProgressBar(max = R, initial = 0, style = 3, width = 20)
-      cat("\r")
-      progress <- function(n){
-         utils::setTxtProgressBar(pb, n/10)
-         if (n < R){
-            cat("\r\r")
-         } else {
-            cat("\r\r")
-         }
-      }
-
-      opts <- list(progress = progress)
-   } else {
-      pb <- NULL
-      opts <- NULL
-   }
-
-   # Assign doRnG
-   `%dorng%` <- doRNG::`%dorng%`
-
-   # ---------------- #
-   # Step 3: Compute bootstrap estimators
-   # ---------------- #
-   # Initialize the bootstrap list here
-   beta.bs.list <- list()
-
-   # Compute the bootstrap estimators
-   for (i in 1:R) {
-      if (class(lpmodel$beta.obs) == "function") {
-         # Re-sample the data
-         data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
-         rownames(data.bs) <- 1:nrow(data.bs)
-
-         beta.obs.return <- lpmodel.beta.eval(data.bs, lpmodel$beta.obs, 1)
-         beta.bs.list[[i]] <- beta.obs.return[[1]]
-      } else if (class(lpmodel$beta.obs) == "list") {
-         beta.bs.list[[i]] <- lpmodel.beta.eval(data, lpmodel$beta.obs,
-                                                i + 1)[[1]]
-      }
-   }
-
-   # ---------------- #
-   # Step 4: Compute the variance
-   # ---------------- #
-   listans <- foreach::foreach(i = 1:R,
-                               .multicombine = TRUE,
-                               .combine = "para.comb",
-                               .options.snow = opts,
-                               .packages = c("lpinfer", "doRNG")) %dorng%
-      {
-         # Compute the bootstrap test statistic
-         beta.product <- beta.bs.list[[i]] - beta.obs.hat
-         listans <- (beta.product) %*% t(beta.product)
-
-         list(x = listans)
-      }
-
-   # ---------------- #
-   # Step 5: Retrieve information from the output
-   # ---------------- #
-   p <- length(beta.bs.list[[1]])
-   sigma.hat1 <- matrix(unlist(listans[[1]][1:(p^2)]), nrow = p, byrow = TRUE)
-   sigma.hat2 <- Reduce('+', listans[[1]][(p^2+1):(R+p^2-1)])
-   sigma.hat <- (sigma.hat1 + sigma.hat2)*n/R
-
-   # ---------------- #
-   # Step 6: Return results
-   # ---------------- #
-   return(list(sigma.hat = sigma.hat,
-               beta.obs.bs = beta.bs.list))
-}
-
-#' Construct the full beta vector
+#' Construct the full beta vector in the FSST procedure.
 #'
 #' @description This function concatenate the \code{beta.obs}, \code{beta.shp}
-#'   and \code{beta.tgt} components to form the full \code{beta} vector.
+#'   and \code{beta.tgt} components to form the full \code{beta} vector. In
+#'   particular, the full vector is defined as
+#'   \eqn{\widehat{\bm{\beta}}_n} vector that is defined as
+#'   \eqn{\widehat{\bm{\beta}}_n \equiv (\widehat{\bm{\beta}}_{{\rm obs},n},
+#'   \bm{\beta}_{{\rm shp},n}, \bm{\beta}_{{\rm tgt}})'}.
 #'
 #' @inheritParams fsst
-#' @param beta.obs.bs List of bootstrap components of \code{beta.obs}.
+#' @param beta.obs.bs Bootstrap estimates of \code{beta.obs}.
 #'
 #' @return List of full beta vectors
 #'   \item{beta.bs}{List of full beta vector
-#'   \eqn{\{\widehat{\bm{\beta}_{n,b}}}\}^B_{b=1}}
+#'   \eqn{\{\widehat{\bm{\beta}}_{n,b}\}^B_{b=1}}.}
 #'
 #' @export
 #'
@@ -601,292 +412,275 @@ full.beta.bs <- function(lpmodel, beta.tgt, beta.obs.bs, R){
    return(beta.bs)
 }
 
-#' Computing the bootstrap betas
+#' Computing the bootstrap estimates of \code{beta.obs}
 #'
-#' @description This function computes the bootstrap betas
+#' @description This function computes the bootstrap estimates of
+#'   \code{beta.obs}.
 #'
-#' @inheritParams dkqs
-#' @inheritParams beta.bs
 #' @inheritParams fsst
-#' @param iseq The sequences of betas to iterate over
+#' @param iseq The list of indices or betas to iterate over.
 #' @param beta.obs.hat Estimator of
-#'   \eqn{\widehat{\bm{\beta}_{\mathrm{obs}, n}}} based on the given
+#'   \eqn{\widehat{\bm{\beta}}_{\mathrm{obs}, n}} based on the given
 #'   information in \code{lpmodel}.
 #' @param df.error Table showing the id of the bootstrap replication(s)
 #'   with error(s) and the corresponding error message(s).
+#' @param seed The \code{.Random.seed} obtained in the beginning of the code.
 #'
 #' @return Returns the bootstrap estimators.
 #'   \item{beta.obs.bs}{List of bootstrap betas.}
-#'   \item{R.succ}{Number of successful bootstrap replications.}
 #'   \item{df.error}{Updated table showing the id of the bootstrap
 #'       replication(s) with error(s) and the corresponding error message(s).}
+#'   \item{R.eval}{Number of bootstrap replications that has been conducted.}
+#'   \item{R.succ}{Number of successful bootstrap replications.}
 #'
 #' @export
 #'
 fsst.beta.bs <- function(n, data, beta.obs.hat, lpmodel, R, maxR, progress,
-                         df.error, iseq){
+                         df.error, iseq, seed){
 
    # ---------------- #
-   # Step 1: Initialize the beta.obs.bs list and progress bar
+   # Step 1: Initialization
    # ---------------- #
+   R.succ <- 0
+   R.eval <- 0
    beta.obs.bs <- list()
+   error.list <- list()
 
-   # Initialize the progress bar
-   if (progress == TRUE) {
-      pb <- utils::txtProgressBar(initial = 0, max = maxR, style = 3,
-                                  width = 20)
-      cat("\r")
-   } else {
-      pb <- NULL
-   }
+   # Check if there is any list objects in 'lpmodel'
+   any.list <- lpmodel.anylist(lpmodel)
 
    # ---------------- #
-   # Step 2: Obtain the bootstrap beta and compute the matrix product
+   # Step 2: Bootstrap replications
    # ---------------- #
-   for (i in iseq) {
-      # Obtain the bootstrap data
-      data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
-      rownames(data.bs) <- 1:nrow(data.bs)
+   # This function will not be called if 'beta.obs' is a list. Hence, it
+   # suffices to consider the case where it is a function.
+   while ((R.succ < R) & (R.eval != maxR)) {
 
-      ## (2.1) Evaluate beta.obs from bootstrap data
-      beta.obs.result <- tryCatch(
-         expr = {
-            beta.obs.bs.temp <- lpmodel.beta.eval(data.bs,
-                                                  lpmodel$beta.obs,
-                                                  1)[[1]]
-            beta.obs.ls <- list(status = "NOERROR",
-                                beta.obs.bs = beta.obs.bs.temp)
-         },
-         error = function(e) {
-            return(list(status = "ERROR",
-                        msg = e))
-         },
-         finally = {
-         }
-      )
-
-      ## (2.2) Check if there is any error in forming beta.obs
-      if (beta.obs.result$status == "NOERROR") {
-         beta.obs.bs[[i]] <- beta.obs.result$beta.obs.bs
+      # Compute the list of indices to be passed to 'future_lapply'
+      if (all.equal(iseq, 1:maxR)) {
+         bs.temp <- bs.assign(R, R.eval, R.succ, maxR, any.list)
+         i0 <- bs.temp$i0
+         i1 <- bs.temp$i1
+         bs.list <- bs.temp$bs.list
       } else {
-         df.error[nrow(df.error) + 1, 2] <- "beta.obs"
-         df.error[nrow(df.error), 4] <- beta.obs.result$msg$message
+         bs.list <- iseq
       }
 
-      # (2.3) Update progress bar
-      if (progress == TRUE) {
-         if ((i == maxR) & (length(beta.obs.bs) == R)){
-            utils::setTxtProgressBar(pb, maxR/10)
-            cat("\r\b")
-         } else {
-            utils::setTxtProgressBar(pb, i/10)
-            cat("\r\r")
-         }
-      }
+      # Obtain results from the bootstrap replications
+      beta.obs.return <- future.apply::future_lapply(bs.list,
+                                                     FUN = fsst.beta.bs.fn,
+                                                     future.seed = seed,
+                                                     data = data,
+                                                     lpmodel = lpmodel)
 
-      # (2.4) Break the loop if R successful replications are made
-      if (length(beta.obs.bs) == R) {
-         break()
-      }
+      # Update the list and parameters
+      post.return <- post.bs(beta.obs.return, i0, i1, R.eval, T.list = NULL,
+                             beta.list = beta.obs.bs, error.list = error.list)
+      beta.obs.bs <- post.return$beta.list
+      error.list <- post.return$error.list
+      R.succ <- post.return$R.succ
+      R.eval <- post.return$R.eval
+
+      # Update seed
+      seed <- .Random.seed
    }
-   # Compute the number of successful bootstrap replicatinos
-   R.succ <- length(beta.obs.bs)
+
+   # ---------------- #
+   # Step 3: Consolidate the error messages
+   # ---------------- #
+   if (R.eval != R.succ) {
+      # Create data.frame for error messages
+      df.error <- data.frame(id = NA,
+                             lambda = NA,
+                             message = unlist(error.list))
+
+      # Remove 'NULL' from the list before passing to future_lapply
+      df.error.nonnull <- error.list[-which(sapply(error.list, is.null))]
+
+      # Match the id of the error messages
+      df.error$id <- unlist(future.apply::future_lapply(df.error.nonnull,
+                                                        FUN = match,
+                                                        error.list))
+   } else {
+      df.error <- NULL
+   }
 
    return(list(beta.obs.bs = beta.obs.bs,
-               R.succ = R.succ,
-               df.error = df.error))
-
+               df.error = df.error,
+               R.eval = R.eval,
+               R.succ = R.succ))
 }
 
-#' Computing the variance estimator
+#' Computes one bootstrap estimates for \code{beta.obs}.
 #'
-#' @description Based on the bootstrap estimators
-#'   \eqn{\{\widehat{\bm{\beta}}_b\}^B_{b=1}}, this function computes the
-#'   asympototic variance estimator of the boostrap estimator, i.e.
-#'     \deqn{\frac{n}{B} \sum^B_{i=1} \left(\widehat{\bm{\beta}}_b -
-#'     \widehat{\bm{\beta}}\right)  \left(\widehat{\bm{\beta}}_b -
-#'     \widehat{\bm{\beta}}\right)'.}
+#' @description This function carries out the one bootstrap replication for
+#'   getting \code{beta.obs} in the FSST test. This function is used in the
+#'   \code{fsst.beta.bs} function via the \code{future_lapply} command.
 #'
 #' @inheritParams fsst
-#' @param beta.bs.list List of bootstrap estimators
-#'    \eqn{\{\widehat{\bm{\beta}}_b\}^B_{b=1}}.
+#' @inheritParams fsst.beta.bs
+#' @param x This is either the list of indices that represent the bootstrap
+#'   replications, or the list of bootstrap components of the \code{lpmodel}
+#'   object passed from the user.
 #'
-#' @return Returns the bootstrap estimators and the estimator of the
-#'   asymptotic variance.
-#'     \item{sigma.mat}{Estimator of the asympototic variance}
+#' @return Returns a list of output that are obtained from the subsampling
+#'   procedure:
+#'   \item{beta}{Bootstrap estimator.}
+#'   \item{msg}{Error message (if applicable).}
 #'
 #' @export
 #'
-sigma.summation <- function(n, beta.bs.list, progress, ind.times){
-   # ---------------- #
-   # Step 1: Estimate beta.obs.hat
-   # ---------------- #
-   beta.obs.hat <- as.matrix(beta.bs.list[[1]])
-   beta.dim <- nrow(beta.obs.hat) * ncol(beta.obs.hat)
-
-   # ---------------- #
-   # Step 2: Initialize the progress bar
-   # ---------------- #
-   R <- length(beta.bs.list) - 1
-   if (progress == TRUE) {
-      if (ind.times == 1){
-         initial.bar <- R/10
-         pb <- utils::txtProgressBar(max = R,
-                                     initial = initial.bar,
-                                     style = 3,
-                                     width = 20)
-      } else if (ind.times == 2){
-         initial.bar <- 2*R/10
-         pb <- utils::txtProgressBar(max = R,
-                                     initial = initial.bar,
-                                     style = 3,
-                                     width = 20)
-      }
-      cat("\r")
-   }
-
-   # ---------------- #
-   # Step 3: Obtain the variance
-   # ---------------- #
-   sigma.sum <- matrix(rep(0, beta.dim^2), nrow = beta.dim)
-   for (i in 1:R){
-      beta.diff <- as.matrix(beta.bs.list[[i+1]] - beta.obs.hat)
-      if (nrow(beta.diff) == 1){
-         sigma.sum <- sigma.sum + t(beta.diff) %*% (beta.diff)
-      } else {
-         sigma.sum <- sigma.sum + (beta.diff) %*% t(beta.diff)
-      }
-
-      # Update progress bar
-      if (progress == TRUE & ind.times %in% c(1,2)) {
-         utils::setTxtProgressBar(pb, initial.bar + i/10)
-         cat("\r\r")
-      }
-   }
-   sigma.hat <- sigma.sum/(length(beta.bs.list)-1)*n
-   return(sigma.hat)
-}
-
-#' Computing the variance estimator using parallel programming
-#'
-#' @description Based on the bootstrap estimators
-#'   \eqn{\{\widehat{\bm{\beta}}_b\}^B_{b=1}}, this function computes the
-#'   asympototic variance estimator of the boostrap estimator, i.e.
-#'     \deqn{\frac{n}{B} \sum^B_{i=1} \left(\widehat{\bm{\beta}}_b -
-#'     \widehat{\bm{\beta}}\right)  \left(\widehat{\bm{\beta}}_b -
-#'     \widehat{\bm{\beta}}\right)'.}
-#'
-#' @import doParallel doRNG
-#'
-#' @inheritParams fsst
-#' @param beta.bs.list List of bootstrap estimators
-#'    \eqn{\{\widehat{\bm{\beta}}_b\}^B_{b=1}}.
-#' @param ind.times Indicator variable showing whether this is called for the
-#'    first or the second time
-#'
-#' @return Returns the bootstrap estimators and the estimator of the
-#'   asymptotic variance.
-#'     \item{sigma.mat}{Estimator of the asympototic variance}
-#'
-#' @export
-#'
-sigma.summation.parallel <- function(n, beta.bs.list, cores, progress,
-                                     ind.times){
-   # ---------------- #
-   # Step 1: Register the number of cores and extract information
-   # ---------------- #
-   options(warn = -1)
-
-   # Register core
-   doMC::registerDoMC(cores)
-   R <- length(beta.bs.list) - 1
-
-   # ---------------- #
-   # Step 2: Initialize progress bar, comb function and assign doRNG
-   # ---------------- #
-   if (progress == TRUE){
-      # Initialize the counter
-      cl <- PtProcess::makeSOCKcluster(8)
-      doSNOW::registerDoSNOW(cl)
-
-      # Set the counter and progress bar
-      if (ind.times == 1){
-         initial.bar <- R/10
-         pb <- utils::txtProgressBar(max = R,
-                                     initial = initial.bar,
-                                     style = 3,
-                                     width = 20)
-      } else if (ind.times == 2){
-         initial.bar <- 2*R/10
-         pb <- utils::txtProgressBar(max = R,
-                                     initial = initial.bar,
-                                     style = 3,
-                                     width = 20)
-      }
-      cat("\r")
-      progress <- function(n){
-         utils::setTxtProgressBar(pb, n/10 + initial.bar)
-         if (n < R){
-            cat("\r\r")
-         } else {
-            cat("\r\r")
-         }
-      }
-      opts <- list(progress = progress)
+fsst.beta.bs.fn <- function(x, data, lpmodel) {
+   # Replace lpmodel by x if x is a list
+   if (is.list(x)) {
+      lpm <- x
    } else {
-      pb <- NULL
-      opts <- NULL
+      lpm <- lpmodel
    }
 
-   # Assign doRnG
-   `%dorng%` <- doRNG::`%dorng%`
+   # Draw data
+   data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
+   rownames(data.bs) <- 1:nrow(data.bs)
 
-   # ---------------- #
-   # Step 3: Estimate beta.obs.hat
-   # ---------------- #
-   beta.obs.hat <- as.matrix(beta.bs.list[[1]])
-   beta.dim <- nrow(beta.obs.hat) * ncol(beta.obs.hat)
+   # Bootstrap estimator
+   result <- tryCatch({
+      beta.obs.return <- lpmodel.beta.eval(data.bs, lpmodel$beta.obs, 1)[[1]]
+      list(beta.obs.return = beta.obs.return)
+   }, warning = function(w) {
+      return(list(status = "warning",
+                  msg = w))
+   }, error = function(e) {
+      return(list(status = "error",
+                  msg = e))
+   })
 
+   # Consolidate the information to be returned
+   if (is.null(result$status)) {
+      beta <- result$beta
+      msg <- NULL
+   } else {
+      beta <- NULL
+      msg <- result$msg$message
+   }
 
-   p <- length(beta.bs.list[[1]])
-
-   # ---------------- #
-   # Step 4: Bootstrap procedure
-   # ---------------- #
-   listans <- foreach::foreach(i = 1:R,
-                               .multicombine = TRUE,
-                               .combine = "para.comb",
-                               .options.snow = opts,
-                               .packages = "lpinfer") %dorng%
-      {
-         beta.diff <- as.matrix(beta.bs.list[[i+1]] - beta.obs.hat)
-         if (nrow(beta.diff) == 1){
-            listans <- t(beta.diff) %*% (beta.diff)
-         } else {
-            listans <- (beta.diff) %*% t(beta.diff)
-         }
-         listans <- as.matrix(listans, nrow = p)
-         list(x=listans)
-      }
-
-   # ---------------- #
-   # Step 5: Retrieve information from the output
-   # ---------------- #
-   sigma.hat1 <- matrix(unlist(listans[[1]][1:(p^2)]), nrow = p, byrow = TRUE)
-   sigma.hat2 <- Reduce('+', listans[[1]][(p^2+1):(R+p^2-1)])
-   sigma.hat <- (sigma.hat1 + sigma.hat2)*n/R
-
-   return(sigma.hat)
+   return(list(beta = beta,
+               msg = msg))
 }
 
-#' Computing \eqn{\widehat{\bm{\beta}}_n^\star}
+#' Computes the weighting matrix in the FSST procedure
+#'
+#' @description This function returns the weighting matrix in the FSST
+#'   procedure. There are three options available:
+#'   \itemize{
+#'     \item{\code{identity} --- identity matrix}
+#'     \item{\code{diag} --- the diagonal matrix that takes the diagonal
+#'        elements of the inverse of the variance matrix}
+#'     \item{\code{avar} --- inverse of the variance matrix}
+#'   }
+#'
+#' @inheritParams fsst
+#' @inheritParams fsst.beta.bs
+#' @param beta.sigma Estimator of the asymptotic variance for
+#'   \eqn{\bm{\beta}_{\rm obs}}.
+#'
+#' @return The weighting matrix is returned.
+#'    \item{weight.max}{Weighting matrix.}
+#'
+#' @export
+#'
+fsst.weight.matrix <- function(weight.matrix, beta.obs.hat, beta.sigma) {
+   # ---------------- #
+   # Step 1: Convert the string to lower case.
+   # ---------------- #
+   weight.matrix <- tolower(weight.matrix)
+
+   # ---------------- #
+   # Step 2: Create the matrix
+   # ---------------- #
+   if (weight.matrix == "identity") {
+      weight.mat = diag(nrow(as.matrix(beta.obs.hat)))
+   } else if (weight.matrix == "diag") {
+      weight.mat <- diag(diag(solve(beta.sigma)))
+   } else if (weight.matrix == "avar") {
+      weight.mat <- solve(beta.sigma)
+   } else {
+      stop("'weight.matrix' has to be one of 'identity', 'diag' and 'avar'.")
+   }
+
+   return(weight.mat)
+}
+
+#' Computes the asymptotic variance estimator
+#'
+#' @description Based on the bootstrap estimates
+#'   \eqn{\{\widehat{\bm{\beta}}_b\}^B_{b=1}}, this function computes the
+#'   asympototic variance estimator of the boostrap estimator, i.e.
+#'   \deqn{\frac{n}{B} \sum^B_{i=1} \left(\widehat{\bm{\beta}}_b -
+#'   \widehat{\bm{\beta}}\right)  \left(\widehat{\bm{\beta}}_b -
+#'   \widehat{\bm{\beta}}\right)'}. This function supports parallel
+#'  programming via the \code{future.apply} package.
+#'
+#' @param n Sample size.
+#' @param beta.bs.list List of bootstrap estimators
+#'    \eqn{\{\widehat{\bm{\beta}}_b\}^B_{b=1}}.
+#'
+#' @return Returns the estimator of the asymptotic variance.
+#'     \item{sigma.mat}{Estimator of the asymptotic variance.}
+#'
+#' @export
+#'
+sigma.summation <- function(n, beta.bs.list) {
+
+   beta.obs.hat <- beta.bs.list[[1]]
+
+   beta.prod.return <- future.apply::future_lapply(beta.bs.list[-1],
+                                                   FUN = beta.product,
+                                                   beta.obs.hat = beta.obs.hat)
+   sigma.mat <- Reduce("+", beta.prod.return) * n / (length(beta.bs.list) - 1)
+   return(sigma.mat)
+}
+
+#' Computes vector products
+#'
+#' @description This function computes the product of the two vectors. This is
+#'   used in the \code{sigma.summation} function that computes the
+#'   asymptotic varianace estimator.
+#'
+#' @details Denote \eqn{\bm{\beta}} and \eqn{\hat{\bm{\beta}}_{\rm obs}} as
+#'   the \eqn{n \times 1} vectors \code{beta} and \code{beta.obs.hat}
+#'   respectively. This function returns the \eqn{n \times n} matrix
+#'   \eqn{\widetilde{\bm{\beta}}\widetilde{\bm{\beta}}'} where
+#'   \eqn{\widetilde{\bm{\beta}}} is defined as
+#'   \eqn{\widetilde{\bm{\beta}} \equiv \bm{\beta} -
+#'   \widehat{\bm{\beta}}_{\rm obs}}.
+#'
+#' @param beta Bootstrap \code{beta.obs} estimator.
+#' @inheritParams fsst.beta.bs
+#'
+#' @return Returns an \eqn{n \times n} matrix.
+#'     \item{beta.prod}{An \eqn{n \times n} matrix.}
+#'
+#' @export
+#'
+beta.product <- function(beta, beta.obs.hat) {
+   beta.diff <- as.matrix(beta - beta.obs.hat)
+   if (nrow(beta.diff) == 1) {
+      beta.prod <- t(beta.diff) %*% beta.diff
+   } else {
+      beta.prod <- beta.diff %*% t(beta.diff)
+   }
+   return(beta.prod)
+}
+
+#' Computes the starred components of \eqn{\widehat{\bm{\beta}}}
 #'
 #' @description This function computes the vector
-#'   \eqn{\widehat{\bm{\beta}}_n^\star} for the case where \eqn{d<p}.
+#'   \eqn{\widehat{\bm{\beta}}_n^\star} for the case where \eqn{d<p} in the
+#'   FSST test.
 #'
 #' @inheritParams fsst
-#' @inheritParams sigma.est
-#' @param weight.mat Weighting matrix
+#' @inheritParams sigma.summation
+#' @param weight.mat Weighting matrix.
 #'
 #' @details This corresponding to solving problem (3) of Torgovitsky (2020).
 #'
@@ -946,44 +740,13 @@ beta.star.qp <- function(data, lpmodel, beta.tgt, weight.mat, beta.obs.hat,
                x.star = x.star))
 }
 
-#' Computes the statistic to the range problem in the FSST procedure
-#'
-#' @description This function computes the statistic of the range problem in
-#'    the FSST procedure.
-#'
-#' @importFrom Matrix norm
-#'
-#' @inheritParams fsst
-#' @inheritParams beta.star.qp
-#' @inheritParams sigma.est
-#' @param x.star Optimal value from `\code{beta.star.qp}`.
-#'
-#' @return Returns the optimal point and optimal value.
-#'  \item{range}{The optimal value of the Range component.}
-#'
-#' @export
-#'
-fsst.range <- function(n, beta.obs.hat, x.star, lpmodel, weight.mat) {
-   # ---------------- #
-   # Step 1: Compute the matrix inside the norm
-   # ---------------- #
-   A.obs.hat <- lpmodel.eval(data, lpmodel$A.obs, 1)
-   beta.obs.star <- A.obs.hat %*% x.star
-   range.arg <- sqrt(n) * expm::sqrtm(weight.mat) %*% (beta.obs.hat -
-                                                          beta.obs.star)
-
-   # ---------------- #
-   # Step 2: Compute the range component
-   # ---------------- #
-   range <- base::norm(range.arg, type = "I")
-   return(range)
-}
-
 #' Computes the solution to the cone problem
 #'
 #' @description This function computes the solution to the cone problem.
 #'
 #' @inheritParams fsst
+#' @inheritParams fsst.cone.bs
+#' @inheritParams fsst.beta.star.bs
 #' @param omega.i The matrix \eqn{\widehat{\bm{\Omega}}^i_n}, i.e. the
 #'   regularized matrix for
 #'   \eqn{\widehat{\bm{\Sigma}}^{\beta^\star}_{n,\bar{\rho}}}.
@@ -991,8 +754,8 @@ fsst.range <- function(n, beta.obs.hat, x.star, lpmodel, weight.mat) {
 #'   equals to 0 for \eqn{d < p}.
 #'
 #' @return Returns the optimal point and optimal value.
-#'  \item{x}{Optimal point calculated from the optimizer.}
-#'  \item{objval}{Optimal value calculated from the optimizer.}
+#'  \item{objval}{Optimal objective value.}
+#'  \item{x}{Optimal point.}
 #'
 #' @export
 #'
@@ -1079,25 +842,30 @@ fsst.cone.lp <- function(n, omega.i, beta.n, beta.star, lpmodel, indicator,
                objval = objval))
 }
 
-#' Compute bootstrap components of \eqn{\widehat{\bm{\beta}}^\star}
+#' Computes the bootstrap estimates of the starred version of \code{beta.obs}
 #'
-#' @description This function computes the bootstrap components of
-#'   \eqn{\widehat{\bm{\beta}}^\star}.
+#' @description This function computes the bootstrap estimates of
+#'   \eqn{\widehat{\bm{\beta}}^\star_n}.
 #'
 #' @inheritParams fsst
-#' @inheritParams beta.bs
+#' @inheritParams fsst.beta.bs
 #' @inheritParams beta.star.qp
-#' @inheritParams weight.matrix
+#' @inheritParams full.beta.bs
+#' @inheritParams fsst.weight.matrix
+#' @param beta.n Sample \eqn{\widehat{\bm{\beta}}_n} vector that is defined as
+#'   \eqn{\widehat{\bm{\beta}}_n \equiv (\widehat{\bm{\beta}}_{{\rm obs},n},
+#'   \bm{\beta}_{{\rm shp},n}, \bm{\beta}_{{\rm tgt}})'}.
+#' @param beta.n.bs The bootstrap estimates of \code{beta.n}.
 #' @param p Length of the beta vector.
-#' @param d Number of columns of the A matrix.
+#' @param d Number of columns of the \code{A} matrix.
 #'
 #' @return Return the following list of objects:
 #'   \item{beta.star}{This corresponds to \eqn{\widehat{\bm{\beta}}^\star}.}
-#'   \item{beta.star.bs}{This corresponds to the bootstrap counterparts of
+#'   \item{beta.star.bs}{This corresponds to the bootstrap estimates of
 #'     \eqn{\widehat{\bm{\beta}}^\star}.}
 #'   \item{x.star}{This corresponds to \eqn{\bm{x}^\star}, which is the
-#'     solution to the quadratic program '\code{beta.star.qp}'.}
-#'   \item{x.star.bs}{This corresponds to the bootstrap counterparts of
+#'     solution to the quadratic program \code{beta.star.qp}.}
+#'   \item{x.star.bs}{This corresponds to the bootstrap estimates of
 #'     \eqn{\bm{x}^\star}.}
 #'   \item{df.error}{Table showing the id of the bootstrap replication(s)
 #'     with error(s) and the corresponding error message(s).}
@@ -1106,25 +874,32 @@ fsst.cone.lp <- function(n, omega.i, beta.n, beta.star, lpmodel, indicator,
 #'
 #' @export
 #'
-fsst.beta.star <- function(data, lpmodel, beta.n, beta.n.bs, beta.tgt,
-                           weight.mat, beta.obs.hat, beta.obs.bs, R,
-                           sigma.beta.obs, solver, df.error, p, d) {
-
+fsst.beta.star.bs <- function(data, lpmodel, beta.n, beta.n.bs, beta.tgt,
+                              weight.mat, beta.obs.hat, beta.obs.bs, R,
+                              sigma.beta.obs, solver, df.error, p, d) {
+   # ---------------- #
+   # Step 1: Initialization
+   # ---------------- #
    # Original number of problematic bootstrap draws
    error0 <- nrow(df.error)
 
    # List of error indices
    error.id <- NULL
 
-   # Case 1: d >= p - All star components are the same as the non-star
-   # components and the x.star objects are not used in the latter parts
+   # ---------------- #
+   # Step 2: Compute 'beta.star', 'x.star' and their bootstrap estimates
+   # ---------------- #
    if (d >= p) {
+      # Case 1: d >= p - All star components are the same as the non-star
+      # components and the x.star objects are not used in the latter parts
       beta.star <- beta.n
       beta.star.bs <- beta.n.bs
       x.star <- NULL
       x.star.bs <- NULL
+
       # There is no error in simply defining new objects
       df.error <- df.error
+      new.error <- 0
    } else {
       # Case 2: d < p - Need to compute beta.star, x.star and their bootstrap
       # counterparts
@@ -1138,45 +913,63 @@ fsst.beta.star <- function(data, lpmodel, beta.n, beta.n.bs, beta.tgt,
       beta.star.bs <- list()
       x.star.bs <- list()
 
-      # Compute the maximum number of iterations remaining
-      R.length <- length(beta.obs.bs)
+      fsst.star.return <-
+         future.apply::future_lapply(beta.obs.bs,
+                                     FUN = fsst.beta.star.bs.fn,
+                                     data = data,
+                                     lpmodel = lpmodel,
+                                     beta.tgt = beta.tgt,
+                                     weight.mat = weight.mat,
+                                     sigma.beta.obs = sigma.beta.obs,
+                                     solver = solver)
 
-      for (i in 1:R.length) {
-         # Evaluate beta.star from bootstrap data
-         qp.result <- tryCatch(
-            expr = {
-               qp.return.bs <- beta.star.qp(data, lpmodel, beta.tgt,
-                                            weight.mat, beta.obs.bs[[i]],
-                                            sigma.beta.obs, solver)
-               qp.return.ls <- list(status = "NOERROR",
-                                    qp.return.bs = qp.return.bs)
-            },
-            error = function(e) {
-               return(list(status = "ERROR",
-                           msg = e))
-            },
-            finally = {
-            }
-         )
+      # Get beta.star and x.star and exclude those with 'NULL'
+      beta.star.bs <- sapply(fsst.star.return, "[", "beta.star")
+      beta.star.bs <- beta.star.bs[lengths(beta.star.bs) != 0]
+      x.star.bs <- sapply(fsst.star.return, "[", "x.star")
+      x.star.bs <- x.star.bs[lengths(x.star.bs) != 0]
 
-         # Check if there is any error in forming beta.obs
-         if (qp.result$status == "NOERROR") {
-            beta.star.bs[[i]] <- qp.result$qp.return.bs$beta.star
-            x.star.bs[[i]] <- qp.result$qp.return.bs$x.star
+      # Retrieve error list
+      error.list <- sapply(fsst.star.return, "[", "msg")
+
+      # Evaluate R.eval and R.succ
+      R.eval <- length(beta.obs.bs)
+      R.succ <- length(beta.star.bs)
+
+      # ---------------- #
+      # Step 3: Consolidate the error messages
+      # ---------------- #
+      if (R.eval != R.succ) {
+         # Create data.frame for error messages
+         df.error1 <- data.frame(id = NA,
+                                 lambda = NA,
+                                 message = unlist(error.list))
+
+         # Remove 'NULL' from the list before passing to future_lapply
+         df.error.nonnull <- error.list[-which(sapply(error.list, is.null))]
+
+         # Match the id of the error messages
+         df.error1$id <- unlist(future.apply::future_lapply(df.error.nonnull,
+                                                            FUN = match,
+                                                            error.list))
+         if (!is.null(df.error)) {
+            # Case 1: There are errors in this function and the earlier parts
+            error0 <- nrow(df.error)
+            df.error <- rbind(df.error, df.error1)
          } else {
-            df.error[nrow(df.error) + 1, 2] <- "beta.star.bs"
-            df.error[nrow(df.error), 4] <- qp.result$msg$message
-            error.id <- c(error.id, i)
+            # Case 2: There are no errors in the earlier steps and there are
+            # errors in this step
+            df.error <- df.error1
          }
+         new.error <- R.eval - R.succ
+         error.id <- df.error1$id
+      } else {
+         # Case 3: There are no new errors in this procedure
+         df.error <- df.error
+         new.error <- 0
+         error.id <- NULL
       }
    }
-
-   # Check if there are new errors
-   error1 <- nrow(df.error)
-   new.error <- error1 - error0
-
-   # Updated list of beta.obs that are non-problematic
-   beta.obs.bs[error.id] <- NULL
 
    return(list(beta.star = beta.star,
                beta.star.bs = beta.star.bs,
@@ -1187,17 +980,69 @@ fsst.beta.star <- function(data, lpmodel, beta.n, beta.n.bs, beta.tgt,
                error.id = error.id))
 }
 
-#' Computes \eqn{\widehat{\bm{\beta}}^r_n}
+#' Computes one bootstrap estimates of \code{beta.star} and \code{x.star}
+#'
+#' @description This function computes one bootstrap estimate for
+#'   \code{beta.star} and \code{x.star}. This function is used
+#'   in the \code{fsst.beta.star.bs} function via the \code{future_lapply}
+#'   command.
+#'
+#' @inheritParams fsst
+#' @inheritParams fsst.beta.star.bs
+#' @inheritParams full.beta.bs
+#' @param sigma.beta.obs Estimator of the asymptotic variance for
+#'   \code{beta.obs}.
+#'
+#' @return Returns a list of output that are obtained from the subsampling
+#'   procedure:
+#'   \item{beta.star}{Bootstrap estimates of \code{beta.star}.}
+#'   \item{x.star}{Bootstrap estimates of \code{x.star}.}
+#'   \item{msg}{Error message (if applicable).}
+#'
+#' @export
+#'
+fsst.beta.star.bs.fn <- function(beta.obs.bs, data, lpmodel, beta.tgt,
+                                 weight.mat, sigma.beta.obs, solver) {
+   # Evaluate the quadratic program
+   qp.result <- tryCatch({
+      qp.return <- beta.star.qp(data, lpmodel, beta.tgt, weight.mat,
+                                beta.obs.bs, sigma.beta.obs, solver)
+      list(beta.star = qp.return$beta.star,
+           x.star = qp.return$x.star)
+   }, warning = function(w) {
+      return(list(status = "warning",
+                  msg = w))
+   }, error = function(e) {
+      return(list(status = "error",
+                  msg = e))
+   })
+
+   if (is.null(qp.result$status)) {
+      beta.star <- qp.result$beta.star
+      x.star <- qp.result$x.star
+      msg <- NULL
+   } else {
+      beta.star <- NULL
+      x.star <- NULL
+      msg <- qp.result$msg$message
+   }
+
+   return(list(beta.star = beta.star,
+               x.star = x.star,
+               msg = msg))
+}
+
+#' Computes the restricted estimator in the FSST procedure
 #'
 #' @description This function computes the restricted estimator
-#'   \eqn{\widehat{\bm{\beta}}^r_n}.
+#'   \eqn{\widehat{\bm{\beta}}^r_n} in the FSST procedure.
 #'
 #' @inheritParams fsst
 #' @inheritParams fsst.cone.lp
 #'
 #' @return Returns the optimal point and optimal value.
-#'  \item{x}{Optimal point calculated from the optimizer.}
-#'  \item{objval}{Optimal value calculated from the optimizer.}
+#'  \item{objval}{Optimal objective value.}
+#'  \item{x}{Optimal point.}
 #'
 #' @export
 #'
@@ -1282,24 +1127,56 @@ beta.r.compute <- function(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
                objval = objval))
 }
 
-#' Computing bootstrap Range components in the FSST procedure
+#' Computes the range component of the test statistics
 #'
-#' @description This function computes the bootstrap components of the
-#'   `Range` test statistics.
+#' @description This function computes the range component of the test
+#'   statistics in the FSST procedure.
 #'
-#' @import doParallel doRNG
+#' @importFrom Matrix norm
 #'
 #' @inheritParams fsst
-#' @inheritParams fsst.range
-#' @inheritParams full.beta.bs
-#' @inheritParams fsst.beta.star
-#' @param x.star.bs Bootstrap components of `\code{x.star}`.
+#' @inheritParams beta.star.qp
+#' @inheritParams fsst.beta.bs
+#' @inheritParams sigma.summation
+#' @param x.star Optimal value from \code{beta.star.qp}.
 #'
-#' @return Returns the following list of objects:
-#'   \item{range.n.list}{A list of bootstrap Range statistics
-#'     \eqn{\{\mathrm{Range}_{n,b}\}^B_{b=1}}}
-#'   \item{df.error}{Table showing the id of the bootstrap replication(s)
-#'     with error(s) and the corresponding error message(s).}
+#' @return Returns the optimal point and optimal value.
+#'  \item{range}{Range component of the test statistic.}
+#'
+#' @export
+#'
+fsst.range <- function(n, beta.obs.hat, x.star, lpmodel, weight.mat) {
+   # ---------------- #
+   # Step 1: Compute the matrix inside the norm
+   # ---------------- #
+   A.obs.hat <- lpmodel.eval(data, lpmodel$A.obs, 1)
+   beta.obs.star <- A.obs.hat %*% x.star
+   range.arg <- sqrt(n) * expm::sqrtm(weight.mat) %*% (beta.obs.hat -
+                                                          beta.obs.star)
+
+   # ---------------- #
+   # Step 2: Compute the range component
+   # ---------------- #
+   range <- base::norm(range.arg, type = "I")
+   return(range)
+}
+
+#' Bootstrap procedure of computing the range component
+#'
+#' @description This function computes the bootstrap estimates of the range
+#'   components.
+#'
+#' @inheritParams fsst
+#' @inheritParams fsst.beta.bs
+#' @inheritParams fsst.range
+#' @inheritParams fsst.weight.matrix
+#' @inheritParams full.beta.bs
+#' @param x.star.bs Bootstrap estimates of \code{x.star}.
+#' @param p Length of the vector \eqn{\bm{\beta}}.
+#' @param d Number of columns of the \eqn{\bm{A}} matrix.
+#'
+#' @return Return the following list of objects:
+#'   \item{range.n.list}{List of bootstrap range components.}
 #'   \item{df.error}{Table showing the id of the bootstrap replication(s)
 #'     with error(s) and the corresponding error message(s).}
 #'   \item{new.error}{Number of new errors.}
@@ -1308,144 +1185,141 @@ beta.r.compute <- function(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
 #' @export
 #'
 fsst.range.bs <- function(n, lpmodel, beta.obs.hat, beta.obs.bs, x.star,
-                          x.star.bs, weight.mat, R, cores, progress,
-                          df.error){
-   range.n.list <- NULL
-   error0 <- nrow(df.error)
-   error.id <- NULL
+                          x.star.bs, weight.mat, R, progress,
+                          df.error) {
 
-   ### A. Non-parallel version
-   if (cores == 1){
-      # Initialize progress bar
-      if (progress == TRUE){
-         pb <- utils::txtProgressBar(initial = 3*R/10, max = R, style = 3,
-                                     width = 20)
-         cat("\r")
+   # ---------------- #
+   # Step 1: Compute the bootstrap range estimates
+   # ---------------- #
+   # Combine the bootstrap replications of 'beta.obs' and 'x.star'
+   beta.x.star <- mapply(list, beta.obs.bs, x.star.bs, SIMPLIFY = FALSE)
+
+   # Compute the bootstrap range estimates
+   range.return <- future.apply::future_lapply(beta.x.star,
+                                               FUN = fsst.range.bs.fn,
+                                               n = n,
+                                               lpmodel = lpmodel,
+                                               beta.obs.hat = beta.obs.hat,
+                                               x.star = x.star,
+                                               weight.mat = weight.mat)
+
+   # Extract the test statistics
+   range.n.list <- unlist(sapply(range.return, "[", "Ts"))
+   error.list <- sapply(range.return, "[", "msg")
+   R.succ <- length(range.n.list)
+   R.eval <- length(beta.obs.bs)
+   new.error <- R.eval - R.succ
+
+   # ---------------- #
+   # Step 2: Consolidate the error messages
+   # ---------------- #
+   if (R.eval != R.succ) {
+      # Create data.frame for error messages
+      df.error1 <- data.frame(id = NA,
+                              lambda = NA,
+                              message = unlist(error.list))
+
+      # Remove 'NULL' from the list before passing to future_lapply
+      df.error.nonnull <- error.list[-which(sapply(error.list, is.null))]
+
+      # Match the id of the error messages
+      df.error1$id <- unlist(future.apply::future_lapply(df.error.nonnull,
+                                                         FUN = match,
+                                                         error.list))
+      if (!is.null(df.error)) {
+         # Case 1: There are errors in this function and the earlier parts
+         df.error <- rbind(df.error, df.error1)
       } else {
-         pb <- NULL
+         # Case 2: There are no errors in the earlier parts
+         df.error <- df.error1
       }
-
-      # Compute the maximum number of iterations remaining
-      R.length <- length(beta.obs.bs)
-
-      for (i in 1:R.length) {
-         # Evaluate beta.star from bootstrap data
-         range.result <- tryCatch(
-            expr = {
-               # ---------------- #
-               # Step A1: Compute the replacements
-               # ---------------- #
-               beta.bs.1 <- beta.obs.bs[[i]] - beta.obs.hat
-               x.star.bs.1 <- x.star.bs[[i]] - x.star
-
-               range.n.return <- fsst.range(n, beta.bs.1, x.star.bs.1,
-                                            lpmodel, weight.mat)
-               range.return.ls <- list(status = "NOERROR",
-                                       range.n.return = range.n.return)
-            },
-            error = function(e) {
-               return(list(status = "ERROR",
-                           msg = e))
-            },
-            finally = {
-            }
-         )
-
-         # Check if there is any error in forming beta.obs
-         if (range.result$status == "NOERROR") {
-            range.n.list <- c(range.n.list, range.result$range.n.return)
-         } else {
-            df.error[nrow(df.error) + 1, 2] <- "range.bs"
-            df.error[nrow(df.error), 4] <- range.result$msg$message
-            error.id <- c(error.id, i)
-         }
-
-         # Update progress bar
-         if (progress == TRUE) {
-            utils::setTxtProgressBar(pb, (3.5*n)/10 + 3*i/10)
-            cat("\r\r")
-         }
-      }
-
-      # Check if there are new errors
-      error1 <- nrow(df.error)
-      new.error <- error1 - error0
-
-      # Updated list of range that are non-problematic
-      range.n.list[error.id] <- NULL
-
+      new.error <- R.eval - R.succ
+      error.id <- df.error1$id
    } else {
-      ### B. Parallel version
-      if (progress == TRUE){
-         # Initialize the counter
-         cl <- PtProcess::makeSOCKcluster(8)
-         doSNOW::registerDoSNOW(cl)
-
-         # Set the counter and progress bar
-         pb <- utils::txtProgressBar(max = R, initial = 3*R/10, style = 3,
-                                     width = 20)
-         cat("\r")
-         progress <- function(n){
-            utils::setTxtProgressBar(pb, (3.5*n)/10 + 3*R/10)
-            if (n < R){
-               cat("\r\r")
-            } else {
-               cat("\r\r")
-            }
-         }
-
-         opts <- list(progress = progress)
-      } else {
-         pb <- NULL
-         opts <- NULL
-      }
-
-      # Assign doRnG
-      `%dorng%` <- doRNG::`%dorng%`
-
-      listans <- foreach::foreach(i = 1:R,
-                                  .multicombine = TRUE,
-                                  .options.snow = opts,
-                                  .packages = "lpinfer") %dorng%
-         {
-            # ---------------- #
-            # Step B1: Compute the replacements
-            # ---------------- #
-            A.obs.hat <- lpmodel.eval(data, lpmodel$A.obs, 1)
-            beta.bs.1 <- beta.obs.bs[[i]] - beta.obs.hat
-
-            # ---------------- #
-            # Step B2: Solve the linear program and extract the solution
-            # ---------------- #
-            range.n.return <- fsst.range(n, beta.bs.1, x.star.bs[[i]] - x.star,
-                                         lpmodel, weight.mat)
-            list(range.n.return)
-         }
-      range.n.list <- unlist(listans)
+      # Case 3: There are no errors in this part but there are errors in the
+      # earlier parts
+      df.error <- df.error
+      new.error <- 0
+      error.id <- NULL
    }
 
    return(list(range.n.list = range.n.list,
-               df.error = df.error,
                new.error = new.error,
+               df.error = df.error,
                error.id = error.id))
 }
 
-#' Computing bootstrap components of `Cone`
+#' Computes one bootstrap estimate for the range component for the test
+#' statistic
 #'
-#' @description This function computes the bootstrap components of the
-#'   `Cone` test statistics.
+#' @description This function computes the one bootstrap estimate for the
+#'   range component in the test statistic.
 #'
-#' @import doParallel doRNG
+#' @inheritParams fsst
+#' @inheritParams dkqs.bs
+#' @inheritParams fsst.beta.bs
+#' @inheritParams fsst.range
+#' @inheritParams fsst.range.bs
+#' @inheritParams fsst.weight.matrix
+#' @param beta.x.star A list that combines the bootstrap estimates of
+#'   \code{beta.star} and \code{x.star}.
+#'
+#' @return Return the following list of objects:
+#'   \item{Ts}{Range test statistic.}
+#'   \item{msg}{Error message (if applicable).}
+#'
+#' @export
+#'
+fsst.range.bs.fn <- function(beta.x.star, n, lpmodel, beta.obs.hat, x.star,
+                             weight.mat) {
+
+   # Compute the differences in 'beta.bs' and 'x.star'
+   beta.bs.1 <- beta.x.star[[1]] - beta.obs.hat
+   x.star.bs.1 <- beta.x.star[[2]] - x.star
+
+   # Compute one range estimate
+   result.range <- tryCatch({
+      range.n.return <- fsst.range(n, beta.bs.1, x.star.bs.1,
+                                   lpmodel, weight.mat)
+      list(range = range.n.return)
+   }, warning = function(w) {
+      return(list(status = "warning",
+                  msg = w))
+   }, error = function(e) {
+      return(list(status = "error",
+                  msg = e))
+   })
+
+   if (is.null(result.range$status)) {
+      Ts <- result.range$range
+      msg <- NULL
+   } else {
+      Ts <- NULL
+      msg <- result.range$msg$message
+   }
+
+   return(list(Ts = Ts,
+               msg = msg))
+
+}
+
+#' Computes the bootstrap estimates of the cone component of the test
+#'   statistics
+#'
+#' @description This function computes the bootstrap estimates of the cone
+#'   components.
 #'
 #' @inheritParams fsst
 #' @inheritParams fsst.cone.lp
-#' @inheritParams fsst.beta.star
-#' @param length.lambda The length of the `\code{lambda}` vector.
-#' @param lambda.i The current value of `\code{lambda}` being considered
+#' @inheritParams fsst.beta.star.bs
+#' @param beta.star This corresponds to the starred version of the
+#'   \code{beta.n} vector, i.e. \eqn{\widehat{\bm{\beta}}^\star_n}.
+#' @param beta.star.list This corresponds to the bootstrap estimates of
+#'   \code{beta.star}.
+#' @param beta.r This corresponds to the restricted estimator.
 #'
-#' @return Returns the following list of objects:
-#'   \item{range.n.list}{A list of bootstrap Range statistics
-#'     \eqn{\{\mathrm{Cone}_{n,b}\}^B_{b=1}}}
+#' @return Return the following list of objects:
+#'   \item{cone.n.list}{List of bootstrap cone components.}
 #'   \item{df.error}{Table showing the id of the bootstrap replication(s)
 #'     with error(s) and the corresponding error message(s).}
 #'   \item{new.error}{Number of new errors.}
@@ -1454,137 +1328,61 @@ fsst.range.bs <- function(n, lpmodel, beta.obs.hat, beta.obs.bs, x.star,
 #' @export
 #'
 fsst.cone.bs <- function(n, omega.i, beta.n, beta.star, lpmodel, R.succ,
-                         lambda,  indicator, beta.star.bs, beta.r,
-                         beta.star.list, solver, cores, progress,
-                         length.lambda, lambda.i, df.error){
-   cone.n.list <- NULL
-   error0 <- nrow(df.error)
-   error.id <- NULL
+                         lambda, indicator, beta.r, beta.star.list, solver,
+                         progress, df.error) {
 
-   if (cores == 1){
-      # Initialize progress bar
-      if (progress == TRUE) {
-         lambda.bar.i0 <- .35*(lambda.i-1)/length.lambda
-         pb <- utils::txtProgressBar(initial = R.succ*.65 +
-                                        R.succ*lambda.bar.i0,
-                                     max = R.succ,
-                                     style = 3,
-                                     width = 20)
-         cat("\r")
+   # ---------------- #
+   # Step 1: Compute the bootstrap cone estimates
+   # ---------------- #
+   cone.return <- future.apply::future_lapply(beta.star.list[-1],
+                                              FUN = fsst.cone.bs.fn,
+                                              n = n,
+                                              omega.i = omega.i,
+                                              beta.n = beta.n,
+                                              beta.star = beta.star,
+                                              lpmodel = lpmodel,
+                                              lambda = lambda,
+                                              indicator = indicator,
+                                              beta.r = beta.r,
+                                              solver = solver)
+
+   cone.n.list <- unlist(sapply(cone.return, "[", "Ts"))
+   error.list <- sapply(cone.return, "[", "msg")
+   R.succ <- length(cone.n.list)
+   R.eval <- length(beta.star.list) - 1
+   new.error <- R.eval - R.succ
+
+   # ---------------- #
+   # Step 2: Consolidate the error messages
+   # ---------------- #
+   if (R.eval != R.succ) {
+      # Create data.frame for error messages
+      df.error1 <- data.frame(id = NA,
+                              lambda = NA,
+                              message = unlist(error.list))
+
+      # Remove 'NULL' from the list before passing to future_lapply
+      df.error.nonnull <- error.list[-which(sapply(error.list, is.null))]
+
+      # Match the id of the error messages
+      df.error1$id <- unlist(future.apply::future_lapply(df.error.nonnull,
+                                                         FUN = match,
+                                                         error.list))
+      if (!is.null(df.error)) {
+         # Case 1: There are errors in this function and the earlier parts
+         df.error <- rbind(df.error, df.error1)
       } else {
-         pb <- NULL
+         # Case 2: There are no errors in the earlier parts
+         df.error <- df.error1
       }
-
-      for (i in 1:R.succ) {
-         # Evaluate beta.star from bootstrap data
-         cone.result <- tryCatch(
-            expr = {
-
-               # ---------------- #
-               # Step 1: Compute the replacements
-               # ---------------- #
-               beta.new <- beta.star.list[[i+1]] - beta.star + lambda*beta.r
-
-               cone.n.return <- fsst.cone.lp(n, omega.i, beta.n, beta.new,
-                                             lpmodel, indicator, solver)
-               cone.return.ls <- list(status = "NOERROR",
-                                      cone.n.return = cone.n.return)
-            },
-            error = function(e) {
-               return(list(status = "ERROR",
-                           msg = e))
-            },
-            finally = {
-            }
-         )
-
-         # Update progress bar
-         if (progress == TRUE) {
-            utils::setTxtProgressBar(pb,
-                                     R.succ*.65 +
-                                        R.succ*lambda.bar.i0 +
-                                        i*.35/length.lambda)
-            if ((i == R.succ) & (length.lambda == lambda.i)) {
-               cat("\r\b")
-            } else {
-               cat("\r\r")
-            }
-         }
-
-         # Check if there is any error in forming beta.obs
-         if (cone.result$status == "NOERROR") {
-            cone.n.list <- c(cone.n.list, cone.result$cone.n.return$objval)
-         } else {
-            df.error[nrow(df.error) + 1, 2] <- "cone.bs"
-            df.error[nrow(df.error) + 1, 3] <- lambda
-            df.error[nrow(df.error), 4] <- cone.result$msg$message
-            error.id <- c(error.id, i)
-         }
-      }
-
-      # Check if there are new errors
-      error1 <- nrow(df.error)
-      new.error <- error1 - error0
-
-      # Updated list of range that are non-problematic
-      cone.n.list[error.id] <- NULL
-
+      new.error <- R.eval - R.succ
+      error.id <- df.error1$id
    } else {
-      options(warn=-1)
-
-      # Register core
-      doMC::registerDoMC(cores)
-
-      if (progress == TRUE){
-
-         # Initialize the counter
-         cl <- PtProcess::makeSOCKcluster(8)
-         doSNOW::registerDoSNOW(cl)
-
-         # Set the counter and progress bar
-         lambda.bar.i0 <- .35*(lambda.i-1)/length.lambda
-         pb <- utils::txtProgressBar(max = R,
-                                     initial = R*.65 + R*lambda.bar.i0,
-                                     style = 3,
-                                     width = 20)
-         cat("\r")
-         progress <- function(n){
-            utils::setTxtProgressBar(pb, R*.65 + R*lambda.bar.i0 +
-                                        n*.35/length.lambda)
-            if (n < R){
-               cat("\r\r")
-            } else if ((n == R) & (length.lambda == lambda.i)){
-               cat("\r\b")
-            }
-         }
-
-         opts <- list(progress = progress)
-      } else {
-         pb <- NULL
-         opts <- NULL
-      }
-
-      # Assign doRnG
-      `%dorng%` <- doRNG::`%dorng%`
-
-      listans <- foreach::foreach(i = 1:R,
-                                  .multicombine = TRUE,
-                                  .options.snow = opts,
-                                  .packages = "lpinfer") %dorng%
-         {
-            # ---------------- #
-            # Step 1: Compute the replacements
-            # ---------------- #
-            beta.new <- beta.star.list[[i+1]] - beta.star + lambda*beta.r
-
-            # ---------------- #
-            # Step 2: Solve the linear program and extract the solution
-            # ---------------- #
-            cone.n.return <- fsst.cone.lp(n, omega.i, beta.n, beta.new,
-                                          lpmodel, indicator, solver)
-            list(cone.n.return$objval)
-         }
-      cone.n.list <- unlist(listans)
+      # Case 3: There are no errors in this part but there are errors in the
+      # earlier parts
+      df.error <- df.error
+      new.error <- 0
+      error.id <- NULL
    }
 
    return(list(cone.n.list = cone.n.list,
@@ -1593,17 +1391,66 @@ fsst.cone.bs <- function(n, omega.i, beta.n, beta.star, lpmodel, R.succ,
                error.id = error.id))
 }
 
-#' Auxiliary function to calculate the p-value of `\code{fsst}`
+#' Computes one bootstrap estimate of the cone component of the test
+#'   statistics
+#'
+#' @description This function computes one bootstrap estimate of the cone
+#'   component of the test statistics.
+#'
+#' @inheritParams fsst
+#' @inheritParams dkqs.bs
+#' @inheritParams fsst.beta.bs
+#' @inheritParams fsst.cone.bs
+#' @inheritParams fsst.weight.matrix
+#' @param beta.star.bs One bootstrap estimate of the \code{beta.star} object.
+#'
+#' @return Return the following list of objects:
+#'   \item{Ts}{Cone test statistic.}
+#'   \item{msg}{Error message (if applicable).}
+#'
+#' @export
+#'
+fsst.cone.bs.fn <- function(beta.star.bs, n, omega.i, beta.n, beta.star,
+                            lpmodel, lambda, indicator, beta.r, solver) {
+
+   # Compute one bootstrap cone estimate
+   result.cone <- tryCatch({
+      beta.new <- beta.star.bs - beta.star + lambda * beta.r
+      cone.return <- fsst.cone.lp(n, omega.i, beta.n, beta.new, lpmodel,
+                                  indicator, solver)
+      list(objval = cone.return$objval)
+   }, warning = function(w) {
+      return(list(status = "warning",
+                  msg = w))
+   }, error = function(e) {
+      return(list(status = "error",
+                  msg = e))
+   })
+
+   if (is.null(result.cone$status)) {
+      Ts <- result.cone$objval
+      msg <- NULL
+   } else {
+      Ts <- NULL
+      msg <- result.cone$msg$message
+   }
+
+   return(list(Ts = Ts,
+               msg = msg))
+}
+
+#' Calculates the \eqn{p}-value for the FSST procedure
 #'
 #' @description This function computes the \eqn{p}-value of the test based on
-#'    the bootstrap estimates.
+#'    the bootstrap estimates for the FSST procedure.
 #'
-#' @param range.n The point estimate for the `Range` test statistics.
-#' @param cone.n The point estimate for the `Cone` test statistics.
-#' @param range.n.list The bootstrap test estimates for the `Range` test
-#'   statistics.
-#' @param cone.n.list The bootstrap test estimates for the `Cone` test
-#'   statistics.
+#' @param range.n The range component of the sample test statistic.
+#' @param cone.n The cone component of the sample test statistic.
+#' @param range.n.list The bootstrap estimates of the range component in the
+#'   test statistics.
+#' @param cone.n.list The bootstrap estimates of the cone component in the
+#'   test statistics.
+#' @param alpha Significance level.
 #' @inheritParams fsst
 #'
 #' @return Returns the \eqn{p}-value and the decision.
@@ -1639,7 +1486,7 @@ fsst.pval <- function(range.n, cone.n, range.n.list, cone.n.list, R,
                decision = decision))
 }
 
-#' Checks and updates the input
+#' Checks and updates the input in \code{fsst}
 #'
 #' @description This function checks and updates the input of the user. If
 #'    there is any invalid input, this function will be terminated and
@@ -1648,19 +1495,20 @@ fsst.pval <- function(range.n, cone.n, range.n.list, cone.n.list, R,
 #' @inheritParams fsst
 #' @inheritParams dkqs
 #'
-#' @return Returns the list of updated parameters as follows:
-#'   \item{data}{Upated data in class \code{data.frame}}
-#'   \item{lpmodel}{A list of linear programming objects in this
-#'      `\code{lpinfer}` package.}
-#'   \item{solver}{Solver to be used.}
-#'   \item{solver.name}{Updated name of solver in lower case.}
-#'   \item{cores}{Updated number of cores to be used in the parallelization
-#'      of the for-loop in the bootstrap procedure.}
+#' @return Returns the updated parameters back to the function \code{fsst}.
+#'   The following information are updated:
+#'    \itemize{
+#'       \item{\code{data}}
+#'       \item{\code{seed}}
+#'       \item{\code{solver}}
+#'       \item{\code{solver.name}}
+#'       \item{\code{test.logical}}
+#'    }
 #'
 #' @export
 #'
 fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
-                       weight.matrix, solver, cores, progress){
+                       weight.matrix, solver, progress){
 
    # ---------------- #
    # Step 1: Check data
@@ -1699,7 +1547,6 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
    # ---------------- #
    check.numeric(beta.tgt, "beta.tgt")
    check.positiveinteger(R, "R")
-   cores <- check.cores(cores)
 
    # Check Rmulti
    check.numrange(Rmulti, "Rmulti", "closed", 1, "open", Inf)
@@ -1724,33 +1571,32 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
    test.logical <- check.betatgt(data, lpmodel, beta.tgt, solver)
 
    # ---------------- #
-   # Step 7: Return updated items
+   # Step 7: Obtain the seed
+   # ---------------- #
+   seed <- lpinfer.seed()
+
+   # ---------------- #
+   # Step 8: Return updated items
    # ---------------- #
    return(list(solver = solver,
                solver.name = solver.name,
-               cores = cores,
                data = data,
-               test.logical = test.logical))
+               test.logical = test.logical,
+               seed = seed))
 }
-
-
 
 #' Print results from \code{fsst}
 #'
-#' @description This function uses the print method on the return list of the
-#'    function \code{fsst}.
+#' @description This function prints the \eqn{p}-values from \code{fsst}.
 #'
 #' @param x Object returned from \code{fsst}.
 #' @param ... Additional arguments.
 #'
-#' @details The p-value is printed
-#'
-#' @return Nothing is returned
+#' @return Nothing is returned.
 #'
 #' @export
 #'
-print.fsst <- function(x, ...){
-   cat("\r\r")
+print.fsst <- function(x, ...) {
 
    if (x$test.logical == 1) {
       # Case 1: 'beta.tgt' is within the logical bound
@@ -1774,29 +1620,17 @@ print.fsst <- function(x, ...){
 
 #' Summary of results from \code{fsst}
 #'
-#' @description This function uses the summary method on the return list of the
-#'    function \code{fsst}. This is a wrapper of the \code{print} command.
+#' @description This function prints a summary of the results obtained from
+#'   \code{fsst}.
 #'
-#' @param x Object returned from \code{fsst}.
+#' @param x Objects returned from \code{fsst}.
 #' @param ... Additional arguments.
 #'
-#' @details The following information are printed
-#'   \itemize{
-#'     \item{Test statistic (Max of Cone and Range)}
-#'     \item{Test statistic (Cone)}
-#'     \item{Test statistic (Range)}
-#'     \item{\eqn{p}-value}
-#'     \item{Solver used}
-#'     \item{Number of cores used}
-#'     \item{Table of critical values}
-#'     \item{Regularization parameters}}
-#'
-#' @return Nothing is returned
+#' @return Nothing is returned.
 #'
 #' @export
 #'
-summary.fsst <- function(x, ...){
-   cat("\r\r")
+summary.fsst <- function(x, ...) {
 
    if (x$test.logical == 1) {
       # Case 1: 'beta.tgt' is within the logical bound
@@ -1825,9 +1659,6 @@ summary.fsst <- function(x, ...){
       # Print solver
       cat(sprintf("\nSolver used: %s\n", x$solver.name))
 
-      # Print cores
-      cat(sprintf("\nNumber of cores used: %s\n", x$cores))
-
       # Regularization parameters
       cat("\nRegularization parameters: \n")
       cat(sprintf("   - Input value of rho: %s\n",
@@ -1837,7 +1668,7 @@ summary.fsst <- function(x, ...){
                   round(x$rhobar.i, digits = 5)))
       cat(sprintf(paste0("\nThe asymptotic variance of the observed component ",
                          "of the beta vector is approximated from the %s.\n"),
-                  x$beta.var.method))
+                  x$var.method))
 
       # Number of successful bootstrap replications
       cat(sprintf("\nNumber of successful bootstrap replications: %s\n",
@@ -1858,42 +1689,4 @@ summary.fsst <- function(x, ...){
       infeasible.pval.msg()
       cat(sprintf("\nSolver used: %s\n", x$solver.name))
    }
-}
-
-#' Computes the weighting matrix in the FSST procedure
-#'
-#' @description This function returns the weighting matrix in the FSST
-#'   procedure. There are three options available:
-#'   \itemize{
-#'     \item{\code{identity} --- identity matrix}
-#'     \item{\code{diag} --- the diagonal matrix that takes the diagonal
-#'        elements of the inverse of the variance matrix}
-#'     \item{\code{avar} --- inverse of the variance matrix}
-#'   }
-#'
-#' @return The weighting matrix is returned.
-#'    \item{weight.max}{Weighting matrix.}
-#'
-#' @export
-#'
-fsst.weight.matrix <- function(weight.matrix, beta.obs.hat, beta.sigma) {
-   # ---------------- #
-   # Step 1: Convert the string to lower case.
-   # ---------------- #
-   weight.matrix <- tolower(weight.matrix)
-
-   # ---------------- #
-   # Step 2: Create the matrix
-   # ---------------- #
-   if (weight.matrix == "identity") {
-      weight.mat = diag(nrow(as.matrix(beta.obs.hat)))
-   } else if (weight.matrix == "diag") {
-      weight.mat <- diag(diag(solve(beta.sigma)))
-   } else if (weight.matrix == "avar") {
-      weight.mat <- solve(beta.sigma)
-   } else {
-      stop("'weight.matrix' has to be one of 'identity', 'diag' and 'avar'.")
-   }
-
-   return(weight.mat)
 }

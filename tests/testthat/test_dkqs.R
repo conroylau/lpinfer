@@ -4,6 +4,8 @@ context("Tests for dkqs")
 # Load relevant packages
 # ---------------- #
 library(lpinfer)
+library(future)
+library(future.apply)
 
 # ---------------- #
 # Define functions to match the moments
@@ -27,7 +29,7 @@ func_full_info <- function(data) {
 }
 
 # 2. Two moments approach
-func_two_moment <- function(data) { 
+func_two_moment <- function(data) {
   # Initialize beta
   beta <- matrix(c(0,0), nrow = 2)
   # Count total number of rows of data and y_list
@@ -62,7 +64,6 @@ farg <- list(data = sampledata,
              beta.tgt = beta.tgt,
              R = reps,
              tau = tau,
-             cores = 1,
              progress = TRUE)
 
 # ---------------- #
@@ -79,96 +80,29 @@ lpmodel.twom <- lpmodel(A.obs    = A_obs_twom,
                         beta.obs = func_two_moment)
 
 # ---------------- #
-# Run results by different solvers with 1 core
+# Run results by different solvers and cores
 # ---------------- #
-## 1. Full information approach
-farg$lpmodel <- lpmodel.full
-# (a) Gurobi
-farg$solver <- "gurobi"
-set.seed(1)
-full_g <- do.call(dkqs, farg)
+# List of cores, lpmodel and norm objects to be used
+i.cores <- list(1, 8)
+j.lpmodel <- list(lpmodel.full, lpmodel.twom)
+k.solver <- list("gurobi", "Rcplex", "limSolve")
 
-# (b) Rcplex
-farg$solver <- "rcplex"
-set.seed(1)
-full_r <- do.call(dkqs, farg)
-
-# (c) limSolve
-farg$solver <- "limsolve"
-set.seed(1)
-full_l <- do.call(dkqs, farg)
-
-## 2. Two moments approach
-farg$lpmodel <- lpmodel.twom
-# (a) Gurobi
-farg$solver <- "gurobi"
-set.seed(1)
-twom_g = do.call(dkqs, farg)
-
-# (b) Rcplex
-farg$solver <- "rcplex"
-set.seed(1)
-twom_r <- do.call(dkqs, farg)
-
-# (c) limSolve
-farg$solver <- "limsolve"
-set.seed(1)
-twom_l <- do.call(dkqs, farg)
-
-# ---------------- #
-# Run results by different solvers with 8 core
-# ---------------- #
-farg$cores <- 8
-## 1. Full information approach
-farg$lpmodel <- lpmodel.full
-# (a) Gurobi
-farg$solver <- "gurobi"
-set.seed(1)
-full_g8 <- do.call(dkqs, farg)
-
-# (b) Rcplex
-farg$solver <- "rcplex"
-set.seed(1)
-full_r8 <- do.call(dkqs, farg)
-
-# (c) limSolve
-farg$solver <- "limsolve"
-set.seed(1)
-full_l8 <- do.call(dkqs, farg)
-
-## 2. Two moments approach
-farg$lpmodel <- lpmodel.twom
-# (a) Gurobi
-farg$solver <- "gurobi"
-set.seed(1)
-twom_g8 = do.call(dkqs, farg)
-
-# (b) Rcplex
-farg$solver <- "rcplex"
-set.seed(1)
-twom_r8 <- do.call(dkqs, farg)
-
-# (c) limSolve
-farg$solver <- "limsolve"
-set.seed(1)
-twom_l8 <- do.call(dkqs, farg)
-
-# ---------------- #
-# Consolidate the list of outputs
-# ---------------- #
-dkqs.output <- list()
-dkqs.output[[1]] <- full_g
-dkqs.output[[2]] <- full_r
-dkqs.output[[3]] <- full_l
-dkqs.output[[4]] <- twom_g
-dkqs.output[[5]] <- twom_r
-dkqs.output[[6]] <- twom_l
-dkqs.output[[7]] <- full_g8
-dkqs.output[[8]] <- full_r8
-dkqs.output[[9]] <- full_l8
-dkqs.output[[10]] <- twom_g8
-dkqs.output[[11]] <- twom_r8
-dkqs.output[[12]] <- twom_l8
+# Generate output
+dkqs.out <- list()
+for (i in seq_along(i.cores)) {
+  plan(multisession, workers = i.cores[[i]])
+  dkqs.out[[i]] <- list()
+  for (j in seq_along(j.lpmodel)) {
+    farg$lpmodel <- j.lpmodel[[j]]
+    dkqs.out[[i]][[j]] <- list()
+    for (k in seq_along(k.solver)) {
+      RNGkind(kind = "L'Ecuyer-CMRG")
+      set.seed(1)
+      farg$solver <- k.solver[[k]]
+      dkqs.out[[i]][[j]][[k]] <- do.call(dkqs, farg)
+    }
+  }
+}
 
 # ---------------- #
 # Create Gurobi solver
@@ -177,28 +111,28 @@ gurobi.qlp <- function(Q = NULL, obj, objcon, A, rhs, quadcon = NULL, sense,
                        modelsense, lb) {
   # Set up the model
   model <- list()
-  
+
   # Objective function
   model$Q <- Q
   model$obj <- obj
   model$objcon <- objcon
-  
+
   # Linear constraints
   model$A <- A
   model$rhs <- rhs
-  
+
   # Quadrtaic constraints
   model$quadcon <- quadcon
-  
+
   # Model sense and lower bound
   model$sense <- sense
   model$modelsense <- modelsense
   model$lb <- lb
-  
+
   # Obtain the results to the optimization problem
   params <- list(OutputFlag = 0, FeasibilityTol = 1e-9)
   result <- gurobi::gurobi(model, params)
-  
+
   return(result)
 }
 
@@ -243,7 +177,7 @@ dkqs.5.arg <- function(Aobs, betaobs) {
   sense <- rep("=", length(rhs))
   rhs.up <- (beta.tgt - theta.down$objval) * tau / (length(c(ind.up, ind.0)))
   rhs.down <- (theta.up$objval - beta.tgt) * tau / (length(c(ind.down, ind.0)))
-  rhs.0 <- (1 - 
+  rhs.0 <- (1 -
               rhs.up * length(ind.up) / tau -
               rhs.down * length(ind.down) / tau) * tau / length(ind.0)
   lb.new <- rep(0, nx)
@@ -269,6 +203,7 @@ tau.full.arg <- dkqs.5.arg(Aobs = A_obs_full, betaobs = beta.obs.full)
 tau.return.full <- do.call(gurobi.qlp, tau.full.arg)
 x.full.star <- tau.return.full$x
 s.full.star <- A_obs_full %*% x.full.star
+
 ## Two moments approach
 beta.obs.twom <- func_two_moment(sampledata)
 Tn.twom.arg <- dkqs.4.arg(Aobs = A_obs_twom, betaobs = beta.obs.twom)
@@ -278,6 +213,9 @@ tau.twom.arg <- dkqs.5.arg(Aobs = A_obs_twom, betaobs = beta.obs.twom)
 tau.return.twom <- do.call(gurobi.qlp, tau.twom.arg)
 x.twom.star <- tau.return.twom$x
 s.twom.star <- A_obs_twom %*% x.twom.star
+s.star.list <- list(s.full.star, s.twom.star)
+
+Tn <- list(Tn.full, Tn.twom)
 
 # 3. Compute the bootstrap estimators using the cone-tightening procedure
 # i.e. solving problem (5)
@@ -307,9 +245,39 @@ for (i in 1:reps) {
   beta.twom.bar <- cbind(beta.twom.bar, beta.bar.twom.bs)
 }
 
+## Function to compute one bootstrap replication
+dkqs.fn <- function(x, data, lpmodel, beta.obs, s.star) {
+  data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
+  beta.obs.bs <- lpmodel$beta.obs(data.bs)
+  beta.bar.bs <- beta.obs.bs - beta.obs + s.star
+  bs.arg <-  dkqs.5.arg(Aobs = lpmodel$A.obs, betaobs = beta.bar.bs)
+  Tn.return <- do.call(gurobi.qlp, bs.arg)
+  Ts <- Tn.return$objval
+  return(Ts)
+}
+
+## Compute the test statistics by 'future'
+set.seed(1)
+RNGkind(kind = "L'Ecuyer-CMRG")
+T.bs <- list()
+seed <- .Random.seed
+for (j in seq_along(j.lpmodel)) {
+  lpm <- j.lpmodel[[j]]
+  T.bs[[j]] <-
+    unlist(future.apply::future_lapply(1:reps,
+                                       FUN = dkqs.fn,
+                                       future.seed = seed,
+                                       data = sampledata,
+                                       lpmodel = lpm,
+                                       beta.obs = lpm$beta.obs(sampledata),
+                                       s.star = s.star.list[[j]]))
+}
+
 # 4. Compute the p-values
-pval.full <- mean(Tbs.full > Tn.full)
-pval.twom <- mean(Tbs.twom > Tn.twom)
+pval <- list()
+for (j in seq_along(j.lpmodel)) {
+  pval[[j]] <- mean(T.bs[[j]] > Tn[[j]])
+}
 
 # 5. Compute the maximum feasible tau
 tauobj <- c(1, rep(0, nx))
@@ -322,21 +290,21 @@ for (i in 1:ncol(A_tgt)) {
   } else if (i %in% ind.down) {
     tauA[i, 1] <- -(theta.up$objval - beta.tgt) / (length(c(ind.down, ind.0)))
   } else {
-    tauA[i, 1] <- -(1 - 
-                      (theta.up$objval - beta.tgt) / 
+    tauA[i, 1] <- -(1 -
+                      (theta.up$objval - beta.tgt) /
                       (length(c(ind.down, ind.0))) * length(ind.down) -
-                      (beta.tgt - theta.down$objval) / 
-                      (length(c(ind.up, ind.0))) * length(ind.up)) / 
+                      (beta.tgt - theta.down$objval) /
+                      (length(c(ind.up, ind.0))) * length(ind.up)) /
       length(ind.0)
   }
 }
 tauA <- rbind(tauA, c(0, A_tgt), c(0, ones))
 taurhs <- c(rep(0, ncol(A_tgt)), beta.tgt, 1)
 tausense <- c(rep(">=", ncol(A_tgt)), rep("=", 2))
-taureturn <- gurobi.qlp(Q = NULL, 
+taureturn <- gurobi.qlp(Q = NULL,
                         obj = tauobj,
                         objcon = 0,
-                        A = tauA, 
+                        A = tauA,
                         rhs = taurhs,
                         quadcon = NULL,
                         sense = tausense,
@@ -349,123 +317,161 @@ taumax <- taureturn$objval
 # ---------------- #
 # 1. Full information approach p-values
 test_that("Full information approach",{
-  for (i in c(1:3, 7:9)) {
-    expect_equal(pval.full, dkqs.output[[i]]$pval$`p-value`)
+  for (i in seq_along(i.cores)) {
+    j <- 1
+    for (k in seq_along(k.solver)) {
+      expect_equal(pval[[j]], dkqs.out[[i]][[j]][[k]]$pval[1, 2])
+    }
   }
 })
 
 # 2. Two moments p-values
 test_that("Two moments approach",{
-  for (i in c(4:6, 10,12)) {
-    expect_equal(pval.twom, dkqs.output[[i]]$pval$`p-value`)
+  for (i in seq_along(i.cores)) {
+    j <- 2
+    for (k in seq_along(k.solver)) {
+      expect_equal(pval[[j]], dkqs.out[[i]][[j]][[k]]$pval[1, 2])
+    }
   }
 })
 
 # 3. The list of feasible taus
 test_that("Feasible taus",{
-  for (i in 1:12) {
-    expect_equal(tau, dkqs.output[[i]]$tau.feasible)
+  for (i in seq_along(i.cores)) {
+    for (j in seq_along(j.lpmodel)) {
+      for (k in seq_along(k.solver)) {
+        expect_equal(tau, dkqs.out[[i]][[j]][[k]]$tau.feasible)
+      }
+    }
   }
 })
 
 # 4. The list of infeasible taus
 test_that("Infeasible taus",{
-  for (i in 1:12) {
-    expect_equal(NULL, dkqs.output[[i]]$tau.infeasible)
+  for (i in seq_along(i.cores)) {
+    for (j in seq_along(j.lpmodel)) {
+      for (k in seq_along(k.solver)) {
+        expect_equal(NULL, dkqs.out[[i]][[j]][[k]]$tau.infeasible)
+      }
+    }
   }
 })
 
 # 5. Maximum feasible tau
 test_that("Maximum feasible tau",{
-  for (i in 1:12) {
-    expect_equal(taumax, dkqs.output[[i]]$tau.max)
+  for (i in seq_along(i.cores)) {
+    for (j in seq_along(j.lpmodel)) {
+      for (k in seq_along(k.solver)) {
+        expect_equal(taumax, dkqs.out[[i]][[j]][[k]]$tau.max)
+      }
+    }
   }
 })
 
 # 6. Test statistics
 test_that("Test statistics",{
-  for (i in c(1:3, 7:9)) {
-    expect_lte(abs(Tn.full - dkqs.output[[i]]$T.n), 1e-6)
-  }
-  for (i in c(4:6, 10:12)) {
-    expect_lte(abs(Tn.twom - dkqs.output[[i]]$T.n), 1e-6)
+  for (i in seq_along(i.cores)) {
+    for (j in seq_along(j.lpmodel)) {
+      for (k in seq_along(k.solver)) {
+        expect_lte(abs(Tn[[j]] - dkqs.out[[i]][[j]][[k]]$T.n), 1e-6)
+      }
+    }
   }
 })
 
 # 7. Test logical lower bound
 test_that("Logical lower bound",{
-  for (i in 1:12) {
-    expect_equal(theta.down$objval, dkqs.output[[i]]$lb0[1,2])
+  for (i in seq_along(i.cores)) {
+    for (j in seq_along(j.lpmodel)) {
+      for (k in seq_along(k.solver)) {
+        expect_equal(theta.down$objval, dkqs.out[[i]][[j]][[k]]$lb0[1,2])
+      }
+    }
   }
 })
 
 # 8. Test logical upper bound
 test_that("Logical upper bound",{
-  for (i in 1:12) {
-    expect_equal(theta.up$objval, dkqs.output[[i]]$ub0[1,2])
+  for (i in seq_along(i.cores)) {
+    for (j in seq_along(j.lpmodel)) {
+      for (k in seq_along(k.solver)) {
+        expect_equal(theta.up$objval, dkqs.out[[i]][[j]][[k]]$ub0[1,2])
+      }
+    }
   }
 })
 
 # 9. Solver name
 test_that("Solver name",{
-  for (i in c(1, 4, 7, 10)) {
-    expect_equal("gurobi", dkqs.output[[i]]$solver)
-  }
-  for (i in c(2, 5, 8, 11)) {
-    expect_equal("Rcplex", dkqs.output[[i]]$solver)
-  }
-  for (i in c(3, 6, 9, 12)) {
-    expect_equal("limSolve", dkqs.output[[i]]$solver)
+  for (i in seq_along(i.cores)) {
+    for (j in seq_along(j.lpmodel)) {
+      for (k in seq_along(k.solver)) {
+        expect_equal(k.solver[[k]], dkqs.out[[i]][[j]][[k]]$solver)
+      }
+    }
   }
 })
 
-# 10. Cores
-test_that("Cores",{
-  for (i in 1:6) {
-    expect_equal(1, dkqs.output[[i]]$cores)
-  }
-  for (i in 7:12) {
-    expect_equal(8, dkqs.output[[i]]$cores)
-  }
-})
-
-# 11. cv.table
+# 10. cv.table
 test_that("cv.table",{
-  full99 <- sort(Tbs.full)[ceiling(.99*length(Tbs.full))]
-  full95 <- sort(Tbs.full)[ceiling(.95*length(Tbs.full))]
-  full90 <- sort(Tbs.full)[ceiling(.90*length(Tbs.full))]
-  twom99 <- sort(Tbs.twom)[ceiling(.99*length(Tbs.twom))]
-  twom95 <- sort(Tbs.twom)[ceiling(.95*length(Tbs.twom))]
-  twom90 <- sort(Tbs.twom)[ceiling(.90*length(Tbs.twom))]
-  for (i in c(1:3, 7:9)) {
-    expect_lte(abs(full99 - dkqs.output[[i]]$cv.table[2,2]), 1e-5)
-    expect_lte(abs(full95 - dkqs.output[[i]]$cv.table[3,2]), 1e-5)
-    expect_lte(abs(full90 - dkqs.output[[i]]$cv.table[4,2]), 1e-5)
+  cv <- list()
+  n99 <- ceiling(.99 * reps)
+  n95 <- ceiling(.95 * reps)
+  n90 <- ceiling(.90 * reps)
+  # Compute the critical values
+  for (j in seq_along(j.lpmodel)) {
+    cv[[j]] <- list()
+    cv[[j]][[1]] <- Tn[[j]]
+    cv[[j]][[2]] <- sort(T.bs[[j]])[n99]
+    cv[[j]][[3]] <- sort(T.bs[[j]])[n95]
+    cv[[j]][[4]] <- sort(T.bs[[j]])[n90]
   }
-  for (i in c(4:6, 10:12)) {
-    expect_lte(abs(twom99 - dkqs.output[[i]]$cv.table[2,2]), 1e-5)
-    expect_lte(abs(twom95 - dkqs.output[[i]]$cv.table[3,2]), 1e-5)
-    expect_lte(abs(twom90 - dkqs.output[[i]]$cv.table[4,2]), 1e-5)
+
+  for (i in seq_along(i.cores)) {
+    for (j in seq_along(j.lpmodel)) {
+      for (k in seq_along(k.solver)) {
+        expect_lte(abs(cv[[j]][[1]] - dkqs.out[[i]][[j]][[k]]$cv.table[1,2]),
+                   1e-5)
+        expect_lte(abs(cv[[j]][[2]] - dkqs.out[[i]][[j]][[k]]$cv.table[2,2]),
+                   1e-5)
+        expect_lte(abs(cv[[j]][[3]] - dkqs.out[[i]][[j]][[k]]$cv.table[3,2]),
+                   1e-5)
+        expect_lte(abs(cv[[j]][[4]] - dkqs.out[[i]][[j]][[k]]$cv.table[4,2]),
+                   1e-5)
+      }
+    }
   }
 })
 
-# 12. Test logical
+# 11. Test logical
 test_that("test logical",{
-  for (i in 1:12) {
-    expect_equal(1, dkqs.output[[i]]$test.logical)
+  for (i in seq_along(i.cores)) {
+    for (j in seq_along(j.lpmodel)) {
+      for (k in seq_along(k.solver)) {
+        expect_equal(1, dkqs.out[[i]][[j]][[k]]$test.logical)
+      }
+    }
   }
 })
 
-# 13. df.error
+# 12. df.error
 test_that("Table for problematic bootstrap replications",{
-  for (i in 1:12) {
-    expect_equal(0, nrow(dkqs.output[[i]]$df.error))
+  for (i in seq_along(i.cores)) {
+    for (j in seq_along(j.lpmodel)) {
+      for (k in seq_along(k.solver)) {
+        expect_equal(NULL, dkqs.out[[i]][[j]][[k]]$df.error)
+      }
+    }
   }
 })
 
-# 14. Number of successful bootstrap replications
+# 13. Number of successful bootstrap replications
 test_that("Number of successful bootstrap replications",{
-  for (i in 1:12) {
-    expect_equal(100, dkqs.output[[i]]$R.succ)
+  for (i in seq_along(i.cores)) {
+    for (j in seq_along(j.lpmodel)) {
+      for (k in seq_along(k.solver)) {
+        expect_equal(reps, dkqs.out[[i]][[j]][[k]]$R.succ)
+      }
+    }
   }
 })

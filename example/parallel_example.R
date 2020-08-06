@@ -1,22 +1,15 @@
 ## ========================================================================= ##
 ##
-##  Example file to compare the time for different number of cores
+##  Example file to compare the time for different number of workers for
+##  parallelization
 ##
 ## ========================================================================= ##
 
 # ---------------- #
 # Part 1: Load required packages
 # ---------------- #
-library(modelr)
-library(gurobi)
-library(e1071)
-library(cplexAPI)
-library(Rcplex)
-library(ddpcr)
-library(limSolve)
-library(foreach)
-library(doMC)
-library(doRNG)
+library(lpinfer)
+library(future)
 
 # ---------------- #
 # Part 2: Data preparation
@@ -90,33 +83,33 @@ beta_tgt <- .365
 # Example 1 - Using full information approach and gurobi solver (1 core)
 t10 <- Sys.time()
 set.seed(1)
+plan(multisession, workers = 1)
 full_gur <- dkqs(data = data,
                  lpmodel = lpmodel.full,
                  beta.tgt = beta.tgt,
                  R = 5000,
                  tau = tau,
                  solver = "gurobi",
-                 cores = 1,
                  progress = TRUE)
 
 t11 <- Sys.time()
 time1 <- t11 - t10
 
-# Example 2 - Using full information approach and gurobi solver (n cores)
-cores <- 8
-t80 <- Sys.time()
+# Example 2 - Using full information approach and gurobi solver (8 cores)
 set.seed(1)
+workers <- 8
+plan(multisession, workers = workers)
+t80 <- Sys.time()
 full_gur <- dkqs(data = data,
                  lpmodel = lpmodel.full,
                  beta.tgt = beta.tgt,
                  R = 5000,
                  tau = tau,
                  solver = "gurobi",
-                 cores = 8,
                  progress = TRUE)
 t81 <- Sys.time()
 time8 <- t81 - t80
 
 # Print the time used
 print(sprintf("Time used with 1 core: %s", time1))
-print(sprintf("Time used with %s cores: %s", cores, time8))
+print(sprintf("Time used with %s cores: %s", workers, time8))

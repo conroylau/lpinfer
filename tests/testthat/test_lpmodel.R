@@ -2,7 +2,7 @@ context("Unit test for writing linear program in standard form")
 
 # ---------------- #
 # Create the constraint matrices and rhs vectors
-# ---------------- # 
+# ---------------- #
 # Obs
 Aobs <- matrix(c(1,1,2,3,3,7), nrow = 2, byrow = TRUE)
 bobs <- matrix(c(6,20), nrow = 2, byrow = TRUE)
@@ -35,10 +35,10 @@ lpm <- standard.lpmodel(lpmn)
 
 # ---------------- #
 # Solve the model by Gurobi (not in standard form)
-# ---------------- # 
+# ---------------- #
 model1 <- list()
 
-# Objective function 
+# Objective function
 model1$obj <- c(1,2,3)
 
 # Linear constraints
@@ -57,7 +57,7 @@ solution1 <- gurobi::gurobi(model1, params1)
 
 # ---------------- #
 # Solve the model by Gurobi (in standard form)
-# ---------------- # 
+# ---------------- #
 model2 <- list()
 
 # Objective function (Extended)
@@ -78,7 +78,7 @@ solution2 <- gurobi::gurobi(model2, params2)
 
 # ---------------- #
 # Run tests
-# ---------------- # 
+# ---------------- #
 # Objective value
 test_that("Objective value",{
   expect_equal(solution1$objval, solution2$objval)
