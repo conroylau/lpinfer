@@ -3,8 +3,6 @@
 #' @description This function conducts inference and returns the
 #'   \eqn{p}-value using the subsampling procedure.
 #'
-#' @import foreach doMC parallel
-#'
 #' @param lpmodel The \code{lpmodel} object used in the test. The following
 #'   components are required in the \code{lpmodel} for the subsampling test:
 #'    \itemize{
