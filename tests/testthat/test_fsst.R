@@ -81,8 +81,8 @@ beta_shp <- c(1)
 # ---------------- #
 # Parameters to test
 beta.tgt <- .365
-lam1 <- .5
-lam2 <- c(.1, .5)
+lam1 <- c(.1, NA)
+lam2 <- c(.1, .5, NA)
 rho <- 1e-4
 reps <- 100
 
@@ -375,7 +375,28 @@ for (j in 1:2) {
   ts[[j]] <- max(cone.n[[j]], range.n[[j]])
 }
 
-# 6. Restricted estimator
+# 6. Obtain the data-driven lambda
+lambda.dd1 <- list()
+lambda.dd.ts <- list()
+alpha.n <- 1/sqrt(log(log(N)))
+for (j in seq_along(j.lpmodel)) {
+  lambda.dd.ts[[j]] <- list()
+  for (i in 1:reps) {
+    # Solve the bootstrap cone problem
+    cone.dd.args <- fsst.56.args(j.lpmodel[[j]],
+                                 p[[j]],
+                                 d[[j]],
+                                 beta.star.bs[[j]][[i]] - beta.star[[j]],
+                                 omega[[j]])
+    lambda.dd.ts[[j]][[i]] <- sqrt(N) * do.call(gurobi.qlp,
+                                                cone.dd.args)$objval
+  }
+  nq <- ceiling(reps * (1 - alpha.n))
+  q <- sort(unlist(lambda.dd.ts[[j]]))[nq]
+  lambda.dd1[[j]] <- min(1/q, 1)
+}
+
+# 7. Restricted estimator
 ## Arguments
 fsst.89.args <- function(lpmodel, p, d, beta.star, beta, omega, beta.tgt) {
   A <- rbind(lpmodel$A.obs, lpmodel$A.shp, lpmodel$A.tgt)
@@ -439,7 +460,7 @@ for (j in 1:2) {
   beta.r[[j]] <- do.call(gurobi.qlp, beta.r.args)$x[1:p[[j]]]
 }
 
-# 7. Compute bootstrap components
+# 8. Compute bootstrap components
 range.n.bs <- list()
 cone.n.bs <- list()
 for (j in 1:2) {
@@ -460,6 +481,9 @@ for (j in 1:2) {
     range.n.bs[[j]][[i]] <- fsst.range.soln(b1, b2, Xi[[j]], p[[j]], d[[j]])
     for (k in 1:2) {
       for (kk in 1:length(k.lambdas[[k]])) {
+        ## Replace NA with data-driven lambda
+        k.lambdas[[k]][is.na(k.lambdas[[k]])] <- lambda.dd1[[j]]
+        ## Compute the bootstrap estimates
         beta.res <- beta.star.bs[[j]][[i]] - beta.star[[j]] +
           k.lambdas[[k]][kk] * beta.r[[j]]
         cone.args <- fsst.56.args(j.lpmodel[[j]], p[[j]], d[[j]], beta.res,
@@ -473,7 +497,7 @@ for (j in 1:2) {
   }
 }
 
-# 8. Compute pvalues
+# 9. Compute pvalues
 pval <- list()
 for (j in 1:2) {
   pval[[j]] <- list()
@@ -485,7 +509,7 @@ for (j in 1:2) {
   }
 }
 
-# 9. Critical values
+# 10. Critical values
 cv <- list()
 for (j in 1:2) {
   cv[[j]] <- list()
@@ -653,7 +677,18 @@ test_that("'d > p': Regularization parameter",{
   }
 })
 
-# 11. Method of obtaining the beta.var matrix
+# 11. Data-driven lambda
+test_that("'d > p': Data-driven lambda",{
+  for (i in seq_along(i.cores)) {
+    for (j in 1:2) {
+      for (k in 1:2) {
+        expect_equal(lambda.dd1[[j]], fsst.out[[i]][[j]][[k]]$lambda.data)
+      }
+    }
+  }
+})
+
+# 12. Method of obtaining the beta.var matrix
 test_that("'d > p': Method of obtaining beta.var",{
   for (i in seq_along(i.cores)) {
     for (j in 1:2) {
@@ -664,7 +699,7 @@ test_that("'d > p': Method of obtaining beta.var",{
   }
 })
 
-# 12. Test logical
+# 13. Test logical
 test_that("'d > p': Omega.i matrix",{
   for (i in seq_along(i.cores)) {
     for (j in 1:2) {
@@ -675,7 +710,7 @@ test_that("'d > p': Omega.i matrix",{
   }
 })
 
-# 13. Test logical
+# 14. Test logical
 test_that("'d > p': Test logical",{
   for (i in seq_along(i.cores)) {
     for (j in 1:2) {
@@ -698,7 +733,7 @@ load("test_lpm_fsst.RData")
 n <- 1000
 reps2 <- 100
 rho2 <- .0001
-lambda2 <- .5
+lambda2 <- c(.5, NA)
 btgt2 <- .21242552380635624
 
 farg2 <- list(lpmodel = lpm,
@@ -789,15 +824,34 @@ cone.n2 <- sqrt(n) * cone.return2$objval
 ## Test statistics
 ts2 <- max(cone.n2, range.n2)
 
-# 5. Restricted estimator
+# 5. Obtain the data-driven lambda
+alpha.n2 <- 1/sqrt(log(log(n)))
+lambda.dd.ts2 <- NULL
+for (i in 1:reps) {
+  # Solve the bootstrap cone problem
+  cone.dd.args <- fsst.56.args(j.lpmodel[[j]],
+                               p[[j]],
+                               d[[j]],
+                               beta.star.bs[[j]][[i]] - beta.star[[j]],
+                               omega[[j]])
+  lambda.dd.ts2 <- c(lambda.dd.ts2,
+                     sqrt(N) * do.call(gurobi.qlp, cone.dd.args)$objval)
+}
+nq2 <- ceiling(reps * (1 - alpha.n2))
+q2 <- sort(lambda.dd.ts2)[nq2]
+lambda.dd2 <- min(1/q2, 1)
+
+# 6. Restricted estimator
 beta.r.args2 <- fsst.89.args(lpm, p2, d2, beta.star2,
                              c(bobs2, lpm$beta.shp, btgt2), omega2, btgt2)
 beta.r2 <- do.call(gurobi.qlp, beta.r.args2)$x[1:p2]
 
-# 6. Compute bootstrap components
+# 7. Compute bootstrap components
 range.n.bs2 <- list()
 cone.n.bs2 <- list()
 ts.bs2 <- list()
+## Replace NA with data-driven lambda
+lambda2[is.na(lambda2)] <- lambda.dd2
 for (i in 1:reps) {
   ## Range
   b1 <- lpm$beta.obs[[i + 1]] - bobs2
@@ -811,10 +865,10 @@ for (i in 1:reps) {
   ts.bs2[[i]] <- max(cone.n.bs2[[i]], range.n.bs2[[i]])
 }
 
-# 7. Compute p-value
+# 8. Compute p-value
 pval2 <- mean(unlist(ts.bs2) > ts2)
 
-# 8. Critical values
+# 9. Critical values
 n99.2 <- ceiling(.99 * reps2)
 n95.2 <- ceiling(.95 * reps2)
 n90.2 <- ceiling(.90 * reps2)
@@ -894,21 +948,28 @@ test_that("'d <= p': Regularization parameter",{
   }
 })
 
-# 9. Method of obtaining the beta.var matrix
+# 9. Data-driven lambda
+test_that("'d <= p': Data-driven lambda",{
+  for (i in seq_along(i.cores)) {
+    expect_equal(lambda.dd2, fsst.out2[[i]]$lambda.data)
+  }
+})
+
+# 10. Method of obtaining the beta.var matrix
 test_that("'d <= p': Method of obtaining beta.var",{
   for (i in seq_along(i.cores)) {
     expect_equal("list", fsst.out2[[i]]$var.method)
   }
 })
 
-# 10. Test logical
+# 11. Test logical
 test_that("'d <= p': Omega.i matrix",{
   for (i in seq_along(i.cores)) {
     expect_equal(omega2, fsst.out2[[i]]$omega.i)
   }
 })
 
-# 11. Test logical
+# 12. Test logical
 test_that("'d <= p': Test logical",{
   for (i in seq_along(i.cores)) {
     expect_equal(1, fsst.out2[[i]]$test.logical)

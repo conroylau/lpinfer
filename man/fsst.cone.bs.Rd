@@ -46,7 +46,11 @@ components are required in the \code{lpmodel} for the FSST test:
  }}
 
 \item{lambda}{Parameter used to obtain the restricted estimator
-\eqn{\widehat{\bm{\beta}}^r_n}.}
+\eqn{\widehat{\bm{\beta}}^r_n}. A data-driven parameter \code{lambda} can
+be included if \code{NA} is included as part of the vector for
+\code{lambda}. For instance, if \code{lambda} is set as \code{c(0.1, NA)},
+then both 0.1 and the data-driven \code{lambda} will be applied in the
+FSST procedure.}
 
 \item{indicator}{A binary variable that equals to 1 for \eqn{d \geq p} and
 equals to 0 for \eqn{d < p}.}

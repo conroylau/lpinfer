@@ -40,7 +40,11 @@ product of \code{Rmulti} and \code{R} refers to the maximum
 number of bootstrap replications to be conducted if there are errors.}
 
 \item{lambda}{Parameter used to obtain the restricted estimator
-\eqn{\widehat{\bm{\beta}}^r_n}.}
+\eqn{\widehat{\bm{\beta}}^r_n}. A data-driven parameter \code{lambda} can
+be included if \code{NA} is included as part of the vector for
+\code{lambda}. For instance, if \code{lambda} is set as \code{c(0.1, NA)},
+then both 0.1 and the data-driven \code{lambda} will be applied in the
+FSST procedure.}
 
 \item{rho}{Parameter used in the studentization of matrices.}
 
@@ -79,6 +83,7 @@ Returns the following information:
   \item{rho}{Input value of rho.}
   \item{rhobar.i}{Regularization parameter used for the Cone
     studentization matrix.}
+  \item{lambda.data}{Data driven \code{lambda}.}
   \item{var.method}{Method used in obtaining the asymptotic variance
     of \code{beta.obs}.}
   \item{test.logical}{Indicator variable for whether the computation has

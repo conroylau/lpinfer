@@ -16,7 +16,12 @@
 #'      \item{\code{beta.shp}}
 #'    }
 #' @param lambda Parameter used to obtain the restricted estimator
-#'    \eqn{\widehat{\bm{\beta}}^r_n}.
+#'    \eqn{\widehat{\bm{\beta}}^r_n}. A data-driven parameter \code{lambda} can
+#'    be included if \code{NA} is included as part of the vector for
+#'    \code{lambda}. For instance, if \code{lambda} is set as \code{c(0.1, NA)},
+#'    then both 0.1 and the data-driven \code{lambda} will be applied in the
+#'    FSST procedure. The default is to use the data-driven approach for
+#'    \code{lambda}.
 #' @param rho Parameter used in the studentization of matrices.
 #' @param n Sample size (only required if \code{data} is omitted in the input).
 #' @param weight.matrix The option used in the weighting matrix. There are
@@ -42,6 +47,7 @@
 #'   \item{rho}{Input value of rho.}
 #'   \item{rhobar.i}{Regularization parameter used for the Cone
 #'     studentization matrix.}
+#'   \item{lambda.data}{Data driven \code{lambda}.}
 #'   \item{var.method}{Method used in obtaining the asymptotic variance
 #'     of \code{beta.obs}.}
 #'   \item{test.logical}{Indicator variable for whether the computation has
@@ -56,7 +62,7 @@
 #' @export
 #'
 fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
-                 lambda = .5, rho = 1e-4, n = NULL, weight.matrix = "diag",
+                 lambda = NA, rho = 1e-4, n = NULL, weight.matrix = "diag",
                  solver = NULL, progress = TRUE){
 
    # ---------------- #
@@ -94,7 +100,14 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       }
 
       # Rearrange the lambda terms
-      lambda <- sort(lambda, decreasing = FALSE)
+      lambda.temp <- sort(lambda, decreasing = FALSE)
+
+      # Check if NA was present in lambda
+      if (NA %in% lambda) {
+         lambda <- c(lambda.temp, NA)
+      } else {
+         lambda <- lambda.temp
+      }
 
       # Define R.succ (-1 refers to the initial trial)
       R.succ <- -1
@@ -243,7 +256,31 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       }
 
       # ---------------- #
-      # Step 6: Compute bootstrap components of cone.n and range.n
+      # Step 6: Choosing a data-driven lambda (if applicable)
+      # ---------------- #
+      if (NA %in% lambda) {
+         lambda.data <- fsst.lambda(n, omega.i, beta.n, beta.star, lpmodel,
+                                    R.succ, beta.star.list, solver, progress,
+                                    df.error, p, d)
+         lambda.dd <- lambda.data$lambda
+         new.error <- lambda.data$new.error
+         df.error <- lambda.data$df.error
+         error.id <- lambda.data$error.id
+
+         # Append the data-driven data if there is no error
+         if (new.error != 0) {
+            next
+         } else {
+            lambda <- c(lambda, lambda.dd)
+         }
+      } else {
+         lambda.dd <- NULL
+      }
+      # Drop the NA term from lambda
+      lambda <- lambda[!is.na(lambda)]
+
+      # ---------------- #
+      # Step 7: Compute bootstrap components of cone.n and range.n
       # ---------------- #
       if (d >= p){
          # Compute the restricted estimator
@@ -321,7 +358,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       }
 
       # ---------------- #
-      # Step 7: Compute decision, p-value and the quantiles of the test
+      # Step 8: Compute decision, p-value and the quantiles of the test
       # statistics
       # ---------------- #
       # Parameters
@@ -346,7 +383,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                                 cone.n.list, range.n.list)
 
       # ---------------- #
-      # Step 8: Assign the return list and return output
+      # Step 9: Assign the return list and return output
       # ---------------- #
       # Assign the list of objects returned
       output <- list(pval = df.pval,
@@ -360,6 +397,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                      solver.name = solver.name,
                      rho = rho,
                      rhobar.i = rhobar.i,
+                     lambda.data = lambda.dd,
                      var.method = var.method,
                      omega.i = omega.i,
                      beta.obs.bs = beta.obs.bs,
@@ -1554,11 +1592,21 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
    # ---------------- #
    # Step 5: Check lambda
    # ---------------- #
-   if (length(lambda) == 1){
-      check.numeric(lambda, "lambda")
+   # If NA is present in lambda, drop it before checking it because NA refers
+   # to using the data-driven lambda in FSST.
+   if (NA %in% lambda) {
+      lambda.temp <- lambda[!is.na(lambda)]
    } else {
-      for (i in 1:length(lambda)){
-         if (class(lambda[i]) != "numeric"){
+      lambda.temp <- lambda
+   }
+
+   # Check lambda without NA. If the user did not provide a lambda, then the
+   # length of lambda.temp is 0, and there is nothing to check.
+   if (length(lambda.temp) == 1) {
+      check.numeric(lambda.temp, "lambda")
+   } else if (length(lambda.temp) > 1) {
+      for (i in 1:length(lambda.temp)){
+         if (class(lambda.temp[i]) != "numeric"){
             stop("The class of the variable 'lambda' has to be numeric.",
                  call. = FALSE)
          }
@@ -1605,12 +1653,7 @@ print.fsst <- function(x, ...) {
       if (nrow(df.pval) == 1){
          cat(sprintf("p-value: %s\n", df.pval[1,2]))
       } else {
-         cat("     lambda\tp-value\n")
-         for (i in 1:nrow(df.pval)){
-            cat(sprintf("     %s\t%s\n",
-                        round(df.pval[i,1], digits = 5),
-                        round(df.pval[i,2], digits = 5)))
-         }
+         print(df.pval, row.names = FALSE)
       }
    } else {
       # Case 2: 'beta.tgt' is outside the logical bound
@@ -1689,4 +1732,72 @@ summary.fsst <- function(x, ...) {
       infeasible.pval.msg()
       cat(sprintf("\nSolver used: %s\n", x$solver.name))
    }
+}
+
+#' Data-driven choice of \code{lambda} in the FSST procedure
+#'
+#' @description This function provides a data-driven choice of \code{lambda}
+#'   in the FSST procedure.
+#'
+#'
+#' @inheritParams fsst.cone.bs
+#' @inheritParams fsst.beta.star.bs
+#'
+#' @details \eqn{\alpha_n} is set as \eqn{1} if the number of observations in
+#'   the data set is less than 16.
+#'
+#' @return Returns the data-driven \code{lambda} and the error messages.
+#'   \item{lambda}{Data-driven \code{lambda}}
+#'   \item{df.error}{Table showing the id of the bootstrap replication(s)
+#'     with error(s) and the corresponding error message(s).}
+#'   \item{new.error}{Number of new errors.}
+#'   \item{error.id}{Indices of the bootstrap replications that give errors.}
+#'
+#' @export
+#'
+fsst.lambda <- function(n, omega.i, beta.n, beta.star, lpmodel, R.succ,
+                        beta.star.list, solver, progress, df.error, p, d) {
+   # ---------------- #
+   # Step 1: Compute the bootstrap cone estimates with lambda = 0, beta.r = 0
+   # ---------------- #
+   beta.r <- rep(0, length(beta.n))
+
+   if (d >= p) {
+      indicator <- 1
+   } else {
+      indicator <- 0
+   }
+   fsst.cone.return <- fsst.cone.bs(n, omega.i, beta.n, beta.star, lpmodel,
+                                    R.succ, 0, indicator, beta.r,
+                                    beta.star.list, solver, progress, df.error)
+
+   # ---------------- #
+   # Step 2: Consolidate the error messages
+   # ---------------- #
+   new.error <- fsst.cone.return$new.error
+   df.error <- fsst.cone.return$df.error
+   error.id <- fsst.cone.return$error.id
+
+   # ---------------- #
+   # Step 3: Consolidate the results
+   # ---------------- #
+   if (new.error != 0) {
+      # If there is an error, return the new error messages
+      lambda <- NULL
+   } else {
+      # Otherwise, compute the data-driven lambda
+      if (n < 16) {
+         alpha <- 1
+      } else {
+         alpha <- 1/sqrt(log(log(n)))
+      }
+      Tn <- sort(fsst.cone.return$cone.n.list)
+      q <- Tn[ceiling(length(Tn) * (1 - alpha))]
+      lambda <- min(1, 1/q)
+   }
+
+   return(list(lambda = lambda,
+               new.error = new.error,
+               df.error = df.error,
+               error.id = error.id))
 }

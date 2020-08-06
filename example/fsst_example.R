@@ -111,3 +111,20 @@ fsst.full2 <- fsst(data = sampledata,
                    progress = TRUE)
 print(fsst.full2)
 summary(fsst.full2)
+
+# ---------------- #
+# Part 8: Run with data-driven lambda
+# ---------------- #
+set.seed(1)
+fsst.full3 <- fsst(data = sampledata,
+                   lpmodel = lpm.full,
+                   beta.tgt = 0.375,
+                   R = 100,
+                   lambda = c(0.1, NA),
+                   rho = 1e-4,
+                   n = nrow(sampledata),
+                   weight.matrix = "diag",
+                   solver = "gurobi",
+                   progress = TRUE)
+print(fsst.full3)
+summary(fsst.full3)

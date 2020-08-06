@@ -866,7 +866,6 @@ fsst(data = sampledata,
      R = 100,
      lambda = 0.5,
      rho = 1e-4,
-     n = nrow(sampledata),
      weight.matrix = "diag",
      solver = "gurobi",
      progress = FALSE)
@@ -874,9 +873,11 @@ fsst(data = sampledata,
 
 where
 
--   `lambda` refers to the tuning parameter that affects test statistics
-    in the bootstrap cone components. Users can pass multiple `lambda`s
-    in this argument.
+-   `lambda` refers to the tuning parameter that is used to obtain the
+    bootstrap estimates of the cone coponent in the test statistics.
+    Users can pass multiple `lambda`s in this argument. In addition, we
+    also provide a data-driven approach to choose the `lambda`
+    parameter. The details can be found [here](#data-driven-lambda).
 -   `rho` refers to the parameter used to studentize the variance
     matrices in the FSST procedure.
 -   `n` is optional if `data` is passed. `n` is a variable that refers
@@ -884,7 +885,7 @@ where
     `list`, then users can skip `data` and pass the number of rows of
     the `data` as `n` instead.
 -   `weight.matrix` is a string that determines the weighting matrix.
-    The details can be found [here](#weight-matrix).
+    The details can be found [here](#weighting-matrix).
 
 The rest of the arguments are the same as that in the `dkqs` procedure.
 
@@ -964,7 +965,6 @@ fsst.full1 <- fsst(data = sampledata,
                    R = 100,
                    lambda = 0.5,
                    rho = 1e-4,
-                   n = nrow(sampledata),
                    weight.matrix = "diag",
                    solver = "gurobi",
                    progress = FALSE)
@@ -983,7 +983,6 @@ fsst.full2 <- fsst(data = sampledata,
                    R = 100,
                    lambda = c(0.1, 0.2, 0.5),
                    rho = 1e-4,
-                   n = nrow(sampledata),
                    weight.matrix = "diag",
                    solver = "gurobi",
                    progress = FALSE)
@@ -1029,6 +1028,35 @@ summary(fsst.full2)
 #> 
 #> Number of successful bootstrap replications: 100
 ```
+
+#### Data-driven `lambda`
+
+To use the data-driven `lambda` in the FSST procedure, users can set
+`lambda` as `NA` or include `NA` as one of the elements in the `lambda`
+vector. For instance, if `lambda` is set as `c(0.1, NA)`, then both 0.1
+and the data-driven `lambda` will be applied in the FSST procedure.
+
+For instance, the following code uses 0.1 and the data-driven `lambda`
+to compute the *p*-value:
+
+```r
+set.seed(1)
+fsst.full3 <- fsst(data = sampledata, 
+                   lpmodel = lpm.full,
+                   beta.tgt = 0.375,
+                   R = 100,
+                   lambda = c(0.1, NA),
+                   rho = 1e-4,
+                   weight.matrix = "diag",
+                   solver = "gurobi",
+                   progress = FALSE)
+print(fsst.full3)
+#>  lambda p-value
+#>     0.1    0.95
+#>     1.0    0.22
+```
+
+In the FSST procedure, the default is to use the data-driven `lambda`.
 
 Constructing Bounds subject to Shape Constraints
 ------------------------------------------------
