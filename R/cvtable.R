@@ -38,7 +38,7 @@ construct.cv.table <- function(param, param.name, ts.sample.list,
   colnames(cv.table) <- c(param.name, round(param, digits = digits))
   percents <- scales::label_percent(accuracy = 1)(levels)
   percents <- paste0("Bootstrap ", percents, " CV")
-  cv.table[,1] <- c("Sample", percents)
+  cv.table[, 1] <- c("Sample", percents)
 
   # Construct the table
   for (i in 1:n.param) {
@@ -97,7 +97,7 @@ fsst.cv.table <- function(param, param.name, cone.n.list, range.n.list,
   cv.range.temp <- construct.cv.table(param[1], param.name, range.n.list,
                                       range.bs.list, levels, digits)
   colnames(cv.range) <- colnames(cv.cone)
-  cv.range[,1:2] <- cv.range.temp[,1:2]
+  cv.range[, 1:2] <- cv.range.temp[, 1:2]
 
   # ---------------- #
   # Step 3: Construct the component that corresponds to the "max" statistics
@@ -105,7 +105,7 @@ fsst.cv.table <- function(param, param.name, cone.n.list, range.n.list,
   cv.max <- cv.cone
   for (i in 1:nrow(cv.cone)) {
     for (j in 2:ncol(cv.cone)) {
-      cv.max[i,j] <- max(cv.cone[i,j], cv.range[i,2])
+      cv.max[i, j] <- max(cv.cone[i, j], cv.range[i, 2])
     }
   }
 

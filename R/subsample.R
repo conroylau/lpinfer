@@ -58,8 +58,7 @@
 #'
 subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                       norm = 2, phi = 2/3, replace = FALSE, solver = NULL,
-                      progress = TRUE){
-
+                      progress = TRUE) {
   # ---------------- #
   # Step 1: Obtain call, check and update the dependencies
   # ---------------- #
@@ -171,7 +170,7 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
 #'
 #' @export
 #'
-subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver){
+subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver) {
   # ---------------- #
   # Step 1: Determine whether each argument is a function or a list
   # ---------------- #
@@ -211,7 +210,7 @@ subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver){
   modelsense.new <- "min"
 
   # Set the objective function and constraints
-  if (norm == 1){
+  if (norm == 1) {
     ### L1-norm
     # Objective function - cost matrix
     c.new <- c(rep(0, ncol(A.obs.hat)), rep(1, k), rep(-1, k))
@@ -242,7 +241,7 @@ subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver){
                   sense = sense.new,
                   modelsense = modelsense.new,
                   lb = lb.new)
-  } else if (norm == 2){
+  } else if (norm == 2) {
     ### L2-norm
     # Constraints
     A.new <- rbind(A.shp.hat, A.tgt.hat)
@@ -473,7 +472,6 @@ subsample.bs.fn <- function(x, data, lpmodel, beta.tgt, norm, m, solver,
 #' @export
 #'
 print.subsample <- function(x, ...) {
-
   if (x$test.logical == 1) {
     # Case 1: 'beta.tgt' is within the logical bound
     cat(sprintf("p-value: %s\n", round(x$pval, digits = 5)))
@@ -496,7 +494,6 @@ print.subsample <- function(x, ...) {
 #' @export
 #'
 summary.subsample <- function(x, ...) {
-
   if (x$test.logical == 1) {
     # Case 1: 'beta.tgt' is within the logical bound
     # Print the p-values
@@ -555,8 +552,7 @@ summary.subsample <- function(x, ...) {
 #' @export
 #'
 subsample.check <- function(data, lpmodel, beta.tgt, R, Rmulti, solver, norm,
-                            phi, replace, progress){
-
+                            phi, replace, progress) {
   # ---------------- #
   # Step 1: Conduct the checks
   # ---------------- #

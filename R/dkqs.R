@@ -55,8 +55,7 @@
 #' @export
 #'
 dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
-                 tau = NULL, solver = NULL, progress = TRUE){
-
+                 tau = NULL, solver = NULL, progress = TRUE) {
   # ---------------- #
   # Step 1: Update call, check and update the arguments
   # ---------------- #
@@ -95,7 +94,6 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       stop(paste0("'data' needs to have a column called 'y' or 'Y' to ",
                   "represent the outcomes."))
     }
-    J <- length(unique(data[,coly])) - 1
 
     # Initialize beta.obs
     beta.obs.return <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)
@@ -137,7 +135,7 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
     # Initialize the data.frames and lists to contain the optimal value of x,
     # bootstrap test statistics and p-values for each tau
     pval.df <- data.frame(matrix(vector(), nrow = n.tau, ncol = 2))
-    pval.df[,1] <- tau.feasible
+    pval.df[, 1] <- tau.feasible
     lb.df <- pval.df
     ub.df <- pval.df
     colnames(pval.df) <- c("tau", "p-value")
@@ -174,8 +172,8 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
         # ---------------- #
         # Step 6: Obtain logical bounds for the function invertci
         # ---------------- #
-        lb.df[i,2] <- x.return$lb0$objval
-        ub.df[i,2] <- x.return$ub0$objval
+        lb.df[i, 2] <- x.return$lb0$objval
+        ub.df[i, 2] <- x.return$ub0$objval
       }
 
       # ---------------- #
@@ -188,7 +186,7 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       # Step 8: Compute p-value
       # ---------------- #
       for (i in 1:n.tau) {
-        pval.df[i,2] <- pval(T.bs.return$T.bs[[i]], T.n)$p
+        pval.df[i, 2] <- pval(T.bs.return$T.bs[[i]], T.n)$p
       }
 
       # ---------------- #
@@ -196,7 +194,6 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       # ---------------- #
       cv.table <- construct.cv.table(tau.feasible, "tau", rep(T.n, n.tau),
                                      T.bs.return$T.bs)
-
     }
 
     # ---------------- #
@@ -227,7 +224,6 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
 
     # Print warning message
     infeasible.betatgt.warning()
-
   }
   attr(output, "class") <- "dkqs"
 
@@ -270,7 +266,7 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
 #' @export
 #'
 dkqs.qlp <- function(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
-                     solver){
+                     solver) {
   # ---------------- #
   # Step 1: Obtain the dimension of the A matrix
   # ---------------- #
@@ -304,7 +300,7 @@ dkqs.qlp <- function(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
                                    A   = ones,
                                    rhs = c(1),
                                    sense = "=",
-                                   modelsense ="max",
+                                   modelsense = "max",
                                    lb = lb))
 
   # Obtain required set of indices
@@ -329,7 +325,7 @@ dkqs.qlp <- function(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
   # - If problem == "cone", this function solves LP (5)
   # - If problem == "tau", this function solves LP (6)
   # ---------------- #
-  if (problem == "test"){
+  if (problem == "test") {
     ans <- do.call(solver, list(Af  = lpmodel$A.obs,
                                 bf  = beta.obs.hat,
                                 nf  = n,
@@ -338,7 +334,7 @@ dkqs.qlp <- function(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
                                 sense = lp.sense,
                                 modelsense = "min",
                                 lb = lb))
-  } else if (problem == "cone"){
+  } else if (problem == "cone") {
     # Update lb
     lb.new <- lb
     lb.new[ind.up] <- rhs.up
@@ -356,7 +352,7 @@ dkqs.qlp <- function(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
                                 lb = lb.new))
   } else if (problem == "tau") {
     lp.lhs.tau <- rbind(lpmodel$A.tgt, ones)
-    lp.lhs.tau <- cbind(matrix(c(0,0), nrow = 2), lp.lhs.tau)
+    lp.lhs.tau <- cbind(matrix(c(0, 0), nrow = 2), lp.lhs.tau)
 
     # Add one unit because of the additional position for tau
     len.tau <- A.tgt.nc + 1
@@ -410,6 +406,7 @@ dkqs.qlp <- function(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
   # ---------------- #
   ans$lb0 <- theta.down
   ans$ub0 <- theta.up
+
   return(ans)
 }
 
@@ -699,7 +696,7 @@ pval <- function(T.bs, T.n) {
 #' @export
 #'
 tau.constraints <- function(length.tau, coeff.tau, coeff.x, ind.x, rhs, sense,
-                            lp.lhs.tau, lp.rhs.tau, lp.sense.tau){
+                            lp.lhs.tau, lp.rhs.tau, lp.sense.tau) {
   # ---------------- #
   # Step 1: Create and append the new constraints
   # ---------------- #
@@ -742,7 +739,7 @@ tau.constraints <- function(length.tau, coeff.tau, coeff.x, ind.x, rhs, sense,
 #' @export
 #'
 dkqs.check <- function(data, lpmodel, beta.tgt, R, Rmulti, tau, solver,
-                       progress){
+                       progress) {
   # ---------------- #
   # Step 1: Check the arguments
   # ---------------- #
@@ -814,7 +811,6 @@ dkqs.check <- function(data, lpmodel, beta.tgt, R, Rmulti, tau, solver,
 #' @export
 #'
 print.dkqs <- function(x, ...) {
-
   if (x$test.logical == 1) {
     # Case 1: 'beta.tgt' is within the logical bound
     # Print the p-values
@@ -829,7 +825,7 @@ print.dkqs <- function(x, ...) {
 
     # Print the p-values
     if (nrow(df.pval) == 1) {
-      cat(sprintf(" p-value: %s\n", df.pval[1,2]))
+      cat(sprintf(" p-value: %s\n", df.pval[1, 2]))
     } else {
       print(df.pval, row.names = FALSE)
     }
@@ -851,8 +847,7 @@ print.dkqs <- function(x, ...) {
 #'
 #' @export
 #'
-summary.dkqs <- function(x, ...){
-
+summary.dkqs <- function(x, ...) {
   if (x$test.logical == 1) {
     # Case 1: 'beta.tgt' is within the logical bound
     # Print the p-values

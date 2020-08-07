@@ -38,7 +38,7 @@ tau <- sqrt(log(N)/N)
 # Part 3: Define functions to compute beta_obs_hat and Omega_hat
 # ---------------- #
 ## Full information approach
-func_full_info <- function(data){
+func_full_info <- function(data) {
   # Initialize beta
   beta <- NULL
 
@@ -50,7 +50,7 @@ func_full_info <- function(data){
   yn <- length(y_list)
 
   # Generate each entry of beta_obs
-  for (i in 1:yn){
+  for (i in 1:yn) {
     beta_i <- sum((data[,"Y"] == y_list[i]) * (data[,"D"] == 1))/n
     beta <- c(beta,c(beta_i))
   }
@@ -63,7 +63,7 @@ func_full_info <- function(data){
 }
 
 ## Two moments approach
-func_two_moment <- function(data){
+func_two_moment <- function(data) {
   # Initialize beta
   beta <- matrix(c(0,0), nrow = 2)
 

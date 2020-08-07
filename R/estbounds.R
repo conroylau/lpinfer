@@ -59,8 +59,7 @@
 #' @export
 #'
 estbounds <- function(data = NULL, lpmodel, kappa = 1e-5, norm = 2,
-                      estimate = TRUE, solver = NULL, progress = TRUE){
-
+                      estimate = TRUE, solver = NULL, progress = TRUE) {
   # ---------------- #
   # Step 1: Obtain call, check and update input
   # ---------------- #
@@ -85,16 +84,17 @@ estbounds <- function(data = NULL, lpmodel, kappa = 1e-5, norm = 2,
   bound0infe <- FALSE
 
   ### Scenario 1: Estimate = FASLE, i.e. solve the exact problem
-  if (estimate == FALSE){
+  if (estimate == FALSE) {
     ub_shp0 <- estbounds.original(data, lpmodel, "max", solver)
     lb_shp0 <- estbounds.original(data, lpmodel, "min", solver)
     ub <- ub_shp0$objval
     lb <- lb_shp0$objval
 
     # Store indicator of whether the estimation procedure should be conducted
-    if (!is.numeric(ub) | !is.numeric(lb) | length(ub) == 0 | length(lb) == 0){
+    if (!is.numeric(ub) | !is.numeric(lb) | length(ub) == 0 |
+        length(lb) == 0) {
       bound0infe <- TRUE
-      if (progress == TRUE){
+      if (progress == TRUE) {
         warning(sprintf(paste0("The original problem is infeasible. ",
                            "The bounds will be estimated by a %s-norm."),
                     norm))
@@ -105,41 +105,37 @@ estbounds <- function(data = NULL, lpmodel, kappa = 1e-5, norm = 2,
   }
 
   ### Scenario 2: Estimate = TRUE or scenario 1 is infeasible
-  if (estimate == TRUE | bound0infe == TRUE){
+  if (estimate == TRUE | bound0infe == TRUE) {
 
     ## Solve model
-    if (norm == 1){
+    if (norm == 1) {
       ## L1-norm
       # Stage one of the problem
       minc <- mincriterion(data, lpmodel, norm, solver.name)
 
       # Return stop message if there is no feasible solution for stage one
       # of the problem
-      if (is.numeric(minc$objval) == FALSE){
+      if (is.numeric(minc$objval) == FALSE) {
         stop("The constraints in the estimation problem are contradictory.
              Please ensure that the constraints are correctly specified.")
       }
       # Stage two of the problem
-      estbounds_ub <- estbounds2.L1(data, minc, lpmodel, "max", kappa,
-                                    solver)
-      estbounds_lb <- estbounds2.L1(data, minc, lpmodel, "min", kappa,
-                                    solver)
-    } else if (norm == 2){
+      estbounds_ub <- estbounds2.L1(data, minc, lpmodel, "max", kappa, solver)
+      estbounds_lb <- estbounds2.L1(data, minc, lpmodel, "min", kappa, solver)
+    } else if (norm == 2) {
       ## L2-norm
       # Stage one of the problem
       minc <- mincriterion(data, lpmodel, norm, solver.name)
 
       # Return stop message if there is no feasible solution for stage one
       # of the problem
-      if (is.numeric(minc$objval) == FALSE){
+      if (is.numeric(minc$objval) == FALSE) {
         stop("The constraints in the estimation problem are contradictory.
              Please ensure that the constraints are correctly specified.")
       }
       # Stage two of the problem
-      estbounds_ub <- estbounds2.L2(data, minc, lpmodel, "max", kappa,
-                                    solver)
-      estbounds_lb <- estbounds2.L2(data, minc, lpmodel, "min", kappa,
-                                    solver)
+      estbounds_ub <- estbounds2.L2(data, minc, lpmodel, "max", kappa, solver)
+      estbounds_lb <- estbounds2.L2(data, minc, lpmodel, "min", kappa, solver)
     }
 
     # Store results
@@ -180,8 +176,7 @@ estbounds <- function(data = NULL, lpmodel, kappa = 1e-5, norm = 2,
 #'
 #' @export
 #'
-estbounds.original <- function(data, lpmodel, original.sense, solver){
-
+estbounds.original <- function(data, lpmodel, original.sense, solver) {
   # ---------------- #
   # Step 1: Problem set-up
   # ---------------- #
@@ -207,16 +202,18 @@ estbounds.original <- function(data, lpmodel, original.sense, solver){
   }
 
   # Check if beta_obs is a function, then compute the
-  if (class(lpmodel$beta.obs) == "function"){
+  if (class(lpmodel$beta.obs) == "function") {
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   } else if (class(lpmodel$beta.obs) == "numeric" |
              class(lpmodel$beta.obs) == "matrix" |
-             class(lpmodel$beta.obs) == "list"){
+             class(lpmodel$beta.obs) == "list") {
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   }
   beta.original <- c(beta.obs.hat, lpmodel$beta.shp)
+
   # Sense contraints
   sense.original <- c(rep("=", nrow(A.original)))
+
   # Zero lower bound
   lb.zero <- rep(0, A.tgt.nc)
 
@@ -261,16 +258,16 @@ estbounds.original <- function(data, lpmodel, original.sense, solver){
 #' @export
 #'
 estbounds2.L1 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
-                          solver){
+                          solver) {
   # ---------------- #
   # Step 1: Initialization
   # ---------------- #
   # Check if beta_obs is a function, then compute the
-  if (class(lpmodel$beta.obs) == "function"){
+  if (class(lpmodel$beta.obs) == "function") {
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   } else if (class(lpmodel$beta.obs) == "numeric" |
              class(lpmodel$beta.obs) == "matrix" |
-             class(lpmodel$beta.obs) == "list"){
+             class(lpmodel$beta.obs) == "list") {
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   }
   k <- length(beta.obs.hat)
@@ -278,7 +275,7 @@ estbounds2.L1 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
   # ---------------- #
   # Step 2: Extract information from the first-stage solution
   # ---------------- #
-  #### Step 1: Extract information from the first-stage solution
+  # Extract information from the first-stage solution
   Qhat <- firststepsoln$objval
   larg <- firststepsoln$larg
 
@@ -299,7 +296,7 @@ estbounds2.L1 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
   if (!is.matrix(A.step2)) {
     A.step2 <- matrix(A.step2, nrow = 1)
   }
-  b.step2 <- c(larg$rhs, Qhat * (1+kappa))
+  b.step2 <- c(larg$rhs, Qhat * (1 + kappa))
   sense.step2 <- c(larg$sense, "<=")
 
   # Append the matrices to the list
@@ -312,7 +309,7 @@ estbounds2.L1 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
   # ---------------- #
   # Update the objective matrix
   A.tgt.new <- cbind(A.tgt.matrix,
-                     matrix(rep(0, 2*k*A.tgt.nr), nrow = A.tgt.nr))
+                     matrix(rep(0, 2 * k * A.tgt.nr), nrow = A.tgt.nr))
   larg$Af <- 0
   larg$bf <- A.tgt.new
   larg$nf <- 1
@@ -351,7 +348,7 @@ estbounds2.L1 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
 #' @export
 #'
 estbounds2.L2 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
-                          solver){
+                          solver) {
   # ---------------- #
   # Step 1: Extract information from the first-stage solution
   # ---------------- #
@@ -361,18 +358,18 @@ estbounds2.L2 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
   # ---------------- #
   # Step 2: Construct the quadratic inequality constraint
   # ---------------- #
-  if (class(lpmodel$beta.obs) == "function"){
+  if (class(lpmodel$beta.obs) == "function") {
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   } else if (class(lpmodel$beta.obs) == "numeric" |
              class(lpmodel$beta.obs) == "matrix" |
-             class(lpmodel$beta.obs) == "list"){
+             class(lpmodel$beta.obs) == "list") {
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   }
   step2_qc <- list()
-  if (is.null(lpmodel$A.obs) == FALSE){
+  if (is.null(lpmodel$A.obs) == FALSE) {
     step2_qc$Qc <- t(lpmodel$A.obs) %*% lpmodel$A.obs
     step2_qc$q <- as.vector(-2 * t(lpmodel$A.obs) %*% beta.obs.hat)
-    step2_qc$rhs <- Qhat * (1+kappa) - t(beta.obs.hat) %*% beta.obs.hat
+    step2_qc$rhs <- Qhat * (1 + kappa) - t(beta.obs.hat) %*% beta.obs.hat
     step2_qc$sense <- "<="
   } else {
     step2_qc <- NULL
@@ -430,7 +427,7 @@ estbounds2.L2 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
 #' @export
 #'
 estbounds.check <- function(data, lpmodel, kappa, norm, solver, estimate,
-                            progress){
+                            progress) {
   # ---------------- #
   # Step 1: Check the arguments
   # ---------------- #
@@ -496,9 +493,9 @@ estbounds.check <- function(data, lpmodel, kappa, norm, solver, estimate,
 #'
 #' @export
 #'
-print.estbounds <- function(x, ...){
+print.estbounds <- function(x, ...) {
   # Print the estimated bounds, norm used and the solver used
-  if (x$est == TRUE){
+  if (x$est == TRUE) {
     # Case 1: Report the estimated bounds
     cat(sprintf("Estimated bounds: [%s, %s] \n",
                 round(x$lb, digits = 5), round(x$ub, digits = 5)))
@@ -520,9 +517,9 @@ print.estbounds <- function(x, ...){
 #'
 #' @export
 #'
-summary.estbounds <- function(x, ...){
+summary.estbounds <- function(x, ...) {
   # Print the estimated bounds, norm used and the solver used
-  if (x$est == TRUE){
+  if (x$est == TRUE) {
     # Case 1: Report the estimated bounds
     cat(sprintf("Estimated bounds: [%s, %s] \n",
                 round(x$lb, digits = 5), round(x$ub, digits = 5)))
@@ -555,7 +552,7 @@ summary.estbounds <- function(x, ...){
 #'
 #' @export
 #'
-mincriterion <- function(data = NULL, lpmodel, norm = 2, solver = NULL){
+mincriterion <- function(data = NULL, lpmodel, norm = 2, solver = NULL) {
   # ---------------- #
   # Step 1: Obtain call, check and update the dependencies
   # ---------------- #
@@ -592,11 +589,11 @@ mincriterion <- function(data = NULL, lpmodel, norm = 2, solver = NULL){
   }
 
   # Check if beta_obs is a function, then compute the
-  if (class(lpmodel$beta.obs) == "function"){
+  if (class(lpmodel$beta.obs) == "function") {
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   } else if (class(lpmodel$beta.obs) == "numeric" |
              class(lpmodel$beta.obs) == "matrix" |
-             class(lpmodel$beta.obs) == "list"){
+             class(lpmodel$beta.obs) == "list") {
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   }
 
@@ -611,7 +608,7 @@ mincriterion <- function(data = NULL, lpmodel, norm = 2, solver = NULL){
   # ---------------- #
   # Step 4: Set up argument for the optimizer
   # ---------------- #
-  if (norm == 1){
+  if (norm == 1) {
     # Define the augmented matrices
     k <- length(beta.obs.hat)
     # Introduce slack variables into the matrix
@@ -620,7 +617,7 @@ mincriterion <- function(data = NULL, lpmodel, norm = 2, solver = NULL){
     } else {
       A.shp.mat <- lpmodel$A.shp
     }
-    A.aug <- cbind(A.shp.mat, matrix(rep(0, 2*k*A.shp.nr),
+    A.aug <- cbind(A.shp.mat, matrix(rep(0, 2 * k * A.shp.nr),
                                          nrow = A.shp.nr))
     A.slack <- cbind(lpmodel$A.obs, -diag(k), diag(k))
     # Combine the constraints
@@ -641,7 +638,7 @@ mincriterion <- function(data = NULL, lpmodel, norm = 2, solver = NULL){
                       sense = sense.new,
                       modelsense = "min",
                       lb = lb.new)
-  } else if (norm == 2){
+  } else if (norm == 2) {
     if (!is.matrix(lpmodel$A.shp)) {
       A.shp.new <- matrix(lpmodel$A.shp, nrow = 1)
     } else {
@@ -701,7 +698,7 @@ mincriterion <- function(data = NULL, lpmodel, norm = 2, solver = NULL){
 #'
 #' @export
 #'
-mincriterion.check <- function(data, lpmodel, norm, solver){
+mincriterion.check <- function(data, lpmodel, norm, solver) {
   # ---------------- #
   # Step 1: Check the arguments
   # ---------------- #
@@ -754,7 +751,7 @@ mincriterion.check <- function(data, lpmodel, norm, solver){
 #'
 #' @export
 #'
-print.mincriterion <- function(x, ...){
+print.mincriterion <- function(x, ...) {
   # Print the minimum value
   cat(sprintf("Minimum value: %s \n", round(x$objval)))
 }
@@ -771,7 +768,7 @@ print.mincriterion <- function(x, ...){
 #'
 #' @export
 #'
-summary.mincriterion <- function(x, ...){
+summary.mincriterion <- function(x, ...) {
   # Print the minimum value, normed used and solver
   cat(sprintf("Minimum value: %s \n", round(x$objval, digits = 5)))
   cat(sprintf("Norm used: %s \n", x$norm))

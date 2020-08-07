@@ -404,7 +404,7 @@ Atgt <- matrix(c(yp, yp), nrow = 1)
 Ashp <- matrix(rep(1, ncol(Aobs.full)), nrow = 1)
 
 # Construct beta.obs (a function)
-betaobs.fullinfo <- function(data){
+betaobs.fullinfo <- function(data) {
   beta <- NULL
   y.list <- sort(unique(data[,"Y"]))
   n <- dim(data)[1]
@@ -612,7 +612,7 @@ Aobs.twom <- matrix(c(rep(0,J1), yp, rep(0,J1), rep(1, J1)), nrow = 2,
                      byrow = TRUE)
 
 # Construct beta.obs (a function)
-betaobs.twom <- function(data){
+betaobs.twom <- function(data) {
   beta <- matrix(c(0,0), nrow = 2)
   n <- dim(data)[1]
   beta[1] <- sum(data[,"Y"] * data[,"D"])/n

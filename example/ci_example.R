@@ -48,13 +48,13 @@ tau <- sqrt(log(N)/N)
 # ---------------- #
 ### Full information approach
 # Function for Omega_hat
-var_full_info <- function(data){
+var_full_info <- function(data) {
   len <- length(unique(data[,"Y"]))
   return(diag(len))
 }
 
 # Function for beta_hat
-func_full_info <- function(data){
+func_full_info <- function(data) {
   # Initialize beta
   beta <- NULL
   # Find the unique elements of Y, sorting in ascending order
@@ -63,7 +63,7 @@ func_full_info <- function(data){
   n <- dim(data)[1]
   yn <- length(y_list)
   # Generate each entry of beta_obs
-  for (i in 1:yn){
+  for (i in 1:yn) {
     beta_i <- sum((data[,"Y"] == y_list[i]) * (data[,"D"] == 1))/n
     beta <- c(beta,c(beta_i))
   }
@@ -76,12 +76,12 @@ func_full_info <- function(data){
 
 ### Two moments approach
 # Function for Omega_hat
-var_two_moment <- function(data){
+var_two_moment <- function(data) {
   return(diag(2))
 }
 
 # Function for beta_hat
-func_two_moment <- function(data){
+func_two_moment <- function(data) {
   # Initialize beta
   beta <- matrix(c(0,0), nrow = 2)
   # Count total number of rows of data and y_list

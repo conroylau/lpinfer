@@ -97,7 +97,7 @@ post.bs <- function(test.return, i0, i1, R.eval, T.list = NULL,
               error.param = error.param))
 }
 
-#' Get the current seed with RNG kind "L'Ecuyer-CMRG"
+#' Gets the current seed with RNG kind "L'Ecuyer-CMRG"
 #'
 #' @description This function gets the current seed with RNG kind
 #'   "L'Ecuyer-CMRG".
@@ -108,5 +108,6 @@ post.bs <- function(test.return, i0, i1, R.eval, T.list = NULL,
 lpinfer.seed <- function() {
   RNGkind("L'Ecuyer-CMRG")
   seed <- .Random.seed
+
   return(seed)
 }

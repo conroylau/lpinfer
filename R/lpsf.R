@@ -20,7 +20,7 @@
 #'
 #' @export
 #'
-standard.form <- function(A, b, sense, lb = NULL, obj = NULL){
+standard.form <- function(A, b, sense, lb = NULL, obj = NULL) {
   # Obtain the matrices by the type of the inequality or equality
   A1 <- A[sense == "<=", ]
   A2 <- A[sense == ">=", ]
@@ -41,14 +41,14 @@ standard.form <- function(A, b, sense, lb = NULL, obj = NULL){
   # Obtain the new RHS vector
   b.sf <- c(b1, b2, b3)
 
-  if (!is.null(lb)){
+  if (!is.null(lb)) {
     # Append the zero lower bound for the slack and surplus variables
     lb.sf <- c(lb, rep(0, nrow(rbind(A1, A2))))
   } else {
     lb.sf <- NULL
   }
 
-  if (!is.null(obj)){
+  if (!is.null(obj)) {
     # Return the updated objective value
     obj.sf <- c(obj, rep(0, nrow(rbind(A1, A2))))
   } else {

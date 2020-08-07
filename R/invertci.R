@@ -47,8 +47,7 @@
 #'
 invertci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
                      ub1 = NULL, tol = .0001, max.iter = 20, df_ci = NULL,
-                     progress = TRUE){
-
+                     progress = TRUE) {
   # ---------------- #
   # Step 1: Update call, check and update the arguments
   # ---------------- #
@@ -80,9 +79,9 @@ invertci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
   # Step 2: Return confidence interval and data frame
   # ---------------- #
   alpha <- sort(alpha)
-  for (i in 1:length(alpha)){
+  for (i in 1:length(alpha)) {
 
-    if (i > 1 & (progress == TRUE)){
+    if (i > 1 & (progress == TRUE)) {
       cat("\n")
     }
 
@@ -107,7 +106,7 @@ invertci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
     ub <- ub_return$pt
 
     ### Compute lower bound of confidence interval
-    if (progress == TRUE){
+    if (progress == TRUE) {
       cat("\n === Computing lower bound of confidence interval ===\n")
     }
     lb_return <- ci.bisection(f, farg, alpha[i], lb0, lb1, tol, max.iter, df_ci,
@@ -127,7 +126,7 @@ invertci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
     # ---------------- #
     # Step 3: Store information as list if alphas is a vector
     # ---------------- #
-    if (length(alpha) > 1){
+    if (length(alpha) > 1) {
       df_ub_list <- c(df_ub_list, list(df_ub))
       df_lb_list <- c(df_lb_list, list(df_lb))
       termination_list <- c(termination_list, list(termination))
@@ -140,7 +139,7 @@ invertci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
   # ---------------- #
   # Step 4: Store information as list if alphas is a vector
   # ---------------- #
-  if (length(alpha) > 1){
+  if (length(alpha) > 1) {
     df_lb <- df_lb_list
     df_ub <- df_ub_list
     termination <- termination_list
@@ -197,21 +196,21 @@ invertci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
 #' @export
 #'
 ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, df_ci,
-                         progress, type, dp){
+                         progress, type, dp) {
 
   # ---------------- #
   # Step 1: Evaluate the end-points and the mid-point of b0 and b1
   # ---------------- #
   ### Initialize data frame to collect the information in the bisection method
   df_bis <- data.frame(matrix(vector(), 0, 6,
-                              dimnames=list(c(),
-                                            c("iteration",
-                                              "left",
-                                              "right",
-                                              "point",
-                                              "p-value",
-                                              "decision"))),
-                       stringsAsFactors=F)
+                              dimnames = list(c(),
+                                              c("iteration",
+                                                "left",
+                                                "right",
+                                                "point",
+                                                "p-value",
+                                                "decision"))),
+                       stringsAsFactors = F)
   # Divide alpha by 2
   alpha_2sided <- alpha/2
 
@@ -238,11 +237,11 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, df_ci,
                         progress, dp, df_bis)$df_bis
 
   # If fb1 and fb0 are of the same sign, ask user to choose another interval
-  if ((fb1 - alpha_2sided) * (fb0 - alpha_2sided) > 0){
+  if ((fb1 - alpha_2sided) * (fb0 - alpha_2sided) > 0) {
     stop("Please choose another interval.")
   }
   # Compute mid-point and evaluate the corresponding p-value
-  c <- (b+a)/2
+  c <- (b + a)/2
   fc_return <- bisec.eval(f, farg, c, df_ci)
   fc <- fc_return$pval
   df_ci <- fc_return$df_ci
@@ -250,16 +249,16 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, df_ci,
   # ---------------- #
   # Step 2: Bisection method
   # ---------------- #
-  for (i in 1:max.iter){
+  for (i in 1:max.iter) {
     # Bisection method is completed if the difference between the two points
     # is below the tolereance level.
-    if (abs(b-a) < tol){
+    if (abs(b - a) < tol) {
       if (progress == TRUE) {
         tol_msg <- paste(" >>> Length of interval is below tolerance level. ",
                          "Bisection method is completed.\n", sep = "")
       }
       last_iter_msg <- "Length of interval is below tolerance level"
-      if (progress == TRUE){
+      if (progress == TRUE) {
         cat(tol_msg)
       }
       break
@@ -270,14 +269,14 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, df_ci,
     df_bis <- bisec.print(i , alpha_2sided, fc_return, a, b, progress,
                           dp, df_bis)$df_bis
 
-    if (ci.inout(fc, alpha_2sided, type) == "left"){
+    if (ci.inout(fc, alpha_2sided, type) == "left") {
       b <- c
     } else {
       a <- c
     }
 
     # Evaluate new mid-point
-    c <- (a+b)/2
+    c <- (a + b)/2
 
     # Update data frame and p-value
     fc_return <- bisec.eval(f, farg, c, df_ci)
@@ -323,7 +322,7 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, df_ci,
 #'
 #' @export
 #'
-bisec.eval <- function(f, farg, pt, df_ci){
+bisec.eval <- function(f, farg, pt, df_ci) {
   # ---------------- #
   # Step 1: Check if the data point has appeared in previous iterations.
   # ---------------- #
@@ -334,12 +333,12 @@ bisec.eval <- function(f, farg, pt, df_ci){
   # Step 2: If the points have been evaluated in df_ci, it will be taken
   # directly. Otherwise, it will be computed.
   # ---------------- #
-  if ((is.null(df_match) == TRUE) | (dim(df_match)[1] == 0)){
+  if ((is.null(df_match) == TRUE) | (dim(df_match)[1] == 0)) {
     farg$beta.tgt <- pt
     test_return <- do.call(f, farg)
     pval = test_return$pval
-    df_ci[df_n+1, 1] <- pt
-    df_ci[df_n+1, 2] <- pval
+    df_ci[df_n + 1, 1] <- pt
+    df_ci[df_n + 1, 2] <- pval
   } else {
     pval <- df_match[2]
   }
@@ -368,22 +367,23 @@ bisec.eval <- function(f, farg, pt, df_ci){
 #'
 #' @export
 #'
-ci.inout <- function(pval, alpha, type){
-  if (type == 1){
+ci.inout <- function(pval, alpha, type) {
+  if (type == 1) {
     # Type == 1: Upper bound
-    if (pval < alpha){
+    if (pval < alpha) {
       part <- "left"
     } else {
       part <- "right"
     }
-  } else if (type == -1){
+  } else if (type == -1) {
     # Type == -1: Lower bound
-    if (pval < alpha){
+    if (pval < alpha) {
       part <- "right"
     } else {
       part <- "left"
     }
   }
+
   return(part)
 }
 
@@ -400,7 +400,7 @@ ci.inout <- function(pval, alpha, type){
 #'
 #' @export
 #'
-dkqs.logicalb <- function(f, farg){
+dkqs.logicalb <- function(f, farg) {
 
   #### Step 1: Assign a value to beta_tgt for returning the results
   farg$beta.tgt <- 0
@@ -442,14 +442,14 @@ dkqs.logicalb <- function(f, farg){
 #' @export
 #'
 bisec.print <- function(procedure, alphahalf, returnlist, a, b, progress, dp,
-                        df_bis){
+                        df_bis) {
   # ---------------- #
   # Step 1: Obtain information about the current data frame
   # ---------------- #
   df_bis_row <- nrow(df_bis)
   space6 <- "      "
   # Update decision
-  if (returnlist$pval < alphahalf){
+  if (returnlist$pval < alphahalf) {
     decision <- TRUE
   } else {
     decision <- FALSE
@@ -458,29 +458,28 @@ bisec.print <- function(procedure, alphahalf, returnlist, a, b, progress, dp,
   # ---------------- #
   # Step 2: Print information from the iteration
   # ---------------- #
-  if (is.numeric(procedure) == FALSE){
+  if (is.numeric(procedure) == FALSE) {
     # Case A: 'procedure' is not numeric if evaluating the initial 3 points
-    if (procedure == "left end"){
+    if (procedure == "left end") {
       df_bis[df_bis_row + 1, 4] <- a
-    } else if (procedure == "right end"){
+    } else if (procedure == "right end") {
       df_bis[df_bis_row + 1, 4] <- b
     }
   } else {
     # Case B: 'procedure' is numeric if evaluating the bisection method
-    df_bis[df_bis_row + 1, 4] <- (a+b)/2
+    df_bis[df_bis_row + 1, 4] <- (a + b)/2
   }
-
 
   # ---------------- #
   # Step 3: Update data frame
   # ---------------- #
   # Update column 1, i.e. whether evaluating end-points or iterations
-  if (procedure == "left end"){
-    df_bis[df_bis_row + 1,1] <- "Left end pt."
-  } else if (procedure == "right end"){
-    df_bis[df_bis_row + 1,1] <- "Right end pt."
-  } else if (is.numeric(procedure) == TRUE){
-    df_bis[df_bis_row + 1,1] <- procedure
+  if (procedure == "left end") {
+    df_bis[df_bis_row + 1, 1] <- "Left end pt."
+  } else if (procedure == "right end") {
+    df_bis[df_bis_row + 1, 1] <- "Right end pt."
+  } else if (is.numeric(procedure) == TRUE) {
+    df_bis[df_bis_row + 1, 1] <- procedure
   }
   df_bis[df_bis_row + 1, 2] <- a
   df_bis[df_bis_row + 1, 3] <- b
@@ -512,8 +511,8 @@ bisec.print <- function(procedure, alphahalf, returnlist, a, b, progress, dp,
 #'
 #' @export
 #'
-decimal.places <- function(x){
-  if ((x %% 1) == 0){
+decimal.places <- function(x) {
+  if ((x %% 1) == 0) {
     # Case 1: x is an integer
     invisible(0)
   } else {
@@ -538,8 +537,8 @@ decimal.places <- function(x){
 #'
 #' @export
 #'
-print.invertci <- function(x, ...){
-  if (length(x$alpha) == 1){
+print.invertci <- function(x, ...) {
+  if (length(x$alpha) == 1) {
     print.invertci_single(x)
   } else {
     print.invertci_multiple(x)
@@ -558,7 +557,7 @@ print.invertci <- function(x, ...){
 #'
 #' @export
 #'
-print.invertci_single <- function(x, ...){
+print.invertci_single <- function(x, ...) {
   cat("\n")
   cat(sprintf("Confidence interval: [%s, %s]\n",
               round(x$lb, digits = 5),
@@ -577,7 +576,7 @@ print.invertci_single <- function(x, ...){
 #'
 #' @export
 #'
-print.invertci_multiple <- function(x, ...){
+print.invertci_multiple <- function(x, ...) {
   # ---------------- #
   # Step 1: Consolidate the data frame
   # ---------------- #
@@ -589,9 +588,9 @@ print.invertci_multiple <- function(x, ...){
   # ---------------- #
   colnames(df) <- NULL
   rownames(df) <- c("Significance level", round(x$alpha, digits = 5))
-  df[1,1] <- "Confidence interval"
+  df[1, 1] <- "Confidence interval"
   for (i in 1:n.alpha) {
-    df[i + 1,1] <- sprintf("[%s, %s]",
+    df[i + 1, 1] <- sprintf("[%s, %s]",
                        round(x$lb[[i]], digits = 5),
                        round(x$ub[[i]], digits = 5))
   }
@@ -611,8 +610,8 @@ print.invertci_multiple <- function(x, ...){
 #'
 #' @export
 #'
-summary.invertci <- function(x, alphas = NULL, ...){
-  if (length(x$alpha) == 1){
+summary.invertci <- function(x, alphas = NULL, ...) {
+  if (length(x$alpha) == 1) {
     summary.invertci_single(x, alphas)
   } else {
     summary.invertci_multiple(x, alphas)
@@ -631,7 +630,7 @@ summary.invertci <- function(x, alphas = NULL, ...){
 #'
 #' @export
 #'
-summary.invertci_single <- function(x, alphas, ...){
+summary.invertci_single <- function(x, alphas, ...) {
   cat("\n")
 
   # ---------------- #
@@ -672,8 +671,7 @@ summary.invertci_single <- function(x, alphas, ...){
 #'
 #' @export
 #'
-summary.invertci_multiple <- function(x, alphas, ...){
-
+summary.invertci_multiple <- function(x, alphas, ...) {
   # ---------------- #
   # Step 1: Print the basic set of results
   # ---------------- #
@@ -702,9 +700,9 @@ summary.invertci_multiple <- function(x, alphas, ...){
     colnames(df) <- NULL
     rownames(df) <- c("Significance level", round(x$alpha[alphas.seq],
                                                   digits = 5))
-    df[1,1] <- "Confidence interval"
+    df[1, 1] <- "Confidence interval"
     for (i in 1:n.alpha) {
-      df[i + 1,1] <- sprintf("[%s, %s]",
+      df[i + 1, 1] <- sprintf("[%s, %s]",
                              round(x$lb[[i]], digits = 5),
                              round(x$ub[[i]], digits = 5))
     }
@@ -746,19 +744,19 @@ summary.invertci_multiple <- function(x, alphas, ...){
 #'
 #' @export
 #'
-summary.bisection.print <- function(df_bis, i){
+summary.bisection.print <- function(df_bis, i) {
   # ---------------- #
   # Step 1: Data cleaning
   # ---------------- #
   print.iter1 <- df_bis[i, 1]
-  if (print.iter1 == "Left end pt." | print.iter1 == "Right end pt."){
+  if (print.iter1 == "Left end pt." | print.iter1 == "Right end pt.") {
     print.iter1 <- paste("", print.iter1, "\t")
   } else {
     print.iter1 <- paste("\r", as.character(print.iter1), "\t\t")
   }
 
   print.iter2 <- df_bis[i, 2]
-  if (print.iter2 != "NA"){
+  if (print.iter2 != "NA") {
     print.iter2 <- format(round(as.numeric(print.iter2), digits = 5),
                           nsmall = 5)
   } else {
@@ -766,7 +764,7 @@ summary.bisection.print <- function(df_bis, i){
   }
 
   print.iter3 <- df_bis[i, 3]
-  if (print.iter3 != "NA"){
+  if (print.iter3 != "NA") {
     print.iter3 <- format(round(as.numeric(print.iter3), digits = 5),
                           nsmall = 5)
   } else {
@@ -789,7 +787,6 @@ summary.bisection.print <- function(df_bis, i){
             format(round(print.iter4, digits = 5), nsmall = 5),"\t",
             print.iter5,"\t",
             print.iter6,"\t\n"))
-
 }
 
 
@@ -815,50 +812,50 @@ summary.bisection.print <- function(df_bis, i){
 #' @export
 #'
 invertci.check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max.iter,
-                           df_ci, progress){
+                           df_ci, progress) {
 
   # ---------------- #
   # Step 1: Conduct the checks
   # ---------------- #
   # Part 1. Check f
-  if (class(f) != "function"){
+  if (class(f) != "function") {
     stop("The class of function ('f') has to be function.", call. = FALSE)
   }
 
   # Part 2. Check farg
-  if (class(farg) != "list"){
+  if (class(farg) != "list") {
     stop("The arguemnt of the function ('farg') has to be a list.",
          call. = FALSE)
   }
 
   # Part 3. Check alpha
-  for (i in 1:length(alpha)){
+  for (i in 1:length(alpha)) {
     check.numrange(alpha[i], "alpha", "closed", 0, "closed", 1)
   }
 
   # Part 4: Check lb0 and ub0
-  if (is.null(lb0) | is.null(ub0)){
+  if (is.null(lb0) | is.null(ub0)) {
     # Part A: If lb0 and ub0 are null, check whether if the function is dkqs
     # If yes, compute lb0 and ub0. Otherwise, return terminate the function.
-    if (as.character(substitute(f)) == "dkqs"){
+    if (as.character(substitute(f)) == "dkqs") {
       logicalb_return = dkqs.logicalb(f, farg)
-      if (is.null(lb0)){
+      if (is.null(lb0)) {
         lb0 = logicalb_return$lb0
       }
-      if (is.null(ub0)){
+      if (is.null(ub0)) {
         ub0 = logicalb_return$ub0
       }
-    } else{
-      if (is.null(ub0) | !is.null(lb0)){
+    } else {
+      if (is.null(ub0) | !is.null(lb0)) {
         stop("Please provide the logical upper bound 'ub0'.", call. = FALSE)
-      } else if (is.null(lb0) | !is.null(ub0)){
+      } else if (is.null(lb0) | !is.null(ub0)) {
         stop("Please provide the logical lower bound 'lb0'.", call. = FALSE)
       } else {
         stop("Please provide the logical lower bound 'lb0' and the logical
              upper bound 'ub0'.", call. = FALSE)
       }
     }
-  } else{
+  } else {
     # Part B: If lb0 and ub0 are both nonnull, check whether they are numeric.
     if (!(is.numeric(lb0) == TRUE & length(lb0) == 1)) {
       stop("The argument 'lb0' must be a scalar.", call. = FALSE)
@@ -870,7 +867,7 @@ invertci.check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max.iter,
 
   # Part 5: Check lb1 and ub1
   # Part A: Check lb1
-  if (is.null(lb1)){
+  if (is.null(lb1)) {
     # If lb1 is null, assign lb1 as ub0
     lb1 = ub0
   } else {
@@ -878,7 +875,7 @@ invertci.check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max.iter,
     check.numeric(lb1, "lb1")
   }
   # Part B: Check ub1
-  if (is.null(ub1)){
+  if (is.null(ub1)) {
     # If ub1 is null, assign ub1 as lb0
     ub1 = lb0
   } else {
@@ -887,17 +884,17 @@ invertci.check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max.iter,
   }
 
   # Part 6: Check the difference between lb0 vs lb1, and ub0 vs ub1
-  if (lb0 > lb1){
+  if (lb0 > lb1) {
     stop("The logical lower bound 'lb0' cannot be larger than the maximum
          possible lower bound 'lb1'.")
   }
-  if (ub0 < ub1){
+  if (ub0 < ub1) {
     stop("The logical upper bound 'ub0' cannot be smaller than the minimum
          possible upper bound 'ub1'.")
   }
 
   # Part 7: Check tol
-  if ((is.numeric(tol) == TRUE & length(tol) == 1 & tol > 0) == FALSE){
+  if ((is.numeric(tol) == TRUE & length(tol) == 1 & tol > 0) == FALSE) {
     stop("The tolerance level ('tol') must be a positive scalar.",
          call. = FALSE)
   }
@@ -906,28 +903,28 @@ invertci.check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max.iter,
   check.positiveinteger(max.iter, "max.iter")
 
   # Part 9: Check df_ci
-  if (is.null(df_ci) == TRUE){
+  if (is.null(df_ci) == TRUE) {
     # Part A: If df_ci is null
     df_ci = data.frame(matrix(vector(), 0, 2,
-                              dimnames=list(c(), c("point", "value"))),
-                       stringsAsFactors=F)
+                              dimnames = list(c(), c("point", "value"))),
+                       stringsAsFactors = F)
   } else {
     # Part B: If df_ci is non-null
-    if (class(df_ci) %in% c("data.frame", "matrix") == TRUE){
+    if (class(df_ci) %in% c("data.frame", "matrix") == TRUE) {
       # Set df_ci as a data frame
       df_ci = as.data.frame(df_ci)
       # Check the column names
-      if (sum(colnames(df_ci) == c("point", "value")) != 2){
+      if (sum(colnames(df_ci) == c("point", "value")) != 2) {
         stop("The column names of the data frame 'df_ci' have to be 'point'
              and 'value'.", call. = FALSE)
       }
       # Check if the values are numeric
-      if (is.numeric(unlist(df_ci)) == FALSE){
+      if (is.numeric(unlist(df_ci)) == FALSE) {
         stop("The data frame 'df_ci' has to be numeric.")
       }
       # Check if the p-values are bounded between [0, 1]
-      if ((sum(df_ci[,2] <= 1) != nrow(df_ci)) |
-          (sum(df_ci[,2] >= 0) != nrow(df_ci))){
+      if ((sum(df_ci[, 2] <= 1) != nrow(df_ci)) |
+          (sum(df_ci[, 2] >= 0) != nrow(df_ci))) {
         stop("The p-values have to be in the interval [0,1].")
       }
 
@@ -960,10 +957,10 @@ invertci.check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max.iter,
 #'
 #' @export
 #'
-consolidate.invertci <- function(df, msg){
-  df.temp <- df[,2:6]
-  df.temp[1,2] <- NA
-  df.temp[2,1] <- NA
+consolidate.invertci <- function(df, msg) {
+  df.temp <- df[, 2:6]
+  df.temp[1, 2] <- NA
+  df.temp[2, 1] <- NA
   for (i in 1:4) {
     df.temp[,i] <- formatC(as.numeric(df.temp[,i]), digits = 5, format = "f")
   }
@@ -972,7 +969,7 @@ consolidate.invertci <- function(df, msg){
                        "  Test point",
                        "  p-value",
                        "  Reject?"), df.temp)
-  rownames(df.consol) <- c("Iteration", df[,1])
+  rownames(df.consol) <- c("Iteration", df[, 1])
   colnames(df.consol) <- NULL
   print(df.consol)
   cat(sprintf("Reason for termination: %s\n", msg))

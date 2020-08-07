@@ -24,7 +24,7 @@
 #' @export
 #'
 gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL,
-                         weight = NULL){
+                         weight = NULL) {
   # ---------------- #
   # Step 1: Obtain the coefficients of the objective function
   # ---------------- #
@@ -76,7 +76,7 @@ gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL,
 #' @export
 #'
 cplexapi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
-                           weight = NULL){
+                           weight = NULL) {
   # ---------------- #
   # Step 1: Obtain the coefficients of the objective function
   # ---------------- #
@@ -121,7 +121,7 @@ cplexapi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
   # Step 4: Solve the problem
   # ---------------- #
   # A linear program is identified if obj2 == NULL
-  if (is.null(obj2) == TRUE){
+  if (is.null(obj2) == TRUE) {
     # Solving linear program
     cplexAPI::copyLpwNamesCPLEX(env,
                                 prob,
@@ -165,7 +165,7 @@ cplexapi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
 #' @export
 #'
 rcplex.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
-                         weight = NULL){
+                         weight = NULL) {
   # ---------------- #
   # Step 1: Obtain the coefficients of the objective function
   # ---------------- #
@@ -234,7 +234,7 @@ rcplex.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
 #' @export
 #'
 limsolve.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
-                           weight = NULL){
+                           weight = NULL) {
   # ---------------- #
   # Step 1: Obtain the coefficients of the objective function
   # ---------------- #
@@ -256,9 +256,9 @@ limsolve.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
   # Step 3: Update constraints
   # ---------------- #
   # Objective function
-  if (modelsense == "max"){
-    fcost <- - objective_return$obj1
-  } else if (modelsense == "min"){
+  if (modelsense == "max") {
+    fcost <- -objective_return$obj1
+  } else if (modelsense == "min") {
     fcost <- objective_return$obj1
   }
 
@@ -284,20 +284,20 @@ limsolve.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
   # Linear solver is used if obj2 is a zero matrix (i.e. number of zeros equals
   # the total number of elements) or NULL
   if (is.null(objective_return$obj2) == TRUE |
-      sum(objective_return$obj2 == 0) == length(objective_return$obj2)){
+      sum(objective_return$obj2 == 0) == length(objective_return$obj2)) {
     ### Linear program solver
     solution <- limSolve::linp(E = Emat, F = Fvec, G = Gmat, H = Hvec,
                                Cost = fcost)
 
     # Obtain objective function, and add back the constant term, negate the
     # solution if it is a max problem
-    if (modelsense == "max"){
+    if (modelsense == "max") {
       objval <- -solution$solutionNorm + objective_return$obj0
-    } else if (modelsense == "min"){
+    } else if (modelsense == "min") {
       objval <- solution$solutionNorm + objective_return$obj0
     }
   } else {
-    if (modelsense == "min"){
+    if (modelsense == "min") {
       ### Quadratic program solver
       # Formulate the two matrices
       Amat <- Af * sqrt(nf)
@@ -307,7 +307,7 @@ limsolve.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
 
       # Obtain objective function
       objval <- solution$solutionNorm
-    } else if (modelsense == "max"){
+    } else if (modelsense == "max") {
       stop("This package cannot be used to solve max problems.")
     }
   }
@@ -365,23 +365,23 @@ limsolve.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
 #'
 #' @export
 #'
-objective.function <- function(A, b, n, weight = NULL){
+objective.function <- function(A, b, n, weight = NULL) {
   # If-else function to determine if it corresponds to a linear or quadratic
   # program. This is identified by whether one of A and b is null or nonzero
   # because it would be the case for linear programs that are considered in
   # this package.
-  if (is.null(A) == TRUE | sum(A == 0) == length(A)){
+  if (is.null(A) == TRUE | sum(A == 0) == length(A)) {
     # Linear program coefficients with nonzero vector b
     obj2 <- NULL
     obj1 <- b * n
     obj0 <- 0
-  } else if (is.null(b) == TRUE | sum(b == 0) == length(b)){
+  } else if (is.null(b) == TRUE | sum(b == 0) == length(b)) {
     # Linear program coefficients with nonzero matrix A
     obj2 <- NULL
     obj1 <- A * n
     obj0 <- 0
   } else {
-    if (is.null(weight)){
+    if (is.null(weight)) {
       weight <- diag(length(b))
     }
 
@@ -395,7 +395,9 @@ objective.function <- function(A, b, n, weight = NULL){
   }
 
   # Return the above objective functions
-  return(list(obj2 = obj2, obj1 = obj1, obj0 = obj0))
+  return(list(obj2 = obj2,
+              obj1 = obj1,
+              obj0 = obj0))
 }
 
 #' LP solver by \code{lpSolveAPI}
@@ -418,7 +420,7 @@ objective.function <- function(A, b, n, weight = NULL){
 #' @export
 #'
 lpsolveapi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
-                             weight = diag(length(b))){
+                             weight = diag(length(b))) {
   # ---------------- #
   # Step 1: Obtain the coefficients of the objective function
   # ---------------- #
@@ -441,12 +443,12 @@ lpsolveapi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
   # solve object
   lprec <- make.lp(nrow = nrow(A), ncol = ncol(A))
   # Model sense
-  lp.control(lprec, sense=modelsense)
+  lp.control(lprec, sense = modelsense)
   # Types of decision variables
-  set.type(lprec, 1:ncol(A), type=c("real"))
+  set.type(lprec, 1:ncol(A), type = c("real"))
   set.objfn(lprec, objective_return$obj1)
   #Define the constraints
-  for (i in 1:nrow(A)){
+  for (i in 1:nrow(A)) {
     add.constraint(lprec, A[i, ], sense[i], rhs[i])
   }
 

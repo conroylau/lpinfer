@@ -19,13 +19,13 @@
 #' @param i Index.
 #'
 #' @return Returns an object at iteration \code{i}.
-#''
+#'
 #' @export
 #'
-lpmodel.eval <- function(data, obj, i){
-  if (class(obj) == "function"){
+lpmodel.eval <- function(data, obj, i) {
+  if (class(obj) == "function") {
     obj.eval <- obj(data)
-  } else if (class(obj) == "list"){
+  } else if (class(obj) == "list") {
     obj.eval <- obj[[i]]
   } else if (!is.matrix(obj) & !is.data.frame(obj)) {
     obj.eval <- matrix(obj, nrow = 1)
@@ -66,22 +66,22 @@ lpmodel.eval <- function(data, obj, i){
 #'
 #' @export
 #'
-lpmodel.beta.eval <- function(data, obj, i){
-  if (class(obj) == "function"){
+lpmodel.beta.eval <- function(data, obj, i) {
+  if (class(obj) == "function") {
     beta.return <- obj(data)
-    if (class(beta.return) == "list"){
-      if (length(beta.return) == 2){
-        if (is.null(nrow(beta.return[[1]]))){
+    if (class(beta.return) == "list") {
+      if (length(beta.return) == 2) {
+        if (is.null(nrow(beta.return[[1]]))) {
           beta.obs.hat <- beta.return[[1]]
           omega.hat <- beta.return[[2]]
-        } else if (nrow(beta.return[[1]] == 1)){
+        } else if (nrow(beta.return[[1]] == 1)) {
           beta.obs.hat <- beta.return[[1]]
           omega.hat <- beta.return[[2]]
         } else {
           beta.obs.hat <- beta.return[[2]]
           omega.hat <- beta.return[[1]]
         }
-      } else if (length(beta.return) == 1){
+      } else if (length(beta.return) == 1) {
         beta.obs.hat <- beta.return[[1]]
         omega.hat <- NULL
       } else {
@@ -93,19 +93,19 @@ lpmodel.beta.eval <- function(data, obj, i){
       beta.obs.hat <- beta.return
       omega.hat <- NULL
     }
-  } else if (class(obj) == "list"){
-    if (class(obj[[i]]) == "list"){
-      if (length(obj[[i]]) != 2){
+  } else if (class(obj) == "list") {
+    if (class(obj[[i]]) == "list") {
+      if (length(obj[[i]]) != 2) {
         stop(paste0("When the first object of the list 'beta.obs' is a ",
                     "list, it needs to have two objects"))
-      } else if (length(obj[[i]]) == 1){
+      } else if (length(obj[[i]]) == 1) {
         beta.obs.hat <- obj[[i]][[1]]
         omega.hat <- NULL
       } else {
-        if (is.null(nrow(obj[[i]][[1]]))){
+        if (is.null(nrow(obj[[i]][[1]]))) {
           beta.obs.hat <- obj[[i]][[1]]
           omega.hat <- obj[[i]][[2]]
-        } else if (nrow(obj[[i]][[1]]) == 1 | ncol(obj[[i]][[1]]) == 1){
+        } else if (nrow(obj[[i]][[1]]) == 1 | ncol(obj[[i]][[1]]) == 1) {
           beta.obs.hat <- obj[[i]][[1]]
           omega.hat <- obj[[i]][[2]]
         } else {
@@ -115,10 +115,10 @@ lpmodel.beta.eval <- function(data, obj, i){
       }
     } else {
       if (length(obj) == 2) {
-        if (is.null(nrow(obj[[1]]))){
+        if (is.null(nrow(obj[[1]]))) {
           beta.obs.hat <- obj[[1]]
           omega.hat <- obj[[2]]
-        } else if (nrow(obj[[1]]) == 1 | ncol(obj[[1]]) == 1){
+        } else if (nrow(obj[[1]]) == 1 | ncol(obj[[1]]) == 1) {
           beta.obs.hat <- obj[[1]]
           omega.hat <- obj[[2]]
         } else {
@@ -130,7 +130,7 @@ lpmodel.beta.eval <- function(data, obj, i){
         omega.hat <- NULL
       }
     }
-  } else if (class(obj) == "numeric"){
+  } else if (class(obj) == "numeric") {
     beta.obs.hat <- obj
     omega.hat <- NULL
   }
@@ -161,7 +161,7 @@ lpmodel.beta.eval <- function(data, obj, i){
 #' @export
 #'
 lpmodel <- function(A.obs = NULL, A.shp = NULL, A.tgt = NULL, beta.obs = NULL,
-                    beta.shp = NULL){
+                    beta.shp = NULL) {
   # ---------------- #
   # Step 1: Define the lpmodel objects
   # ---------------- #
@@ -234,39 +234,40 @@ lpmodel.natural <- function(A.obs = NULL, A.shp = NULL, A.tgt = NULL,
 #'
 #' @export
 #'
-lpm.print <- function(x, lpm.string, data = NULL, ...){
+lpm.print <- function(x, lpm.string, data = NULL, ...) {
   # List of variables
   lpmodel.string <- c("A.obs", "A.shp", "A.tgt", "beta.obs", "beta.shp")
   lpmodel.ind <- NULL
-  for (i in 1:length(lpm.string)){
-    if (!is.null(x[[lpm.string[i]]])){
+  for (i in 1:length(lpm.string)) {
+    if (!is.null(x[[lpm.string[i]]])) {
       lpmodel.ind <- c(lpmodel.ind, i)
     }
   }
-  if (length(lpmodel.ind) == 0){
+
+  if (length(lpmodel.ind) == 0) {
     cat("'lpmodel' object does not contain the required objects.")
   } else {
     cat("Object     Class \tDimension \tLength \n")
-    for (i in 1:length(lpm.string)){
-      if (i %in% lpmodel.ind){
+    for (i in 1:length(lpm.string)) {
+      if (i %in% lpmodel.ind) {
         obj <- x[[lpm.string[i]]]
         # Check class of object
         class.tmp <- class(obj)
         # Check length of object
-        if (class.tmp == "list"){
+        if (class.tmp == "list") {
           class.tmp <- "list  "
           length.tmp <- length(obj)
           dimension.str <- dim(as.matrix(obj[[1]]))
           dimension.tmp <- paste0(dimension.str[1], "x", dimension.str[2])
-        } else if (class.tmp == "function"){
+        } else if (class.tmp == "function") {
           # If data is not passed, print "N/A" for dimensions. Otherwise,
           # compute the output for the output object
-          if (is.null(data)){
+          if (is.null(data)) {
             length.tmp <- "N/A"
             dimension.tmp <- "N/A"
           } else {
             tmp.obj <- obj(data)
-            if (class(tmp.obj) == "list"){
+            if (class(tmp.obj) == "list") {
               length.tmp <- length(tmp.obj)
             } else {
               length.tmp <- 1
@@ -274,7 +275,7 @@ lpm.print <- function(x, lpm.string, data = NULL, ...){
             dimension.str <- dim(as.matrix(tmp.obj))
             dimension.tmp <- paste0(dimension.str[1], "x", dimension.str[2])
           }
-        } else if (class.tmp %in% c("data.frame", "matrix", "numeric")){
+        } else if (class.tmp %in% c("data.frame", "matrix", "numeric")) {
           dim.obj <- dim(obj)
           if (is.null(dim.obj)) {
             dimension.tmp <- paste0("1x", length(obj))
@@ -314,7 +315,7 @@ lpm.print <- function(x, lpm.string, data = NULL, ...){
 #'
 #' @export
 #'
-print.lpmodel <- function(x, data = NULL, ...){
+print.lpmodel <- function(x, data = NULL, ...) {
   # List of variables
   lpmodel.string <- c("A.obs", "A.shp", "A.tgt", "beta.obs", "beta.shp")
   lpm.print(x, lpmodel.string, data)
@@ -332,7 +333,7 @@ print.lpmodel <- function(x, data = NULL, ...){
 #'
 #' @export
 #'
-summary.lpmodel <- function(x, ...){
+summary.lpmodel <- function(x, ...) {
   print(x)
 }
 
@@ -349,7 +350,7 @@ summary.lpmodel <- function(x, ...){
 #'
 #' @export
 #'
-print.lpmodel.natural <- function(x, data = NULL, ...){
+print.lpmodel.natural <- function(x, data = NULL, ...) {
   # List of variables
   lpmodel.natural.string <- c("A.obs", "A.shp", "A.tgt", "beta.obs",
                               "beta.shp", "sense.shp", "x.lb", "x.ub")
@@ -369,7 +370,7 @@ print.lpmodel.natural <- function(x, data = NULL, ...){
 #'
 #' @export
 #'
-summary.lpmodel.natural <- function(x, ...){
+summary.lpmodel.natural <- function(x, ...) {
   print(x)
 }
 

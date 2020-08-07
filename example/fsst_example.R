@@ -55,7 +55,7 @@ Ashp <- matrix(rep(1, ncol(Aobs.full)), nrow = 1)
 # Part 4: Define functions to compute beta_obs_hat and Omega_hat
 # ---------------- #
 # Construct beta.obs (a function)
-betaobs.fullinfo <- function(data){
+betaobs.fullinfo <- function(data) {
   beta <- NULL
   y.list <- sort(unique(data[,"Y"]))
   n <- dim(data)[1]

@@ -63,7 +63,7 @@
 #'
 fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                  lambda = NA, rho = 1e-4, n = NULL, weight.matrix = "diag",
-                 solver = NULL, progress = TRUE){
+                 solver = NULL, progress = TRUE) {
 
    # ---------------- #
    # Step 1: Update call, check and update the arguments; initialize df.error
@@ -93,7 +93,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
    ### beta.tgt is inside the logical bounds
    if (test.logical == 1) {
       # The user must either provide the data or n
-      if (is.null(data)){
+      if (is.null(data)) {
          n <- n
       } else {
          n <- nrow(data)
@@ -146,15 +146,15 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          ### 2(b) Estimate sigma.beta.obs and store the boostrap estimates
          # If the user provided bootstrap estimates of beta, use it to compute
          # sigma
-         if (class(lpmodel$beta.obs) == "list"){
+         if (class(lpmodel$beta.obs) == "list") {
             var.method <- "list"
-            if (is.null(sigma.beta.obs)){
+            if (is.null(sigma.beta.obs)) {
                sigma.beta.obs <- sigma.summation(n, lpmodel$beta.obs)
                var.method <- "bootstrapped values of the input list"
             }
-            beta.obs.bs <- lpmodel$beta.obs[2:(R+1)]
+            beta.obs.bs <- lpmodel$beta.obs[2:(R + 1)]
             beta.n.bs <- list()
-            for (i in 1:R){
+            for (i in 1:R) {
                beta.n.bs[[i]] <- c(beta.obs.bs[[i]], beta.shp.hat, beta.tgt)
             }
          } else {
@@ -173,7 +173,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
             # from the bootstrap betas
             if (is.null(sigma.beta.obs)) {
                var.method <- paste0("bootstrapped 'beta.obs' ",
-                                         "from the function.")
+                                    "from the function.")
                sigma.beta.obs <- sigma.summation(n, beta.obs.list)
             }
             beta.n.bs <- full.beta.bs(lpmodel, beta.tgt, beta.obs.bs, R)
@@ -182,12 +182,11 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          ### 2(c) Compute the beta.sigma
          n.beta1 <- nrow(sigma.beta.obs)
          n.beta23 <- length(c(beta.shp.hat, beta.tgt))
-         zero.12 <- matrix(rep(0, n.beta1*n.beta23), nrow = n.beta1)
+         zero.12 <- matrix(rep(0, n.beta1 * n.beta23), nrow = n.beta1)
          zero.21 <- t(zero.12)
          zero.22 <- matrix(rep(0, n.beta23^2), nrow = n.beta23)
          beta.sigma <- rbind(cbind(sigma.beta.obs, zero.12),
                              cbind(zero.21, zero.22))
-
 
          # ---------------- #
          # Step 3: Estimate beta.star, x.star and their bootstrap counterparts
@@ -231,7 +230,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       # Step 4: Studentization
       # ---------------- #
       # Obtain the star version of the sigma matrix
-      if (d >= p){
+      if (d >= p) {
          sigma.star <- beta.sigma
       } else {
          sigma.star <- sigma.summation(n, beta.star.list)
@@ -245,7 +244,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       # Step 5: Test statistic
       # ---------------- #
       # Compute range.n
-      if (d >= p){
+      if (d >= p) {
          range.n <- 0
          cone.n <- fsst.cone.lp(n, omega.i, beta.n, beta.star, lpmodel, 1,
                                 solver)
@@ -282,7 +281,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       # ---------------- #
       # Step 7: Compute bootstrap components of cone.n and range.n
       # ---------------- #
-      if (d >= p){
+      if (d >= p) {
          # Compute the restricted estimator
          beta.r <- beta.r.compute(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
                                   beta.star, omega.i, 1, solver)$x
@@ -292,11 +291,11 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
 
          # Compute cone.n for bootstrap beta
          cone.n.list <- list()
-         for (i in 1:length(lambda)){
+         for (i in 1:length(lambda)) {
             cone.return <- fsst.cone.bs(n, omega.i, beta.n, beta.star, lpmodel,
                                         R.succ, lambda[i], 1, beta.r,
-                                        beta.star.list, solver,
-                                        progress, df.error)
+                                        beta.star.list, solver, progress,
+                                        df.error)
             cone.n.list[[i]] <- cone.return$cone.n.list
 
             # Update the list of errors and restart the loop if necessary
@@ -333,11 +332,11 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
 
          # Compute cone.n for bootstrap beta
          cone.n.list <- list()
-         for (i in 1:length(lambda)){
+         for (i in 1:length(lambda)) {
             cone.return <- fsst.cone.bs(n, omega.i, beta.n, beta.star, lpmodel,
                                         R.succ, lambda[i], 0, beta.r,
-                                        beta.star.list, solver,
-                                        progress, df.error)
+                                        beta.star.list, solver, progress,
+                                        df.error)
             cone.n.list[[i]] <- cone.return$cone.n.list
 
             # Update the list of errors and break the for-loop if there is
@@ -362,25 +361,23 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       # statistics
       # ---------------- #
       # Parameters
-      quans <- c(.99, .95, .90)
       n.lambda <- length(lambda)
 
       # Initialize the data frames
       df.pval <- data.frame(matrix(vector(), nrow = n.lambda, ncol = 2))
       colnames(df.pval) <- c("lambda", "p-value")
-      for (i in 1:n.lambda){
+      for (i in 1:n.lambda) {
          # Compute the p-values
          pval.return <- fsst.pval(range.n, cone.n$objval, range.n.list,
                                   cone.n.list[[i]], R)
-         df.pval[i,1] <- lambda[i]
-         df.pval[i,2] <- pval.return$pval
+         df.pval[i, 1] <- lambda[i]
+         df.pval[i, 2] <- pval.return$pval
       }
 
       # Compute cv.table
       cv.table <- fsst.cv.table(lambda, "lambda",
                                 rep(cone.n$objval, n.lambda),
-                                range.n,
-                                cone.n.list, range.n.list)
+                                range.n, cone.n.list, range.n.list)
 
       # ---------------- #
       # Step 9: Assign the return list and return output
@@ -442,11 +439,12 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
 #'
 #' @export
 #'
-full.beta.bs <- function(lpmodel, beta.tgt, beta.obs.bs, R){
+full.beta.bs <- function(lpmodel, beta.tgt, beta.obs.bs, R) {
    beta.bs <- list()
-   for (i in 1:R){
+   for (i in 1:R) {
       beta.bs[[i]] <- c(beta.obs.bs[[i]], lpmodel$beta.shp, beta.tgt)
    }
+
    return(beta.bs)
 }
 
@@ -474,7 +472,7 @@ full.beta.bs <- function(lpmodel, beta.tgt, beta.obs.bs, R){
 #' @export
 #'
 fsst.beta.bs <- function(n, data, beta.obs.hat, lpmodel, R, maxR, progress,
-                         df.error, iseq, seed){
+                         df.error, iseq, seed) {
 
    # ---------------- #
    # Step 1: Initialization
@@ -642,7 +640,7 @@ fsst.weight.matrix <- function(weight.matrix, beta.obs.hat, beta.sigma) {
    } else if (weight.matrix == "avar") {
       weight.mat <- solve(beta.sigma)
    } else {
-      stop("'weight.matrix' has to be one of 'identity', 'diag' and 'avar'.")
+      stop("'weight.matrix' has to be one of 'avar', 'diag' and 'identity'.")
    }
 
    return(weight.mat)
@@ -668,13 +666,12 @@ fsst.weight.matrix <- function(weight.matrix, beta.obs.hat, beta.sigma) {
 #' @export
 #'
 sigma.summation <- function(n, beta.bs.list) {
-
    beta.obs.hat <- beta.bs.list[[1]]
-
    beta.prod.return <- future.apply::future_lapply(beta.bs.list[-1],
                                                    FUN = beta.product,
                                                    beta.obs.hat = beta.obs.hat)
    sigma.mat <- Reduce("+", beta.prod.return) * n / (length(beta.bs.list) - 1)
+
    return(sigma.mat)
 }
 
@@ -707,6 +704,7 @@ beta.product <- function(beta, beta.obs.hat) {
    } else {
       beta.prod <- beta.diff %*% t(beta.diff)
    }
+
    return(beta.prod)
 }
 
@@ -728,7 +726,7 @@ beta.product <- function(beta, beta.obs.hat) {
 #' @export
 #'
 beta.star.qp <- function(data, lpmodel, beta.tgt, weight.mat, beta.obs.hat,
-                         beta.sigma, solver){
+                         beta.sigma, solver) {
    # ---------------- #
    # Step 1: Solve the quadratic program
    # ---------------- #
@@ -774,6 +772,7 @@ beta.star.qp <- function(data, lpmodel, beta.tgt, weight.mat, beta.obs.hat,
    # Compute beta.star
    A <- as.matrix(rbind(lpmodel$A.obs, lpmodel$A.shp, lpmodel$A.tgt))
    beta.star <- A %*% x.star
+
    return(list(beta.star = beta.star,
                x.star = x.star))
 }
@@ -798,7 +797,7 @@ beta.star.qp <- function(data, lpmodel, beta.tgt, weight.mat, beta.obs.hat,
 #' @export
 #'
 fsst.cone.lp <- function(n, omega.i, beta.n, beta.star, lpmodel, indicator,
-                         solver){
+                         solver) {
    # ---------------- #
    # Step 1: Construct the linear program
    # ---------------- #
@@ -807,17 +806,16 @@ fsst.cone.lp <- function(n, omega.i, beta.n, beta.star, lpmodel, indicator,
    ones.p <- rep(1, p)
    zero.p <- rep(0, p)
    zero.d <- rep(0, d)
-   zero.dp <- matrix(rep(0, d*p), nrow = d)
+   zero.dp <- matrix(rep(0, d * p), nrow = d)
 
    # Update the objective function
    obj <- c(beta.star, zero.p, zero.p)
 
    # Construct the lower bound
-   lb <- c(rep(-Inf, p), rep(0, 2*p))
+   lb <- c(rep(-Inf, p), rep(0, 2 * p))
 
    # Construct the constraints matrix
    A <- rbind(lpmodel$A.obs, lpmodel$A.shp, lpmodel$A.tgt)
-   ones <- rep(1, p)
 
    A.mat1 <- cbind(omega.i, -diag(p), diag(p))
    A.mat2 <- c(zero.p, ones.p, ones.p)
@@ -828,10 +826,10 @@ fsst.cone.lp <- function(n, omega.i, beta.n, beta.star, lpmodel, indicator,
    rhs.mat <- c(zero.p, 1, zero.d)
 
    # Sense
-   sense.mat <- c(rep("=", p), rep("<=", d+1))
+   sense.mat <- c(rep("=", p), rep("<=", d + 1))
 
    # Construct the arguments
-   if (indicator == 1){
+   if (indicator == 1) {
       optim.arg <- list(Af = NULL,
                         bf = obj,
                         nf = 1,
@@ -841,8 +839,8 @@ fsst.cone.lp <- function(n, omega.i, beta.n, beta.star, lpmodel, indicator,
                         modelsense = "max",
                         lb = lb)
    } else {
-      zero.pp <- matrix(rep(0, p*p), nrow = p)
-      zero.Am <- matrix(rep(0, (p+d+1)*(d)), nrow = (p+d+1))
+      zero.pp <- matrix(rep(0, p * p), nrow = p)
+      zero.Am <- matrix(rep(0, (p + d + 1) * d), nrow = (p + d + 1))
 
       # Update objective function
       obj.ext <- c(obj, zero.d)
@@ -857,7 +855,7 @@ fsst.cone.lp <- function(n, omega.i, beta.n, beta.star, lpmodel, indicator,
       sense.ext <- c(sense.mat, rep("=", p))
 
       # Update lower bound
-      lb.ext <- c(lb, rep(-Inf,d))
+      lb.ext <- c(lb, rep(-Inf, d))
 
       # Set the arguments
       optim.arg <- list(Af = NULL,
@@ -1085,7 +1083,7 @@ fsst.beta.star.bs.fn <- function(beta.obs.bs, data, lpmodel, beta.tgt,
 #' @export
 #'
 beta.r.compute <- function(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
-                           beta.star, omega.i, indicator, solver){
+                           beta.star, omega.i, indicator, solver) {
    # ---------------- #
    # Step 1: Construct the linear program
    # ---------------- #
@@ -1101,18 +1099,17 @@ beta.r.compute <- function(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
    ones.p1 <- matrix(ones.1p, nrow = p)
    zero.1p <- rep(0, p)
    zero.p1 <- matrix(zero.1p, nrow = p)
-   zero.1d <- rep(0, d)
-   zero.pd <- matrix(rep(0, p*d), nrow = p)
-   zero.pp <- matrix(rep(0, p*p), nrow = p)
-   zero.qq <- matrix(rep(0, q*q), nrow = q)
-   zero.pqq <- matrix(rep(0, (p-q)*q), nrow = q)
+   zero.pd <- matrix(rep(0, p * d), nrow = p)
+   zero.pp <- matrix(rep(0, p * p), nrow = p)
+   zero.qq <- matrix(rep(0, q * q), nrow = q)
+   zero.pqq <- matrix(rep(0, (p - q) * q), nrow = q)
    iden.beta <- rbind(cbind(zero.qq, zero.pqq),
-                      cbind(t(zero.pqq), diag(p-q)))
+                      cbind(t(zero.pqq), diag(p - q)))
 
    # Construct the constraints matrix
    A <- rbind(lpmodel$A.obs, lpmodel$A.shp, lpmodel$A.tgt)
-   A.mat1 <- as.matrix(cbind(sqrt(n)*diag(p), zero.pd, -omega.i, A, zero.p1))
-   if (indicator == 0){
+   A.mat1 <- as.matrix(cbind(sqrt(n) * diag(p), zero.pd, -omega.i, A, zero.p1))
+   if (indicator == 0) {
       # Multiply A.mat 1 by t(A) if indicator == 0 (i.e. d < p)
       A.mat1 <- t(A) %*% A.mat1
    }
@@ -1123,22 +1120,22 @@ beta.r.compute <- function(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
 
    # Construct the rhs vector and the sense vector
    A.mat <- rbind(A.mat1, A.mat2, A.mat3, A.mat4, A.mat5)
-   if (indicator == 0){
+   if (indicator == 0) {
       rhs.mat <- c(sqrt(n) * t(A) %*% beta.star, zero.1p, zero.1p, zero.1p,
-                   rep(0,q), lpmodel$beta.shp, beta.tgt)
+                   rep(0, q), lpmodel$beta.shp, beta.tgt)
       sense.mat <- c(rep("=", nrow(A.mat1) + nrow(A.mat2)),
-                     rep(">=", 2*p), rep("=", p))
+                     rep(">=", 2 * p), rep("=", p))
    } else {
-      rhs.mat <- c(sqrt(n) * beta.n, zero.1p, zero.1p, zero.1p, rep(0,q),
+      rhs.mat <- c(sqrt(n) * beta.n, zero.1p, zero.1p, zero.1p, rep(0, q),
                    lpmodel$beta.shp, beta.tgt)
-      sense.mat <- c(rep("=", 2*p), rep(">=", 2*p), rep("=", p))
+      sense.mat <- c(rep("=", 2 * p), rep(">=", 2 * p), rep("=", p))
    }
 
    # Construct the objective function
-   obj <- c(rep(0, 2*(p+d)), 1)
+   obj <- c(rep(0, 2 * (p + d)), 1)
 
    # Lower bound
-   lb <- c(rep(-Inf,p), rep(0, d), rep(-Inf, p), rep(0, d+1))
+   lb <- c(rep(-Inf, p), rep(0, d), rep(-Inf, p), rep(0, d + 1))
 
    # Set the arguments
    optim.arg <- list(Af = NULL,
@@ -1196,6 +1193,7 @@ fsst.range <- function(n, beta.obs.hat, x.star, lpmodel, weight.mat) {
    # Step 2: Compute the range component
    # ---------------- #
    range <- base::norm(range.arg, type = "I")
+
    return(range)
 }
 
@@ -1287,11 +1285,11 @@ fsst.range.bs <- function(n, lpmodel, beta.obs.hat, beta.obs.bs, x.star,
                error.id = error.id))
 }
 
-#' Computes one bootstrap estimate for the range component for the test
+#' Computes one bootstrap estimate for the range component of the test
 #' statistic
 #'
 #' @description This function computes the one bootstrap estimate for the
-#'   range component in the test statistic.
+#'   range component of the test statistic.
 #'
 #' @inheritParams fsst
 #' @inheritParams dkqs.bs
@@ -1317,8 +1315,8 @@ fsst.range.bs.fn <- function(beta.x.star, n, lpmodel, beta.obs.hat, x.star,
 
    # Compute one range estimate
    result.range <- tryCatch({
-      range.n.return <- fsst.range(n, beta.bs.1, x.star.bs.1,
-                                   lpmodel, weight.mat)
+      range.n.return <- fsst.range(n, beta.bs.1, x.star.bs.1, lpmodel,
+                                   weight.mat)
       list(range = range.n.return)
    }, warning = function(w) {
       return(list(status = "warning",
@@ -1338,7 +1336,6 @@ fsst.range.bs.fn <- function(beta.x.star, n, lpmodel, beta.obs.hat, x.star,
 
    return(list(Ts = Ts,
                msg = msg))
-
 }
 
 #' Computes the bootstrap estimates of the cone component of the test
@@ -1498,13 +1495,13 @@ fsst.cone.bs.fn <- function(beta.star.bs, n, omega.i, beta.n, beta.star,
 #' @export
 #'
 fsst.pval <- function(range.n, cone.n, range.n.list, cone.n.list, R,
-                      alpha = .05){
+                      alpha = .05) {
    # ---------------- #
    # Step 1: Compute the test statistic and the bootstrap test statistics
    # ---------------- #
    T.n <- max(range.n, cone.n)
    T.bs <- NULL
-   for (i in 1:R){
+   for (i in 1:R) {
       T.bs <- c(T.bs, max(range.n.list[[i]], cone.n.list[[i]]))
    }
 
@@ -1515,7 +1512,7 @@ fsst.pval <- function(range.n, cone.n, range.n.list, cone.n.list, R,
    pval <- mean(T.bs >= T.n)
 
    # Decision
-   if (pval > alpha){
+   if (pval > alpha) {
       decision <- 1
    } else {
       decision <- 0
@@ -1546,13 +1543,13 @@ fsst.pval <- function(range.n, cone.n, range.n.list, cone.n.list, R,
 #' @export
 #'
 fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
-                       weight.matrix, solver, progress){
+                       weight.matrix, solver, progress) {
 
    # ---------------- #
    # Step 1: Check data
    # ---------------- #
    # Check data
-   if (is.null(n)){
+   if (is.null(n)) {
       data <- check.dataframe(data)
    } else {
       check.positiveinteger(n, "n")
@@ -1605,8 +1602,8 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
    if (length(lambda.temp) == 1) {
       check.numeric(lambda.temp, "lambda")
    } else if (length(lambda.temp) > 1) {
-      for (i in 1:length(lambda.temp)){
-         if (class(lambda.temp[i]) != "numeric"){
+      for (i in 1:length(lambda.temp)) {
+         if (class(lambda.temp[i]) != "numeric") {
             stop("The class of the variable 'lambda' has to be numeric.",
                  call. = FALSE)
          }
@@ -1656,7 +1653,7 @@ print.fsst <- function(x, ...) {
          if (!is.null(x$lambda.data)) {
             pv <- paste(pv, "(by data-driven 'lambda')")
          }
-         cat(sprintf("%s: %s\n", pv, df.pval[1,2]))
+         cat(sprintf("%s: %s\n", pv, df.pval[1, 2]))
       } else {
          # Label the data-driven lambda with a "*" if it is used
          dfl <- fsst.label.lambda(df.pval$`lambda`, x$lambda.data)
@@ -1665,7 +1662,7 @@ print.fsst <- function(x, ...) {
 
          # Print the message for data-driven lambda if necessary
          if (!is.null(dfl$msg)) {
-            cat(dfl$msg)
+            cat(paste0("   ", dfl$msg))
          }
       }
    } else {
@@ -1694,8 +1691,8 @@ summary.fsst <- function(x, ...) {
       cat("\nSample and quantiles of bootstrap test statistics: \n")
       cv.tab <- x$cv.table
       cv.tab[is.na(cv.tab)] <- ""
-      cv.tab[,1] <- paste0("   ", cv.tab[,1], " ")
-      cv.tab[,2] <- paste0(cv.tab[,2], "  ")
+      cv.tab[, 1] <- paste0("   ", cv.tab[, 1], " ")
+      cv.tab[, 2] <- paste0(cv.tab[, 2], "  ")
       colnames(cv.tab)[2] <- paste0(colnames(cv.tab)[2], "  ")
       # Label the data-driven lambda with a "*" if it is used
       cvlambda <- as.numeric(colnames(cv.tab)[-c(1, 2)])
@@ -1716,7 +1713,7 @@ summary.fsst <- function(x, ...) {
          dfl <- df.pval$lambda
          dfl <- fsst.label.lambda(dfl, x$lambda.data)
          colnames(df.pval.2) <- c("    lambda    ", dfl$lambdas)
-         df.pval.2[1,] <- c("    p-value   ", df.pval[,2])
+         df.pval.2[1, ] <- c("    p-value   ", df.pval[, 2])
          print(df.pval.2, row.names = FALSE)
       }
 
@@ -1787,7 +1784,6 @@ fsst.lambda <- function(n, omega.i, beta.n, beta.star, lpmodel, R.succ,
    # Step 1: Compute the bootstrap cone estimates with lambda = 0, beta.r = 0
    # ---------------- #
    beta.r <- rep(0, length(beta.n))
-
    if (d >= p) {
       indicator <- 1
    } else {
