@@ -835,7 +835,7 @@ for (i in 1:reps) {
                                beta.star.bs[[j]][[i]] - beta.star[[j]],
                                omega[[j]])
   lambda.dd.ts2 <- c(lambda.dd.ts2,
-                     sqrt(N) * do.call(gurobi.qlp, cone.dd.args)$objval)
+                     sqrt(n) * do.call(gurobi.qlp, cone.dd.args)$objval)
 }
 nq2 <- ceiling(reps * (1 - alpha.n2))
 q2 <- sort(lambda.dd.ts2)[nq2]
@@ -859,7 +859,7 @@ for (i in 1:reps) {
   range.n.bs2[[i]] <- fsst.range.soln(b1, b2, Xi2, p2, d2)
 
   ## Cone
-  beta.res2 <- beta.star.bs2[[i]] - beta.star2 + lambda2 * beta.r2
+  beta.res2 <- beta.star.bs2[[i]] - beta.star2 + lambda2[1] * beta.r2
   cone.args2 <- fsst.56.args(lpm, p2, d2, beta.res2, omega2)
   cone.n.bs2[[i]] <- sqrt(n) * do.call(gurobi.qlp, cone.args2)$objval
   ts.bs2[[i]] <- max(cone.n.bs2[[i]], range.n.bs2[[i]])
