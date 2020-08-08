@@ -677,7 +677,6 @@ check.lpmodel <- function(data, lpmodel, name.var, A.tgt.cat, A.obs.cat,
 #' @export
 #'
 check.lpobjects <- function(data, mat, mat.name, mat.cat, R) {
-  # Ignore if mat is null
   if (!is.null(mat)) {
     # ---------------- #
     # Step 1: Check error indicator
@@ -837,6 +836,10 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R) {
                    mat.name),
            call. = FALSE)
     }
+  } else {
+    stop(sprintf("The component '%s' is required in the 'lpmodel' object.",
+                 mat.name),
+         call. = FALSE)
   }
 }
 
