@@ -1563,11 +1563,11 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
                             name.var = "lpmodel",
                             A.tgt.cat = "matrix",
                             A.obs.cat = "matrix",
-                            A.shp.cat = "not_used",
+                            A.shp.cat = "matrix",
                             beta.obs.cat = c("function_mat",
                                              "list",
                                              "function_obs_var"),
-                            beta.shp.cat = "not_used",
+                            beta.shp.cat = "matrix",
                             R = R)
 
    # ---------------- #
