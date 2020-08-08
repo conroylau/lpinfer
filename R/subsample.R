@@ -596,6 +596,7 @@ subsample.check <- function(data, lpmodel, beta.tgt, R, Rmulti, solver, norm,
   check.boolean(progress, "progress")
 
   # Check whether beta.tgt is within the logical bounds
+  check.numeric(beta.tgt, "beta.tgt")
   test.logical <- check.betatgt(data, lpmodel, beta.tgt, solver)
 
   # Obtain the seed
