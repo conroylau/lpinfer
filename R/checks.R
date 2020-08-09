@@ -634,9 +634,13 @@ check.lpmodel <- function(data, lpmodel, name.var, A.tgt.cat, A.obs.cat,
   # ---------------- #
   # Step 1: Check if lpmodel is a list
   # ---------------- #
+  if (is.null(lpmodel)) {
+    stop("The 'lpmodel' object is required.")
+  }
+
   if (class(lpmodel) != "lpmodel") {
     # Call the general error message function
-    check.errormsg(name.var, "a list")
+    check.errormsg(name.var, "an object in the 'lpmodel' class")
   }
 
   # ---------------- #
