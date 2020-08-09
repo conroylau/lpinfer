@@ -1575,6 +1575,7 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
    # ---------------- #
    check.numeric(beta.tgt, "beta.tgt")
    check.positiveinteger(R, "R")
+   check.positive(rho, "rho")
 
    # Check Rmulti
    check.numrange(Rmulti, "Rmulti", "closed", 1, "open", Inf)
@@ -1593,13 +1594,10 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
    # Check lambda without NA. If the user did not provide a lambda, then the
    # length of lambda.temp is 0, and there is nothing to check.
    if (length(lambda.temp) == 1) {
-      check.numeric(lambda.temp, "lambda")
+      check.numrange(lambda.temp, "lambda", "closed", 0, "closed", 1)
    } else if (length(lambda.temp) > 1) {
       for (i in 1:length(lambda.temp)) {
-         if (class(lambda.temp[i]) != "numeric") {
-            stop("The class of the variable 'lambda' has to be numeric.",
-                 call. = FALSE)
-         }
+         check.numrange(lambda.temp[i], "lambda", "closed", 0, "closed", 1)
       }
    }
 

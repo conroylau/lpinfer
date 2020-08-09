@@ -110,6 +110,35 @@ check.nonnegaetive <- function(x, name.var) {
   return(x)
 }
 
+#' Check function: positive number
+#'
+#' @description This function checks whether variable satisfies the following
+#'   requirements:
+#'   \itemize{
+#'     \item{The class of the variable is \code{numeric}.}
+#'     \item{The length of the variable is 1.}
+#'     \item{The variable is strictly positive.}
+#'   }
+#'
+#' @param x Variable to be checked.
+#' @inheritParams check.positiveinteger
+#'
+#' @return Nothing is returned.
+#'
+#' @export
+#'
+check.positive <- function(x, name.var) {
+  if (!is.numeric(x)) {
+    # Call the general error message function
+    check.errormsg(name.var, "a strictly positive number")
+  } else if ((is.numeric(x) == TRUE & length(x) == 1 & x > 0) == FALSE) {
+    # Call the general error message function
+    check.errormsg(name.var, "a strictly positive number")
+  }
+  
+  return(x)
+}
+
 #' Check function: numeric
 #'
 #' @description This function checks whether the class of the variable
