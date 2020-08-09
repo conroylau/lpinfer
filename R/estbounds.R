@@ -143,6 +143,11 @@ estbounds <- function(data = NULL, lpmodel, kappa = 1e-5, norm = 2,
     lb <- estbounds_lb$objval
 
     est = TRUE
+
+    # Assign mincriterion
+    minc.objval <- minc$objval
+  } else {
+    minc.objval <- NULL
   }
 
   # ---------------- #
@@ -150,7 +155,7 @@ estbounds <- function(data = NULL, lpmodel, kappa = 1e-5, norm = 2,
   # ---------------- #
   output = list(ub = ub,
                 lb = lb,
-                mincriterion = minc$objval,
+                mincriterion = minc.objval,
                 est = est,
                 call = call,
                 norm = norm,
