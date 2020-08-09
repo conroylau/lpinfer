@@ -2,7 +2,7 @@
 % Please edit documentation in R/misc.R
 \name{lpinfer.seed}
 \alias{lpinfer.seed}
-\title{Get the current seed with RNG kind "L'Ecuyer-CMRG"}
+\title{Gets the current seed with RNG kind "L'Ecuyer-CMRG"}
 \usage{
 lpinfer.seed()
 }

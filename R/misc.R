@@ -111,3 +111,30 @@ lpinfer.seed <- function() {
 
   return(seed)
 }
+
+#' Matches the id of the error messages
+#'
+#' @description This function is used after the bootstrap replications. This
+#'   function is used to match the id of the error messages, given the list
+#'   of error messages returned from the \code{future_lapply} function.
+#'
+#' @param error.list List of error messages.
+#' @param df.error Consolidated data frame of error messages.
+#'
+#' @return Returns an updated list of error messages.
+#'   \item{df.error}{Updated data frame of error messages.}
+#'
+#' @export
+#'
+error.id.match <- function(error.list, df.error) {
+  # Remove 'NULL' from the list before passing to future_lapply
+  df.error.nonnull <- error.list[-which(sapply(error.list, is.null))]
+
+  # Match the id
+  for (i in seq_along(df.error.nonnull)) {
+    df.error$id[i] <- match(df.error.nonnull[i], error.list)
+    error.list[df.error$id[i]] <- NA
+  }
+
+  return(df.error)
+}

@@ -521,13 +521,8 @@ dkqs.bs <- function(data, lpmodel, beta.tgt, R, maxR, s.star.list, tau.list,
                            tau = unlist(tau.error),
                            message = unlist(error.list))
 
-    # Remove 'NULL' from the list before passing to future_lapply
-    df.error.nonnull <- error.list[-which(sapply(error.list, is.null))]
-
     # Match the id of the error messages
-    df.error$id <- unlist(future.apply::future_lapply(df.error.nonnull,
-                                                      FUN = match,
-                                                      error.list))
+    df.error <- error.id.match(error.list, df.error)
   } else {
     df.error <- NULL
   }

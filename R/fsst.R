@@ -530,13 +530,8 @@ fsst.beta.bs <- function(n, data, beta.obs.hat, lpmodel, R, maxR, progress,
                              lambda = NA,
                              message = unlist(error.list))
 
-      # Remove 'NULL' from the list before passing to future_lapply
-      df.error.nonnull <- error.list[-which(sapply(error.list, is.null))]
-
       # Match the id of the error messages
-      df.error$id <- unlist(future.apply::future_lapply(df.error.nonnull,
-                                                        FUN = match,
-                                                        error.list))
+      df.error <- error.id.match(error.list, df.error)
    } else {
       df.error <- NULL
    }
@@ -981,13 +976,8 @@ fsst.beta.star.bs <- function(data, lpmodel, beta.n, beta.n.bs, beta.tgt,
                                  lambda = NA,
                                  message = unlist(error.list))
 
-         # Remove 'NULL' from the list before passing to future_lapply
-         df.error.nonnull <- error.list[-which(sapply(error.list, is.null))]
-
          # Match the id of the error messages
-         df.error1$id <- unlist(future.apply::future_lapply(df.error.nonnull,
-                                                            FUN = match,
-                                                            error.list))
+         df.error1 <- error.id.match(error.list, df.error1)
          if (!is.null(df.error)) {
             # Case 1: There are errors in this function and the earlier parts
             error0 <- nrow(df.error)
@@ -1255,13 +1245,9 @@ fsst.range.bs <- function(n, lpmodel, beta.obs.hat, beta.obs.bs, x.star,
                               lambda = NA,
                               message = unlist(error.list))
 
-      # Remove 'NULL' from the list before passing to future_lapply
-      df.error.nonnull <- error.list[-which(sapply(error.list, is.null))]
 
       # Match the id of the error messages
-      df.error1$id <- unlist(future.apply::future_lapply(df.error.nonnull,
-                                                         FUN = match,
-                                                         error.list))
+      df.error1 <- error.id.match(error.list, df.error1)
       if (!is.null(df.error)) {
          # Case 1: There are errors in this function and the earlier parts
          df.error <- rbind(df.error, df.error1)
@@ -1396,13 +1382,8 @@ fsst.cone.bs <- function(n, omega.i, beta.n, beta.star, lpmodel, R.succ,
                               lambda = NA,
                               message = unlist(error.list))
 
-      # Remove 'NULL' from the list before passing to future_lapply
-      df.error.nonnull <- error.list[-which(sapply(error.list, is.null))]
-
       # Match the id of the error messages
-      df.error1$id <- unlist(future.apply::future_lapply(df.error.nonnull,
-                                                         FUN = match,
-                                                         error.list))
+      df.error1 <- error.id.match(error.list, df.error1)
       if (!is.null(df.error)) {
          # Case 1: There are errors in this function and the earlier parts
          df.error <- rbind(df.error, df.error1)

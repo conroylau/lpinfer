@@ -2,7 +2,7 @@
 % Please edit documentation in R/fsst.R
 \name{fsst.range.bs.fn}
 \alias{fsst.range.bs.fn}
-\title{Computes one bootstrap estimate for the range component for the test
+\title{Computes one bootstrap estimate for the range component of the test
 statistic}
 \usage{
 fsst.range.bs.fn(beta.x.star, n, lpmodel, beta.obs.hat, x.star, weight.mat)
@@ -38,5 +38,5 @@ Return the following list of objects:
 }
 \description{
 This function computes the one bootstrap estimate for the
-  range component in the test statistic.
+  range component of the test statistic.
 }

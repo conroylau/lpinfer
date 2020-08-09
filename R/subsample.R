@@ -378,13 +378,8 @@ subsample.bs <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
     # Create data.frame for error messages
     df.error <- data.frame(id = NA, message = unlist(error.list))
 
-    # Remove 'NULL' from the list before passing to future_lapply
-    df.error.nonnull <- error.list[-which(sapply(error.list, is.null))]
-
     # Match the id of the error messages
-    df.error$id <- unlist(future.apply::future_lapply(df.error.nonnull,
-                                                      FUN = match,
-                                                      error.list))
+    df.error <- error.id.match(error.list, df.error)
   } else {
     df.error <- NULL
   }

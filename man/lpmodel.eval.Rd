@@ -15,7 +15,6 @@ lpmodel.eval(data, obj, i)
 }
 \value{
 Returns an object at iteration \code{i}.
-'
 }
 \description{
 This function returns the matrix or vector depending on the
