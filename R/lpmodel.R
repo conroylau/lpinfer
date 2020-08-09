@@ -130,7 +130,7 @@ lpmodel.beta.eval <- function(data, obj, i) {
         omega.hat <- NULL
       }
     }
-  } else if (class(obj) == "numeric") {
+  } else if (class(obj) == "numeric" | class(obj) == "matrix") {
     beta.obs.hat <- obj
     omega.hat <- NULL
   }

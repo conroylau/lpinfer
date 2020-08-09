@@ -109,8 +109,11 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          lambda <- lambda.temp
       }
 
-      # Define R.succ (-1 refers to the initial trial)
+      # Define parameters and lists (-1 refers to the initial trial)
       R.succ <- -1
+      i1 <- -1
+      error.id0 <- NULL
+      error.id <- NULL
       beta.obs.bs <- list()
 
       # ---------------- #
@@ -126,7 +129,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
 
       # This while loop is used to re-draw the data if there are some
       # problematic draws in the bootstrap iterations
-      while ((R.succ < R) & ((R.succ + nrow(df.error)) < maxR)) {
+      while ((R.succ < R) & (i1 < maxR)) {
          # Set the index set for the bootstrap replications
          if (R.succ == -1) {
             # -1 corresponds to the initial bootstrap replications
@@ -135,11 +138,15 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
             iseq <- 1:maxR
          } else {
             # Remove the problematic entries
-            beta.obs.bs[error.id] <- NULL
+            error.id.new <- error.id[!(error.id %in% error.id0)]
+            beta.obs.bs[error.id.new] <- NULL
+
+            # Save the current error.id
+            error.id0 <- error.id
 
             # Update the sequence of indices
-            i0 <- min(maxR, R.succ + 1 + nrow(df.error))
-            i1 <- min(maxR, (R - R.succ))
+            i0 <- min(maxR, i1 + 1)
+            i1 <- min(maxR, i0 + (R - R.succ))
             iseq <- i0:i1
          }
 
@@ -216,6 +223,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          # Update the list of errors and restart the loop if necessary
          df.error <- beta.star.return$df.error
          new.error <- beta.star.return$new.error
+         error.id <- beta.star.return$error.id
          R.succ <- length(beta.star.bs)
          if (new.error > 1) {
             next
@@ -224,136 +232,136 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          # Consolidate the bootstrap estimators into a list
          beta.star.l <- list(beta.star = beta.star)
          beta.star.list <- c(beta.star.l, beta.star.bs)
-      }
-
-      # ---------------- #
-      # Step 4: Studentization
-      # ---------------- #
-      # Obtain the star version of the sigma matrix
-      if (d >= p) {
-         sigma.star <- beta.sigma
-      } else {
-         sigma.star <- sigma.summation(n, beta.star.list)
-      }
-
-      # Compute the matrix square root
-      rhobar.i <- base::norm(sigma.star, type = "f") * rho
-      omega.i <- expm::sqrtm(sigma.star + rhobar.i * diag(nrow(sigma.star)))
-
-      # ---------------- #
-      # Step 5: Test statistic
-      # ---------------- #
-      # Compute range.n
-      if (d >= p) {
-         range.n <- 0
-         cone.n <- fsst.cone.lp(n, omega.i, beta.n, beta.star, lpmodel, 1,
-                                solver)
-      } else {
-         range.n <- fsst.range(n, beta.obs.hat, x.star, lpmodel, weight.mat)
-         cone.n <- fsst.cone.lp(n, omega.i, beta.n, beta.star, lpmodel, 0,
-                                solver)
-      }
-
-      # ---------------- #
-      # Step 6: Choosing a data-driven lambda (if applicable)
-      # ---------------- #
-      if (NA %in% lambda) {
-         lambda.data <- fsst.lambda(n, omega.i, beta.n, beta.star, lpmodel,
-                                    R.succ, beta.star.list, solver, progress,
-                                    df.error, p, d)
-         lambda.dd <- lambda.data$lambda
-         new.error <- lambda.data$new.error
-         df.error <- lambda.data$df.error
-         error.id <- lambda.data$error.id
-
-         # Append the data-driven data if there is no error
-         if (new.error != 0) {
-            next
+         # ---------------- #
+         # Step 4: Studentization
+         # ---------------- #
+         # Obtain the star version of the sigma matrix
+         if (d >= p) {
+            sigma.star <- beta.sigma
          } else {
-            lambda <- c(lambda, lambda.dd)
+            sigma.star <- sigma.summation(n, beta.star.list)
          }
-      } else {
-         lambda.dd <- NULL
-      }
-      # Drop the NA term from lambda
-      lambda <- lambda[!is.na(lambda)]
 
-      # ---------------- #
-      # Step 7: Compute bootstrap components of cone.n and range.n
-      # ---------------- #
-      if (d >= p) {
-         # Compute the restricted estimator
-         beta.r <- beta.r.compute(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
-                                  beta.star, omega.i, 1, solver)$x
+         # Compute the matrix square root
+         rhobar.i <- base::norm(sigma.star, type = "f") * rho
+         omega.i <- expm::sqrtm(sigma.star + rhobar.i * diag(nrow(sigma.star)))
 
-         # Compute range.n for bootstrap beta
-         range.n.list <- rep(0, R.succ)
+         # ---------------- #
+         # Step 5: Test statistic
+         # ---------------- #
+         # Compute range.n
+         if (d >= p) {
+            range.n <- 0
+            cone.n <- fsst.cone.lp(n, omega.i, beta.n, beta.star, lpmodel, 1,
+                                   solver)
+         } else {
+            range.n <- fsst.range(n, beta.obs.hat, x.star, lpmodel, weight.mat)
+            cone.n <- fsst.cone.lp(n, omega.i, beta.n, beta.star, lpmodel, 0,
+                                   solver)
+         }
 
-         # Compute cone.n for bootstrap beta
-         cone.n.list <- list()
-         for (i in 1:length(lambda)) {
-            cone.return <- fsst.cone.bs(n, omega.i, beta.n, beta.star, lpmodel,
-                                        R.succ, lambda[i], 1, beta.r,
-                                        beta.star.list, solver, progress,
-                                        df.error)
-            cone.n.list[[i]] <- cone.return$cone.n.list
+         # ---------------- #
+         # Step 6: Choosing a data-driven lambda (if applicable)
+         # ---------------- #
+         if (NA %in% lambda) {
+            lambda.data <- fsst.lambda(n, omega.i, beta.n, beta.star, lpmodel,
+                                       R.succ, beta.star.list, solver, progress,
+                                       df.error, p, d)
+            lambda.dd <- lambda.data$lambda
+            new.error <- lambda.data$new.error
+            df.error <- lambda.data$df.error
+            error.id <- lambda.data$error.id
+
+            # Append the data-driven data if there is no error
+            if (new.error != 0) {
+               next
+            } else {
+               lambda <- c(lambda, lambda.dd)
+            }
+         } else {
+            lambda.dd <- NULL
+         }
+         # Drop the NA term from lambda
+         lambda <- lambda[!is.na(lambda)]
+
+         # ---------------- #
+         # Step 7: Compute bootstrap components of cone.n and range.n
+         # ---------------- #
+         if (d >= p) {
+            # Compute the restricted estimator
+            beta.r <- beta.r.compute(n, lpmodel, beta.obs.hat, beta.tgt,
+                                     beta.n, beta.star, omega.i, 1, solver)$x
+
+            # Compute range.n for bootstrap beta
+            range.n.list <- rep(0, R.succ)
+
+            # Compute cone.n for bootstrap beta
+            cone.n.list <- list()
+            for (i in 1:length(lambda)) {
+               cone.return <- fsst.cone.bs(n, omega.i, beta.n, beta.star,
+                                           lpmodel, R.succ, lambda[i], 1,
+                                           beta.r, beta.star.list, solver,
+                                           progress, df.error)
+               cone.n.list[[i]] <- cone.return$cone.n.list
+
+               # Update the list of errors and restart the loop if necessary
+               df.error <- cone.return$df.error
+               error.id <- cone.return$error.id
+               new.error.bs <- cone.return$new.error
+               R.succ <- length(cone.n.list[[i]])
+               if (new.error.bs > 1) {
+                  next
+               }
+
+            }
+         } else {
+
+            # Compute the restricted estimator
+            beta.r <- beta.r.compute(n, lpmodel, beta.obs.hat, beta.tgt,
+                                     beta.n, beta.star, omega.i, 0, solver)$x
+
+            # Compute range.n for bootstrap beta
+            range.return <- fsst.range.bs(n, lpmodel, beta.obs.hat,
+                                          beta.obs.bs, x.star, x.star.bs,
+                                          weight.mat, R, progress, df.error)
+
+            range.n.list <- range.return$range.n.list
 
             # Update the list of errors and restart the loop if necessary
-            df.error <- cone.return$df.error
-            new.error.bs <- cone.return$new.error
-            R.succ <- length(cone.n.list[[i]])
-            if (new.error.bs > 1) {
-               next
-            }
+            df.error <- range.return$df.error
+            new.error.bs <- range.return$new.error
+            R.succ <- length(range.n.list)
+            error.id <- range.return$error.id
 
-         }
-      } else {
-
-         # Compute the restricted estimator
-         beta.r <- beta.r.compute(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
-                                  beta.star, omega.i, 0, solver)$x
-
-         # Compute range.n for bootstrap beta
-         range.return <- fsst.range.bs(n, lpmodel, beta.obs.hat, beta.obs.bs,
-                                       x.star, x.star.bs, weight.mat, R,
-                                       progress, df.error)
-
-         range.n.list <- range.return$range.n.list
-
-         # Update the list of errors and restart the loop if necessary
-         df.error <- range.return$df.error
-         new.error.bs <- range.return$new.error
-         R.succ <- length(range.n.list)
-         error.id <- range.return$error.id
-
-         if (new.error.bs > 1) {
-            break()
-         }
-
-         # Compute cone.n for bootstrap beta
-         cone.n.list <- list()
-         for (i in 1:length(lambda)) {
-            cone.return <- fsst.cone.bs(n, omega.i, beta.n, beta.star, lpmodel,
-                                        R.succ, lambda[i], 0, beta.r,
-                                        beta.star.list, solver, progress,
-                                        df.error)
-            cone.n.list[[i]] <- cone.return$cone.n.list
-
-            # Update the list of errors and break the for-loop if there is
-            # any errors
-            df.error <- cone.return$df.error
-            new.error.bs <- cone.return$new.error
-            error.id <- cone.return$error.id
             if (new.error.bs > 1) {
                break()
             }
-            new.error.bs <- 0
-         }
-      }
 
-      # Restasrt the loop if necessary
-      if (new.error.bs > 1) {
-         next
+            # Compute cone.n for bootstrap beta
+            cone.n.list <- list()
+            for (i in 1:length(lambda)) {
+               cone.return <- fsst.cone.bs(n, omega.i, beta.n, beta.star,
+                                           lpmodel, R.succ, lambda[i], 0,
+                                           beta.r, eta.star.list, solver,
+                                           progress, df.error)
+               cone.n.list[[i]] <- cone.return$cone.n.list
+               R.succ <- length(cone.n.list[[i]])
+               # Update the list of errors and break the for-loop if there is
+               # any errors
+               df.error <- cone.return$df.error
+               new.error.bs <- cone.return$new.error
+               error.id <- cone.return$error.id
+               if (new.error.bs > 1) {
+                  break()
+               }
+               new.error.bs <- 0
+            }
+         }
+
+         # Restasrt the loop if necessary
+         if (new.error.bs > 1) {
+            next
+         }
       }
 
       # ---------------- #
@@ -369,7 +377,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       for (i in 1:n.lambda) {
          # Compute the p-values
          pval.return <- fsst.pval(range.n, cone.n$objval, range.n.list,
-                                  cone.n.list[[i]], R)
+                                  cone.n.list[[i]], R.succ)
          df.pval[i, 1] <- lambda[i]
          df.pval[i, 2] <- pval.return$pval
       }
@@ -491,15 +499,16 @@ fsst.beta.bs <- function(n, data, beta.obs.hat, lpmodel, R, maxR, progress,
    # This function will not be called if 'beta.obs' is a list. Hence, it
    # suffices to consider the case where it is a function.
    while ((R.succ < R) & (R.eval != maxR)) {
-
       # Compute the list of indices to be passed to 'future_lapply'
-      if (all.equal(iseq, 1:maxR)) {
+      if (identical(iseq, 1:maxR)) {
          bs.temp <- bs.assign(R, R.eval, R.succ, maxR, any.list)
          i0 <- bs.temp$i0
          i1 <- bs.temp$i1
          bs.list <- bs.temp$bs.list
       } else {
          bs.list <- iseq
+         i0 <- bs.list[1]
+         i1 <- tail(bs.list, n = 1)
       }
 
       # Obtain results from the bootstrap replications
@@ -982,6 +991,7 @@ fsst.beta.star.bs <- function(data, lpmodel, beta.n, beta.n.bs, beta.tgt,
             # Case 1: There are errors in this function and the earlier parts
             error0 <- nrow(df.error)
             df.error <- rbind(df.error, df.error1)
+            rownames(df.error) <- 1:nrow(df.error)
          } else {
             # Case 2: There are no errors in the earlier steps and there are
             # errors in this step
@@ -1251,6 +1261,7 @@ fsst.range.bs <- function(n, lpmodel, beta.obs.hat, beta.obs.bs, x.star,
       if (!is.null(df.error)) {
          # Case 1: There are errors in this function and the earlier parts
          df.error <- rbind(df.error, df.error1)
+         rownames(df.error) <- 1:nrow(df.error)
       } else {
          # Case 2: There are no errors in the earlier parts
          df.error <- df.error1
@@ -1387,6 +1398,7 @@ fsst.cone.bs <- function(n, omega.i, beta.n, beta.star, lpmodel, R.succ,
       if (!is.null(df.error)) {
          # Case 1: There are errors in this function and the earlier parts
          df.error <- rbind(df.error, df.error1)
+         rownames(df.error) <- 1:nrow(df.error)
       } else {
          # Case 2: There are no errors in the earlier parts
          df.error <- df.error1
@@ -1483,7 +1495,7 @@ fsst.pval <- function(range.n, cone.n, range.n.list, cone.n.list, R,
    T.n <- max(range.n, cone.n)
    T.bs <- NULL
    for (i in 1:R) {
-      T.bs <- c(T.bs, max(range.n.list[[i]], cone.n.list[[i]]))
+      T.bs <- c(T.bs, max(range.n.list[i], cone.n.list[i]))
    }
 
    # ---------------- #
@@ -1719,7 +1731,7 @@ summary.fsst <- function(x, ...) {
       # Number of failed bootstrap replications
       if (!is.null(x$df.error) & nrow(x$df.error) != 0) {
          nerr <- nrow(x$df.error)
-         errstring <- " Number of failed bootstrap"
+         errstring <- "\nNumber of failed bootstrap"
          if (nerr == 1) {
             cat(sprintf(paste(errstring, "replication: %s\n"), nerr))
          } else {
