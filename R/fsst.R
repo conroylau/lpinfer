@@ -350,7 +350,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
             for (i in 1:length(lambda)) {
                cone.return <- fsst.cone.bs(n, omega.i, beta.n, beta.star,
                                            lpmodel, R.succ, lambda[i], 0,
-                                           beta.r, eta.star.list, solver,
+                                           beta.r, beta.star.list, solver,
                                            progress, df.error)
                cone.n.list[[i]] <- cone.return$cone.n.list
                R.succ <- length(cone.n.list[[i]])
