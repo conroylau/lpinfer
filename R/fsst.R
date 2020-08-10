@@ -171,6 +171,14 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                                             R, maxR, progress, df.error,
                                             iseq, seed)
 
+            df.error <- beta.obs.return$df.error
+            error.id <- beta.obs.return$error.id
+            R.succ <- beta.obs.return$R.succ
+            new.error <- beta.obs.return$R.eval - R.succ
+            if (new.error > 1) {
+               next
+            }
+
             # Merge it with the beta.obs.bs that has been computed earlier
             beta.obs.bs.new <- beta.obs.return$beta.obs.bs
             beta.obs.bs <- c(beta.obs.bs, beta.obs.bs.new)
@@ -364,51 +372,65 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          }
       }
 
-      # ---------------- #
-      # Step 8: Compute decision, p-value and the quantiles of the test
-      # statistics
-      # ---------------- #
       # Parameters
       n.lambda <- length(lambda)
 
       # Initialize the data frames
       df.pval <- data.frame(matrix(vector(), nrow = n.lambda, ncol = 2))
       colnames(df.pval) <- c("lambda", "p-value")
-      for (i in 1:n.lambda) {
-         # Compute the p-values
-         pval.return <- fsst.pval(range.n, cone.n$objval, range.n.list,
-                                  cone.n.list[[i]], R.succ)
-         df.pval[i, 1] <- lambda[i]
-         df.pval[i, 2] <- pval.return$pval
+      df.pval$lambda <- lambda
+
+      if (R.succ != 0) {
+         # ---------------- #
+         # Step 8: Compute decision, p-value and the quantiles of the test
+         # statistics
+         # ---------------- #
+         for (i in 1:n.lambda) {
+            # Compute the p-values
+            pval.return <- fsst.pval(range.n, cone.n$objval, range.n.list,
+                                     cone.n.list[[i]], R.succ)
+            df.pval[i, 2] <- pval.return$pval
+         }
+
+         # Compute cv.table
+         cv.table <- fsst.cv.table(lambda, "lambda",
+                                   rep(cone.n$objval, n.lambda),
+                                   range.n, cone.n.list, range.n.list)
+
+         # ---------------- #
+         # Step 9: Assign the return list and return output
+         # ---------------- #
+         # Assign the list of objects returned
+         output <- list(pval = df.pval,
+                        cv.table = cv.table,
+                        call = call,
+                        range = range.n,
+                        cone = cone.n,
+                        test = max(range.n, cone.n$objval),
+                        cone.n.list = cone.n.list,
+                        range.n.list = range.n.list,
+                        solver.name = solver.name,
+                        rho = rho,
+                        rhobar.i = rhobar.i,
+                        lambda.data = lambda.dd,
+                        var.method = var.method,
+                        omega.i = omega.i,
+                        beta.obs.bs = beta.obs.bs,
+                        test.logical = test.logical,
+                        R.succ = R.succ,
+                        df.error = df.error)
+      } else {
+         df.pval[, 2] <- NA
+         output <- list(pval = df.pval,
+                        cv.table = NA,
+                        call = call,
+                        solver.name = solver.name,
+                        rho = rho,
+                        rhobar.i = NA,
+                        test.logical = test.logical,
+                        R.succ = R.succ,
+                        df.error = df.error)
       }
-
-      # Compute cv.table
-      cv.table <- fsst.cv.table(lambda, "lambda",
-                                rep(cone.n$objval, n.lambda),
-                                range.n, cone.n.list, range.n.list)
-
-      # ---------------- #
-      # Step 9: Assign the return list and return output
-      # ---------------- #
-      # Assign the list of objects returned
-      output <- list(pval = df.pval,
-                     cv.table = cv.table,
-                     call = call,
-                     range = range.n,
-                     cone = cone.n,
-                     test = max(range.n, cone.n$objval),
-                     cone.n.list = cone.n.list,
-                     range.n.list = range.n.list,
-                     solver.name = solver.name,
-                     rho = rho,
-                     rhobar.i = rhobar.i,
-                     lambda.data = lambda.dd,
-                     var.method = var.method,
-                     omega.i = omega.i,
-                     beta.obs.bs = beta.obs.bs,
-                     test.logical = test.logical,
-                     R.succ = R.succ,
-                     df.error = df.error)
    } else {
       ### Case 2: test.logical == 0. Set the p-value as 0 directly because
       ### beta.tgt is outside the logical bounds
@@ -1679,17 +1701,19 @@ summary.fsst <- function(x, ...) {
    if (x$test.logical == 1) {
       # Case 1: 'beta.tgt' is within the logical bound
       # Print the sample and bootstrap test statistics
-      cat("\nSample and quantiles of bootstrap test statistics: \n")
-      cv.tab <- x$cv.table
-      cv.tab[is.na(cv.tab)] <- ""
-      cv.tab[, 1] <- paste0("   ", cv.tab[, 1], " ")
-      cv.tab[, 2] <- paste0(cv.tab[, 2], "  ")
-      colnames(cv.tab)[2] <- paste0(colnames(cv.tab)[2], "  ")
-      # Label the data-driven lambda with a "*" if it is used
-      cvlambda <- as.numeric(colnames(cv.tab)[-c(1, 2)])
-      cvlambda <- fsst.label.lambda(cvlambda, x$lambda.data)
-      colnames(cv.tab)[-c(1, 2)] <- cvlambda$lambdas
-      print(cv.tab, row.names = FALSE)
+      if (!is.na(x$cv.table)) {
+         cat("\nSample and quantiles of bootstrap test statistics: \n")
+         cv.tab <- x$cv.table
+         cv.tab[is.na(cv.tab)] <- ""
+         cv.tab[, 1] <- paste0("   ", cv.tab[, 1], " ")
+         cv.tab[, 2] <- paste0(cv.tab[, 2], "  ")
+         colnames(cv.tab)[2] <- paste0(colnames(cv.tab)[2], "  ")
+         # Label the data-driven lambda with a "*" if it is used
+         cvlambda <- as.numeric(colnames(cv.tab)[-c(1, 2)])
+         cvlambda <- fsst.label.lambda(cvlambda, x$lambda.data)
+         colnames(cv.tab)[-c(1, 2)] <- cvlambda$lambdas
+         print(cv.tab, row.names = FALSE)
+      }
 
       # Print the p-values
       df.pval <- x$pval
@@ -1738,8 +1762,10 @@ summary.fsst <- function(x, ...) {
       }
 
       # Print the message for data-driven lambda if necessary
-      if (!is.null(cvlambda$msg)) {
-         cat(cvlambda$msg)
+      if (!is.na(x$cv.table)) {
+         if (!is.null(cvlambda$msg)) {
+            cat(cvlambda$msg)
+         }
       }
    } else if (x$test.logical == 0) {
       # Case 2: 'beta.tgt' is outside the logical bound

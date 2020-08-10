@@ -181,19 +181,25 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       # ---------------- #
       T.bs.return <- dkqs.bs(data, lpmodel, beta.tgt, R, maxR, s.star.list,
                              tau.feasible, solver, progress, seed)
+      R.succ <- T.bs.return$R.succ
 
-      # ---------------- #
-      # Step 8: Compute p-value
-      # ---------------- #
-      for (i in 1:n.tau) {
-        pval.df[i, 2] <- pval(T.bs.return$T.bs[[i]], T.n)$p
+      if (R.succ != 0) {
+        # ---------------- #
+        # Step 8: Compute p-value
+        # ---------------- #
+        for (i in 1:n.tau) {
+          pval.df[i, 2] <- pval(T.bs.return$T.bs[[i]], T.n)$p
+        }
+
+        # ---------------- #
+        # Step 9: Generate a table of critical values
+        # ---------------- #
+        cv.table <- construct.cv.table(tau.feasible, "tau", rep(T.n, n.tau),
+                                       T.bs.return$T.bs)
+      } else {
+        pval.df[,2] <- NA
+        cv.table <- NULL
       }
-
-      # ---------------- #
-      # Step 9: Generate a table of critical values
-      # ---------------- #
-      cv.table <- construct.cv.table(tau.feasible, "tau", rep(T.n, n.tau),
-                                     T.bs.return$T.bs)
     }
 
     # ---------------- #

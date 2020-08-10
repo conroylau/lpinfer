@@ -99,18 +99,24 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
     # ---------------- #
     T_subsample <- subsample.bs(data, R, maxR, lpmodel, beta.tgt, norm, solver,
                                 replace, progress, m, seed)
+    R.succ <- T_subsample$R.succ
 
-    # ---------------- #
-    # Step 4: Compute the p-value (using the p_eval function in dkqs)
-    # ---------------- #
-    pval_return <- pval(T_subsample$T.sub, Treturn$objval)
-    pval <- pval_return$p
+    if (R.succ != 0) {
+      # ---------------- #
+      # Step 4: Compute the p-value (using the p_eval function in dkqs)
+      # ---------------- #
+      pval_return <- pval(T_subsample$T.sub, Treturn$objval)
+      pval <- pval_return$p
 
-    # ---------------- #
-    # Step 5: Generate a table of critical values
-    # ---------------- #
-    cv.table <- construct.cv.table(phi, "phi", Treturn$objval,
-                                   T_subsample$T.sub)
+      # ---------------- #
+      # Step 5: Generate a table of critical values
+      # ---------------- #
+      cv.table <- construct.cv.table(phi, "phi", Treturn$objval,
+                                     T_subsample$T.sub)
+    } else {
+      pval <- NA
+      cv.table <- NA
+    }
 
     # ---------------- #
     # Step 6: Assign the return list
