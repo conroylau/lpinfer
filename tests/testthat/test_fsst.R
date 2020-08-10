@@ -627,7 +627,7 @@ test_that("'d > p': Cone test statistics",{
   for (i in seq_along(i.cores)) {
     for (j in 1:2) {
       for (k in 1:2) {
-        expect_equal(cone.n[[j]], fsst.out[[i]][[j]][[k]]$cone$objval)
+        expect_equal(cone.n[[j]], fsst.out[[i]][[j]][[k]]$cone)
       }
     }
   }
@@ -916,7 +916,7 @@ test_that("'d <= p': Range test statistics",{
 # 4. Cone test statistics
 test_that("'d <= p': Cone test statistics",{
   for (i in seq_along(i.cores)) {
-    expect_equal(cone.n2, fsst.out2[[i]]$cone$objval)
+    expect_equal(cone.n2, fsst.out2[[i]]$cone)
   }
 })
 
