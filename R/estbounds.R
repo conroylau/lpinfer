@@ -81,33 +81,32 @@ estbounds <- function(data = NULL, lpmodel, kappa = 1e-5, norm = 2,
   # ---------------- #
   # Default - Boolean variable of whether the answer to the scenario 1 is
   # feasible or not
-  bound0infe <- FALSE
-
-  ### Scenario 1: Estimate = FASLE, i.e. solve the exact problem
-  if (estimate == FALSE) {
+  if (isFALSE(estimate)) {
+    ### Scenario 1: Estimate = FASLE, i.e. solve the exact problem
     ub_shp0 <- estbounds.original(data, lpmodel, "max", solver)
     lb_shp0 <- estbounds.original(data, lpmodel, "min", solver)
-    ub <- ub_shp0$objval
-    lb <- lb_shp0$objval
+    ub.status <- ub_shp0$status
+    lb.status <- lb_shp0$status
 
-    # Store indicator of whether the estimation procedure should be conducted
-    if (!is.numeric(ub) | !is.numeric(lb) | length(ub) == 0 |
-        length(lb) == 0) {
-      bound0infe <- TRUE
-      if (progress == TRUE) {
-        warning(sprintf(paste0("The original problem is infeasible. ",
-                           "The bounds will be estimated by a %s-norm."),
-                    norm))
-      }
+    # Assign results depending on whether the LP/QP is feasible or not
+    if ((ub.status != 1) | (lb.status != 1)) {
+      ub <- Inf
+      lb <- -Inf
+      warning("The identified set is empty.")
     } else {
-      est = FALSE
+      ub <- ub_shp0$objval
+      lb <- lb_shp0$objval
     }
-  }
 
-  ### Scenario 2: Estimate = TRUE or scenario 1 is infeasible
-  if (estimate == TRUE | bound0infe == TRUE) {
-
+    # Assign the parameters
+    minc.objval <- NULL
+    est <- FALSE
+  } else {
+    ### Scenario 2: Estimate = TRUE
     ## Solve model
+    contra.msg <- paste0("The constraints in the estimation problem ",
+                         "are contradictory. Please ensure that the ",
+                         "constraints are correctly specified.")
     if (norm == 1) {
       ## L1-norm
       # Stage one of the problem
@@ -116,8 +115,7 @@ estbounds <- function(data = NULL, lpmodel, kappa = 1e-5, norm = 2,
       # Return stop message if there is no feasible solution for stage one
       # of the problem
       if (is.numeric(minc$objval) == FALSE) {
-        stop("The constraints in the estimation problem are contradictory.
-             Please ensure that the constraints are correctly specified.")
+        stop(contra.msg)
       }
       # Stage two of the problem
       estbounds_ub <- estbounds2.L1(data, minc, lpmodel, "max", kappa, solver)
@@ -130,8 +128,7 @@ estbounds <- function(data = NULL, lpmodel, kappa = 1e-5, norm = 2,
       # Return stop message if there is no feasible solution for stage one
       # of the problem
       if (is.numeric(minc$objval) == FALSE) {
-        stop("The constraints in the estimation problem are contradictory.
-             Please ensure that the constraints are correctly specified.")
+        stop(contra.msg)
       }
       # Stage two of the problem
       estbounds_ub <- estbounds2.L2(data, minc, lpmodel, "max", kappa, solver)
@@ -142,12 +139,10 @@ estbounds <- function(data = NULL, lpmodel, kappa = 1e-5, norm = 2,
     ub <- estbounds_ub$objval
     lb <- estbounds_lb$objval
 
-    est = TRUE
+    est <- TRUE
 
     # Assign mincriterion
     minc.objval <- minc$objval
-  } else {
-    minc.objval <- NULL
   }
 
   # ---------------- #
@@ -178,6 +173,7 @@ estbounds <- function(data = NULL, lpmodel, kappa = 1e-5, norm = 2,
 #' @return Returns the solution to the linear program.
 #'  \item{objval}{Optimal objective value.}
 #'  \item{x}{Optimal point.}
+#'  \item{status}{Status of the linear program.}
 #'
 #' @export
 #'
@@ -243,7 +239,8 @@ estbounds.original <- function(data, lpmodel, original.sense, solver) {
   # Step 4: Return result
   # ---------------- #
   invisible(list(objval = ans$objval,
-                 x = ans$x))
+                 x = ans$x,
+                 status = ans$status))
 }
 
 #' Estimates the bounds with shape constraints (stage 2 with 1-norm)

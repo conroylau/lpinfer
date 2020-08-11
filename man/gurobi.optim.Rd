@@ -41,9 +41,11 @@ constraints. Each constraint has to be a list.}
 \item{weight}{Weighting matrix.}
 }
 \value{
-Returns the optimal point and optimal value.
+Returns the optimal point, optimal value and the status of the
+ solution.
  \item{objval}{Optimal objective value.}
  \item{x}{Optimal point.}
+ \item{status}{Status of the solution.}
 }
 \description{
 This function computes the solution to the quadratic or linear

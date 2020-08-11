@@ -17,9 +17,11 @@
 #'    constraints. Each constraint has to be a list.
 #' @param weight Weighting matrix.
 #'
-#' @return Returns the optimal point and optimal value.
+#' @return Returns the optimal point, optimal value and the status of the
+#'  solution.
 #'  \item{objval}{Optimal objective value.}
 #'  \item{x}{Optimal point.}
+#'  \item{status}{Status of the solution.}
 #'
 #' @export
 #'
@@ -56,9 +58,16 @@ gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL,
   # ---------------- #
   params <- list(OutputFlag = 0, FeasibilityTol = 1e-9)
   result <- gurobi::gurobi(model, params)
+  gurobi.status <- result$status
+  if (gurobi.status == "OPTIMAL") {
+    status = 1
+  } else {
+    status = 0
+  }
 
   return(list(objval = as.numeric(result$objval),
-              x = as.numeric(result$x)))
+              x = as.numeric(result$x),
+              status = status))
 }
 
 #' LP and QP solver by \code{cplexAPI}
