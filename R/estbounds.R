@@ -90,8 +90,8 @@ estbounds <- function(data = NULL, lpmodel, kappa = 1e-5, norm = 2,
 
     # Assign results depending on whether the LP/QP is feasible or not
     if ((ub.status != 1) | (lb.status != 1)) {
-      ub <- Inf
-      lb <- -Inf
+      ub <- -Inf
+      lb <- Inf
       warning("The identified set is empty.")
     } else {
       ub <- ub_shp0$objval
