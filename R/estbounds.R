@@ -46,14 +46,16 @@
 #'   }
 #'
 #' @return Returns the bounds subject to the shape constraints.
-#'   \item{ub}{Upper bound with shape constraints}
-#'   \item{lb}{Lower bound with shape constraints}
+#'   \item{ub}{Upper bound with shape constraints.}
+#'   \item{lb}{Lower bound with shape constraints.}
 #'   \item{mincriterion}{Objective value of the first-stage problem (i.e.
 #'      \code{mincriterion}).}
 #'   \item{est}{Indicator of whether estimation is involved in the
 #'   estimation}
 #'   \item{call}{The function that has been called.}
 #'   \item{norm}{Norm used in the optimization problem.}
+#'   \item{ub.status}{Status of the optimization problem for the upper bound.}
+#'   \item{lb.status}{Status of the optimization problem for the lower bound.}
 #'   \item{solver}{Name of the solver used.}
 #'
 #' @export
@@ -85,19 +87,21 @@ estbounds <- function(data = NULL, lpmodel, kappa = 1e-5, norm = 2,
     ### Scenario 1: Estimate = FASLE, i.e. solve the exact problem
     ub_shp0 <- estbounds.original(data, lpmodel, "max", solver)
     lb_shp0 <- estbounds.original(data, lpmodel, "min", solver)
+
+    # Get the solution to the bounds
+    ub <- ub_shp0$objval
+    lb <- lb_shp0$objval
+
+    # Status of the solutions
     ub.status <- ub_shp0$status
     lb.status <- lb_shp0$status
 
-    # Assign results depending on whether the LP/QP is feasible or not
-    if ((ub.status != 1) | (lb.status != 1)) {
-      ub <- -Inf
-      lb <- Inf
-      warning("The identified set is empty.")
-    } else {
-      ub <- ub_shp0$objval
-      lb <- lb_shp0$objval
+    # Return error message in case the identified set is empty
+    non.error <- c("OPTIMAL", "UNBOUNDED")
+    if (!((ub.status %in% non.error) & (lb.status %in% non.error))) {
+      warning(paste0("The identified set is empty. Please check ",
+                     "'ub.status' and 'lb.status' for the status codes."))
     }
-
     # Assign the parameters
     minc.objval <- NULL
     est <- FALSE
@@ -138,6 +142,8 @@ estbounds <- function(data = NULL, lpmodel, kappa = 1e-5, norm = 2,
     # Store results
     ub <- estbounds_ub$objval
     lb <- estbounds_lb$objval
+    ub.status <- estbounds_ub$status
+    lb.status <- estbounds_lb$status
 
     est <- TRUE
 
@@ -154,6 +160,8 @@ estbounds <- function(data = NULL, lpmodel, kappa = 1e-5, norm = 2,
                 est = est,
                 call = call,
                 norm = norm,
+                ub.status = ub.status,
+                lb.status = lb.status,
                 solver = solver.name)
 
   attr(output, "class") = "estbounds"
@@ -172,7 +180,6 @@ estbounds <- function(data = NULL, lpmodel, kappa = 1e-5, norm = 2,
 #'
 #' @return Returns the solution to the linear program.
 #'  \item{objval}{Optimal objective value.}
-#'  \item{x}{Optimal point.}
 #'  \item{status}{Status of the linear program.}
 #'
 #' @export
@@ -235,12 +242,52 @@ estbounds.original <- function(data, lpmodel, original.sense, solver) {
   # ---------------- #
   ans <- do.call(solver, oarg)
 
+  # If the status is INF_OR_UNBD, set DualReductions as 0 and reoptimize
+  if (ans$status == "INF_OR_UNBD") {
+    oarg$dualr <- 0
+    ans <- do.call(solver, oarg)
+  }
+
+  # If the status is UNBOUNDED, it tells nothing about feasibility so set
+  # the objective as 0 to check feasibility
+  if (ans$status == "UNBOUNDED") {
+    oarg$nf <- 0
+    ans2 <- do.call(solver, oarg)
+  } else {
+    ans2 <- list(status = "NA")
+  }
+
+  if (ans$status == "OPTIMAL") {
+    # Case 1: Optimal
+    objval <- ans$objval
+    status <- ans$status
+  } else if (ans$status == "UNBOUNDED" & ans2$status == "OPTIMAL") {
+    # Case 2: Unbounded and the problem is feasible
+    if (original.sense == "max") {
+      objval <- Inf
+    } else {
+      objval <- -Inf
+    }
+    status <- ans$status
+  } else {
+    # Case 3: Infeasible
+    if (original.sense == "max") {
+      objval <- -Inf
+    } else {
+      objval <- Inf
+    }
+    if (ans2$status != "NA") {
+      status <- ans2$status
+    } else {
+      status <- ans$status
+    }
+  }
+
   # ---------------- #
   # Step 4: Return result
   # ---------------- #
-  invisible(list(objval = ans$objval,
-                 x = ans$x,
-                 status = ans$status))
+  invisible(list(objval = objval,
+                 status = status))
 }
 
 #' Estimates the bounds with shape constraints (stage 2 with 1-norm)
@@ -256,6 +303,7 @@ estbounds.original <- function(data, lpmodel, original.sense, solver) {
 #' @return Returns the solution to the second step of the two-step procedure.
 #'  \item{objval}{Optimal objective value.}
 #'  \item{x}{Optimal point.}
+#'  \item{status}{Status of the optimization problem.}
 #'
 #' @export
 #'
@@ -330,7 +378,8 @@ estbounds2.L1 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
   # Step 7: Return results
   # ---------------- #
   return(list(objval = step2.ans$objval,
-              x = step2.ans$x))
+              x = step2.ans$x,
+              status = step2.ans$status))
 }
 
 #' Estimates the bounds with shape constraints (Stage 2 with 2-norm)
@@ -346,6 +395,7 @@ estbounds2.L1 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
 #' @return Returns the solution to the second step of the two-step procedure.
 #'  \item{objval}{Optimal objective value.}
 #'  \item{x}{Optimal point.}
+#'  \item{status}{Status of the optimization problem.}
 #'
 #' @export
 #'
@@ -402,7 +452,8 @@ estbounds2.L2 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
   # Step 6: Return results
   # ---------------- #
   return(list(objval = step2_ans$objval,
-              x = step2_ans$x))
+              x = step2_ans$x,
+              status = step2_ans$status))
 }
 
 #' Checks and updates the input in \code{estbounds}
@@ -503,7 +554,11 @@ print.estbounds <- function(x, ...) {
                 round(x$lb, digits = 5), round(x$ub, digits = 5)))
   } else {
     # Case 2: Report the true bounds
-    cat(sprintf("True bounds: [%s, %s] \n", x$lb, x$ub))
+    if (x$lb == Inf & x$ub == -Inf) {
+      cat("The identified set is empty.\n")
+    } else {
+      cat(sprintf("True bounds: [%s, %s] \n", x$lb, x$ub))
+    }
   }
 }
 
@@ -528,7 +583,7 @@ summary.estbounds <- function(x, ...) {
     cat(sprintf("Norm used: %s \n", x$norm))
   } else {
     # Case 2: Report the true bounds
-    cat(sprintf("True bounds: [%s, %s] \n", x$lb, x$ub))
+    print(x)
   }
   cat(sprintf("Solver: %s \n", x$solver))
 }

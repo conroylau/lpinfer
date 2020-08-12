@@ -48,14 +48,16 @@ displayed while the code is running.}
 }
 \value{
 Returns the bounds subject to the shape constraints.
-  \item{ub}{Upper bound with shape constraints}
-  \item{lb}{Lower bound with shape constraints}
+  \item{ub}{Upper bound with shape constraints.}
+  \item{lb}{Lower bound with shape constraints.}
   \item{mincriterion}{Objective value of the first-stage problem (i.e.
      \code{mincriterion}).}
   \item{est}{Indicator of whether estimation is involved in the
   estimation}
   \item{call}{The function that has been called.}
   \item{norm}{Norm used in the optimization problem.}
+  \item{ub.status}{Status of the optimization problem for the upper bound.}
+  \item{lb.status}{Status of the optimization problem for the lower bound.}
   \item{solver}{Name of the solver used.}
 }
 \description{

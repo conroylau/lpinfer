@@ -14,7 +14,8 @@ gurobi.optim(
   modelsense,
   lb,
   qc = NULL,
-  weight = NULL
+  weight = NULL,
+  dualr = 1
 )
 }
 \arguments{

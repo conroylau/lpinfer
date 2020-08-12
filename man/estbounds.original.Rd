@@ -29,7 +29,6 @@ The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \value{
 Returns the solution to the linear program.
  \item{objval}{Optimal objective value.}
- \item{x}{Optimal point.}
  \item{status}{Status of the linear program.}
 }
 \description{

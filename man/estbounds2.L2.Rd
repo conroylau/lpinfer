@@ -37,6 +37,7 @@ The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 Returns the solution to the second step of the two-step procedure.
  \item{objval}{Optimal objective value.}
  \item{x}{Optimal point.}
+ \item{status}{Status of the optimization problem.}
 }
 \description{
 This function evaluates the solution to stage 2 of the

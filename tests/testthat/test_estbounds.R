@@ -437,3 +437,46 @@ test_that("'estbounds': Solver",{
     }
   }
 })
+
+# ---------------- #
+# Check non-optimal cases
+# ---------------- #
+Amat <- matrix(c(1,0), nrow = 1)
+lpm.inf <- lpmodel(A.obs = Amat,
+                   A.shp = Amat,
+                   A.tgt = matrix(c(1,1), nrow = 1),
+                   beta.obs = 1,
+                   beta.shp = 1)
+
+# This should give [1, Inf]
+estinf1 <- estbounds(lpmodel = lpm.inf,
+                     solver = "gurobi",
+                     estimate = FALSE)
+
+test_that("'estinf1' bounds are [1, Inf]", {
+  expect_equal(estinf1$lb, 1)
+  expect_equal(estinf1$ub, Inf)
+})
+
+test_that("Status for 'estinf1' bounds", {
+  expect_equal(estinf1$lb.status, "OPTIMAL")
+  expect_equal(estinf1$ub.status, "UNBOUNDED")
+})
+
+# This setup is infeasible
+lpm.inf2 <- lpm.inf
+lpm.inf2$beta.shp <- 2
+
+estinf2 <- estbounds(lpmodel = lpm.inf2,
+                     solver = "gurobi",
+                     estimate = FALSE)
+
+test_that("'estinf2' bounds are [Inf, -Inf]", {
+  expect_equal(estinf2$lb, Inf)
+  expect_equal(estinf2$ub, -Inf)
+})
+
+test_that("Status for 'estinf2' bounds", {
+  expect_equal(estinf2$lb.status, "INFEASIBLE")
+  expect_equal(estinf2$ub.status, "INFEASIBLE")
+})

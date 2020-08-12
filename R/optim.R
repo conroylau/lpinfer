@@ -26,7 +26,7 @@
 #' @export
 #'
 gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL,
-                         weight = NULL) {
+                         weight = NULL, dualr = 1) {
   # ---------------- #
   # Step 1: Obtain the coefficients of the objective function
   # ---------------- #
@@ -56,18 +56,13 @@ gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL,
   # ---------------- #
   # Step 3: Result of the linear or quadratic program, and return result
   # ---------------- #
-  params <- list(OutputFlag = 0, FeasibilityTol = 1e-9)
+  params <- list(OutputFlag = 0, FeasibilityTol = 1e-9,
+                 DualReductions = dualr)
   result <- gurobi::gurobi(model, params)
-  gurobi.status <- result$status
-  if (gurobi.status == "OPTIMAL") {
-    status = 1
-  } else {
-    status = 0
-  }
 
   return(list(objval = as.numeric(result$objval),
               x = as.numeric(result$x),
-              status = status))
+              status = result$status))
 }
 
 #' LP and QP solver by \code{cplexAPI}
