@@ -16,6 +16,8 @@
 #' @param qc List of quadratic constraint(s). There can be multiple quadratic
 #'    constraints. Each constraint has to be a list.
 #' @param weight Weighting matrix.
+#' @param ... List of options to be passed to the Gurobi solver. This part is
+#'    optional.
 #'
 #' @return Returns the optimal point, optimal value and the status of the
 #'  solution.
@@ -26,7 +28,7 @@
 #' @export
 #'
 gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL,
-                         weight = NULL, dualr = 1) {
+                         weight = NULL, ...) {
   # ---------------- #
   # Step 1: Obtain the coefficients of the objective function
   # ---------------- #
@@ -56,9 +58,40 @@ gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL,
   # ---------------- #
   # Step 3: Result of the linear or quadratic program, and return result
   # ---------------- #
-  params <- list(OutputFlag = 0, FeasibilityTol = 1e-6,
-                 DualReductions = dualr)
-  result <- gurobi::gurobi(model, params)
+  params <- list(...)
+  params$OutputFlag <- 0
+  if (length(params) == 0) {
+    result <- gurobi::gurobi(model)
+  } else {
+    result <- gurobi::gurobi(model, params)
+  }
+  
+  # ---------------- #
+  # Step 4: Try through different options if the status is 'ITERATION_LIMIT'
+  # ---------------- #
+  if (result$status == "ITERATION_LIMIT") {
+    gurobi.method <- c(0, 1, 2)
+    gurobi.numericfocus <- c(999, 1, 2, 3)
+    gurobi.scaleflag <- c(999, -1, 0, 1, 3)
+    for (i in seq_along(gurobi.scaleflag)) {
+      params.new <- params
+      if (gurobi.scaleflag[i] != 999) {
+        params.new$ScaleFlag <- gurobi.scaleflag[i]
+      }
+      for (j in seq_along(gurobi.numericfocus)) {
+        if (gurobi.numericfocus[j] != 999) {
+          params.new$NumericFocus <- gurobi.numericfocus[j]
+        }
+        for (k in seq_along(gurobi.method)) {
+          params.new$Method <- gurobi.method[k]
+          result <- gurobi::gurobi(model, params.new)
+          if (result$status != "OPTIMAL") {
+            break()
+          }
+        }
+      }
+    }
+  }
 
   return(list(objval = as.numeric(result$objval),
               x = as.numeric(result$x),

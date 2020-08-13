@@ -69,6 +69,7 @@ Returns the data-driven \code{lambda} and the error messages.
     with error(s) and the corresponding error message(s).}
   \item{new.error}{Number of new errors.}
   \item{error.id}{Indices of the bootstrap replications that give errors.}
+  \item{R.succ}{Number of successful bootstrap replications.}
 }
 \description{
 This function provides a data-driven choice of \code{lambda}

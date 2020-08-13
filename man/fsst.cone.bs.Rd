@@ -80,6 +80,7 @@ Return the following list of objects:
     with error(s) and the corresponding error message(s).}
   \item{new.error}{Number of new errors.}
   \item{error.id}{Indices of the bootstrap replications that give errors.}
+  \item{R.succ}{Number of successful bootstrap replications.}
 }
 \description{
 This function computes the bootstrap estimates of the cone

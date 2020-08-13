@@ -115,6 +115,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       error.id0 <- NULL
       error.id <- NULL
       beta.obs.bs <- list()
+      beta.n.bs <- list()
 
       # ---------------- #
       # Step 2: Obtain beta.obs, the list of bootstrap estimators and the
@@ -126,6 +127,11 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       sigma.beta.obs <- beta.obs.return[[2]]
       beta.shp.hat <- lpmodel.eval(data, lpmodel$beta.shp, 1)
       beta.n <- c(unlist(beta.obs.hat), beta.shp.hat, beta.tgt)
+
+      # Change maxR to the length of the list 'beta.obs' if it is a list
+      if (class(lpmodel$beta.obs) == "list") {
+         maxR <- length(lpmodel$beta.obs)
+      }
 
       # This while loop is used to re-draw the data if there are some
       # problematic draws in the bootstrap iterations
@@ -140,6 +146,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
             # Remove the problematic entries
             error.id.new <- error.id[!(error.id %in% error.id0)]
             beta.obs.bs[error.id.new] <- NULL
+            beta.n.bs[error.id.new] <- NULL
 
             # Save the current error.id
             error.id0 <- error.id
@@ -159,10 +166,14 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                sigma.beta.obs <- sigma.summation(n, lpmodel$beta.obs)
                var.method <- "bootstrapped values of the input list"
             }
-            beta.obs.bs <- lpmodel$beta.obs[2:(R + 1)]
-            beta.n.bs <- list()
-            for (i in 1:R) {
-               beta.n.bs[[i]] <- c(beta.obs.bs[[i]], beta.shp.hat, beta.tgt)
+            beta.obs.bs.new <- lpmodel$beta.obs[(i0 + 1):(i1 + 1)]
+            if (!is.null(beta.obs.bs.new[[1]])) {
+               beta.n.bs.new <- list()
+               for (i in i0:i1) {
+                  beta.n.bs.new[[i]] <- c(beta.obs.bs.new[[i]], beta.shp.hat, beta.tgt)
+               }
+               beta.obs.bs <- c(beta.obs.bs, beta.obs.bs.new)
+               beta.n.bs <- c(beta.n.bs, beta.n.bs.new)
             }
          } else {
             var.method <- "function"
@@ -278,17 +289,18 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
             lambda.dd <- lambda.data$lambda
             new.error <- lambda.data$new.error
             df.error <- lambda.data$df.error
+            R.succ <- lambda.data$R.succ
             error.id <- lambda.data$error.id
-
-            # Append the data-driven data if there is no error
             if (new.error != 0) {
                next
             } else {
+               # Append the data-driven data if there is no error
                lambda <- c(lambda, lambda.dd)
             }
          } else {
             lambda.dd <- NULL
          }
+
          # Drop the NA term from lambda
          lambda <- lambda[!is.na(lambda)]
 
@@ -320,10 +332,8 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                if (new.error.bs > 1) {
                   next
                }
-
             }
          } else {
-
             # Compute the restricted estimator
             beta.r <- beta.r.compute(n, lpmodel, beta.obs.hat, beta.tgt,
                                      beta.n, beta.star, omega.i, 0, solver)$x
@@ -366,7 +376,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
             }
          }
 
-         # Restasrt the loop if necessary
+         # Restart the loop if necessary
          if (new.error.bs > 1) {
             next
          }
@@ -901,7 +911,8 @@ fsst.cone.lp <- function(n, omega.i, beta.n, beta.star, lpmodel, indicator,
    objval <- ans$objval * sqrt(n)
 
    return(list(x = ans$x,
-               objval = objval))
+               objval = objval,
+               status = ans$status))
 }
 
 #' Computes the bootstrap estimates of the starred version of \code{beta.obs}
@@ -1378,13 +1389,13 @@ fsst.range.bs.fn <- function(beta.x.star, n, lpmodel, beta.obs.hat, x.star,
 #'     with error(s) and the corresponding error message(s).}
 #'   \item{new.error}{Number of new errors.}
 #'   \item{error.id}{Indices of the bootstrap replications that give errors.}
+#'   \item{R.succ}{Number of successful bootstrap replications.}
 #'
 #' @export
 #'
 fsst.cone.bs <- function(n, omega.i, beta.n, beta.star, lpmodel, R.succ,
                          lambda, indicator, beta.r, beta.star.list, solver,
                          progress, df.error) {
-
    # ---------------- #
    # Step 1: Compute the bootstrap cone estimates
    # ---------------- #
@@ -1438,7 +1449,8 @@ fsst.cone.bs <- function(n, omega.i, beta.n, beta.star, lpmodel, R.succ,
    return(list(cone.n.list = cone.n.list,
                new.error = new.error,
                df.error = df.error,
-               error.id = error.id))
+               error.id = error.id,
+               R.succ = R.succ))
 }
 
 #' Computes one bootstrap estimate of the cone component of the test
@@ -1483,6 +1495,10 @@ fsst.cone.bs.fn <- function(beta.star.bs, n, omega.i, beta.n, beta.star,
    } else {
       Ts <- NULL
       msg <- result.cone$msg$message
+   }
+
+   if (length(Ts) == 0) {
+      msg <- cone.return$status
    }
 
    return(list(Ts = Ts,
@@ -1792,6 +1808,7 @@ summary.fsst <- function(x, ...) {
 #'     with error(s) and the corresponding error message(s).}
 #'   \item{new.error}{Number of new errors.}
 #'   \item{error.id}{Indices of the bootstrap replications that give errors.}
+#'   \item{R.succ}{Number of successful bootstrap replications.}
 #'
 #' @export
 #'
@@ -1816,6 +1833,7 @@ fsst.lambda <- function(n, omega.i, beta.n, beta.star, lpmodel, R.succ,
    new.error <- fsst.cone.return$new.error
    df.error <- fsst.cone.return$df.error
    error.id <- fsst.cone.return$error.id
+   R.succ <- fsst.cone.return$R.succ
 
    # ---------------- #
    # Step 3: Consolidate the results
@@ -1838,7 +1856,8 @@ fsst.lambda <- function(n, omega.i, beta.n, beta.star, lpmodel, R.succ,
    return(list(lambda = lambda,
                new.error = new.error,
                df.error = df.error,
-               error.id = error.id))
+               error.id = error.id,
+               R.succ = R.succ))
 }
 
 #' Indicates the data-driven \code{lambda} in the output

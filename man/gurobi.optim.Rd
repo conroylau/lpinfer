@@ -15,7 +15,7 @@ gurobi.optim(
   lb,
   qc = NULL,
   weight = NULL,
-  dualr = 1
+  ...
 )
 }
 \arguments{
@@ -40,6 +40,9 @@ objective function.}
 constraints. Each constraint has to be a list.}
 
 \item{weight}{Weighting matrix.}
+
+\item{...}{List of options to be passed to the Gurobi solver. This part is
+optional.}
 }
 \value{
 Returns the optimal point, optimal value and the status of the
