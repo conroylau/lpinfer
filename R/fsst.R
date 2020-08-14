@@ -114,6 +114,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       i1 <- -1
       error.id0 <- NULL
       error.id <- NULL
+      new.error.bs <- 0
       beta.obs.bs <- list()
       beta.n.bs <- list()
 
@@ -130,12 +131,12 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
 
       # Change maxR to the length of the list 'beta.obs' if it is a list
       if (class(lpmodel$beta.obs) == "list") {
-         maxR <- length(lpmodel$beta.obs)
+         maxR <- length(lpmodel$beta.obs) - 1
       }
 
       # This while loop is used to re-draw the data if there are some
       # problematic draws in the bootstrap iterations
-      while ((R.succ < R) & (i1 < maxR)) {
+      while (((R.succ < R) & (i1 < maxR)) | new.error.bs != 0) {
          # Set the index set for the bootstrap replications
          if (R.succ == -1) {
             # -1 corresponds to the initial bootstrap replications
@@ -154,6 +155,10 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
             # Update the sequence of indices
             i0 <- min(maxR, i1 + 1)
             i1 <- min(maxR, i0 + (R - R.succ))
+            if (class(lpmodel$beta.obs) == "list") {
+               i0 <- i1 + 1
+               i1 <- i0 + (R - R.succ)
+            }
             iseq <- i0:i1
          }
 
@@ -185,8 +190,8 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
             df.error <- beta.obs.return$df.error
             error.id <- beta.obs.return$error.id
             R.succ <- beta.obs.return$R.succ
-            new.error <- beta.obs.return$R.eval - R.succ
-            if (new.error > 1) {
+            new.error.bs <- beta.obs.return$R.eval - R.succ
+            if (new.error.bs != 0) {
                next
             }
 
@@ -241,10 +246,10 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
 
          # Update the list of errors and restart the loop if necessary
          df.error <- beta.star.return$df.error
-         new.error <- beta.star.return$new.error
+         new.error.bs <- beta.star.return$new.error
          error.id <- beta.star.return$error.id
          R.succ <- length(beta.star.bs)
-         if (new.error > 1) {
+         if (new.error.bs != 0) {
             next
          }
 
@@ -287,11 +292,11 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                                        R.succ, beta.star.list, solver, progress,
                                        df.error, p, d)
             lambda.dd <- lambda.data$lambda
-            new.error <- lambda.data$new.error
+            new.error.bs <- lambda.data$new.error
             df.error <- lambda.data$df.error
             R.succ <- lambda.data$R.succ
             error.id <- lambda.data$error.id
-            if (new.error != 0) {
+            if (new.error.bs != 0) {
                next
             } else {
                # Append the data-driven data if there is no error
@@ -329,7 +334,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                error.id <- cone.return$error.id
                new.error.bs <- cone.return$new.error
                R.succ <- length(cone.n.list[[i]])
-               if (new.error.bs > 1) {
+               if (new.error.bs != 0) {
                   next
                }
             }
@@ -351,7 +356,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
             R.succ <- length(range.n.list)
             error.id <- range.return$error.id
 
-            if (new.error.bs > 1) {
+            if (new.error.bs != 0) {
                break()
             }
 
@@ -369,7 +374,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                df.error <- cone.return$df.error
                new.error.bs <- cone.return$new.error
                error.id <- cone.return$error.id
-               if (new.error.bs > 1) {
+               if (new.error.bs != 0) {
                   break()
                }
                new.error.bs <- 0
@@ -377,7 +382,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          }
 
          # Restart the loop if necessary
-         if (new.error.bs > 1) {
+         if (new.error.bs != 0) {
             next
          }
       }
