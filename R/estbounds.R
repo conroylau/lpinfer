@@ -244,7 +244,7 @@ estbounds.original <- function(data, lpmodel, original.sense, solver) {
 
   # If the status is INF_OR_UNBD, set DualReductions as 0 and reoptimize
   if (ans$status == "INF_OR_UNBD") {
-    oarg$dualr <- 0
+    oarg$DualReductions <- 0
     ans <- do.call(solver, oarg)
   }
 
