@@ -85,7 +85,7 @@ gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL,
         for (k in seq_along(gurobi.method)) {
           params.new$Method <- gurobi.method[k]
           result <- gurobi::gurobi(model, params.new)
-          if (result$status != "OPTIMAL") {
+          if (result$status == "OPTIMAL") {
             break()
           }
         }
