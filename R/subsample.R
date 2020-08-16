@@ -446,7 +446,7 @@ subsample.bs.fn <- function(x, data, lpmodel, beta.tgt, norm, m, solver,
                 msg = e))
   })
 
-  if (is.null(result$status)) {
+  if (!(result$status %in% c("warning", "error"))) {
     Ts <- result$objval
     beta <- result$beta
     msg <- NULL
