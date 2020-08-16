@@ -239,6 +239,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                                                beta.obs.hat, beta.obs.bs, R,
                                                sigma.beta.obs, solver,
                                                df.error, p, d)
+
          beta.star <- beta.star.return$beta.star
          beta.star.bs <- beta.star.return$beta.star.bs
          x.star <- beta.star.return$x.star
@@ -815,7 +816,8 @@ beta.star.qp <- function(data, lpmodel, beta.tgt, weight.mat, beta.obs.hat,
    beta.star <- A %*% x.star
 
    return(list(beta.star = beta.star,
-               x.star = x.star))
+               x.star = x.star,
+               status = ans$status))
 }
 
 #' Computes the solution to the cone problem
@@ -1722,7 +1724,7 @@ summary.fsst <- function(x, ...) {
    if (x$test.logical == 1) {
       # Case 1: 'beta.tgt' is within the logical bound
       # Print the sample and bootstrap test statistics
-      if (!is.na(x$cv.table)) {
+      if (!is.null(nrow(x$cv.table))) {
          cat("\nSample and quantiles of bootstrap test statistics: \n")
          cv.tab <- x$cv.table
          cv.tab[is.na(cv.tab)] <- ""
@@ -1772,18 +1774,20 @@ summary.fsst <- function(x, ...) {
                   x$R.succ))
 
       # Number of failed bootstrap replications
-      if (!is.null(x$df.error) & nrow(x$df.error) != 0) {
-         nerr <- nrow(x$df.error)
-         errstring <- "\nNumber of failed bootstrap"
-         if (nerr == 1) {
-            cat(sprintf(paste(errstring, "replication: %s\n"), nerr))
-         } else {
-            cat(sprintf(paste(errstring, "replications: %s\n"), nerr))
+      if (!is.null(x$df.error)) {
+         if (nrow(x$df.error) != 0) {
+            nerr <- nrow(x$df.error)
+            errstring <- "\nNumber of failed bootstrap"
+            if (nerr == 1) {
+               cat(sprintf(paste(errstring, "replication: %s\n"), nerr))
+            } else {
+               cat(sprintf(paste(errstring, "replications: %s\n"), nerr))
+            }
          }
       }
 
       # Print the message for data-driven lambda if necessary
-      if (!is.na(x$cv.table)) {
+      if (!is.null(nrow(x$cv.table))) {
          if (!is.null(cvlambda$msg)) {
             cat(cvlambda$msg)
          }
