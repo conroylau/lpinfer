@@ -666,6 +666,13 @@ check.lpmodel <- function(data, lpmodel, name.var, A.tgt.cat, A.obs.cat,
           stop(error.msg.det)
         }
       }
+
+      # If none of the components inside the 'lpmodel' object is a list,
+      # return an error message
+      if (notlist == 0) {
+        stop(paste0("When 'data' is 'NULL', the 'lpmodel' object needs ",
+                    "to contain the bootstrap estimates."))
+      }
     }
   } else {
     for (i in seq_along(lpmodel)) {
@@ -675,13 +682,6 @@ check.lpmodel <- function(data, lpmodel, name.var, A.tgt.cat, A.obs.cat,
           stop(error.msg.det)
         } else if (class(lpmodel[[i]]) != "list") {
           notlist <- notlist + 1
-        }
-
-        # If none of the components inside the 'lpmodel' object is a list,
-        # return an error message
-        if (notlist == 0) {
-          stop(paste0("When 'data' is 'NULL', the 'lpmodel' object needs ",
-                      "to contain the bootstrap estimates."))
         }
       }
     }
@@ -1196,7 +1196,7 @@ check.errormsg <- function(name.var, needs.to.be) {
 #'
 check.samplesize <- function(x, name.var) {
   # General message
-  samplesize.msg <- paste0(sprintf("When 'data' is 'NULL', the object '%s' ",
+  samplesize.msg <- sprintf(paste0("When 'data' is 'NULL', the object '%s' ",
                                    "has to be a positive integer."),
                            name.var)
 
