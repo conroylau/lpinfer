@@ -4,7 +4,7 @@
 \alias{subsample.bs.fn}
 \title{Carries out one bootstrap replication for the subsampling test}
 \usage{
-subsample.bs.fn(x, data, lpmodel, beta.tgt, norm, m, solver, replace)
+subsample.bs.fn(x, data, lpmodel, beta.tgt, norm, m, solver, replace, n)
 }
 \arguments{
 \item{x}{This is either the list of indices that represent the bootstrap
@@ -35,6 +35,8 @@ The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 
 \item{replace}{Boolean variable to indicate whether the function samples
 the data with or without replacement.}
+
+\item{n}{Sample size (only required if \code{data} is omitted in the input).}
 }
 \value{
 Returns a list of output that are obtained from the subsampling

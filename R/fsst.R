@@ -23,7 +23,6 @@
 #'    FSST procedure. The default is to use the data-driven approach for
 #'    \code{lambda}.
 #' @param rho Parameter used in the studentization of matrices.
-#' @param n Sample size (only required if \code{data} is omitted in the input).
 #' @param weight.matrix The option used in the weighting matrix. There are
 #'   three options available:
 #'   \itemize{
@@ -1586,11 +1585,11 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
    # ---------------- #
    # Step 1: Check data
    # ---------------- #
-   # Check data
-   if (is.null(n)) {
+   # Check data. If data is NULL, check if n is a positive integer
+   if (!is.null(data)) {
       data <- check.dataframe(data)
    } else {
-      check.positiveinteger(n, "n")
+      check.samplesize(n, "n")
    }
 
    # ---------------- #

@@ -57,8 +57,8 @@
 #' @export
 #'
 subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
-                      norm = 2, phi = 2/3, replace = FALSE, solver = NULL,
-                      progress = TRUE) {
+                      norm = 2, phi = 2/3, n = NULL, replace = FALSE,
+                      solver = NULL, progress = TRUE) {
   # ---------------- #
   # Step 1: Obtain call, check and update the dependencies
   # ---------------- #
@@ -67,7 +67,7 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
 
   # Check the arguments
   subsample.return <- subsample.check(data, lpmodel, beta.tgt, R, Rmulti,
-                                      solver, norm, phi, replace, progress)
+                                      solver, norm, phi, n, replace, progress)
 
   # Update the arguments and seed
   data <- subsample.return$data
@@ -79,8 +79,10 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
   seed <- subsample.return$seed
 
   # Compute size of each subsample
-  n = nrow(data)
-  m = floor(n^(phi))
+  if (!is.null(data)) {
+    n <- nrow(data)
+  }
+  m <- floor(n^(phi))
 
   # Compute the maximum number of iterations
   maxR <- ceiling(R * Rmulti)
@@ -92,13 +94,17 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
     # Step 2: Solve for T.n
     # ---------------- #
     ## Solve the main problem with the full sample
-    Treturn <- subsample.prob(data, lpmodel, beta.tgt, norm, solver)
+    beta.obs.return <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)
+    beta.obs.hat <- beta.obs.return$beta.obs
+    omega.hat <- beta.obs.return$omega
+    Treturn <- subsample.prob(data, lpmodel, beta.tgt, norm, solver, n,
+                              beta.obs.hat, omega.hat)
 
     # ---------------- #
     # Step 3: Subsampling procedure
     # ---------------- #
     T_subsample <- subsample.bs(data, R, maxR, lpmodel, beta.tgt, norm, solver,
-                                replace, progress, m, seed)
+                                replace, progress, m, seed, n)
     R.succ <- T_subsample$R.succ
 
     if (R.succ != 0) {
@@ -161,6 +167,8 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
 #'   function solves a quadratic program.
 #'
 #' @inheritParams subsample
+#' @inheritParams dkqs.qlp
+#' @param omega.hat Estimator of the asymptotic variance.
 #'
 #' @return Returns the following list of outputs:
 #'   \item{status}{Status of the optimization problem.}
@@ -176,15 +184,11 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
 #'
 #' @export
 #'
-subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver) {
+subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver, n,
+                           beta.obs.hat, omega.hat) {
   # ---------------- #
   # Step 1: Determine whether each argument is a function or a list
   # ---------------- #
-  # beta.obs
-  beta.obs.return <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)
-  beta.obs.hat <- beta.obs.return$beta.obs
-  omega.hat <- beta.obs.return$omega
-
   # Always evaluate the first object in lpmodel - the 'lpmodel' object in the
   # bootstrap replications are explicitly passed
   A.obs.hat <- lpmodel.eval(data, lpmodel$A.obs, 1)
@@ -192,9 +196,6 @@ subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver) {
   A.tgt.hat <- lpmodel.eval(data, lpmodel$A.tgt, 1)
   beta.shp.hat <- lpmodel.eval(data, lpmodel$beta.shp, 1)
   k <- length(beta.obs.hat)
-
-  # Count the number of rows
-  n <- nrow(data)
 
   # ---------------- #
   # Step 2: Define the inverse omega matrix
@@ -313,7 +314,7 @@ subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver) {
 #' @export
 #'
 subsample.bs <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
-                         replace, progress, m, seed) {
+                         replace, progress, m, seed, n) {
   # ---------------- #
   # Step 1: Initialize the quantities and compute the lists
   # ---------------- #
@@ -328,7 +329,7 @@ subsample.bs <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
 
   # If there is some list objects, set maxR as the max length of the list
   if (isTRUE(any.list$list)) {
-    maxR <- length(any.list$consol[any.list$name[1]])
+    maxR <- length(any.list$consol)
   }
 
   # ---------------- #
@@ -351,7 +352,8 @@ subsample.bs <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
                                                     norm = norm,
                                                     m = m,
                                                     solver = solver,
-                                                    replace = replace)
+                                                    replace = replace,
+                                                    n = n)
 
     # Update the list and parameters
     post.return <- post.bs(subsample.return, i0, i1, R.eval, T.sub,
@@ -422,21 +424,34 @@ subsample.bs <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
 #' @export
 #'
 subsample.bs.fn <- function(x, data, lpmodel, beta.tgt, norm, m, solver,
-                            replace) {
+                            replace, n) {
   # Replace lpmodel by x if x is a list
   if (is.list(x)) {
     lpm <- x
+    for (i in seq_along(lpm)) {
+      if (is.null(lpm[[i]])) {
+        lpm[[i]] <- lpmodel[[i]]
+      }
+    }
   } else {
     lpm <- lpmodel
   }
 
   # Draw data
-  data.bs <- as.data.frame(data[sample(1:nrow(data), m, replace),])
-  rownames(data.bs) <- 1:nrow(data.bs)
+  if (!is.null(data)) {
+    data.bs <- as.data.frame(data[sample(1:nrow(data), m, replace),])
+    rownames(data.bs) <- 1:nrow(data.bs)
+  } else {
+    data.bs <- NULL
+  }
 
   # Bootstrap estimator
   result <- tryCatch({
-    sub.return <- subsample.prob(data.bs, lpm, beta.tgt, norm, solver)
+    # The 'lpm' object does not contain the asymptotic variance estimator
+    beta.obs.hat <- lpmodel.beta.eval(data.bs, lpm$beta.obs, 1)$beta.obs
+    omega.hat <- lpmodel.beta.eval(data.bs, lpmodel$beta.obs, 1)$omega
+    sub.return <- subsample.prob(data.bs, lpm, beta.tgt, norm, solver, m,
+                                 beta.obs.hat, omega.hat)
     sub.return
   }, warning = function(w) {
     return(list(status = "warning",
@@ -553,12 +568,16 @@ summary.subsample <- function(x, ...) {
 #' @export
 #'
 subsample.check <- function(data, lpmodel, beta.tgt, R, Rmulti, solver, norm,
-                            phi, replace, progress) {
+                            phi, n, replace, progress) {
   # ---------------- #
   # Step 1: Conduct the checks
   # ---------------- #
-  # Check the data frame
-  data <- check.dataframe(data)
+  # Check data. If data is NULL, check if n is a positive integer
+  if (!is.null(data)) {
+    data <- check.dataframe(data)
+  } else {
+    check.samplesize(n, "n")
+  }
 
   # Check lpmodel
   lpmodel <- check.lpmodel(data = data,

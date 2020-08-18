@@ -15,7 +15,8 @@ subsample.bs(
   replace,
   progress,
   m,
-  seed
+  seed,
+  n
 )
 }
 \arguments{
@@ -54,6 +55,8 @@ displayed while the code is running.}
 \item{m}{Size of each subsample.}
 
 \item{seed}{The \code{.Random.seed} obtained in the beginning of the code.}
+
+\item{n}{Sample size (only required if \code{data} is omitted in the input).}
 }
 \value{
 Returns a list of output that are obtained from the subsampling

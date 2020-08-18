@@ -12,7 +12,8 @@ dkqs.bs.fn(
   beta.tgt,
   s.star.list,
   tau.list,
-  solver
+  solver,
+  n
 )
 }
 \arguments{
@@ -45,6 +46,8 @@ in the cone-tightening procedure for each \eqn{\tau}.}
 are used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
+
+\item{n}{Sample size (only required if \code{data} is omitted in the input).}
 }
 \value{
 Returns a list of output that are obtained from the DKQS

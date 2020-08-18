@@ -4,7 +4,7 @@
 \alias{dkqs.check}
 \title{Checks and updates the input in \code{dkqs}}
 \usage{
-dkqs.check(data, lpmodel, beta.tgt, R, Rmulti, tau, solver, progress)
+dkqs.check(data, lpmodel, beta.tgt, R, Rmulti, tau, n, solver, progress)
 }
 \arguments{
 \item{data}{Data used in the tests.}
@@ -28,6 +28,8 @@ number of bootstrap replications to be conducted if there are errors.}
 \item{tau}{Value of the tuning parameter \eqn{\tau} in the DKQS
 procedure.}
 
+\item{n}{Sample size (only required if \code{data} is omitted in the input).}
+
 \item{solver}{Name of the linear and quadratic programming solver that
 are used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
@@ -44,7 +46,7 @@ Returns the updated parameters back to the function
       \item{\code{data}}
       \item{\code{lpmodel}}
       \item{\code{seed}}
-      \item{\code{solver}}
+      \item{\code{solver}}``
       \item{\code{solver.name}}
       \item{\code{test.logical}}
    }

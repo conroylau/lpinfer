@@ -13,7 +13,8 @@ check.lpmodel(
   A.shp.cat,
   beta.obs.cat,
   beta.shp.cat,
-  R
+  R,
+  is.estbounds = FALSE
 )
 }
 \arguments{
@@ -34,6 +35,13 @@ check.lpmodel(
 \item{beta.shp.cat}{Category of the \code{beta.shp} object.}
 
 \item{R}{Number of bootstrap replications.}
+
+\item{is.estbounds}{Boolean variable that indicates whether the test
+function being called is \code{estbounds}. If this function is being
+called, then it means that when \code{data} is \code{NULL}, then each
+component of the \code{lpmodel} object is not required to be a
+\code{list}. Otherwise, the \code{lpmodel} object needs to contain the
+bootstrap estimates if \code{data} is \code{NULL}.}
 }
 \value{
 Returns the updated \code{lpmodel} object.

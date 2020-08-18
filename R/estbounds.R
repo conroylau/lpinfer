@@ -69,8 +69,8 @@ estbounds <- function(data = NULL, lpmodel, kappa = 1e-5, norm = 2,
   call = match.call()
 
   # Check and update
-  estbounds.return = estbounds.check(data, lpmodel, kappa, norm, solver,
-                                     estimate, progress)
+  estbounds.return <- estbounds.check(data, lpmodel, kappa, norm, solver,
+                                      estimate, progress)
   # Update the input
   data <- estbounds.return$data
   lpmodel <- estbounds.return$lpmodel
@@ -496,7 +496,8 @@ estbounds.check <- function(data, lpmodel, kappa, norm, solver, estimate,
                                             "matrix",
                                             "function_obs_var"),
                            beta.shp.cat = "matrix",
-                           R = 1)
+                           R = 1,
+                           is.estbounds = TRUE)
 
   # Check data
   if (!is.null(data)) {
@@ -771,7 +772,8 @@ mincriterion.check <- function(data, lpmodel, norm, solver) {
                                             "matrix",
                                             "function_obs_var"),
                            beta.shp.cat = "matrix",
-                           R = 1)
+                           R = 1,
+                           is.estbounds = TRUE)
 
   # Check data
   if (!is.null(data)) {

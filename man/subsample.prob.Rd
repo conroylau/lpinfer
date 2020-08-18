@@ -4,7 +4,16 @@
 \alias{subsample.prob}
 \title{Formulates and solves the subsampling problem}
 \usage{
-subsample.prob(data, lpmodel, beta.tgt, norm, solver)
+subsample.prob(
+  data,
+  lpmodel,
+  beta.tgt,
+  norm,
+  solver,
+  n,
+  beta.obs.hat,
+  omega.hat
+)
 }
 \arguments{
 \item{data}{Data used in the tests.}
@@ -29,6 +38,13 @@ or a 2-norm.}
 are used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
+
+\item{n}{Sample size (only required if \code{data} is omitted in the input).}
+
+\item{beta.obs.hat}{The value of sample \eqn{\hat{\bm{\beta}}_{\mathrm{obs}}}
+from the \code{lpmodel} object.}
+
+\item{omega.hat}{Estimator of the asymptotic variance.}
 }
 \value{
 Returns the following list of outputs:

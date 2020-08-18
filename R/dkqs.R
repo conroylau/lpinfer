@@ -25,6 +25,7 @@
 #' @param progress The boolean variable for whether the progress bars should
 #'    be displayed. If it is set as \code{TRUE}, the progress bars will be
 #'    displayed while the code is running.
+#' @param n Sample size (only required if \code{data} is omitted in the input).
 #' @return Returns the following list of outputs:
 #'   \item{pval}{A table of \eqn{p}-values for each \eqn{\tau}.}
 #'   \item{tau.feasible}{The list of \eqn{\tau} that are feasible.}
@@ -55,7 +56,7 @@
 #' @export
 #'
 dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
-                 tau = NULL, solver = NULL, progress = TRUE) {
+                 tau = NULL, n = NULL, solver = NULL, progress = TRUE) {
   # ---------------- #
   # Step 1: Update call, check and update the arguments
   # ---------------- #
@@ -63,7 +64,7 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
   call <- match.call()
 
   # Check the arguments
-  dkqs.return <- dkqs.check(data, lpmodel, beta.tgt, R, Rmulti, tau, solver,
+  dkqs.return <- dkqs.check(data, lpmodel, beta.tgt, R, Rmulti, tau, n, solver,
                             progress)
 
   # Update the arguments and seed
@@ -83,16 +84,18 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
     # ---------------- #
     # Step 2: Initialization
     # ---------------- #
-    n <- nrow(data)
-    # Choose whether the data frame has "Y" or "y" as the column name for the
-    # outcomes
-    if ("y" %in% colnames(data)) {
-      coly <- "y"
-    } else if  ("Y" %in% colnames(data)) {
-      coly <- "Y"
-    } else {
-      stop(paste0("'data' needs to have a column called 'y' or 'Y' to ",
-                  "represent the outcomes."))
+    if (!is.null(data)) {
+      n <- nrow(data)
+      # Choose whether the data frame has "Y" or "y" as the column name for the
+      # outcomes
+      if ("y" %in% colnames(data)) {
+        coly <- "y"
+      } else if  ("Y" %in% colnames(data)) {
+        coly <- "Y"
+      } else {
+        stop(paste0("'data' needs to have a column called 'y' or 'Y' to ",
+                    "represent the outcomes."))
+      }
     }
 
     # Initialize beta.obs
@@ -180,7 +183,7 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       # Step 7: Compute the bootstrap beta and estimates
       # ---------------- #
       T.bs.return <- dkqs.bs(data, lpmodel, beta.tgt, R, maxR, s.star.list,
-                             tau.feasible, solver, progress, seed)
+                             tau.feasible, solver, progress, seed, n)
       R.succ <- T.bs.return$R.succ
 
       if (R.succ != 0) {
@@ -446,7 +449,7 @@ dkqs.qlp <- function(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
 #' @export
 #'
 dkqs.bs <- function(data, lpmodel, beta.tgt, R, maxR, s.star.list, tau.list,
-                    solver, progress, seed) {
+                    solver, progress, seed, n) {
   # ---------------- #
   # Step 1: Initialize and assigning the lists
   # ---------------- #
@@ -462,7 +465,7 @@ dkqs.bs <- function(data, lpmodel, beta.tgt, R, maxR, s.star.list, tau.list,
 
   # If there is some list objects, set maxR as the max length of the list
   if (isTRUE(any.list$list)) {
-    maxR <- length(any.list$consol[any.list$name[1]])
+    maxR <- length(any.list$consol)
   }
 
   # Obtain the sample beta.obs with full data
@@ -488,6 +491,7 @@ dkqs.bs <- function(data, lpmodel, beta.tgt, R, maxR, s.star.list, tau.list,
                                                beta.tgt = beta.tgt,
                                                s.star.list = s.star.list,
                                                tau.list = tau.list,
+                                               n = n,
                                                solver = solver)
 
     # Update the list and parameters
@@ -562,7 +566,7 @@ dkqs.bs <- function(data, lpmodel, beta.tgt, R, maxR, s.star.list, tau.list,
 #' @export
 #'
 dkqs.bs.fn <- function(x, data, lpmodel, beta.obs.hat, beta.tgt, s.star.list,
-                       tau.list, solver) {
+                       tau.list, solver, n) {
   # ---------------- #
   # Step 1: Initialize the parameters
   # ---------------- #
@@ -575,6 +579,11 @@ dkqs.bs.fn <- function(x, data, lpmodel, beta.obs.hat, beta.tgt, s.star.list,
   # Replace lpmodel by x if x is a list
   if (is.list(x)) {
     lpm <- x
+    for (i in seq_along(lpm)) {
+      if (is.null(lpm[[i]])) {
+        lpm[[i]] <- lpmodel[[i]]
+      }
+    }
   } else {
     lpm <- lpmodel
   }
@@ -583,8 +592,10 @@ dkqs.bs.fn <- function(x, data, lpmodel, beta.obs.hat, beta.tgt, s.star.list,
   # Step 2: Conduct one bootstrap replication
   # ---------------- #
   # Draw data
-  data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
-  rownames(data.bs) <- 1:nrow(data.bs)
+  if (!is.null(data)) {
+    data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
+    rownames(data.bs) <- 1:nrow(data.bs)
+  }
 
   # Bootstrap estimator
   beta.result <- tryCatch({
@@ -607,7 +618,7 @@ dkqs.bs.fn <- function(x, data, lpmodel, beta.obs.hat, beta.tgt, s.star.list,
       # Bootstrap test statistic
       T.result <- tryCatch({
         T.bs.i <- dkqs.qlp(lpm, beta.tgt, beta.bs.bar, tau.list[i], "cone",
-                           nrow(data), solver)$objval
+                           n, solver)$objval
         list(T.bs.i = T.bs.i)
       }, warning = function(w) {
         return(list(status = "warning",
@@ -732,20 +743,24 @@ tau.constraints <- function(length.tau, coeff.tau, coeff.x, ind.x, rhs, sense,
 #'       \item{\code{data}}
 #'       \item{\code{lpmodel}}
 #'       \item{\code{seed}}
-#'       \item{\code{solver}}
+#'       \item{\code{solver}}``
 #'       \item{\code{solver.name}}
 #'       \item{\code{test.logical}}
 #'    }
 #'
 #' @export
 #'
-dkqs.check <- function(data, lpmodel, beta.tgt, R, Rmulti, tau, solver,
+dkqs.check <- function(data, lpmodel, beta.tgt, R, Rmulti, tau, n, solver,
                        progress) {
   # ---------------- #
   # Step 1: Check the arguments
   # ---------------- #
-  # Check data
-  data <- check.dataframe(data)
+  # Check data. If data is NULL, check if n is a positive integer
+  if (!is.null(data)) {
+    data <- check.dataframe(data)
+  } else {
+    check.samplesize(n, "n")
+  }
 
   # Check lpmodel
   lpmodel <- check.lpmodel(data = data,

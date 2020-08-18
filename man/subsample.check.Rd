@@ -13,6 +13,7 @@ subsample.check(
   solver,
   norm,
   phi,
+  n,
   replace,
   progress
 )
@@ -46,6 +47,8 @@ or a 2-norm.}
 
 \item{phi}{Tuning parameter for the subsampling test. The size of each
 subsample is \eqn{n^\phi} where \eqn{\phi \in [0,1]}.}
+
+\item{n}{Sample size (only required if \code{data} is omitted in the input).}
 
 \item{replace}{Boolean variable to indicate whether the function samples
 the data with or without replacement.}

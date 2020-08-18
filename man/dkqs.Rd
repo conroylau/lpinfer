@@ -11,6 +11,7 @@ dkqs(
   R = 100,
   Rmulti = 1.25,
   tau = NULL,
+  n = NULL,
   solver = NULL,
   progress = TRUE
 )
@@ -36,6 +37,8 @@ number of bootstrap replications to be conducted if there are errors.}
 
 \item{tau}{Value of the tuning parameter \eqn{\tau} in the DKQS
 procedure.}
+
+\item{n}{Sample size (only required if \code{data} is omitted in the input).}
 
 \item{solver}{Name of the linear and quadratic programming solver that
 are used to obtain the solution to linear and quadratic programs.

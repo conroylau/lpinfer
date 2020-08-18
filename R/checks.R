@@ -135,7 +135,7 @@ check.positive <- function(x, name.var) {
     # Call the general error message function
     check.errormsg(name.var, "a strictly positive number")
   }
-  
+
   return(x)
 }
 
@@ -604,6 +604,12 @@ check.solver <- function(x, name.var, norm = 2 , qc = FALSE) {
 #' @param A.shp.cat Category of the \code{A.shp} object.
 #' @param beta.obs.cat Category of the \code{beta.obs} object.
 #' @param beta.shp.cat Category of the \code{beta.shp} object.
+#' @param is.estbounds Boolean variable that indicates whether the test
+#'   function being called is \code{estbounds}. If this function is being
+#'   called, then it means that when \code{data} is \code{NULL}, then each
+#'   component of the \code{lpmodel} object is not required to be a
+#'   \code{list}. Otherwise, the \code{lpmodel} object needs to contain the
+#'   bootstrap estimates if \code{data} is \code{NULL}.
 #' @inheritParams dkqs
 #'
 #' @details In each of the testing procedures, there are five possible
@@ -630,7 +636,8 @@ check.solver <- function(x, name.var, norm = 2 , qc = FALSE) {
 #' @export
 #'
 check.lpmodel <- function(data, lpmodel, name.var, A.tgt.cat, A.obs.cat,
-                          A.shp.cat, beta.obs.cat, beta.shp.cat, R) {
+                          A.shp.cat, beta.obs.cat, beta.shp.cat, R,
+                          is.estbounds = FALSE) {
   # ---------------- #
   # Step 1: Check if lpmodel is a list
   # ---------------- #
@@ -644,7 +651,44 @@ check.lpmodel <- function(data, lpmodel, name.var, A.tgt.cat, A.obs.cat,
   }
 
   # ---------------- #
-  # Step 2: Check each of the objects (treat them as matrices)
+  # Step 2: Check if lpmodel includes the bootstrap estimates if data is NULL
+  # (only check if lpmodel is deterministic if the function is estbounds)
+  # ---------------- #
+  # If data is NULL, then at least one of the components in lpmodel
+  # has to be a list to represent the bootstrap replications except for
+  # 'estbounds' where only deterministic components are required.
+  error.msg.det <- paste0("When 'data' is 'NULL', each component in the ",
+                          "'lpmodel' object has to be deterministic.")
+  if (isFALSE(is.estbounds)) {
+    if (is.null(data)) {
+      for (i in seq_along(lpmodel)) {
+        if (class(lpmodel[[i]]) == "function") {
+          stop(error.msg.det)
+        }
+      }
+    }
+  } else {
+    for (i in seq_along(lpmodel)) {
+      if (is.null(data)) {
+        notlist <- 0
+        if (class(lpmodel[[i]]) == "function") {
+          stop(error.msg.det)
+        } else if (class(lpmodel[[i]]) != "list") {
+          notlist <- notlist + 1
+        }
+
+        # If none of the components inside the 'lpmodel' object is a list,
+        # return an error message
+        if (notlist == 0) {
+          stop(paste0("When 'data' is 'NULL', the 'lpmodel' object needs ",
+                      "to contain the bootstrap estimates."))
+        }
+      }
+    }
+  }
+
+  # ---------------- #
+  # Step 3: Check each of the objects (treat them as matrices)
   # and check if beta.obs and beta.shp are matrices
   # ---------------- #
   if (!("not_used" %in% A.tgt.cat)) {
@@ -668,7 +712,7 @@ check.lpmodel <- function(data, lpmodel, name.var, A.tgt.cat, A.obs.cat,
   }
 
   # ---------------- #
-  # Step 3: Check whether the dimension matches
+  # Step 4: Check whether the dimension matches
   # ---------------- #
   # General message telling the user to provide the "A" matrix and the "beta"
   # vector with the same number of rows
@@ -1135,4 +1179,33 @@ infeasible.betatgt.warning <- function() {
 check.errormsg <- function(name.var, needs.to.be) {
   general.msg <- "The object '%s' has to be %s."
   stop(sprintf(general.msg, name.var, needs.to.be), call. = FALSE)
+}
+
+#' Check function: sample size \code{n} if \code{data} is \code{NULL}
+#'
+#' @description This function checks the sample size \code{n} if \code{data}
+#'   is \code{NULL}. This function is only used if \code{data} is \code{NULL}.
+#'   Typically, when \code{data} is \code{NULL}, it refers to the case where
+#'   the bootstrap replications are all passed to the \code{lpmodel} object.
+#'
+#' @inheritParams check.positiveinteger
+#'
+#' @return Nothing is returned.
+#'
+#' @export
+#'
+check.samplesize <- function(x, name.var) {
+  # General message
+  samplesize.msg <- paste0(sprintf("When 'data' is 'NULL', the object '%s' ",
+                                   "has to be a positive integer."),
+                           name.var)
+
+  # Return error if x is not numeric or if it is not a positive integer
+  if (!is.numeric(x)) {
+    stop(samplesize.msg)
+  } else if ((is.numeric(x) == TRUE & length(x) == 1 & x > 0 & x %% 1 == 0)
+             == FALSE) {
+    # Call the general error message function
+    stop(samplesize.msg)
+  }
 }
