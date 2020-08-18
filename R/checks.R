@@ -661,9 +661,12 @@ check.lpmodel <- function(data, lpmodel, name.var, A.tgt.cat, A.obs.cat,
                           "'lpmodel' object has to be deterministic.")
   if (isFALSE(is.estbounds)) {
     if (is.null(data)) {
+      notlist <- 0
       for (i in seq_along(lpmodel)) {
         if (class(lpmodel[[i]]) == "function") {
           stop(error.msg.det)
+        } else if (class(lpmodel[[i]]) != "list") {
+          notlist <- notlist + 1
         }
       }
 
@@ -677,11 +680,8 @@ check.lpmodel <- function(data, lpmodel, name.var, A.tgt.cat, A.obs.cat,
   } else {
     for (i in seq_along(lpmodel)) {
       if (is.null(data)) {
-        notlist <- 0
         if (class(lpmodel[[i]]) == "function") {
           stop(error.msg.det)
-        } else if (class(lpmodel[[i]]) != "list") {
-          notlist <- notlist + 1
         }
       }
     }
