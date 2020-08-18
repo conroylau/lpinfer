@@ -114,8 +114,7 @@ farg <- list(data = sampledata,
 # Generate output from FSST
 # ---------------- #
 # Define the parameters
-# i.cores <- list(1, 8)
-i.cores <- list(1)
+i.cores <- list(1, 8)
 j.lpmodel <- list(lpmodel.full, lpmodel.twom)
 k.lambdas <- list(lam1, lam2)
 
