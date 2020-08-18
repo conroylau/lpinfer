@@ -799,7 +799,8 @@ beta.star.qp <- function(data, lpmodel, beta.tgt, weight.mat, beta.obs.hat,
                      sense = "=",
                      modelsense = "min",
                      lb = rep(-Inf, d),
-                     weight = weight.mat)
+                     weight = weight.mat,
+                     Method = 0)
 
    # Solve the model
    ans <- do.call(solver, optim.arg)
