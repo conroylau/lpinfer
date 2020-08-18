@@ -41,6 +41,7 @@ Returns the optimal objective value and the corresponding argument
   to the linear program.
  \item{objval}{Optimal objective value.}
  \item{x}{Optimal point.}
+ \item{status}{Status of the optimization problem.}
 }
 \description{
 This function computes the solution to the linear program

@@ -23,7 +23,7 @@
 #'  solution.
 #'  \item{objval}{Optimal objective value.}
 #'  \item{x}{Optimal point.}
-#'  \item{status}{Status of the solution.}
+#'  \item{status}{Status of the optimization problem.}
 #'
 #' @export
 #'
@@ -65,7 +65,7 @@ gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL,
   } else {
     result <- gurobi::gurobi(model, params)
   }
-  
+
   # ---------------- #
   # Step 4: Try through different options if the status is 'ITERATION_LIMIT'
   # ---------------- #
@@ -109,6 +109,7 @@ gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL,
 #' @return Returns the optimal point and optimal value.
 #'  \item{objval}{Optimal objective value.}
 #'  \item{x}{Optimal point.}
+#'  \item{status}{Status of the optimization problem.}
 #'
 #' @export
 #'
@@ -182,8 +183,13 @@ cplexapi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
          Please use another solver for quadratic progarms.")
   }
   cplexAPI::closeEnvCPLEX(env)
+
+  # Status code
+  status <- solution$lpstat
+  status.msg <- sprintf("Status code: %s", status)
   return(list(objval = as.numeric(solution$objval),
-              x = as.numeric(solution$x)))
+              x = as.numeric(solution$x),
+              status = status.msg))
 }
 
 #' LP and QP solver by \code{Rcplex}
@@ -198,6 +204,7 @@ cplexapi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
 #' @return Returns the optimal point and optimal value.
 #'  \item{objval}{Optimal objective value.}
 #'  \item{x}{Optimal point.}
+#'  \item{status}{Status of the optimization problem.}
 #'
 #' @export
 #'
@@ -250,9 +257,12 @@ rcplex.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
   } else {
     objval <- solution$obj
   }
+  status <- solution$status
+  status.msg <- sprintf("Status code: %s", status)
 
   return(list(objval = as.numeric(objval),
-              x = as.numeric(solution$xopt)))
+              x = as.numeric(solution$xopt),
+              status = status.msg))
 }
 
 #' LP and QP solver by \code{limSolve}
@@ -267,6 +277,7 @@ rcplex.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
 #' @return Returns the optimal point and optimal value.
 #'  \item{objval}{Optimal objective value.}
 #'  \item{x}{Optimal point.}
+#'  \item{status}{Status of the optimization problem.}
 #'
 #' @export
 #'
@@ -351,8 +362,18 @@ limsolve.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
   # Optimal the optimal value of x
   x <- solution$X
 
+  # Status of the optimization problem
+  status <- solution$IsError
+  if (status == TRUE) {
+    status.msg <- "No error has occured."
+  } else {
+    status.msg <- paste0("An error has occured in solving the optimization ",
+                         "problem by limSolve")
+  }
+
   return(list(x = as.numeric(x),
-              objval = as.numeric(objval)))
+              objval = as.numeric(objval),
+              status = status.msg))
 }
 
 
@@ -450,6 +471,7 @@ objective.function <- function(A, b, n, weight = NULL) {
 #'   to the linear program.
 #'  \item{objval}{Optimal objective value.}
 #'  \item{x}{Optimal point.}
+#'  \item{status}{Status of the optimization problem.}
 #'
 #' @details The package \code{lpSolveAPI} cannot be used to solve quadratic
 #'   programs.
@@ -494,10 +516,13 @@ lpsolveapi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
   # ---------------- #
   x <- get.variables(lprec)
   objval <- get.objective(lprec)
+  status <- solve.lpExtPtr(lprec)
+  status.msg <- sprintf("Status code: %s", status)
 
   # ---------------- #
   # Step 5: Return results
   # ---------------- #
   return(list(objval = objval,
-              x = x))
+              x = x,
+              status = status.msg))
 }

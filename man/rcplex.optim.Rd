@@ -30,6 +30,7 @@ objective function.}
 Returns the optimal point and optimal value.
  \item{objval}{Optimal objective value.}
  \item{x}{Optimal point.}
+ \item{status}{Status of the optimization problem.}
 }
 \description{
 This function computes the solution to the linear and quadratic

@@ -49,7 +49,7 @@ Returns the optimal point, optimal value and the status of the
  solution.
  \item{objval}{Optimal objective value.}
  \item{x}{Optimal point.}
- \item{status}{Status of the solution.}
+ \item{status}{Status of the optimization problem.}
 }
 \description{
 This function computes the solution to the quadratic or linear
