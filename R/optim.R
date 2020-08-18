@@ -72,7 +72,7 @@ gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL,
   if (result$status == "ITERATION_LIMIT") {
     gurobi.method <- c(0, 1, 2)
     gurobi.numericfocus <- c(999, 1, 2, 3)
-    gurobi.scaleflag <- c(999, -1, 0, 1, 3)
+    gurobi.scaleflag <- c(999, -1, 0, 1, 2, 3)
     for (i in seq_along(gurobi.scaleflag)) {
       params.new <- params
       if (gurobi.scaleflag[i] != 999) {
