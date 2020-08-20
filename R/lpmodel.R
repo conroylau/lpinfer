@@ -457,3 +457,34 @@ lpmodel.extractlist <- function(obj, len) {
 
   return(result)
 }
+
+#' Combines deterministic components and one bootstrap estimate in
+#' \code{lpmodel}
+#'
+#' @description This function is used in the bootstrap replications to combine
+#'   the deterministic components in \code{lpmodel} to the stochastic component.
+#'
+#' @param lpm.de Deterministic components of the \code{lpmodel} object.
+#' @param lpm.st An \code{lpmodel} object that only contains one bootstrap
+#'   replication of the stochastic component(s). The deterministic component
+#'   is set as \code{NULL}.
+#'
+#' @return Returns an \code{lpmodel} object that combines the deterministic
+#'   and stochastic component.
+#'   \item{lpm.st}{Updated \code{lpmodel} object.}
+#'
+#' @export
+#'
+lpmodel.update <- function(lpm.de, lpm.st) {
+  # List of the names of the components in lpmodel
+  lpmodel.namelist <- c("A.obs", "A.shp", "A.tgt", "beta.obs", "beta.shp")
+
+  # Combine the bootstrap estimate with the deterministic component
+  for (i in seq_along(lpmodel.namelist)) {
+    if (is.null(lpm.st[[lpmodel.namelist[i]]])) {
+      lpm.st[[lpmodel.namelist[i]]] <- lpm.de[[lpmodel.namelist[i]]]
+    }
+  }
+
+  return(lpm.st)
+}

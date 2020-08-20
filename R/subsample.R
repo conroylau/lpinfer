@@ -427,12 +427,7 @@ subsample.bs.fn <- function(x, data, lpmodel, beta.tgt, norm, m, solver,
                             replace, n) {
   # Replace lpmodel by x if x is a list
   if (is.list(x)) {
-    lpm <- x
-    for (i in seq_along(lpm)) {
-      if (is.null(lpm[[i]])) {
-        lpm[[i]] <- lpmodel[[i]]
-      }
-    }
+    lpm <- lpmodel.update(lpmodel, x)
   } else {
     lpm <- lpmodel
   }

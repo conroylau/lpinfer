@@ -610,7 +610,7 @@ fsst.beta.bs <- function(n, data, beta.obs.hat, lpmodel, R, maxR, progress,
 fsst.beta.bs.fn <- function(x, data, lpmodel) {
    # Replace lpmodel by x if x is a list
    if (is.list(x)) {
-      lpm <- x
+      lpm <- lpmodel.update(lpmodel, x)
    } else {
       lpm <- lpmodel
    }
