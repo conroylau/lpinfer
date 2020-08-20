@@ -815,8 +815,8 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R) {
                 (df.dim[i, 1] != df.dim[i - 1, 1])) {
               stop(sprintf(paste0("The dimension of the objects inside the ",
                                   "list '%s' in 'lpmodel' need to have the ",
-                                  "same dimension.",
-                                  mat.name)),
+                                  "same dimension."),
+                           mat.name),
                    call. = FALSE)
             }
           }
