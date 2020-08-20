@@ -80,7 +80,7 @@ lpmodel.twom <- lpmodel(A.obs    = A_obs_twom,
                         beta.obs = func_two_moment)
 
 # ---------------- #
-# Run results by different solvers and cores
+# Output 1: beta.obs is a function
 # ---------------- #
 # List of cores, lpmodel and norm objects to be used
 i.cores <- list(1, 8)
@@ -100,6 +100,65 @@ for (i in seq_along(i.cores)) {
       set.seed(1)
       farg$solver <- k.solver[[k]]
       dkqs.out[[i]][[j]][[k]] <- do.call(dkqs, farg)
+    }
+  }
+}
+
+# ---------------- #
+# Output 2: beta.obs is a list that contains the sample and bootstrap estimates
+# ---------------- #
+# Function to draw bootstrap data
+draw.bs.data <- function(x, f, data) {
+  data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
+  bobs.bs <- f(data.bs)
+  return(bobs.bs)
+}
+
+# Draw bootstrap data for the full information and two moments method
+set.seed(1)
+RNGkind(kind = "L'Ecuyer-CMRG")
+seed <- .Random.seed
+bobs.bs.full.list <- future.apply::future_lapply(1:reps,
+                                                 FUN = draw.bs.data,
+                                                 future.seed = seed,
+                                                 f = func_full_info,
+                                                 data = sampledata)
+bobs.bs.twom.list <- future.apply::future_lapply(1:reps,
+                                                 FUN = draw.bs.data,
+                                                 future.seed = seed,
+                                                 f = func_two_moment,
+                                                 data = sampledata)
+
+bobs.full.list <- c(list(func_full_info(sampledata)), bobs.bs.full.list)
+bobs.twom.list <- c(list(func_two_moment(sampledata)), bobs.bs.twom.list)
+
+# Redefine the 'lpmodel' object with 'beta.obs' being a list
+lpmodel.full.list <- lpmodel.full
+lpmodel.twom.list <- lpmodel.twom
+lpmodel.full.list$beta.obs <- bobs.full.list
+lpmodel.twom.list$beta.obs <- bobs.twom.list
+
+# Define the new lpmodel object and the arguments to be passed to the function
+j.lpmodel2 <- list(lpmodel.full.list, lpmodel.twom.list)
+farg2 <- list(beta.tgt = beta.tgt,
+              R = reps,
+              tau = tau,
+              n = nrow(sampledata),
+              progress = TRUE)
+
+# Compute the dkqs output again
+dkqs.out2 <- list()
+for (i in seq_along(i.cores)) {
+  plan(multisession, workers = i.cores[[i]])
+  dkqs.out2[[i]] <- list()
+  for (j in seq_along(j.lpmodel2)) {
+    farg2$lpmodel <- j.lpmodel2[[j]]
+    dkqs.out2[[i]][[j]] <- list()
+    for (k in seq_along(k.solver)) {
+      RNGkind(kind = "L'Ecuyer-CMRG")
+      set.seed(1)
+      farg2$solver <- k.solver[[k]]
+      dkqs.out2[[i]][[j]][[k]] <- do.call(dkqs, farg2)
     }
   }
 }
@@ -129,7 +188,7 @@ gurobi.qlp <- function(Q = NULL, obj, objcon, A, rhs, quadcon = NULL, sense,
   model$modelsense <- modelsense
   model$lb <- lb
 
-  # Obtain the results to the optimization problem
+  # Obtain the results to  the optimization problem
   params <- list(OutputFlag = 0, FeasibilityTol = 1e-9)
   result <- gurobi::gurobi(model, params)
 
@@ -137,7 +196,7 @@ gurobi.qlp <- function(Q = NULL, obj, objcon, A, rhs, quadcon = NULL, sense,
 }
 
 # ---------------- #
-# Construct the answer by the linear programs themselves
+# Obtain the results without using the dkqs function
 # ---------------- #
 # 1. Obtain the parameters and the index sets
 nx <- ncol(A_tgt)
@@ -227,7 +286,8 @@ beta.full.bar <- NULL
 beta.twom.bar <- NULL
 for (i in 1:reps) {
   ## Construct tau-tightened recentered bootstrap estimates
-  data.bs <- as.data.frame(sampledata[sample(1:nrow(sampledata), replace = TRUE),])
+  data.bs <- as.data.frame(sampledata[sample(1:nrow(sampledata),
+                                             replace = TRUE),])
   ## Full information approach
   beta.obs.full.bs <- func_full_info(data.bs)
   beta.bar.full.bs <- beta.obs.full.bs - beta.obs.full + s.full.star
@@ -313,165 +373,181 @@ taureturn <- gurobi.qlp(Q = NULL,
 taumax <- taureturn$objval
 
 # ---------------- #
-# Test if the output are equal
+# A list of unit tests
 # ---------------- #
-# 1. Full information approach p-values
-test_that("Full information approach",{
-  for (i in seq_along(i.cores)) {
-    j <- 1
-    for (k in seq_along(k.solver)) {
-      expect_equal(pval[[j]], dkqs.out[[i]][[j]][[k]]$pval[1, 2])
-    }
-  }
-})
-
-# 2. Two moments p-values
-test_that("Two moments approach",{
-  for (i in seq_along(i.cores)) {
-    j <- 2
-    for (k in seq_along(k.solver)) {
-      expect_equal(pval[[j]], dkqs.out[[i]][[j]][[k]]$pval[1, 2])
-    }
-  }
-})
-
-# 3. The list of feasible taus
-test_that("Feasible taus",{
-  for (i in seq_along(i.cores)) {
-    for (j in seq_along(j.lpmodel)) {
+tests.dkqs <- function(dkqs.out, test.name) {
+  # Assign the name
+  test.name <- sprintf("'beta.obs' as %s:", test.name)
+  
+  # 1. Full information approach p-values
+  test_that(sprintf("%s Full information approach", test.name), {
+    for (i in seq_along(i.cores)) {
+      j <- 1
       for (k in seq_along(k.solver)) {
-        expect_equal(tau, dkqs.out[[i]][[j]][[k]]$tau.feasible)
+        expect_equal(pval[[j]], dkqs.out[[i]][[j]][[k]]$pval[1, 2])
       }
     }
-  }
-})
-
-# 4. The list of infeasible taus
-test_that("Infeasible taus",{
-  for (i in seq_along(i.cores)) {
-    for (j in seq_along(j.lpmodel)) {
+  })
+  
+  # 2. Two moments p-values
+  test_that(sprintf("%s Two moments approach", test.name), {
+    for (i in seq_along(i.cores)) {
+      j <- 2
       for (k in seq_along(k.solver)) {
-        expect_equal(NULL, dkqs.out[[i]][[j]][[k]]$tau.infeasible)
+        expect_equal(pval[[j]], dkqs.out[[i]][[j]][[k]]$pval[1, 2])
       }
     }
-  }
-})
-
-# 5. Maximum feasible tau
-test_that("Maximum feasible tau",{
-  for (i in seq_along(i.cores)) {
-    for (j in seq_along(j.lpmodel)) {
-      for (k in seq_along(k.solver)) {
-        expect_equal(taumax, dkqs.out[[i]][[j]][[k]]$tau.max)
+  })
+  
+  # 3. The list of feasible taus
+  test_that(sprintf("%s Feasible taus", test.name), {
+    for (i in seq_along(i.cores)) {
+      for (j in seq_along(j.lpmodel)) {
+        for (k in seq_along(k.solver)) {
+          expect_equal(tau, dkqs.out[[i]][[j]][[k]]$tau.feasible)
+        }
       }
     }
-  }
-})
-
-# 6. Test statistics
-test_that("Test statistics",{
-  for (i in seq_along(i.cores)) {
-    for (j in seq_along(j.lpmodel)) {
-      for (k in seq_along(k.solver)) {
-        expect_lte(abs(Tn[[j]] - dkqs.out[[i]][[j]][[k]]$T.n), 1e-6)
+  })
+  
+  # 4. The list of infeasible taus
+  test_that(sprintf("%s Infeasible taus", test.name), {
+    for (i in seq_along(i.cores)) {
+      for (j in seq_along(j.lpmodel)) {
+        for (k in seq_along(k.solver)) {
+          expect_equal(NULL, dkqs.out[[i]][[j]][[k]]$tau.infeasible)
+        }
       }
     }
-  }
-})
-
-# 7. Test logical lower bound
-test_that("Logical lower bound",{
-  for (i in seq_along(i.cores)) {
-    for (j in seq_along(j.lpmodel)) {
-      for (k in seq_along(k.solver)) {
-        expect_equal(theta.down$objval, dkqs.out[[i]][[j]][[k]]$lb0[1,2])
+  })
+  
+  # 5. Maximum feasible tau
+  test_that(sprintf("%s Maximum feasible tau", test.name), {
+    for (i in seq_along(i.cores)) {
+      for (j in seq_along(j.lpmodel)) {
+        for (k in seq_along(k.solver)) {
+          expect_equal(taumax, dkqs.out[[i]][[j]][[k]]$tau.max)
+        }
       }
     }
-  }
-})
-
-# 8. Test logical upper bound
-test_that("Logical upper bound",{
-  for (i in seq_along(i.cores)) {
-    for (j in seq_along(j.lpmodel)) {
-      for (k in seq_along(k.solver)) {
-        expect_equal(theta.up$objval, dkqs.out[[i]][[j]][[k]]$ub0[1,2])
+  })
+  
+  # 6. Test statistics
+  test_that(sprintf("%s Test statistics", test.name), {
+    for (i in seq_along(i.cores)) {
+      for (j in seq_along(j.lpmodel)) {
+        for (k in seq_along(k.solver)) {
+          expect_lte(abs(Tn[[j]] - dkqs.out[[i]][[j]][[k]]$T.n), 1e-6)
+        }
       }
     }
-  }
-})
-
-# 9. Solver name
-test_that("Solver name",{
-  for (i in seq_along(i.cores)) {
-    for (j in seq_along(j.lpmodel)) {
-      for (k in seq_along(k.solver)) {
-        expect_equal(k.solver[[k]], dkqs.out[[i]][[j]][[k]]$solver)
+  })
+  
+  # 7. Test logical lower bound
+  test_that(sprintf("%s Logical lower bound", test.name), {
+    for (i in seq_along(i.cores)) {
+      for (j in seq_along(j.lpmodel)) {
+        for (k in seq_along(k.solver)) {
+          expect_equal(theta.down$objval, dkqs.out[[i]][[j]][[k]]$lb0[1,2])
+        }
       }
     }
-  }
-})
-
-# 10. cv.table
-test_that("cv.table",{
-  cv <- list()
-  n99 <- ceiling(.99 * reps)
-  n95 <- ceiling(.95 * reps)
-  n90 <- ceiling(.90 * reps)
-  # Compute the critical values
-  for (j in seq_along(j.lpmodel)) {
-    cv[[j]] <- list()
-    cv[[j]][[1]] <- Tn[[j]]
-    cv[[j]][[2]] <- sort(T.bs[[j]])[n99]
-    cv[[j]][[3]] <- sort(T.bs[[j]])[n95]
-    cv[[j]][[4]] <- sort(T.bs[[j]])[n90]
-  }
-
-  for (i in seq_along(i.cores)) {
-    for (j in seq_along(j.lpmodel)) {
-      for (k in seq_along(k.solver)) {
-        expect_lte(abs(cv[[j]][[1]] - dkqs.out[[i]][[j]][[k]]$cv.table[1,2]),
-                   1e-5)
-        expect_lte(abs(cv[[j]][[2]] - dkqs.out[[i]][[j]][[k]]$cv.table[2,2]),
-                   1e-5)
-        expect_lte(abs(cv[[j]][[3]] - dkqs.out[[i]][[j]][[k]]$cv.table[3,2]),
-                   1e-5)
-        expect_lte(abs(cv[[j]][[4]] - dkqs.out[[i]][[j]][[k]]$cv.table[4,2]),
-                   1e-5)
+  })
+  
+  # 8. Test logical upper bound
+  test_that(sprintf("%s Logical upper bound", test.name), {
+    for (i in seq_along(i.cores)) {
+      for (j in seq_along(j.lpmodel)) {
+        for (k in seq_along(k.solver)) {
+          expect_equal(theta.up$objval, dkqs.out[[i]][[j]][[k]]$ub0[1,2])
+        }
       }
     }
-  }
-})
-
-# 11. Test logical
-test_that("test logical",{
-  for (i in seq_along(i.cores)) {
-    for (j in seq_along(j.lpmodel)) {
-      for (k in seq_along(k.solver)) {
-        expect_equal(1, dkqs.out[[i]][[j]][[k]]$test.logical)
+  })
+  
+  # 9. Solver name
+  test_that(sprintf("%s Solver name", test.name), {
+    for (i in seq_along(i.cores)) {
+      for (j in seq_along(j.lpmodel)) {
+        for (k in seq_along(k.solver)) {
+          expect_equal(k.solver[[k]], dkqs.out[[i]][[j]][[k]]$solver)
+        }
       }
     }
-  }
-})
-
-# 12. df.error
-test_that("Table for problematic bootstrap replications",{
-  for (i in seq_along(i.cores)) {
+  })
+  
+  # 10. cv.table
+  test_that(sprintf("%s cv.table", test.name), {
+    cv <- list()
+    n99 <- ceiling(.99 * reps)
+    n95 <- ceiling(.95 * reps)
+    n90 <- ceiling(.90 * reps)
+    # Compute the critical values
     for (j in seq_along(j.lpmodel)) {
-      for (k in seq_along(k.solver)) {
-        expect_equal(NULL, dkqs.out[[i]][[j]][[k]]$df.error)
+      cv[[j]] <- list()
+      cv[[j]][[1]] <- Tn[[j]]
+      cv[[j]][[2]] <- sort(T.bs[[j]])[n99]
+      cv[[j]][[3]] <- sort(T.bs[[j]])[n95]
+      cv[[j]][[4]] <- sort(T.bs[[j]])[n90]
+    }
+    
+    for (i in seq_along(i.cores)) {
+      for (j in seq_along(j.lpmodel)) {
+        for (k in seq_along(k.solver)) {
+          expect_lte(abs(cv[[j]][[1]] - dkqs.out[[i]][[j]][[k]]$cv.table[1,2]),
+                     1e-5)
+          expect_lte(abs(cv[[j]][[2]] - dkqs.out[[i]][[j]][[k]]$cv.table[2,2]),
+                     1e-5)
+          expect_lte(abs(cv[[j]][[3]] - dkqs.out[[i]][[j]][[k]]$cv.table[3,2]),
+                     1e-5)
+          expect_lte(abs(cv[[j]][[4]] - dkqs.out[[i]][[j]][[k]]$cv.table[4,2]),
+                     1e-5)
+        }
       }
     }
-  }
-})
-
-# 13. Number of successful bootstrap replications
-test_that("Number of successful bootstrap replications",{
-  for (i in seq_along(i.cores)) {
-    for (j in seq_along(j.lpmodel)) {
-      for (k in seq_along(k.solver)) {
-        expect_equal(reps, dkqs.out[[i]][[j]][[k]]$R.succ)
+  })
+  
+  # 11. Test logical
+  test_that(sprintf("%s Test logical", test.name), {
+    for (i in seq_along(i.cores)) {
+      for (j in seq_along(j.lpmodel)) {
+        for (k in seq_along(k.solver)) {
+          expect_equal(1, dkqs.out[[i]][[j]][[k]]$test.logical)
+        }
       }
     }
-  }
-})
+  })
+  
+  # 12. df.error
+  test_that(sprintf("%s Table for problematic bootstrap replications",
+                    test.name), {
+    for (i in seq_along(i.cores)) {
+      for (j in seq_along(j.lpmodel)) {
+        for (k in seq_along(k.solver)) {
+          expect_equal(NULL, dkqs.out[[i]][[j]][[k]]$df.error)
+        }
+      }
+    }
+  })
+  
+  # 13. Number of successful bootstrap replications
+  test_that(sprintf("%s Number of successful bootstrap replications",
+                    test.name), {
+    for (i in seq_along(i.cores)) {
+      for (j in seq_along(j.lpmodel)) {
+        for (k in seq_along(k.solver)) {
+          expect_equal(reps, dkqs.out[[i]][[j]][[k]]$R.succ)
+        }
+      }
+    }
+  })
+}
+
+# ---------------- #
+# Run the tests
+# ---------------- #
+# beta.obs is a function
+tests.dkqs(dkqs.out, "function")
+
+# beta.obs is a list of bootstrap estimates
+tests.dkqs(dkqs.out2, "list")

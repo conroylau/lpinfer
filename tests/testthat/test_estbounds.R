@@ -85,7 +85,7 @@ beta_shp <- c(1)
 beta.tgt <- .365
 kap <- 1e-5
 
-# Define the lpmodels
+# Define the lpmodels when beta.obs is a function
 lpmodel.full <- lpmodel(A.obs    = A_obs_full,
                         A.tgt    = A_tgt,
                         A.shp    = A_shp_full,
@@ -97,17 +97,26 @@ lpmodel.twom <- lpmodel(A.obs    = A_obs_twom,
                         A.shp    = A_shp_full,
                         beta.obs = func_two_moment,
                         beta.shp = beta_shp)
-
 i.lpmodel <- list(lpmodel.full, lpmodel.twom)
+
+# Define the lpmodels when beta.obs is deterministic
+lpmodel.full2 <- lpmodel.full
+lpmodel.full2$beta.obs <- lpmodel.full$beta.obs(sampledata)
+lpmodel.twom2 <- lpmodel.twom
+lpmodel.twom2$beta.obs <- lpmodel.twom$beta.obs(sampledata)
+i.lpmodel2 <- list(lpmodel.full2, lpmodel.twom2)
+
+# Define other testing parameters
 ni <- length(i.lpmodel)
 k.solver <- list("gurobi", "Rcplex", "limSolve")
 nk <- length(k.solver)
+
 # Define arguments
 farg <- list(data = sampledata,
              solver = "gurobi")
 
 # ---------------- #
-# Generate output from MINCRITERION
+# Output 1a: Generate output from MINCRITERION and beta.obs is a function
 # i: lpmodel/approach, j: norm, k: solver
 # ---------------- #
 mincriterion.out <- list()
@@ -126,7 +135,7 @@ for (i in 1:ni) {
 }
 
 # ---------------- #
-# Generate output from ESTBOUNDS
+# Output 1b: Generate output from ESTBOUNDS and beta.obs is a function
 # i: lpmodel/approach, j: norm, k: solver
 # ---------------- #
 farg$kappa <- kap
@@ -148,6 +157,55 @@ for (i in 1:ni) {
       k <- 1
       farg$solver <- k.solver[[k]]
       estbounds.out[[i]][[j]][[k]] <- do.call(estbounds, farg)
+    }
+  }
+}
+
+# ---------------- #
+# Output 2a: Generate output from MINCRITERION and beta.obs is deterministic
+# i: lpmodel/approach, j: norm, k: solver
+# ---------------- #
+farg <- list(data = sampledata,
+             solver = "gurobi")
+
+mincriterion.out2 <- list()
+plan(multisession, workers = 8)
+for (i in 1:ni) {
+  farg$lpmodel <- i.lpmodel2[[i]]
+  mincriterion.out2[[i]] <- list()
+  for (j in 1:2) {
+    farg$norm <- j
+    mincriterion.out2[[i]][[j]] <- list()
+    for (k in 1:nk) {
+      farg$solver <- k.solver[[k]]
+      mincriterion.out2[[i]][[j]][[k]] <- do.call(mincriterion, farg)
+    }
+  }
+}
+
+# ---------------- #
+# Output 2b: Generate output from ESTBOUNDS and beta.obs is deterministic
+# i: lpmodel/approach, j: norm, k: solver
+# ---------------- #
+farg$kappa <- kap
+farg$estimate <- TRUE
+farg$progress <- TRUE
+estbounds.out2 <- list()
+for (i in 1:ni) {
+  farg$lpmodel <- i.lpmodel2[[i]]
+  estbounds.out2[[i]] <- list()
+  for (j in 1:2) {
+    farg$norm <- j
+    estbounds.out2[[i]][[j]] <- list()
+    if (j == 1) {
+      for (k in 1:nk) {
+        farg$solver <- k.solver[[k]]
+        estbounds.out2[[i]][[j]][[k]] <- do.call(estbounds, farg)
+      }
+    } else if (j == 2) {
+      k <- 1
+      farg$solver <- k.solver[[k]]
+      estbounds.out2[[i]][[j]][[k]] <- do.call(estbounds, farg)
     }
   }
 }
@@ -307,139 +365,169 @@ for (i in 1:ni) {
 }
 
 # ---------------- #
-# Test if the output are equal in MINCRITERION
+# A list of unit tests for MINCRITERION
 # ---------------- #
-# 1. Qhat
-test_that("'mincriterion': Q-hat",{
-  for (i in 1:ni) {
-    for (j in 1:2) {
-      for (k in 1:nk) {
-        expect_lte(abs(Qhat[[i]][[j]] - mincriterion.out[[i]][[j]][[k]]$objval),
-                   1e-10)
-      }
-    }
-  }
-})
-
-# 2. Norm
-test_that("'mincriterion': Norm",{
-  for (i in 1:ni) {
-    for (j in 1:2) {
-      for (k in 1:nk) {
-        expect_equal(j, mincriterion.out[[i]][[j]][[k]]$norm)
-      }
-    }
-  }
-})
-
-# 3. Solver
-test_that("'mincriterion': Solver",{
-  for (i in 1:ni) {
-    for (j in 1:2) {
-      for (k in 1:nk) {
-        expect_equal(k.solver[[k]], mincriterion.out[[i]][[j]][[k]]$solver)
-      }
-    }
-  }
-})
-
-# ---------------- #
-# Test if the output are equal in ESTBOUNDS
-# ---------------- #
-# 1. Lower bounds (lb)
-test_that("'estbounds': Lower bounds",{
-  for (i in 1:ni) {
-    for (j in 1:2) {
-      for (k in 1:nk) {
-        if (j == 1) {
-          expect_equal(lb[[i]][[j]], estbounds.out[[i]][[j]][[k]]$lb)
-        } else if (j == 2) {
-          expect_equal(lb[[i]][[j]], estbounds.out[[i]][[j]][[1]]$lb)
+tests.minc <- function(estbounds.out, test.name) {
+  # Assign the name
+  test.name <- sprintf("'beta.obs' as %s:", test.name)
+  
+  # 1. Qhat
+  test_that(sprintf("%s 'mincriterion': Q-hat", test.name), {
+    for (i in 1:ni) {
+      for (j in 1:2) {
+        for (k in 1:nk) {
+          expect_lte(abs(Qhat[[i]][[j]] -
+                           mincriterion.out[[i]][[j]][[k]]$objval),
+                     1e-10)
         }
       }
     }
-  }
-})
-
-# 2. Upper bounds (ub)
-test_that("'estbounds': Upper bounds",{
-  for (i in 1:ni) {
-    for (j in 1:2) {
-      for (k in 1:nk) {
-        if (j == 1) {
-          expect_equal(ub[[i]][[j]], estbounds.out[[i]][[j]][[k]]$ub)
-        } else if (j == 2) {
-          expect_equal(ub[[i]][[j]], estbounds.out[[i]][[j]][[1]]$ub)
+  })
+  
+  # 2. Norm
+  test_that(sprintf("%s 'mincriterion': Norm", test.name), {
+    for (i in 1:ni) {
+      for (j in 1:2) {
+        for (k in 1:nk) {
+          expect_equal(j, mincriterion.out[[i]][[j]][[k]]$norm)
         }
       }
     }
-  }
-})
-
-# 3. Checking the value of the mincriterion
-test_that("'estbounds': Checking the value of the mincriterion",{
-  for (i in 1:ni) {
-    for (j in 1:2) {
-      for (k in 1:nk) {
-        if (j == 1) {
-          expect_equal(Qhat[[i]][[j]],
-                       estbounds.out[[i]][[j]][[k]]$mincriterion)
-        } else if (j == 2) {
-          expect_equal(Qhat[[i]][[j]],
-                       estbounds.out[[i]][[j]][[1]]$mincriterion)
+  })
+  
+  # 3. Solver
+  test_that(sprintf("%s 'mincriterion': Solver", test.name), {
+    for (i in 1:ni) {
+      for (j in 1:2) {
+        for (k in 1:nk) {
+          expect_equal(k.solver[[k]], mincriterion.out[[i]][[j]][[k]]$solver)
         }
       }
     }
-  }
-})
-
-# 4. Estimate
-test_that("'estbounds': Estimate",{
-  for (i in 1:ni) {
-    for (j in 1:2) {
-      for (k in 1:nk) {
-        if (j == 1) {
-          expect_equal(TRUE, estbounds.out[[i]][[j]][[k]]$est)
-        } else if (j == 2) {
-          expect_equal(TRUE, estbounds.out[[i]][[j]][[1]]$est)
-        }
-      }
-    }
-  }
-})
-
-# 5. Norm
-test_that("'estbounds': Norm",{
-  for (i in 1:ni) {
-    for (j in 1:2) {
-      for (k in 1:nk) {
-        if (j == 1) {
-          expect_equal(j, estbounds.out[[i]][[j]][[k]]$norm)
-        } else if (j == 2) {
-          expect_equal(j, estbounds.out[[i]][[j]][[1]]$norm)
-        }
-      }
-    }
-  }
-})
-
-# 6. Solver
-test_that("'estbounds': Solver",{
-  for (i in 1:ni) {
-    for (j in 1:2) {
-      for (k in 1:nk) {
-        if (j == 1) {
-          expect_equal(k.solver[[k]], estbounds.out[[i]][[j]][[k]]$solver)
-        } else if (j == 2) {
-          expect_equal(k.solver[[1]], estbounds.out[[i]][[j]][[1]]$solver)
-        }
-      }
-    }
-  }
-})
+  })
+}
 
 # ---------------- #
-# Check non-optimal cases
+# A list of unit tests for ESTBUONDS
+# ---------------- #
+tests.estb <- function(estbounds.out, test.name) {
+  # Assign the name
+  test.name <- sprintf("'beta.obs' as %s:", test.name)
+  
+  # 1. Lower bounds (lb)
+  test_that(sprintf("%s 'estbounds': Lower bounds", test.name), {
+    for (i in 1:ni) {
+      for (j in 1:2) {
+        for (k in 1:nk) {
+          if (j == 1) {
+            expect_equal(lb[[i]][[j]], estbounds.out[[i]][[j]][[k]]$lb)
+          } else if (j == 2) {
+            expect_equal(lb[[i]][[j]], estbounds.out[[i]][[j]][[1]]$lb)
+          }
+        }
+      }
+    }
+  })
+  
+  # 2. Upper bounds (ub)
+  test_that(sprintf("%s 'estbounds': Upper bounds", test.name), {
+    for (i in 1:ni) {
+      for (j in 1:2) {
+        for (k in 1:nk) {
+          if (j == 1) {
+            expect_equal(ub[[i]][[j]], estbounds.out[[i]][[j]][[k]]$ub)
+          } else if (j == 2) {
+            expect_equal(ub[[i]][[j]], estbounds.out[[i]][[j]][[1]]$ub)
+          }
+        }
+      }
+    }
+  })
+  
+  # 3. Checking the value of the mincriterion
+  test_that(sprintf("%s 'estbounds': Checking the value of the mincriterion",
+                    test.name), {
+    for (i in 1:ni) {
+      for (j in 1:2) {
+        for (k in 1:nk) {
+          if (j == 1) {
+            expect_equal(Qhat[[i]][[j]],
+                         estbounds.out[[i]][[j]][[k]]$mincriterion)
+          } else if (j == 2) {
+            expect_equal(Qhat[[i]][[j]],
+                         estbounds.out[[i]][[j]][[1]]$mincriterion)
+          }
+        }
+      }
+    }
+  })
+  
+  # 4. Estimate
+  test_that(sprintf("%s 'estbounds': Estimate", test.name), {
+    for (i in 1:ni) {
+      for (j in 1:2) {
+        for (k in 1:nk) {
+          if (j == 1) {
+            expect_equal(TRUE, estbounds.out[[i]][[j]][[k]]$est)
+          } else if (j == 2) {
+            expect_equal(TRUE, estbounds.out[[i]][[j]][[1]]$est)
+          }
+        }
+      }
+    }
+  })
+  
+  # 5. Norm
+  test_that(sprintf("%s 'estbounds': Norm", test.name), {
+    for (i in 1:ni) {
+      for (j in 1:2) {
+        for (k in 1:nk) {
+          if (j == 1) {
+            expect_equal(j, estbounds.out[[i]][[j]][[k]]$norm)
+          } else if (j == 2) {
+            expect_equal(j, estbounds.out[[i]][[j]][[1]]$norm)
+          }
+        }
+      }
+    }
+  })
+  
+  # 6. Solver
+  test_that(sprintf("%s 'estbounds': Solver", test.name), {
+    for (i in 1:ni) {
+      for (j in 1:2) {
+        for (k in 1:nk) {
+          if (j == 1) {
+            expect_equal(k.solver[[k]], estbounds.out[[i]][[j]][[k]]$solver)
+          } else if (j == 2) {
+            expect_equal(k.solver[[1]], estbounds.out[[i]][[j]][[1]]$solver)
+          }
+        }
+      }
+    }
+  })
+}
+
+# ---------------- #
+# Run the tests for the optimal cases in ESTBOUNDS
+# ---------------- #
+# beta.obs is a function
+tests.minc(mincriterion.out, "function")
+
+# beta.obs is a list of bootstrap estimates
+tests.minc(mincriterion.out2, "list")
+
+# ---------------- #
+# Run the tests for the optimal cases in ESTBOUNDS
+# ---------------- #
+# beta.obs is a function
+tests.estb(estbounds.out, "function")
+
+# beta.obs is a list of bootstrap estimates
+tests.estb(estbounds.out2, "list")
+
+# ---------------- #
+# Unit tests on nonoptimal cases
 # ---------------- #
 Amat <- matrix(c(1,0), nrow = 1)
 lpm.inf <- lpmodel(A.obs = Amat,

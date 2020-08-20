@@ -16,7 +16,7 @@ func_full_info <- function(data){
   # Initialize beta
   beta <- NULL
   # Find the unique elements of Y, sorting in ascending order
-  y_list <- sort(unique(data[,"Y"]))
+  y_list <- seq(0, 1, .1)
   # Count total number of rows of data and y_list
   n <- dim(data)[1]
   yn <- length(y_list)
@@ -92,6 +92,7 @@ beta_shp <- c(1)
 tau <- sqrt(log(N)/N)
 beta.tgt <- .365
 phi <- 2/3
+m <- floor(N^phi)
 # Define arguments for the `subsample` function
 farg <- list(data = sampledata,
              R = 100,
@@ -119,7 +120,7 @@ lpmodel.twom <- lpmodel(A.obs    = A_obs_twom,
                         beta.shp = beta_shp)
 
 # ---------------- #
-# Run results by different solvers and cores
+# Output 1: beta.obs is a function
 # ---------------- #
 # List of cores, lpmodel and norm objects to be used
 i.cores <- list(1, 8)
@@ -143,6 +144,75 @@ for (i in seq_along(i.cores)) {
         set.seed(1)
         farg$solver <- l.solver[[l]]
         ss.out[[i]][[j]][[k]][[l]] <- do.call(subsample, farg)
+      }
+    }
+  }
+}
+
+# ---------------- #
+# Output 2: beta.obs is a list that contains the sample and bootstrap estimates
+# ---------------- #
+# Function to draw bootstrap data
+draw.bs.data <- function(x, f, data) {
+  data.bs <- as.data.frame(data[sample(1:nrow(data),
+                                       size = m,
+                                       replace = FALSE),])
+  bobs.bs <- f(data.bs)$beta
+  return(bobs.bs)
+}
+
+# Draw bootstrap data for the full information and two moments method
+set.seed(1)
+RNGkind(kind = "L'Ecuyer-CMRG")
+seed <- .Random.seed
+bobs.bs.full.list <- future.apply::future_lapply(1:reps,
+                                                 FUN = draw.bs.data,
+                                                 future.seed = seed,
+                                                 f = func_full_info,
+                                                 data = sampledata)
+bobs.bs.twom.list <- future.apply::future_lapply(1:reps,
+                                                 FUN = draw.bs.data,
+                                                 future.seed = seed,
+                                                 f = func_two_moment,
+                                                 data = sampledata)
+
+bobs.full.list <- c(list(func_full_info(sampledata)$beta), bobs.bs.full.list)
+bobs.twom.list <- c(list(func_two_moment(sampledata)$beta), bobs.bs.twom.list)
+bobs.full.list[[1]] <- func_full_info(sampledata)
+bobs.twom.list[[1]] <- func_two_moment(sampledata)
+
+# Redefine the 'lpmodel' object with 'beta.obs' being a list
+lpmodel.full.list <- lpmodel.full
+lpmodel.twom.list <- lpmodel.twom
+lpmodel.full.list$beta.obs <- bobs.full.list
+lpmodel.twom.list$beta.obs <- bobs.twom.list
+
+# Define the new lpmodel object and the arguments to be passed to the function
+j.lpmodel2 <- list(lpmodel.full.list, lpmodel.twom.list)
+farg2 <- list(R = 100,
+              beta.tgt = beta.tgt,
+              norm = 2,
+              phi = phi,
+              replace = FALSE,
+              n = N,
+              progress = TRUE)
+
+# Compute the subsample output again
+ss.out2 <- list()
+for (i in seq_along(i.cores)) {
+  plan(multisession, workers = i.cores[[i]])
+  ss.out2[[i]] <- list()
+  for (j in seq_along(j.lpmodel2)) {
+    farg2$lpmodel <- j.lpmodel2[[j]]
+    ss.out2[[i]][[j]] <- list()
+    for (k in seq_along(k.norm)) {
+      farg2$norm <- k.norm[[k]]
+      ss.out2[[i]][[j]][[k]] <- list()
+      for (l in seq_along(l.solver)) {
+        RNGkind(kind = "L'Ecuyer-CMRG")
+        set.seed(1)
+        farg2$solver <- l.solver[[l]]
+        ss.out2[[i]][[j]][[k]][[l]] <- do.call(subsample, farg2)
       }
     }
   }
@@ -181,7 +251,7 @@ gurobi.qlp <- function(Q = NULL, obj, objcon, A, rhs, quadcon = NULL, sense,
 }
 
 # ---------------- #
-# Construct the answer by the programs
+# Obtain the results without using the subsample function
 # ---------------- #
 # 1. Obtain the parameters
 m <- floor(N^phi)
@@ -315,179 +385,198 @@ for (j in seq_along(j.lpmodel)) {
 }
 
 # ---------------- #
-# Test if the output are equal
+# A list of unit tests
 # ---------------- #
-# 1. Full information approach p-values
-test_that("Full information approach p-values",{
-  for (i in seq_along(i.cores)) {
-    j <- 1
-    for (k in seq_along(k.norm)) {
-      for (l in seq_along(l.solver)) {
+tests.ss <- function(ss.out, test.name) {
+  # Assign the name
+  test.name <- sprintf("'beta.obs' as %s:", test.name)
+
+  # 1. Full information approach p-values
+  test_that(sprintf("%s Full information approach p-values", test.name), {
+    for (i in seq_along(i.cores)) {
+      j <- 1
+      for (k in seq_along(k.norm)) {
+        for (l in seq_along(l.solver)) {
+          expect_lte(abs(ss.pval[[j]][[k]] - ss.out[[i]][[j]][[k]][[l]]$pval),
+                     1e-5)
+        }
+      }
+    }
+  })
+
+  # 2. Two moments approach p-values
+  test_that(sprintf("%s Two moments approach p-values", test.name), {
+    for (i in seq_along(i.cores)) {
+      j <- 2
+      for (k in seq_along(k.norm)) {
         expect_lte(abs(ss.pval[[j]][[k]] - ss.out[[i]][[j]][[k]][[l]]$pval),
                    1e-5)
       }
     }
-  }
-})
+  })
 
-# 2. Two moments approach p-values
-test_that("Two moments approach p-values",{
-  for (i in seq_along(i.cores)) {
-    j <- 2
-    for (k in seq_along(k.norm)) {
-      expect_lte(abs(ss.pval[[j]][[k]] - ss.out[[i]][[j]][[k]][[l]]$pval),
-                 1e-5)
-    }
-  }
-})
-
-# 3. Full information approach test statistics
-test_that("Full information approach test statistics",{
-  for (i in seq_along(i.cores)) {
-    j <- 1
-    for (k in seq_along(k.norm)) {
-      expect_lte(abs(ss.ts[[j]][[k]]$objval - ss.out[[i]][[j]][[k]][[l]]$T.n),
-                 1e-5)
-    }
-  }
-})
-
-# 4. Two moments approach test statistics
-test_that("Two moments approach test statistics",{
-  for (i in seq_along(i.cores)) {
-    j <- 2
-    for (k in seq_along(k.norm)) {
-      expect_lte(abs(ss.ts[[j]][[k]]$objval - ss.out[[i]][[j]][[k]][[l]]$T.n),
-                 1e-5)
-    }
-  }
-})
-
-# 5. Solver name
-test_that("Solver name",{
-  for (i in seq_along(i.cores)) {
-    for (j in seq_along(j.lpmodel)) {
+  # 3. Full information approach test statistics
+  test_that(sprintf("%s Full information approach test statistics",
+                    test.name), {
+    for (i in seq_along(i.cores)) {
+      j <- 1
       for (k in seq_along(k.norm)) {
-        for (l in seq_along(l.solver)) {
-          expect_equal(l.solver[[l]], ss.out[[i]][[j]][[k]][[l]]$solver)
-        }
+        expect_lte(abs(ss.ts[[j]][[k]]$objval -
+                         ss.out[[i]][[j]][[k]][[l]]$T.n),
+                   1e-5)
       }
     }
-  }
-})
+  })
 
-# 6. cv.table
-cv <- list()
-test_that("cv.table",{
-  n99 <- ceiling(.99 * reps)
-  n95 <- ceiling(.95 * reps)
-  n90 <- ceiling(.90 * reps)
-  # Compute the critical values
-  for (j in seq_along(j.lpmodel)) {
-    cv[[j]] <- list()
-    for (k in seq_along(k.norm)) {
-      cv[[j]][[k]] <- list()
-      cv[[j]][[k]][[1]] <- ss.ts[[j]][[k]]$objval
-      cv[[j]][[k]][[2]] <- sort(unlist(ss.bs.ts[[j]][[k]]))[n99]
-      cv[[j]][[k]][[3]] <- sort(unlist(ss.bs.ts[[j]][[k]]))[n95]
-      cv[[j]][[k]][[4]] <- sort(unlist(ss.bs.ts[[j]][[k]]))[n90]
-    }
-  }
-
-  # Check the critical values
-  for (i in seq_along(i.cores)) {
-    for (j in seq_along(j.lpmodel)) {
+  # 4. Two moments approach test statistics
+  test_that(sprintf("%s Two moments approach test statistics", test.name), {
+    for (i in seq_along(i.cores)) {
+      j <- 2
       for (k in seq_along(k.norm)) {
-        for (l in seq_along(l.solver)) {
-          expect_lte(abs(cv[[j]][[k]][[1]] -
-                         ss.out[[i]][[j]][[k]][[l]]$cv.table[1,2]),
-                     1e-5)
-          for (p in 2:4) {
-            expect_lte(abs(cv[[j]][[k]][[p]] -
-                            ss.out[[i]][[j]][[k]][[l]]$cv.table[p,2]),
-                           1e-5)
+        expect_lte(abs(ss.ts[[j]][[k]]$objval -
+                         ss.out[[i]][[j]][[k]][[l]]$T.n),
+                   1e-5)
+      }
+    }
+  })
+
+  # 5. Solver name
+  test_that(sprintf("%s Solver name", test.name), {
+    for (i in seq_along(i.cores)) {
+      for (j in seq_along(j.lpmodel)) {
+        for (k in seq_along(k.norm)) {
+          for (l in seq_along(l.solver)) {
+            expect_equal(l.solver[[l]], ss.out[[i]][[j]][[k]][[l]]$solver)
           }
         }
       }
     }
-  }
-})
+  })
 
-# 7. Phi
-test_that("Phi",{
-  for (i in seq_along(i.cores)) {
+  # 6. cv.table
+  cv <- list()
+  test_that(sprintf("%s cv.table", test.name), {
+    n99 <- ceiling(.99 * reps)
+    n95 <- ceiling(.95 * reps)
+    n90 <- ceiling(.90 * reps)
+    # Compute the critical values
     for (j in seq_along(j.lpmodel)) {
+      cv[[j]] <- list()
       for (k in seq_along(k.norm)) {
-        for (l in seq_along(l.solver)) {
-          expect_equal(2/3, ss.out[[i]][[j]][[k]][[l]]$phi)
+        cv[[j]][[k]] <- list()
+        cv[[j]][[k]][[1]] <- ss.ts[[j]][[k]]$objval
+        cv[[j]][[k]][[2]] <- sort(unlist(ss.bs.ts[[j]][[k]]))[n99]
+        cv[[j]][[k]][[3]] <- sort(unlist(ss.bs.ts[[j]][[k]]))[n95]
+        cv[[j]][[k]][[4]] <- sort(unlist(ss.bs.ts[[j]][[k]]))[n90]
+      }
+    }
+
+    # Check the critical values
+    for (i in seq_along(i.cores)) {
+      for (j in seq_along(j.lpmodel)) {
+        for (k in seq_along(k.norm)) {
+          for (l in seq_along(l.solver)) {
+            expect_lte(abs(cv[[j]][[k]][[1]] -
+                             ss.out[[i]][[j]][[k]][[l]]$cv.table[1,2]),
+                       1e-5)
+            for (p in 2:4) {
+              expect_lte(abs(cv[[j]][[k]][[p]] -
+                               ss.out[[i]][[j]][[k]][[l]]$cv.table[p,2]),
+                         1e-5)
+            }
+          }
         }
       }
     }
-  }
-})
+  })
 
-# 8. Norm
-test_that("Norm",{
-  for (i in seq_along(i.cores)) {
-    for (j in seq_along(j.lpmodel)) {
-      for (k in seq_along(k.norm)) {
-        for (l in seq_along(l.solver)) {
-          expect_equal(k.norm[[k]], ss.out[[i]][[j]][[k]][[l]]$norm)
+  # 7. Phi
+  test_that(sprintf("%s Phi", test.name), {
+    for (i in seq_along(i.cores)) {
+      for (j in seq_along(j.lpmodel)) {
+        for (k in seq_along(k.norm)) {
+          for (l in seq_along(l.solver)) {
+            expect_equal(2/3, ss.out[[i]][[j]][[k]][[l]]$phi)
+          }
         }
       }
     }
-  }
-})
+  })
 
-# 9. Subsample size
-test_that("subsample size",{
-  for (i in seq_along(i.cores)) {
-    for (j in seq_along(j.lpmodel)) {
-      for (k in seq_along(k.norm)) {
-        for (l in seq_along(l.solver)) {
-          expect_equal(floor(nrow(sampledata)^phi),
-                       ss.out[[i]][[j]][[k]][[l]]$subsample.size)
+  # 8. Norm
+  test_that(sprintf("%s Norm", test.name), {
+    for (i in seq_along(i.cores)) {
+      for (j in seq_along(j.lpmodel)) {
+        for (k in seq_along(k.norm)) {
+          for (l in seq_along(l.solver)) {
+            expect_equal(k.norm[[k]], ss.out[[i]][[j]][[k]][[l]]$norm)
+          }
         }
       }
     }
-  }
-})
+  })
 
-# 10. Test logical
-test_that("test logical",{
-  for (i in seq_along(i.cores)) {
-    for (j in seq_along(j.lpmodel)) {
-      for (k in seq_along(k.norm)) {
-        for (l in seq_along(l.solver)) {
-          expect_equal(1, ss.out[[i]][[j]][[k]][[l]]$test.logical)
+  # 9. Subsample size
+  test_that(sprintf("%s subsample size", test.name), {
+    for (i in seq_along(i.cores)) {
+      for (j in seq_along(j.lpmodel)) {
+        for (k in seq_along(k.norm)) {
+          for (l in seq_along(l.solver)) {
+            expect_equal(floor(nrow(sampledata)^phi),
+                         ss.out[[i]][[j]][[k]][[l]]$subsample.size)
+          }
         }
       }
     }
-  }
-})
+  })
 
-# 11. df.error
-test_that("Table for problematic bootstrap replications",{
-  for (i in seq_along(i.cores)) {
-    for (j in seq_along(j.lpmodel)) {
-      for (k in seq_along(k.norm)) {
-        for (l in seq_along(l.solver)) {
-          expect_equal(TRUE, is.null(ss.out[[i]][[j]][[k]][[l]]$df.error))
+  # 10. Test logical
+  test_that(sprintf("%s test logical", test.name), {
+    for (i in seq_along(i.cores)) {
+      for (j in seq_along(j.lpmodel)) {
+        for (k in seq_along(k.norm)) {
+          for (l in seq_along(l.solver)) {
+            expect_equal(1, ss.out[[i]][[j]][[k]][[l]]$test.logical)
+          }
         }
       }
     }
-  }
-})
+  })
 
-# 12. Number of successful bootstrap replications
-test_that("Number of successful bootstrap replications",{
-  for (i in seq_along(i.cores)) {
-    for (j in seq_along(j.lpmodel)) {
-      for (k in seq_along(k.norm)) {
-        for (l in seq_along(l.solver)) {
-          expect_equal(reps, ss.out[[i]][[j]][[k]][[l]]$R.succ)
+  # 11. df.error
+  test_that(sprintf("%s Table for problematic bootstrap replications",
+                    test.name), {
+    for (i in seq_along(i.cores)) {
+      for (j in seq_along(j.lpmodel)) {
+        for (k in seq_along(k.norm)) {
+          for (l in seq_along(l.solver)) {
+            expect_equal(TRUE, is.null(ss.out[[i]][[j]][[k]][[l]]$df.error))
+          }
         }
       }
     }
-  }
-})
+  })
+
+  # 12. Number of successful bootstrap replications
+  test_that(sprintf("%s Number of successful bootstrap replications",
+                    test.name), {
+    for (i in seq_along(i.cores)) {
+      for (j in seq_along(j.lpmodel)) {
+        for (k in seq_along(k.norm)) {
+          for (l in seq_along(l.solver)) {
+            expect_equal(reps, ss.out[[i]][[j]][[k]][[l]]$R.succ)
+          }
+        }
+      }
+    }
+  })
+}
+
+# ---------------- #
+# Run the tests
+# ---------------- #
+# beta.obs is a function
+tests.ss(ss.out, "function")
+
+# beta.obs is a list of bootstrap estimates
+tests.ss(ss.out2, "list")
