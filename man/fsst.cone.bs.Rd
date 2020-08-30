@@ -18,7 +18,9 @@ fsst.cone.bs(
   beta.star.list,
   solver,
   progress,
-  df.error
+  df.error,
+  eval.count,
+  data.driven = FALSE
 )
 }
 \arguments{
@@ -72,6 +74,16 @@ displayed while the code is running.}
 
 \item{df.error}{Table showing the id of the bootstrap replication(s)
 with error(s) and the corresponding error message(s).}
+
+\item{eval.count}{Count for the number of times the \code{future_lapply}
+function has been called. If this object is zero, it means that the
+\code{future_lapply} function is being called for the first time in this
+subprocedure. Otherwise, it means that the \code{future_lapply} function
+has been called for more than once. This situation typically refers to the
+situations where there are some errors in the first time of the
+replications.}
+
+\item{data.driven}{}
 }
 \value{
 Return the following list of objects:

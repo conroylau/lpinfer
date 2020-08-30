@@ -293,7 +293,7 @@ subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver, n,
 #'   subsampling test. This function supports parallel programming via the
 #'   \code{future.apply} package.
 #'
-#' @import future.apply
+#' @import future.apply progressr
 #'
 #' @inheritParams dkqs
 #' @inheritParams estbounds
@@ -335,6 +335,7 @@ subsample.bs <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
   # ---------------- #
   # Step 2: Bootstrap replicatoins
   # ---------------- #
+  eval.count <- 0
   while ((R.succ < R) & (R.eval != maxR)) {
     # Evaluate the list of indices to be passed to 'future_lapply'
     bs.temp <- bs.assign(R, R.eval, R.succ, maxR, any.list)
@@ -343,17 +344,30 @@ subsample.bs <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
     bs.list <- bs.temp$bs.list
 
     # Obtain results from the bootstrap replications
-    subsample.return <- future.apply::future_lapply(bs.list,
-                                                    FUN = subsample.bs.fn,
-                                                    future.seed = seed,
-                                                    data = data,
-                                                    lpmodel = lpmodel,
-                                                    beta.tgt = beta.tgt,
-                                                    norm = norm,
-                                                    m = m,
-                                                    solver = solver,
-                                                    replace = replace,
-                                                    n = n)
+    progressr::with_progress({
+      if (isTRUE(progress)) {
+        pbar <- progressr::progressor(along = i0:i1)
+      } else {
+        pbar <- NULL
+      }
+
+      subsample.return <- future.apply::future_lapply(bs.list,
+                                                      FUN = subsample.bs.fn,
+                                                      future.seed = seed,
+                                                      data = data,
+                                                      lpmodel = lpmodel,
+                                                      beta.tgt = beta.tgt,
+                                                      norm = norm,
+                                                      m = m,
+                                                      solver = solver,
+                                                      replace = replace,
+                                                      n = n,
+                                                      pbar = pbar,
+                                                      progress = progress,
+                                                      eval.count = eval.count,
+                                                      n.bs = i1 - i0 + 1)
+      eval.count <- eval.count + 1
+    })
 
     # Update the list and parameters
     post.return <- post.bs(subsample.return, i0, i1, R.eval, T.sub,
@@ -411,6 +425,7 @@ subsample.bs <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
 #' @inheritParams subsample.prob
 #' @inheritParams subsample.bs
 #' @inheritParams dkqs.bs
+#' @inheritParams dkqs.bs.fn
 #' @param x This is either the list of indices that represent the bootstrap
 #'   replications, or the list of bootstrap components of the \code{lpmodel}
 #'   object passed from the user.
@@ -424,7 +439,30 @@ subsample.bs <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
 #' @export
 #'
 subsample.bs.fn <- function(x, data, lpmodel, beta.tgt, norm, m, solver,
-                            replace, n) {
+                            replace, n, pbar, eval.count, n.bs, progress) {
+  # ---------------- #
+  # Step 1: Print progress bar
+  # ---------------- #
+  # If replace = FALSE, it refers to subsampling. Otherwise, it is referring
+  # to bootstrap or m out of n bootstrap
+  if (isTRUE(replace)) {
+    procedure <- "bootstrap"
+  } else {
+    procedure <- "subsample"
+  }
+
+  # Print progress bar
+  if (isTRUE(progress)) {
+    if (eval.count == 0) {
+      pbar(sprintf("(Computing %s %s estimates)", n.bs, procedure))
+    } else {
+      pbar(sprintf("(Computing %s extra %s estimates)", n.bs, procedure))
+    }
+  }
+
+  # ---------------- #
+  # Step 2: Initialize the parameters
+  # ---------------- #
   # Replace lpmodel by x if x is a list
   if (is.list(x)) {
     lpm <- lpmodel.update(lpmodel, x)
@@ -432,6 +470,9 @@ subsample.bs.fn <- function(x, data, lpmodel, beta.tgt, norm, m, solver,
     lpm <- lpmodel
   }
 
+  # ---------------- #
+  # Step 3: Conduct one bootstrap/subsample replication
+  # ---------------- #
   # Draw data
   if (!is.null(data)) {
     data.bs <- as.data.frame(data[sample(1:nrow(data), m, replace),])

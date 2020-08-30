@@ -11,7 +11,11 @@ fsst.beta.star.bs.fn(
   beta.tgt,
   weight.mat,
   sigma.beta.obs,
-  solver
+  solver,
+  pbar,
+  progress,
+  n.bs,
+  eval.count
 )
 }
 \arguments{
@@ -40,6 +44,22 @@ components are required in the \code{lpmodel} for the FSST test:
 are used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
+
+\item{pbar}{Progress bar object.}
+
+\item{progress}{The boolean variable for whether the progress bars should
+be displayed. If it is set as \code{TRUE}, the progress bars will be
+displayed while the code is running.}
+
+\item{n.bs}{Total number of replications to be conducted in this procedure.}
+
+\item{eval.count}{Count for the number of times the \code{future_lapply}
+function has been called. If this object is zero, it means that the
+\code{future_lapply} function is being called for the first time in this
+subprocedure. Otherwise, it means that the \code{future_lapply} function
+has been called for more than once. This situation typically refers to the
+situations where there are some errors in the first time of the
+replications.}
 }
 \value{
 Returns a list of output that are obtained from the subsampling

@@ -15,7 +15,12 @@ fsst.cone.bs.fn(
   lambda,
   indicator,
   beta.r,
-  solver
+  solver,
+  pbar,
+  progress,
+  n.bs,
+  eval.count,
+  data.driven
 )
 }
 \arguments{
@@ -61,6 +66,24 @@ equals to 0 for \eqn{d < p}.}
 are used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
+
+\item{pbar}{Progress bar object.}
+
+\item{progress}{The boolean variable for whether the progress bars should
+be displayed. If it is set as \code{TRUE}, the progress bars will be
+displayed while the code is running.}
+
+\item{n.bs}{Total number of replications to be conducted in this procedure.}
+
+\item{eval.count}{Count for the number of times the \code{future_lapply}
+function has been called. If this object is zero, it means that the
+\code{future_lapply} function is being called for the first time in this
+subprocedure. Otherwise, it means that the \code{future_lapply} function
+has been called for more than once. This situation typically refers to the
+situations where there are some errors in the first time of the
+replications.}
+
+\item{data.driven}{}
 }
 \value{
 Return the following list of objects:

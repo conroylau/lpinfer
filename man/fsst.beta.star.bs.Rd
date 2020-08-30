@@ -18,7 +18,9 @@ fsst.beta.star.bs(
   solver,
   df.error,
   p,
-  d
+  d,
+  progress,
+  eval.count
 )
 }
 \arguments{
@@ -63,6 +65,18 @@ with error(s) and the corresponding error message(s).}
 \item{p}{Length of the beta vector.}
 
 \item{d}{Number of columns of the \code{A} matrix.}
+
+\item{progress}{The boolean variable for whether the progress bars should
+be displayed. If it is set as \code{TRUE}, the progress bars will be
+displayed while the code is running.}
+
+\item{eval.count}{Count for the number of times the \code{future_lapply}
+function has been called. If this object is zero, it means that the
+\code{future_lapply} function is being called for the first time in this
+subprocedure. Otherwise, it means that the \code{future_lapply} function
+has been called for more than once. This situation typically refers to the
+situations where there are some errors in the first time of the
+replications.}
 }
 \value{
 Return the following list of objects:

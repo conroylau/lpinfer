@@ -13,7 +13,9 @@ post.bs(
   beta.list = NULL,
   error.list = NULL,
   list.param = NULL,
-  error.param = NULL
+  error.param = NULL,
+  ub.list = NULL,
+  lb.list = NULL
 )
 }
 \arguments{
@@ -34,6 +36,10 @@ component.}
 
 \item{error.param}{List of parameters that lead to errors (if applicable).}
 
+\item{ub.list}{List of upper bounds (if applicable).}
+
+\item{lb.list}{List of lower bounds (if applicable).}
+
 \item{param.list}{List of parameters (if applicable).}
 }
 \value{
@@ -46,6 +52,8 @@ Returns the following three objects.
   \item{error.list}{List of error messages (if applicable).}
   \item{error.param}{List of parameters that lead to errors (if
     applicable).}
+  \item{ub.list}{List of upper messages (if applicable).}
+  \item{lb.list}{List of lower messages (if applicable).}
 }
 \description{
 This function is used after the bootstrap replications to

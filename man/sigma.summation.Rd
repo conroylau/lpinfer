@@ -4,7 +4,7 @@
 \alias{sigma.summation}
 \title{Computes the asymptotic variance estimator}
 \usage{
-\method{sigma}{summation}(n, beta.bs.list)
+\method{sigma}{summation}(n, beta.bs.list, progress, eval.count)
 }
 \arguments{
 \item{n}{Sample size.}
@@ -19,7 +19,7 @@ Returns the estimator of the asymptotic variance.
 \description{
 Based on the bootstrap estimates
   \eqn{\{\widehat{\bm{\beta}}_b\}^B_{b=1}}, this function computes the
-  asympototic variance estimator of the boostrap estimator, i.e.
+  asymptotic variance estimator of the bootstrap estimator, i.e.
   \deqn{\frac{n}{B} \sum^B_{i=1} \left(\widehat{\bm{\beta}}_b -
   \widehat{\bm{\beta}}\right)  \left(\widehat{\bm{\beta}}_b -
   \widehat{\bm{\beta}}\right)'}. This function supports parallel

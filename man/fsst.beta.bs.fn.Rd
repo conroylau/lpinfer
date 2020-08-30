@@ -4,7 +4,7 @@
 \alias{fsst.beta.bs.fn}
 \title{Computes one bootstrap estimates for \code{beta.obs}.}
 \usage{
-fsst.beta.bs.fn(x, data, lpmodel)
+fsst.beta.bs.fn(x, data, lpmodel, pbar, progress, eval.count, n.bs)
 }
 \arguments{
 \item{x}{This is either the list of indices that represent the bootstrap
@@ -22,6 +22,22 @@ components are required in the \code{lpmodel} for the FSST test:
    \item{\code{beta.obs}}
    \item{\code{beta.shp}}
  }}
+
+\item{pbar}{Progress bar object.}
+
+\item{progress}{The boolean variable for whether the progress bars should
+be displayed. If it is set as \code{TRUE}, the progress bars will be
+displayed while the code is running.}
+
+\item{eval.count}{Count for the number of times the \code{future_lapply}
+function has been called. If this object is zero, it means that the
+\code{future_lapply} function is being called for the first time in this
+subprocedure. Otherwise, it means that the \code{future_lapply} function
+has been called for more than once. This situation typically refers to the
+situations where there are some errors in the first time of the
+replications.}
+
+\item{n.bs}{Total number of replications to be conducted in this procedure.}
 }
 \value{
 Returns a list of output that are obtained from the subsampling

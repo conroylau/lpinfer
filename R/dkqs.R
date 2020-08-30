@@ -425,7 +425,7 @@ dkqs.qlp <- function(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
 #'   DKQS test. This function supports parallel programming via the
 #'   \code{future.apply} package.
 #'
-#' @import future.apply
+#' @import future.apply progressr
 #'
 #' @param s.star.list The list of values of
 #'    \eqn{\hat{\bm{s}}^\star \equiv \bm{A}_{\mathrm{obs}}\hat{\bm{x}}_n^\star}
@@ -474,6 +474,7 @@ dkqs.bs <- function(data, lpmodel, beta.tgt, R, maxR, s.star.list, tau.list,
   # ---------------- #
   # Step 2: Bootstrap replicatoins
   # ---------------- #
+  eval.count <- 0
   while ((R.succ < R) & (R.eval != maxR)) {
     # Evaluate the list of indices to be passed to 'future_lapply'
     bs.temp <- bs.assign(R, R.eval, R.succ, maxR, any.list)
@@ -482,17 +483,29 @@ dkqs.bs <- function(data, lpmodel, beta.tgt, R, maxR, s.star.list, tau.list,
     bs.list <- bs.temp$bs.list
 
     # Obtain results from the bootstrap replications
-    dkqs.return <- future.apply::future_lapply(bs.list,
-                                               FUN = dkqs.bs.fn,
-                                               future.seed = seed,
-                                               data = data,
-                                               lpmodel = lpmodel,
-                                               beta.obs = beta.obs.hat,
-                                               beta.tgt = beta.tgt,
-                                               s.star.list = s.star.list,
-                                               tau.list = tau.list,
-                                               n = n,
-                                               solver = solver)
+    progressr::with_progress({
+      if (isTRUE(progress)) {
+        pbar <- progressr::progressor(along = i0:i1)
+      } else {
+        pbar <- NULL
+      }
+      dkqs.return <- future.apply::future_lapply(bs.list,
+                                                 FUN = dkqs.bs.fn,
+                                                 future.seed = seed,
+                                                 data = data,
+                                                 lpmodel = lpmodel,
+                                                 beta.obs = beta.obs.hat,
+                                                 beta.tgt = beta.tgt,
+                                                 s.star.list = s.star.list,
+                                                 tau.list = tau.list,
+                                                 n = n,
+                                                 solver = solver,
+                                                 pbar = pbar,
+                                                 progress = progress,
+                                                 eval.count = eval.count,
+                                                 n.bs = i1 - i0 + 1)
+      eval.count <- eval.count + 1
+    })
 
     # Update the list and parameters
     post.return <- post.bs(dkqs.return, i0, i1, R.eval, T.list,
@@ -555,6 +568,15 @@ dkqs.bs <- function(data, lpmodel, beta.tgt, R, maxR, s.star.list, tau.list,
 #' @param x This is either the list of indices that represent the bootstrap
 #'   replications, or the list of bootstrap components of the \code{lpmodel}
 #'   object passed from the user.
+#' @param pbar Progress bar object.
+#' @param eval.count Count for the number of times the \code{future_lapply}
+#'   function has been called. If this object is zero, it means that the
+#'   \code{future_lapply} function is being called for the first time in this
+#'   subprocedure. Otherwise, it means that the \code{future_lapply} function
+#'   has been called for more than once. This situation typically refers to the
+#'   situations where there are some errors in the first time of the
+#'   replications.
+#' @param n.bs Total number of replications to be conducted in this procedure.
 #'
 #' @return Returns a list of output that are obtained from the DKQS
 #'   procedure:
@@ -566,9 +588,20 @@ dkqs.bs <- function(data, lpmodel, beta.tgt, R, maxR, s.star.list, tau.list,
 #' @export
 #'
 dkqs.bs.fn <- function(x, data, lpmodel, beta.obs.hat, beta.tgt, s.star.list,
-                       tau.list, solver, n) {
+                       tau.list, solver, n, pbar, eval.count, n.bs, progress) {
   # ---------------- #
-  # Step 1: Initialize the parameters
+  # Step 1: Print progress bar
+  # ---------------- #
+  if (isTRUE(progress)) {
+    if (eval.count == 0) {
+      pbar(sprintf("(Computing %s bootstrap estimates)", n.bs))
+    } else {
+      pbar(sprintf("(Computing %s extra bootstrap estimates)", n.bs))
+    }
+  }
+
+  # ---------------- #
+  # Step 2: Initialize the parameters
   # ---------------- #
   # Initialization
   T.bs.list <- list()
@@ -577,14 +610,15 @@ dkqs.bs.fn <- function(x, data, lpmodel, beta.obs.hat, beta.tgt, s.star.list,
   msg <- NULL
 
   # Replace lpmodel by x if x is a list
-  if (is.list(x)) {
-    lpm <- lpmodel.update(lpmodel, x)
+  if (is.list(lpmodel$beta.obs)) {
+    lpm <- lpmodel
+    lpm$beta.obs <- lpmodel$beta.obs
   } else {
     lpm <- lpmodel
   }
 
   # ---------------- #
-  # Step 2: Conduct one bootstrap replication
+  # Step 3: Conduct one bootstrap replication
   # ---------------- #
   # Draw data
   if (!is.null(data)) {

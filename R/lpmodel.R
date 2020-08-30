@@ -481,10 +481,10 @@ lpmodel.update <- function(lpm.de, lpm.st) {
 
   # Combine the bootstrap estimate with the deterministic component
   for (i in seq_along(lpmodel.namelist)) {
-    if (is.null(lpm.st[[lpmodel.namelist[i]]])) {
-      lpm.st[[lpmodel.namelist[i]]] <- lpm.de[[lpmodel.namelist[i]]]
+    if (!is.null(lpm.st[[lpmodel.namelist[i]]])) {
+      lpm.de[[lpmodel.namelist[i]]] <- lpm.st[[lpmodel.namelist[i]]]
     }
   }
 
-  return(lpm.st)
+  return(lpm.de)
 }
