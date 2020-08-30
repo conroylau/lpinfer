@@ -54,6 +54,8 @@ bs.assign <- function(R, R.eval, R.succ, maxR, any.list) {
 #' @param error.list List of error messages.
 #' @param param.list List of parameters (if applicable).
 #' @param error.param List of parameters that lead to errors (if applicable).
+#' @param ub.list List of upper bounds (if applicable).
+#' @param lb.list List of lower bounds (if applicable).
 #'
 #' @return Returns the following three objects.
 #'   \item{R.succ}{Number of successful bootstrap replications.}
@@ -64,12 +66,14 @@ bs.assign <- function(R, R.eval, R.succ, maxR, any.list) {
 #'   \item{error.list}{List of error messages (if applicable).}
 #'   \item{error.param}{List of parameters that lead to errors (if
 #'     applicable).}
+#'   \item{ub.list}{List of upper messages (if applicable).}
+#'   \item{lb.list}{List of lower messages (if applicable).}
 #'
 #' @export
 #'
 post.bs <- function(test.return, i0, i1, R.eval, T.list = NULL,
                     beta.list = NULL, error.list = NULL, list.param = NULL,
-                    error.param = NULL) {
+                    error.param = NULL, ub.list = NULL, lb.list = NULL) {
   # Update the lists
   if (!is.null(T.list)) {
     T.list <- c(unlist(T.list), unname(unlist(sapply(test.return, "[", "Ts"))))
@@ -84,6 +88,12 @@ post.bs <- function(test.return, i0, i1, R.eval, T.list = NULL,
   if (!is.null(error.param)) {
     error.param <- c(error.param, sapply(test.return, "[", "param"))
   }
+  if (!is.null(ub.list)) {
+    ub.list <- c(ub.list, sapply(test.return, "[", "ub"))
+  }
+  if (!is.null(lb.list)) {
+    lb.list <- c(lb.list, sapply(test.return, "[", "lb"))
+  }
 
   # Update the number of successful bootstrap replications
   R.succ <- length(beta.list)
@@ -94,7 +104,9 @@ post.bs <- function(test.return, i0, i1, R.eval, T.list = NULL,
               T.list = T.list,
               beta.list = beta.list,
               error.list = error.list,
-              error.param = error.param))
+              error.param = error.param,
+              ub.list = ub.list,
+              lb.list = lb.list))
 }
 
 #' Gets the current seed with RNG kind "L'Ecuyer-CMRG"
