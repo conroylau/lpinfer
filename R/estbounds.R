@@ -46,8 +46,8 @@
 #'   }
 #'
 #' @return Returns the bounds subject to the shape constraints.
-#'   \item{ub}{Upper bound with shape constraints.}
-#'   \item{lb}{Lower bound with shape constraints.}
+#'   \item{ub}{Upper bound.}
+#'   \item{lb}{Lower bound.}
 #'   \item{mincriterion}{Objective value of the first-stage problem (i.e.
 #'      \code{mincriterion}).}
 #'   \item{est}{Indicator of whether estimation is involved in the
