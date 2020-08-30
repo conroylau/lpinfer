@@ -84,7 +84,7 @@ estbounds <- function(data = NULL, lpmodel, kappa = 1e-5, norm = 2,
   # Default - Boolean variable of whether the answer to the scenario 1 is
   # feasible or not
   if (isFALSE(estimate)) {
-    ### Scenario 1: Estimate = FASLE, i.e. solve the exact problem
+    ### Scenario 1: Estimate = FALSE, i.e. solve the exact problem
     ub_shp0 <- estbounds.original(data, lpmodel, "max", solver)
     lb_shp0 <- estbounds.original(data, lpmodel, "min", solver)
 
@@ -219,7 +219,7 @@ estbounds.original <- function(data, lpmodel, original.sense, solver) {
   }
   beta.original <- c(beta.obs.hat, lpmodel$beta.shp)
 
-  # Sense contraints
+  # Sense constraints
   sense.original <- c(rep("=", nrow(A.original)))
 
   # Zero lower bound
@@ -517,7 +517,7 @@ estbounds.check <- function(data, lpmodel, kappa, norm, solver, estimate,
   solver.name <- solver.return$solver.name
 
   # Check kappa
-  kappa <- check.nonnegaetive(kappa, "kappa")
+  kappa <- check.nonnegative(kappa, "kappa")
 
   # Check Boolean
   check.boolean(progress, "progress")
@@ -828,7 +828,7 @@ print.mincriterion <- function(x, ...) {
 #' @export
 #'
 summary.mincriterion <- function(x, ...) {
-  # Print the minimum value, normed used and solver
+  # Print the minimum value, norm used and solver
   cat(sprintf("Minimum value: %s \n", round(x$objval, digits = 5)))
   cat(sprintf("Norm used: %s \n", x$norm))
   cat(sprintf("Solver: %s \n", x$solver))

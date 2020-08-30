@@ -22,7 +22,7 @@ rcplex.optim(Af, bf, nf, A, rhs, sense, modelsense, lb, weight = NULL)
 \item{modelsense}{The indicator of whether the model is to max or min an
 objective function.}
 
-\item{lb}{The lower lound vector.}
+\item{lb}{The lower bound vector.}
 
 \item{weight}{Weighting matrix.}
 }

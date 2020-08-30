@@ -816,7 +816,7 @@ dkqs.check <- function(data, lpmodel, beta.tgt, R, Rmulti, tau, n, solver,
   check.numeric(beta.tgt, "beta.tgt")
   check.positiveinteger(R, "R")
   for (i in 1:length(tau)) {
-    check.nonnegaetive(tau[i], "tau")
+    check.nonnegative(tau[i], "tau")
   }
 
   # Check Boolean

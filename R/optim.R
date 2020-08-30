@@ -12,7 +12,7 @@
 #' @param modelsense The indicator of whether the model is to max or min an
 #'    objective function.
 #' @param sense The sense of the linear constraints.
-#' @param lb The lower lound vector.
+#' @param lb The lower bound vector.
 #' @param qc List of quadratic constraint(s). There can be multiple quadratic
 #'    constraints. Each constraint has to be a list.
 #' @param weight Weighting matrix.
@@ -47,7 +47,7 @@ gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL,
   model$A <- A
   model$rhs <- rhs
 
-  # Quadrtaic constraints
+  # Quadratic constraints
   model$quadcon <- qc
 
   # Model sense and lower bound
@@ -180,7 +180,7 @@ cplexapi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
   } else {
     # Solving quadratic program
     stop("This version can only solve linear programs by CPLEX at the moment.
-         Please use another solver for quadratic progarms.")
+         Please use another solver for quadratic programs")
   }
   cplexAPI::closeEnvCPLEX(env)
 

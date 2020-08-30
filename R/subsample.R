@@ -333,7 +333,7 @@ subsample.bs <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
   }
 
   # ---------------- #
-  # Step 2: Bootstrap replicatoins
+  # Step 2: Bootstrap replications
   # ---------------- #
   eval.count <- 0
   while ((R.succ < R) & (R.eval != maxR)) {

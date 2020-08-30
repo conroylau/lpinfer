@@ -34,7 +34,7 @@ gurobi.optim(
 \item{modelsense}{The indicator of whether the model is to max or min an
 objective function.}
 
-\item{lb}{The lower lound vector.}
+\item{lb}{The lower bound vector.}
 
 \item{qc}{List of quadratic constraint(s). There can be multiple quadratic
 constraints. Each constraint has to be a list.}

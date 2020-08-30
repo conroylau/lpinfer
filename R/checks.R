@@ -98,7 +98,7 @@ check.positiveinteger <- function(x, name.var) {
 #'
 #' @export
 #'
-check.nonnegaetive <- function(x, name.var) {
+check.nonnegative <- function(x, name.var) {
   if (!is.numeric(x)) {
     # Call the general error message function
     check.errormsg(name.var, "a nonnegative number")
