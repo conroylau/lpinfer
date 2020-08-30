@@ -20,7 +20,7 @@ confidence interval.}
 \item{a}{Lower bound of the current interval. This is \code{NULL} if the
 initial end-points are being evaluated.}
 
-\item{b}{Upper bound of teh current interval. This is \code{NULL} if the
+\item{b}{Upper bound of the current interval. This is \code{NULL} if the
 initial end-points are being evaluated.}
 
 \item{progress}{The boolean variable for whether the result messages should

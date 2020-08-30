@@ -9,10 +9,14 @@
 #' @param farg List of arguments to be passed to the function of testing
 #'    procedure.
 #' @param alpha Significance level of the test.
-#' @param lb0 Logical lower bound for the confidence interval.
-#' @param lb1 Maximum possible lower bound for the confidence interval.
-#' @param ub0 Logical upper bound for the confidence interval.
-#' @param ub1 Minimum possible upper bound for the confidence interval.
+#' @param lb0 Logical lower bound for the confidence interval. This is not
+#'    required if the function \code{chorussell} is used.
+#' @param lb1 Maximum possible lower bound for the confidence interval. This is
+#'    not required if the function \code{chorussell} is used.
+#' @param ub0 Logical upper bound for the confidence interval. This is not
+#'    required if the function \code{chorussell} is used.
+#' @param ub1 Minimum possible upper bound for the confidence interval. This
+#'    is not required if the function \code{chorussell} is used.
 #' @param tol Tolerance level in the bisection method.
 #' @param max.iter Maximum number of iterations in the bisection method.
 #' @param df_ci Data frame that consists the points and the corresponding
@@ -80,59 +84,76 @@ invertci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
   # ---------------- #
   alpha <- sort(alpha)
   for (i in 1:length(alpha)) {
+    if (!identical(f, chorussell)) {
+      # If `f` is not `chorussell`, use the bisection method in `invertci`
+      if (i > 1 & (progress == TRUE)) {
+        cat("\n")
+      }
 
-    if (i > 1 & (progress == TRUE)) {
-      cat("\n")
-    }
+      df_ci <- invertci.return$df_ci
+      termination <- NULL
 
-    df_ci <- invertci.return$df_ci
-    termination <- NULL
+      ### Compute upper bound of confidence interval
+      if (progress == TRUE) {
+        cat(sprintf(" < Constructing confidence interval for alpha = %s >\n",
+                    alpha[i]))
+        cat("\n === Computing upper bound of confidence interval ===\n")
+      }
+      ub_return <- ci.bisection(f, farg, alpha[i], ub1, ub0, tol, max.iter,
+                                df_ci, progress, 1, dp)
+      # Update data frame
+      df_ci <- ub_return$df_ci
+      # Data frame storing all messages in each iteration
+      df_ub <- ub_return$df_bis
+      # Obtain termination message
+      termination$ub <- ub_return$last_iter_msg
+      # Obtain upper bound
+      ub <- ub_return$pt
 
-    ### Compute upper bound of confidence interval
-    if (progress == TRUE) {
-      cat(sprintf(" < Constructing confidence interval for alpha = %s >\n",
-                  alpha[i]))
-      cat("\n === Computing upper bound of confidence interval ===\n")
-    }
-    ub_return <- ci.bisection(f, farg, alpha[i], ub1, ub0, tol, max.iter,
-                              df_ci, progress, 1, dp)
-    # Update data frame
-    df_ci <- ub_return$df_ci
-    # Data frame storing all messages in each iteration
-    df_ub <- ub_return$df_bis
-    # Obtain termination message
-    termination$ub <- ub_return$last_iter_msg
-    # Obtain upper bound
-    ub <- ub_return$pt
+      ### Compute lower bound of confidence interval
+      if (progress == TRUE) {
+        cat("\n === Computing lower bound of confidence interval ===\n")
+      }
+      lb_return <- ci.bisection(f, farg, alpha[i], lb0, lb1, tol, max.iter,
+                                df_ci, progress, -1, dp)
+      # Update data frame
+      df_ci <- lb_return$df_ci
+      # Data frame storing all messages in each iteration
+      df_lb <- lb_return$df_bis
+      # Obtain termination message
+      termination$lb <- lb_return$last_iter_msg
+      # Obtain lower bound
+      lb <- lb_return$pt
 
-    ### Compute lower bound of confidence interval
-    if (progress == TRUE) {
-      cat("\n === Computing lower bound of confidence interval ===\n")
-    }
-    lb_return <- ci.bisection(f, farg, alpha[i], lb0, lb1, tol, max.iter, df_ci,
-                              progress, -1, dp)
-    # Update data frame
-    df_ci <- lb_return$df_ci
-    # Data frame storing all messages in each iteration
-    df_lb <- lb_return$df_bis
-    # Obtain termination message
-    termination$lb <- lb_return$last_iter_msg
-    # Obtain lower bound
-    lb <- lb_return$pt
+      # Compute the number of Iterations
+      iter <- lb_return$iter + ub_return$iter
 
-    # Compute the number of Iterations
-    iter <- lb_return$iter + ub_return$iter
+      # ---------------- #
+      # Step 3: Store information as list if alphas is a vector
+      # ---------------- #
+      if (length(alpha) > 1) {
+        df_ub_list <- c(df_ub_list, list(df_ub))
+        df_lb_list <- c(df_lb_list, list(df_lb))
+        termination_list <- c(termination_list, list(termination))
+        lb_list <- c(lb_list, list(lb))
+        ub_list <- c(ub_list, list(ub))
+        iter_list <- c(iter_list, list(iter))
+      }
+    } else {
+      # If `f` is `chorussell`, use the bisection method in `chorussell`
+      farg$tol <- tol
+      farg$alpha <- alpha[i]
+      farg$ci <- TRUE
+      chorussell.return <- do.call(chorussell, farg)
+      lb <- chorussell.return$ci.df[1, 2]
+      ub <- chorussell.return$ci.df[1, 3]
+      iter <- chorussell.return$iter
 
-    # ---------------- #
-    # Step 3: Store information as list if alphas is a vector
-    # ---------------- #
-    if (length(alpha) > 1) {
-      df_ub_list <- c(df_ub_list, list(df_ub))
-      df_lb_list <- c(df_lb_list, list(df_lb))
-      termination_list <- c(termination_list, list(termination))
-      lb_list <- c(lb_list, list(lb))
-      ub_list <- c(ub_list, list(ub))
-      iter_list <- c(iter_list, list(iter))
+      if (length(alpha) > 1) {
+        lb_list <- c(lb_list, list(lb))
+        ub_list <- c(ub_list, list(ub))
+        iter_list <- c(iter_list, list(iter))
+      }
     }
   }
 
@@ -140,12 +161,18 @@ invertci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
   # Step 4: Store information as list if alphas is a vector
   # ---------------- #
   if (length(alpha) > 1) {
-    df_lb <- df_lb_list
-    df_ub <- df_ub_list
-    termination <- termination_list
-    lb <- lb_list
-    ub <- ub_list
-    iter <- iter_list
+    if (!identical(f, chorussell)) {
+      df_lb <- df_lb_list
+      df_ub <- df_ub_list
+      termination <- termination_list
+      lb <- lb_list
+      ub <- ub_list
+      iter <- iter_list
+    } else {
+      lb <- lb_list
+      ub <- ub_list
+      iter <- iter_list
+    }
   }
 
   # ---------------- #
@@ -154,14 +181,18 @@ invertci <- function(f, farg, alpha = .05, lb0 = NULL, lb1 = NULL, ub0 = NULL,
   output <- list(ub = ub,
                  lb = lb,
                  df_ci = df_ci,
-                 df_ub = df_ub,
-                 df_lb = df_lb,
                  tol = tol,
                  alpha = alpha,
                  iter = iter,
-                 max.iter = max.iter,
-                 call = call,
-                 termination = termination)
+                 call = call)
+
+  # The following information are returned only if `f` is not `chorussell`
+  if (!identical(f, chorussell)) {
+    output$max.iter <- max.iter
+    output$df_ub <- df_ub
+    output$df_lb <- df_lb
+    output$termination <- termination
+  }
   attr(output, "class") <- "invertci"
 
   # Return output
@@ -251,7 +282,7 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, df_ci,
   # ---------------- #
   for (i in 1:max.iter) {
     # Bisection method is completed if the difference between the two points
-    # is below the tolereance level.
+    # is below the tolerance level.
     if (abs(b - a) < tol) {
       if (progress == TRUE) {
         tol_msg <- paste(" >>> Length of interval is below tolerance level. ",
@@ -429,7 +460,7 @@ dkqs.logicalb <- function(f, farg) {
 #'    \code{bisec.eval}.
 #' @param a Lower bound of the current interval. This is \code{NULL} if the
 #'    initial end-points are being evaluated.
-#' @param b Upper bound of teh current interval. This is \code{NULL} if the
+#' @param b Upper bound of the current interval. This is \code{NULL} if the
 #'    initial end-points are being evaluated.
 #' @param df_bis Data frame storing the information from the bisection method.
 #' @inheritParams invertci
@@ -641,22 +672,26 @@ summary.invertci_single <- function(x, alphas, ...) {
               round(x$ub, digits = 5)))
   cat(sprintf("\nMaximum number of iterations: %s\n", x$max.iter))
   cat(sprintf("Tolerance level: %s\n", x$tol))
-  cat("\n")
 
-  # ---------------- #
-  # Step 2: Messages in constructing the upper bound
-  # ---------------- #
-  cat("Details:\n\n")
-  cat("=== Iterations in constructing upper bound:")
-  consolidate.invertci(x$df_ub, x$termination$ub)
-  cat("\n\n")
+  # Display the details if `f` is not `chorussell` (where x$df_ub and
+  # x$df_lb will be NULL)
+  if (!is.null(x$df_ub)) {
+    cat("\n")
+    # ---------------- #
+    # Step 2: Messages in constructing the upper bound
+    # ---------------- #
+    cat("Details:\n\n")
+    cat("=== Iterations in constructing upper bound:")
+    consolidate.invertci(x$df_ub, x$termination$ub)
+    cat("\n\n")
 
-  # ---------------- #
-  # Step 3: Messages in constructing the lower bound
-  # ---------------- #
-  cat("=== Iterations in constructing lower bound:")
-  consolidate.invertci(x$df_lb, x$termination$lb)
-  cat("\n\n")
+    # ---------------- #
+    # Step 3: Messages in constructing the lower bound
+    # ---------------- #
+    cat("=== Iterations in constructing lower bound:")
+    consolidate.invertci(x$df_lb, x$termination$lb)
+    cat("\n\n")
+  }
 }
 
 #' Summary of results from \code{invertci} with multiple alphas
@@ -707,27 +742,30 @@ summary.invertci_multiple <- function(x, alphas, ...) {
                              round(x$ub[[i]], digits = 5))
     }
     print(df)
-    cat("\n")
 
-    # Display the details
-    cat("Details:\n\n")
-    for (i in alphas.seq) {
-      cat(sprintf("<Confidence interval for significance level = %s>\n\n",
-                  x$alpha[i]))
+    # Display the details if `f` is not `chorussell` (where x$df_ub and
+    # x$df_lb will be NULL)
+    if (!is.null(x$df_ub)) {
+      cat("\n")
+      cat("Details:\n\n")
+      for (i in alphas.seq) {
+        cat(sprintf("<Confidence interval for significance level = %s>\n\n",
+                    x$alpha[i]))
 
-      # ---------------- #
-      # Step 3: Messages in constructing the upper bound
-      # ---------------- #
-      cat("=== Iterations in constructing upper bound:")
-      consolidate.invertci(x$df_ub[[i]], x$termination[[i]]$ub)
-      cat("\n\n")
+        # ---------------- #
+        # Step 3: Messages in constructing the upper bound
+        # ---------------- #
+        cat("=== Iterations in constructing upper bound:")
+        consolidate.invertci(x$df_ub[[i]], x$termination[[i]]$ub)
+        cat("\n\n")
 
-      # ---------------- #
-      # Step 4: Messages in constructing the lower bound
-      # ---------------- #
-      cat("=== Iterations in constructing lower bound:")
-      consolidate.invertci(x$df_lb[[i]], x$termination[[i]]$lb)
-      cat("\n\n")
+        # ---------------- #
+        # Step 4: Messages in constructing the lower bound
+        # ---------------- #
+        cat("=== Iterations in constructing lower bound:")
+        consolidate.invertci(x$df_lb[[i]], x$termination[[i]]$lb)
+        cat("\n\n")
+      }
     }
   }
 }
@@ -824,7 +862,7 @@ invertci.check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max.iter,
 
   # Part 2. Check farg
   if (class(farg) != "list") {
-    stop("The arguemnt of the function ('farg') has to be a list.",
+    stop("The argument of the function ('farg') has to be a list.",
          call. = FALSE)
   }
 
@@ -833,64 +871,72 @@ invertci.check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max.iter,
     check.numrange(alpha[i], "alpha", "closed", 0, "closed", 1)
   }
 
-  # Part 4: Check lb0 and ub0
-  if (is.null(lb0) | is.null(ub0)) {
-    # Part A: If lb0 and ub0 are null, check whether if the function is dkqs
-    # If yes, compute lb0 and ub0. Otherwise, return terminate the function.
-    if (as.character(substitute(f)) == "dkqs") {
-      logicalb_return = dkqs.logicalb(f, farg)
-      if (is.null(lb0)) {
-        lb0 = logicalb_return$lb0
-      }
-      if (is.null(ub0)) {
-        ub0 = logicalb_return$ub0
+  # lb and ub are not required if f is chorussell
+  if (!identical(f, chorussell)) {
+    # Part 4: Check lb0 and ub0
+    if (is.null(lb0) | is.null(ub0)) {
+      # Part A: If lb0 and ub0 are null, check whether if the function is dkqs
+      # If yes, compute lb0 and ub0. Otherwise, return terminate the function.
+      if (as.character(substitute(f)) == "dkqs") {
+        logicalb_return = dkqs.logicalb(f, farg)
+        if (is.null(lb0)) {
+          lb0 = logicalb_return$lb0
+        }
+        if (is.null(ub0)) {
+          ub0 = logicalb_return$ub0
+        }
+      } else {
+        if (is.null(ub0) | !is.null(lb0)) {
+          stop("Please provide the logical upper bound 'ub0'.", call. = FALSE)
+        } else if (is.null(lb0) | !is.null(ub0)) {
+          stop("Please provide the logical lower bound 'lb0'.", call. = FALSE)
+        } else {
+          stop("Please provide the logical lower bound 'lb0' and the logical
+             upper bound 'ub0'.", call. = FALSE)
+        }
       }
     } else {
-      if (is.null(ub0) | !is.null(lb0)) {
-        stop("Please provide the logical upper bound 'ub0'.", call. = FALSE)
-      } else if (is.null(lb0) | !is.null(ub0)) {
-        stop("Please provide the logical lower bound 'lb0'.", call. = FALSE)
-      } else {
-        stop("Please provide the logical lower bound 'lb0' and the logical
-             upper bound 'ub0'.", call. = FALSE)
+      # Part B: If lb0 and ub0 are both nonnull, check whether they are numeric.
+      if (!(is.numeric(lb0) == TRUE & length(lb0) == 1)) {
+        stop("The argument 'lb0' must be a scalar.", call. = FALSE)
+      }
+      if (!(is.numeric(ub0) == TRUE & length(ub0) == 1)) {
+        stop("The argument 'ub0' must be a scalar.", call. = FALSE)
       }
     }
-  } else {
-    # Part B: If lb0 and ub0 are both nonnull, check whether they are numeric.
-    if (!(is.numeric(lb0) == TRUE & length(lb0) == 1)) {
-      stop("The argument 'lb0' must be a scalar.", call. = FALSE)
-    }
-    if (!(is.numeric(ub0) == TRUE & length(ub0) == 1)) {
-      stop("The argument 'ub0' must be a scalar.", call. = FALSE)
-    }
-  }
 
-  # Part 5: Check lb1 and ub1
-  # Part A: Check lb1
-  if (is.null(lb1)) {
-    # If lb1 is null, assign lb1 as ub0
-    lb1 = ub0
-  } else {
-    # If lb1 is nonnull, check whether its numeric
-    check.numeric(lb1, "lb1")
-  }
-  # Part B: Check ub1
-  if (is.null(ub1)) {
-    # If ub1 is null, assign ub1 as lb0
-    ub1 = lb0
-  } else {
-    # If ub1 is nonnull, check whether its numeric
-    check.numeric(lb0, "lb0")
-  }
+    # Part 5: Check lb1 and ub1
+    # Part A: Check lb1
+    if (is.null(lb1)) {
+      # If lb1 is null, assign lb1 as ub0
+      lb1 = ub0
+    } else {
+      # If lb1 is nonnull, check whether its numeric
+      check.numeric(lb1, "lb1")
+    }
+    # Part B: Check ub1
+    if (is.null(ub1)) {
+      # If ub1 is null, assign ub1 as lb0
+      ub1 = lb0
+    } else {
+      # If ub1 is nonnull, check whether its numeric
+      check.numeric(lb0, "lb0")
+    }
 
-  # Part 6: Check the difference between lb0 vs lb1, and ub0 vs ub1
-  if (lb0 > lb1) {
-    stop("The logical lower bound 'lb0' cannot be larger than the maximum
+    # Part 6: Check the difference between lb0 vs lb1, and ub0 vs ub1
+    if (lb0 > lb1) {
+      stop("The logical lower bound 'lb0' cannot be larger than the maximum
          possible lower bound 'lb1'.")
-  }
-  if (ub0 < ub1) {
-    stop("The logical upper bound 'ub0' cannot be smaller than the minimum
+    }
+    if (ub0 < ub1) {
+      stop("The logical upper bound 'ub0' cannot be smaller than the minimum
          possible upper bound 'ub1'.")
+    }
+  } else {
+    lb0 <- NULL
+    lb1 <- NULL
+    ub0 <- NULL
+    ub1 <- NULL
   }
 
   # Part 7: Check tol
@@ -930,7 +976,7 @@ invertci.check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max.iter,
 
     } else {
       stop(gsub("\\s+", " ",
-                "The data povided 'df_ci' must either be a data.frame,
+                "The data provided 'df_ci' must either be a data.frame,
                 a data.table, or a matrix."), call. = FALSE)
     }
   }
@@ -946,7 +992,7 @@ invertci.check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max.iter,
               ub1 = ub1))
 }
 
-#' Function to consolidate the print the summary table for the interations
+#' Function to consolidate the print the summary table for the interactions
 #'
 #' @description This function is used to consolidate the summary table for
 #'   display via the \code{summary} command.

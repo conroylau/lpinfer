@@ -2,7 +2,7 @@
 % Please edit documentation in R/invertci.R
 \name{consolidate.invertci}
 \alias{consolidate.invertci}
-\title{Function to consolidate the print the summary table for the interations}
+\title{Function to consolidate the print the summary table for the interactions}
 \usage{
 consolidate.invertci(df, msg)
 }

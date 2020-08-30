@@ -26,13 +26,17 @@ procedure.}
 
 \item{alpha}{Significance level of the test.}
 
-\item{lb0}{Logical lower bound for the confidence interval.}
+\item{lb0}{Logical lower bound for the confidence interval. This is not
+required if the function \code{chorussell} is used.}
 
-\item{lb1}{Maximum possible lower bound for the confidence interval.}
+\item{lb1}{Maximum possible lower bound for the confidence interval. This is
+not required if the function \code{chorussell} is used.}
 
-\item{ub0}{Logical upper bound for the confidence interval.}
+\item{ub0}{Logical upper bound for the confidence interval. This is not
+required if the function \code{chorussell} is used.}
 
-\item{ub1}{Minimum possible upper bound for the confidence interval.}
+\item{ub1}{Minimum possible upper bound for the confidence interval. This
+is not required if the function \code{chorussell} is used.}
 
 \item{tol}{Tolerance level in the bisection method.}
 
