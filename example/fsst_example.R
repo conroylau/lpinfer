@@ -2,11 +2,13 @@
 ##
 ##  Example file for fsst function
 ##
-##  This is an example code for applying the R module fsst on the missing
-##  data problem using the sample data by Torgovitsky (2019). This file
-##  illustrates how the module can be used to obtain the p-values.
+##  This is an example code for applying the fsst procedure on the missing
+##  data problem using the sample data. This file illustrates how the module
+##  can be used to obtain the p-values using the ull-information and two
+##  moments approach.
 ##
 ## ========================================================================= ##
+rm(list = ls())
 
 # ---------------- #
 # Part 1: Load required packages
@@ -15,116 +17,107 @@ library(lpinfer)
 library(future)
 
 # ---------------- #
-# Part 2: Data preparation
+# Part 2: Data and lpmodel preparation
 # ---------------- #
-# Read data
-data <- read.csv("./data/sampledata.csv")
+source("./example/dgp_missingdata.R")
+J <- 5
+N <- 1000
+data <- missingdata_draw(J = J, n = N, seed = 1, prob.obs = .5)
+lpmodel.full <- missingdata_lpm(J = J, info = "full", data = data)
+lpmodel.twom <- missingdata_lpm(J = J, info = "mean", data = data)
 
-# Compute parameters required
-N <- dim(data)[1]
-J <- length(unique(data[,"Y"])) - 1
-J1 <- J + 1
-pi <- 1 - mean(data[,"D"])
-
-# Compute matrices required
-yp <- seq(0,1,1/J)
-A_tgt <- matrix(c(yp, yp), nrow = 1)
-
-# Define the value of tau to be used
 tau <- sqrt(log(N)/N)
+beta.tgt <- .2
+lambda <- .5
+rho <- 1e-4
+reps <- 100
 
 # ---------------- #
-# Part 3: Construct matrices in lpmodel
+# Part 3: Run the fsst procedure
 # ---------------- #
-# Extract relevant information from data
-N <- nrow(sampledata)
-J <- length(unique(sampledata[,"Y"])) - 1
-J1 <- J + 1
-
-# Construct A.obs
-Aobs.full <- cbind(matrix(rep(0, J1 * J1), nrow = J1), diag(1, J1))
-
-# Construct A.tgt
-yp <- seq(0, 1, 1/J)
-Atgt <- matrix(c(yp, yp), nrow = 1)
-
-# Construct A.shp
-Ashp <- matrix(rep(1, ncol(Aobs.full)), nrow = 1)
-
-# ---------------- #
-# Part 4: Define functions to compute beta_obs_hat and Omega_hat
-# ---------------- #
-# Construct beta.obs (a function)
-betaobs.fullinfo <- function(data) {
-  beta <- NULL
-  y.list <- sort(unique(data[,"Y"]))
-  n <- dim(data)[1]
-  yn <- length(y.list)
-  for (i in 1:yn) {
-    beta.i <- sum((data[,"Y"] == y.list[i]) * (data[,"D"] == 1))/n
-    beta <- c(beta, c(beta.i))
-  }
-  beta <- as.matrix(beta)
-  return(list(beta = beta,
-              var = diag(yn)))
-}
-
-# ---------------- #
-# Part 5: Define the 'lpmodel' object
-# ---------------- #
-lpm.full <- lpmodel(A.obs    = Aobs.full,
-                    A.tgt    = Atgt,
-                    A.shp    = Ashp,
-                    beta.obs = betaobs.fullinfo,
-                    beta.shp = 1)
-
-# ---------------- #
-# Part 6: Run the FSST test
-# ---------------- #
+# Example 1 - Using full information approach and gurobi solver (1 core)
+set.seed(1)
+plan(multisession, workers = 1)
 set.seed(1)
 fsst.full1 <- fsst(data = sampledata,
-                   lpmodel = lpm.full,
-                   beta.tgt = 0.375,
-                   R = 100,
-                   lambda = 0.5,
+                   lpmodel = lpmodel.full,
+                   beta.tgt = beta.tgt,
+                   R = reps,
+                   lambda = lambda,
+                   rho = 1e-4,
+                   n = nrow(sampledata),
+                   weight.matrix = "identity",
+                   solver = "gurobi",
+                   progress = TRUE)
+
+# Example 2 - Using two moments approach and gurobi solver (1 core)
+set.seed(1)
+plan(multisession, workers = 1)
+fsst.twom1 <- fsst(data = sampledata,
+                   lpmodel = lpmodel.twom,
+                   beta.tgt = beta.tgt,
+                   R = reps,
+                   lambda = lambda,
+                   rho = 1e-4,
+                   n = nrow(sampledata),
+                   weight.matrix = "identity",
+                   solver = "gurobi",
+                   progress = TRUE)
+
+# Example 3 - Using two moments approach and gurobi solver (1 core) with
+# weight.matrix = "diag"
+set.seed(1)
+plan(multisession, workers = 1)
+fsst.twom2 <- fsst(data = sampledata,
+                   lpmodel = lpmodel.twom,
+                   beta.tgt = beta.tgt,
+                   R = reps,
+                   lambda = lambda,
                    rho = 1e-4,
                    n = nrow(sampledata),
                    weight.matrix = "diag",
                    solver = "gurobi",
                    progress = TRUE)
-print(fsst.full1)
-summary(fsst.full1)
 
-# ---------------- #
-# Part 7: Run the fsst module to compute multiple p-values
-# ---------------- #
+# Example 4 - Using two moments approach and gurobi solver (1 core) with
+# weight.matrix = "avar"
+set.seed(1)
+plan(multisession, workers = 1)
+fsst.twom3 <- fsst(data = sampledata,
+                   lpmodel = lpmodel.twom,
+                   beta.tgt = beta.tgt,
+                   R = reps,
+                   lambda = lambda,
+                   rho = 1e-4,
+                   n = nrow(sampledata),
+                   weight.matrix = "avar",
+                   solver = "gurobi",
+                   progress = TRUE)
+
+# Example 5 - Using full information approach and gurobi solver (1 core)
+# with multiple lambdas
 set.seed(1)
 fsst.full2 <- fsst(data = sampledata,
-                   lpmodel = lpm.full,
-                   beta.tgt = 0.375,
-                   R = 100,
-                   lambda = c(0.1, 0.2, 0.5),
-                   rho = 1e-4,
+                   lpmodel = lpmodel.full,
+                   beta.tgt = beta.tgt,
+                   R = reps,
+                   lambda = c(.1, .2, .5),
+                   rho = rho,
                    n = nrow(sampledata),
-                   weight.matrix = "diag",
+                   weight.matrix = "identity",
                    solver = "gurobi",
                    progress = TRUE)
-print(fsst.full2)
-summary(fsst.full2)
 
-# ---------------- #
-# Part 8: Run with data-driven lambda
-# ---------------- #
+# Example 6 - Using full information approach and gurobi solver (1 core)
+# with data-driven lambda
 set.seed(1)
 fsst.full3 <- fsst(data = sampledata,
-                   lpmodel = lpm.full,
-                   beta.tgt = 0.375,
-                   R = 100,
-                   lambda = c(0.1, NA),
-                   rho = 1e-4,
+                   lpmodel = lpmodel.full,
+                   beta.tgt = beta.tgt,
+                   R = reps,
+                   lambda = NA,
+                   rho = rho,
                    n = nrow(sampledata),
-                   weight.matrix = "diag",
+                   weight.matrix = "identity",
                    solver = "gurobi",
                    progress = TRUE)
-print(fsst.full3)
-summary(fsst.full3)
