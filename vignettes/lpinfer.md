@@ -34,11 +34,13 @@ vignette: |
         procedure](#test-1-dkqs-cone-tightening-procedure)
     -   [Test 2: Subsampling procedure](#test-2-subsampling-procedure)
     -   [Test 3: FSST procedure](#test-3-fsst-procedure)
+    -   [Test 4: Cho-Russell procedure](#test-4-cho-russell-procedure)
 -   [Constructing Bounds subject to Shape
     Constraints](#constructing-bounds-subject-to-shape-constraints)
 -   [Constructing Confidence
     Intervals](#constructing-confidence-intervals)
 -   [Parallel Programming](#parallel-programming)
+-   [Further Examples](#further-examples)
 -   [Help, Feature Requests and Bug
     Reports](#help-feature-requests-and-bug-reports)
 -   [References](#references)
@@ -53,6 +55,7 @@ this package supports the following tests:
 1.  Cone-tightening procedure by Deb et al. (2018)
 2.  Subsampling procedure
 3.  FSST procedure by Fang et al. (2020)
+4.  Procedure by Cho and Russell (2019)
 
 Apart from computing the *p*-values based on the above tests, this
 package can also construct confidence intervals and estimate the bounds
@@ -287,7 +290,7 @@ This can be done easily with the `standard.lpmodel` function in this
 -   `x.ub`
 
 The first five components are the same as the `lpmodel` class. The
-`sense.shp` vector stores the sense of the shape constraints (i.e. `>=`,
+`sense.shp` vector stores the sense of the shape constraints (i.e. `>=`,
 `=` or `<=`). The two components `x.lb` and `x.ub` correspond to the
 lower and upper bound of the `x` vector respectively.
 
@@ -391,6 +394,13 @@ bootstrap data) in the bootstrap procedure.
     draw. If the component is a `list`, then each object in the list
     represents the component in the bootstrap draw.
 
+-   If `data` is passed to the testing procedure, then the argument `n`
+    (that represents the total number of observations in the `data` is
+    optional). Otherwise, when `data` is not passed to the testing
+    procedure (which typically refers to the case where the bootstrap
+    estimates have already been incorporated in the `lpmodel` object),
+    then the argument `n` is required.
+
 #### Remarks for the component being a function
 
 If the component is a `function`, then it has to fulfill the following
@@ -477,6 +487,7 @@ dkqs(data = sampledata,
      beta.tgt = .375,
      R = 100,
      tau = sqrt(log(N)/N),
+     n = NULL,
      solver = "gurobi",
      progress = FALSE)
 ```
@@ -489,6 +500,9 @@ where
 -   `R` refers to the total number of bootstraps.
 -   `tau` refers to the tuning parameter tau. This will be explained
     [here](#choosing-the-tau-parameter). It can be a scalar or a vector.
+-   `n` refers to the total number of observations in `data`. This is
+    optional if `data` is passed to the testing procedure. See
+    [here](#deterministic-or-stochastic-components) for more details.
 -   `progress` refers to the boolean variable for whether the progress
     bar should be printed in the testing procedure.
 
@@ -687,6 +701,7 @@ subsample(data = sampledata,
           solver = "gurobi",
           norm = 2,
           phi = 2/3,
+          n = NULL,
           replace = FALSE,
           progress = FALSE)
 ```
@@ -813,9 +828,9 @@ summary(subsample.full)
 
 As indicated [earlier](#choosing-the-phi-and-replace-parameter), the
 `subsample` command can perform the bootstrap and *m* out of *n*
-boostrap procedures. They are illustrated as follows.
+bootstrap procedures. They are illustrated as follows.
 
-The following is an exmaple of performing a bootstrapping procedure:
+The following is an example of performing a bootstrapping procedure:
 
 ```r
 set.seed(1)
@@ -832,7 +847,7 @@ print(subsample.bootstrap)
 #> p-value: 0.48
 ```
 
-The following is an exmaple of performing a *m* out of *n* bootstrapping
+The following is an example of performing a *m* out of *n* bootstrapping
 procedure:
 
 ```r
@@ -866,6 +881,7 @@ fsst(data = sampledata,
      R = 100,
      lambda = 0.5,
      rho = 1e-4,
+     n = NULL,
      weight.matrix = "diag",
      solver = "gurobi",
      progress = FALSE)
@@ -874,16 +890,12 @@ fsst(data = sampledata,
 where
 
 -   `lambda` refers to the tuning parameter that is used to obtain the
-    bootstrap estimates of the cone coponent in the test statistics.
+    bootstrap estimates of the cone component in the test statistics.
     Users can pass multiple `lambda`s in this argument. In addition, we
     also provide a data-driven approach to choose the `lambda`
     parameter. The details can be found [here](#data-driven-lambda).
 -   `rho` refers to the parameter used to studentize the variance
     matrices in the FSST procedure.
--   `n` is optional if `data` is passed. `n` is a variable that refers
-    to the number of rows of `data`. If the `beta.obs` in `lpmodel` is a
-    `list`, then users can skip `data` and pass the number of rows of
-    the `data` as `n` instead.
 -   `weight.matrix` is a string that determines the weighting matrix.
     The details can be found [here](#weighting-matrix).
 
@@ -1060,6 +1072,195 @@ print(fsst.full3)
 
 In the FSST procedure, the default is to use the data-driven `lambda`.
 
+
+### Test 4: Cho-Russell procedure
+
+The `chorussell` function in this `lpinfer` package is used to conduct
+the testing procedure by Cho and Russell (2019).
+
+#### Syntax
+
+The `chorussell` command has the following syntax:
+
+    chorussell(data = sampledata, 
+               lpmodel = lpm.full,
+               beta.tgt = 0.375,
+               R = 100,
+               kappa = 1e-5,
+               norm = 2,
+               n = NULL,
+               estimate = TRUE,
+               solver = "gurobi",
+               ci = FALSE,
+               alpha = 0.05,
+               tol = 1e-4,
+               progress = FALSE)
+
+where
+
+-   `ci` refers to whether a confidence interval or the *p*-value is
+    returned. By default, the *p*-value is returned.
+-   `alpha` refers to the significance level. This argument is not
+    required if `ci` is set as `FALSE`.
+-   `tol` refers to the tolerance level used in the bisection method to
+    search for the *p*-value. This argument is not required if `ci` is
+    set as `TRUE`.
+
+The rest of the arguments are the same as that in the `dkqs` and the
+`estbounds` procedures. In this function, `kappa` can be a vector.
+
+#### Components in `lpmodel`
+
+The following table summarizes whether the components in `lpmodel` can
+be deterministic or stochastic:
+
+<table>
+<thead>
+<tr class="header">
+<th>Component in <code>lpmodel</code></th>
+<th style="text-align: left;">Property</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>A.obs</code></td>
+<td style="text-align: left;">Deterministic</td>
+</tr>
+<tr class="even">
+<td><code>A.shp</code></td>
+<td style="text-align: left;">Deterministic</td>
+</tr>
+<tr class="odd">
+<td><code>A.tgt</code></td>
+<td style="text-align: left;">Deterministic</td>
+</tr>
+<tr class="even">
+<td><code>beta.obs</code></td>
+<td style="text-align: left;">Stochastic</td>
+</tr>
+<tr class="odd">
+<td><code>beta.shp</code></td>
+<td style="text-align: left;">Deterministic</td>
+</tr>
+</tbody>
+</table>
+
+#### Example (Returning confidence interval)
+
+To construct a confidence interval, the option `ci` has to be specified
+as `TRUE`. The following code can be used to construct a 95%-confidence
+interval:
+
+```r
+set.seed(1)
+cr.ci1 <- chorussell(data = sampledata, 
+                     lpmodel = lpm.full,
+                     beta.tgt = 0.375,
+                     R = 100,
+                     kappa = 1e-5,
+                     norm = 2,
+                     estimate = TRUE,
+                     solver = "gurobi",
+                     ci = TRUE,
+                     alpha = 0.05,
+                     progress = FALSE)
+print(cr.ci1)
+#> 95%-confidence interval: [0.36659, 0.6574]
+```
+
+As noted above, the `kappa` parameter can be a vector so one confidence
+interval will be returned for each `kappa`:
+
+```r
+set.seed(1)
+cr.ci2 <- chorussell(data = sampledata, 
+                     lpmodel = lpm.full,
+                     beta.tgt = 0.375,
+                     R = 100,
+                     kappa = c(1e-3, 1e-5),
+                     norm = 2,
+                     estimate = TRUE,
+                     solver = "gurobi",
+                     ci = TRUE,
+                     alpha = 0.05,
+                     progress = FALSE)
+print(cr.ci2)
+#> 95%-confidence intervals: 
+#>  kappa         intervals
+#>  1e-05 [0.36821, 0.6574]
+#>  1e-03  [0.364, 0.85701]
+```
+
+Again, more detailed information can be obtained via the `summary`
+command:
+
+```r
+summary(cr.ci2)
+#> 95%-confidence intervals: 
+#>  kappa         intervals
+#>  1e-05 [0.36821, 0.6574]
+#>  1e-03  [0.364, 0.85701]
+#> Solver: gurobi
+#> Norm: 2
+#> Number of successful bootstrap replications: 100
+```
+
+#### Example (Returning *p*-value)
+
+To compute the *p*-value, the option `ci` has to be specified as
+`FALSE`. The following code can be run to compute the *p*-value with
+tolerance level being 0.001:
+
+```r
+set.seed(1)
+cr.pv1 <- chorussell(data = sampledata, 
+                     lpmodel = lpm.full,
+                     beta.tgt = 0.375,
+                     R = 100,
+                     kappa = 1e-5,
+                     norm = 2,
+                     estimate = TRUE,
+                     solver = "gurobi",
+                     ci = FALSE,
+                     tol = 0.001,
+                     progress = FALSE)
+print(cr.pv1)
+#> p-value: 0.21973
+```
+
+Again, the `kappa` parameter can be a vector:
+
+```r
+set.seed(1)
+cr.pv2 <- chorussell(data = sampledata, 
+                     lpmodel = lpm.full,
+                     beta.tgt = 0.375,
+                     R = 100,
+                     kappa = c(1e-3, 1e-5),
+                     norm = 2,
+                     estimate = TRUE,
+                     solver = "gurobi",
+                     ci = FALSE,
+                     tol = 0.001,
+                     progress = FALSE)
+print(cr.pv2)
+#>  kappa p-value
+#>  1e-05 0.26074
+#>  1e-03 0.18066
+```
+
+More detailed information can be obtained via the `summary` command:
+
+```r
+summary(cr.pv2)
+#>  kappa p-value
+#>  1e-05 0.26074
+#>  1e-03 0.18066
+#> Solver: gurobi
+#> Norm: 2
+#> Number of successful bootstrap replications: 100
+```
+
 Constructing Bounds subject to Shape Constraints
 ------------------------------------------------
 
@@ -1202,7 +1403,7 @@ subsample.args <- list(data = sampledata,
                        progress = FALSE)
 ```
 
-Note that the argument for the target value of beta, i.e. the value to
+Note that the argument for the target value of beta, i.e. the value to
 be tested under the null, is not required in the above argument
 assignment.
 
@@ -1514,7 +1715,7 @@ print(sprintf("Time used with 3 cores: %s", time3))
 
 Note that there are different options available for the `plan` command.
 The availability of the options may depend on the operating systems
-used. Please refer to the instructions from the `future` pakage for more
+used. Please refer to the instructions from the `future` package for more
 details.
 
 Help, Feature Requests and Bug Reports
@@ -1524,8 +1725,17 @@ Please post an issue on the [issues
 page](https://github.com/conroylau/lpinfer/issues) of the GitHub
 repository. We are happy to help.
 
+Further Examples
+----------------
+
+For further examples on different procedures in this package, please
+refer to the codes in the `example` folder for more details.
+
 References
 ----------
+
+Cho, J., and T. M. Russell. 2019. “Simple Inference on Functionals of
+Set-Identified Parameters Defined by Linear Moments.” *Working Paper*.
 
 Deb, R., Y. Kitamura, J. K. H. Quah, and Stoye J. 2018. “Revealed Price
 Preference: Theory and Empirical Analysis.” *Working Paper*.
