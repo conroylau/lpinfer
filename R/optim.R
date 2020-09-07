@@ -114,7 +114,7 @@ gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL,
 #' @export
 #'
 cplexapi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
-                           weight = NULL) {
+                           weight = NULL, ...) {
   # ---------------- #
   # Step 1: Obtain the coefficients of the objective function
   # ---------------- #
@@ -209,7 +209,7 @@ cplexapi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
 #' @export
 #'
 rcplex.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
-                         weight = NULL) {
+                         weight = NULL, ...) {
   # ---------------- #
   # Step 1: Obtain the coefficients of the objective function
   # ---------------- #
@@ -282,7 +282,7 @@ rcplex.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
 #' @export
 #'
 limsolve.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
-                           weight = NULL) {
+                           weight = NULL, ...) {
   # ---------------- #
   # Step 1: Obtain the coefficients of the objective function
   # ---------------- #
