@@ -1318,7 +1318,7 @@ beta.r.compute <- function(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
 #' @description This function computes the range component of the test
 #'   statistics in the FSST procedure.
 #'
-#' @importFrom Matrix norm
+#' @importFrom norm
 #'
 #' @inheritParams fsst
 #' @inheritParams beta.star.qp
