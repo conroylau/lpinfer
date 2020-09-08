@@ -61,7 +61,7 @@
 #' @export
 #'
 estbounds <- function(data = NULL, lpmodel, kappa = 1e-5, norm = 2,
-                      estimate = TRUE, solver = NULL, progress = TRUE) {
+                      estimate = TRUE, solver = NULL) {
   # ---------------- #
   # Step 1: Obtain call, check and update input
   # ---------------- #
@@ -70,7 +70,7 @@ estbounds <- function(data = NULL, lpmodel, kappa = 1e-5, norm = 2,
 
   # Check and update
   estbounds.return <- estbounds.check(data, lpmodel, kappa, norm, solver,
-                                      estimate, progress)
+                                      estimate)
   # Update the input
   data <- estbounds.return$data
   lpmodel <- estbounds.return$lpmodel
@@ -479,8 +479,7 @@ estbounds2.L2 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
 #'
 #' @export
 #'
-estbounds.check <- function(data, lpmodel, kappa, norm, solver, estimate,
-                            progress) {
+estbounds.check <- function(data, lpmodel, kappa, norm, solver, estimate) {
   # ---------------- #
   # Step 1: Check the arguments
   # ---------------- #
@@ -520,7 +519,6 @@ estbounds.check <- function(data, lpmodel, kappa, norm, solver, estimate,
   kappa <- check.nonnegative(kappa, "kappa")
 
   # Check Boolean
-  check.boolean(progress, "progress")
   check.boolean(estimate, "estimate")
 
   # ---------------- #
