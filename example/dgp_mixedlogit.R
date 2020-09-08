@@ -88,7 +88,6 @@ mixedlogit_Atgt_dfelast <- function(dgp, w2eval = 1, eeval = -1) {
 #' @export
 mixedlogit_betaobs <- function(data, dgp) {
     a <- aggregate(data$y, by = list(data$w), FUN = mean)
-    print(a)
     bobs <- rep(0, nrow(dgp$wdist))
     bobs[a[,1]] <- a[,2]
     return(bobs)
