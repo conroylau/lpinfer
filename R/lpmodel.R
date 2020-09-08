@@ -74,7 +74,7 @@ lpmodel.beta.eval <- function(data, obj, i) {
         if (is.null(nrow(beta.return[[1]]))) {
           beta.obs.hat <- beta.return[[1]]
           omega.hat <- beta.return[[2]]
-        } else if (nrow(beta.return[[1]] == 1)) {
+        } else if (nrow(beta.return[[1]] == 1 | ncol(obj[[1]]) == 1)) {
           beta.obs.hat <- beta.return[[1]]
           omega.hat <- beta.return[[2]]
         } else {
