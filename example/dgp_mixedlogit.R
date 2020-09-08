@@ -104,9 +104,7 @@ mixedlogit_betaobs <- function(data, dgp) {
 #'  \item{w}{Integer from 1 up to dimw.}
 #'
 #' @export'
-mixedlogit_draw <- function(dgp, n = 2000, seed = 1) {
-    set.seed(seed)
-
+mixedlogit_draw <- function(dgp, n = 2000) {
     vint <- sample(1:nrow(dgp$vdist), n, replace = TRUE,
                    prob = dgp$vdist[,1])
     v <- dgp$vdist[vint, -1]
