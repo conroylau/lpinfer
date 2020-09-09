@@ -74,7 +74,6 @@ Returns the updated parameters back to the function \code{fsst}.
   The following information are updated:
    \itemize{
       \item{\code{data}}
-      \item{\code{seed}}
       \item{\code{solver}}
       \item{\code{solver.name}}
       \item{\code{test.logical}}

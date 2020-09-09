@@ -167,16 +167,15 @@ draw.bs.data <- function(x, f, data) {
 
 # Draw bootstrap data for the full information and two moments method
 set.seed(1)
-RNGkind(kind = "L'Ecuyer-CMRG")
-seed <- .Random.seed
 bobs.bs.full.list <- future.apply::future_lapply(1:reps,
                                                  FUN = draw.bs.data,
-                                                 future.seed = seed,
+                                                 future.seed = TRUE,
                                                  f = func_full_info,
                                                  data = sampledata)
+set.seed(1)
 bobs.bs.twom.list <- future.apply::future_lapply(1:reps,
                                                  FUN = draw.bs.data,
-                                                 future.seed = seed,
+                                                 future.seed = TRUE,
                                                  f = func_two_moment,
                                                  data = sampledata)
 
@@ -273,8 +272,6 @@ for (j in seq_along(j.lpmodel)) {
     delta[[j]][[k]] <- temp$ub - temp$lb
     # Bootstrap bounds
     set.seed(1)
-    RNGkind(kind = "L'Ecuyer-CMRG")
-    seed <- .Random.seed
     temp <- future.apply::future_lapply(1:reps,
                                         FUN = cr.bs.fn,
                                         lpmodel = j.lpmodel[[j]],
@@ -282,7 +279,7 @@ for (j in seq_along(j.lpmodel)) {
                                         kappa = kappa,
                                         norm = k.norm[[k]],
                                         estimate = TRUE,
-                                        future.seed = seed)
+                                        future.seed = TRUE)
     ub.bs[[j]][[k]] <- unlist(sapply(temp, "[", "ub"), use.names = FALSE)
     lb.bs[[j]][[k]] <- unlist(sapply(temp, "[", "lb"), use.names = FALSE)
   }

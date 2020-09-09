@@ -74,12 +74,11 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
    fsst.return <- fsst.check(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho,
                              n, weight.matrix, solver, progress)
 
-   # Update the arguments and seed
+   # Update the arguments
    data <- fsst.return$data
    solver <- fsst.return$solver
    solver.name <- fsst.return$solver.name
    test.logical <- fsst.return$test.logical
-   seed <- fsst.return$seed
 
    # Compute the maximum number of iterations
    maxR <- ceiling(R * Rmulti)
@@ -188,7 +187,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
 
             beta.obs.return <- fsst.beta.bs(n, data, beta.obs.hat, lpmodel,
                                             R, maxR, progress, df.error,
-                                            iseq, seed, eval.count)
+                                            iseq, eval.count)
 
             df.error <- beta.obs.return$df.error
             error.id <- beta.obs.return$error.id
@@ -518,7 +517,6 @@ full.beta.bs <- function(lpmodel, beta.tgt, beta.obs.bs, R) {
 #'   information in \code{lpmodel}.
 #' @param df.error Table showing the id of the bootstrap replication(s)
 #'   with error(s) and the corresponding error message(s).
-#' @param seed The \code{.Random.seed} obtained in the beginning of the code.
 #'
 #' @return Returns the bootstrap estimators.
 #'   \item{beta.obs.bs}{List of bootstrap betas.}
@@ -530,7 +528,7 @@ full.beta.bs <- function(lpmodel, beta.tgt, beta.obs.bs, R) {
 #' @export
 #'
 fsst.beta.bs <- function(n, data, beta.obs.hat, lpmodel, R, maxR, progress,
-                         df.error, iseq, seed, eval.count) {
+                         df.error, iseq, eval.count) {
 
    # ---------------- #
    # Step 1: Initialization
@@ -571,7 +569,7 @@ fsst.beta.bs <- function(n, data, beta.obs.hat, lpmodel, R, maxR, progress,
 
          beta.obs.return <- future.apply::future_lapply(bs.list,
                                                         FUN = fsst.beta.bs.fn,
-                                                        future.seed = seed,
+                                                        future.seed = TRUE,
                                                         data = data,
                                                         lpmodel = lpmodel,
                                                         pbar = pbar,
@@ -588,9 +586,6 @@ fsst.beta.bs <- function(n, data, beta.obs.hat, lpmodel, R, maxR, progress,
       error.list <- post.return$error.list
       R.succ <- post.return$R.succ
       R.eval <- post.return$R.eval
-
-      # Update seed
-      seed <- .Random.seed
    }
 
    # ---------------- #
@@ -1747,7 +1742,6 @@ fsst.pval <- function(range.n, cone.n, range.n.list, cone.n.list, R,
 #'   The following information are updated:
 #'    \itemize{
 #'       \item{\code{data}}
-#'       \item{\code{seed}}
 #'       \item{\code{solver}}
 #'       \item{\code{solver.name}}
 #'       \item{\code{test.logical}}
@@ -1827,18 +1821,12 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
    test.logical <- check.betatgt(data, lpmodel, beta.tgt, solver)
 
    # ---------------- #
-   # Step 7: Obtain the seed
-   # ---------------- #
-   seed <- lpinfer.seed()
-
-   # ---------------- #
-   # Step 8: Return updated items
+   # Step 7: Return updated items
    # ---------------- #
    return(list(solver = solver,
                solver.name = solver.name,
                data = data,
-               test.logical = test.logical,
-               seed = seed))
+               test.logical = test.logical))
 }
 
 #' Print results from \code{fsst}

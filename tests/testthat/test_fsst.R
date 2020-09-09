@@ -128,7 +128,6 @@ for (i in seq_along(i.cores)) {
     farg$lpmodel <- j.lpmodel[[j]]
     fsst.out[[i]][[j]] <- list()
     for (k in seq_along(k.lambdas)) {
-      RNGkind(kind = "L'Ecuyer-CMRG")
       set.seed(1)
       farg$lambda <- k.lambdas[[k]]
       fsst.out[[i]][[j]][[k]] <- do.call(fsst, farg)
@@ -149,16 +148,15 @@ draw.bs.data <- function(x, f, data) {
 
 # Draw bootstrap data for the full information and two moments method
 set.seed(1)
-RNGkind(kind = "L'Ecuyer-CMRG")
-seed <- .Random.seed
 bobs.bs.full.list <- future.apply::future_lapply(1:reps,
                                                  FUN = draw.bs.data,
-                                                 future.seed = seed,
+                                                 future.seed = TRUE,
                                                  f = func_full_info,
                                                  data = sampledata)
+set.seed(1)
 bobs.bs.twom.list <- future.apply::future_lapply(1:reps,
                                                  FUN = draw.bs.data,
-                                                 future.seed = seed,
+                                                 future.seed = TRUE,
                                                  f = func_two_moment,
                                                  data = sampledata)
 
@@ -193,7 +191,6 @@ for (i in seq_along(i.cores)) {
     farg2$lpmodel <- j.lpmodel2[[j]]
     fsst.out2[[i]][[j]] <- list()
     for (k in seq_along(k.lambdas)) {
-      RNGkind(kind = "L'Ecuyer-CMRG")
       set.seed(1)
       farg2$lambda <- k.lambdas[[k]]
       fsst.out2[[i]][[j]][[k]] <- do.call(fsst, farg2)
@@ -276,15 +273,12 @@ fsst.bs.fn <- function(x, data, lpmodel) {
   return(beta)
 }
 ## Estimator of asymptotic variance of beta.obs
-set.seed(1)
-RNGkind(kind = "L'Ecuyer-CMRG")
-seed <- .Random.seed
-
 beta.bs <- list()
 for (j in seq_along(j.lpmodel)) {
+  set.seed(1)
   beta.bs[[j]] <- future.apply::future_lapply(1:reps,
                                               FUN = fsst.bs.fn,
-                                              future.seed = seed,
+                                              future.seed = TRUE,
                                               data = sampledata,
                                               lpmodel = j.lpmodel[[j]])
 }
@@ -860,7 +854,6 @@ farg3 <- list(data = sampledata,
 fsst.out3 <- list()
 for (i in seq_along(i.cores)) {
   plan(multisession, workers = i.cores[[i]])
-  RNGkind(kind = "L'Ecuyer-CMRG")
   set.seed(1)
   fsst.out3[[i]] <- do.call(fsst, farg3)
 }
@@ -871,11 +864,9 @@ for (i in seq_along(i.cores)) {
 # ---------------- #
 # Draw bootstrap data for the full information and two moments method
 set.seed(1)
-RNGkind(kind = "L'Ecuyer-CMRG")
-seed <- .Random.seed
 bobs.dlp.list <- future.apply::future_lapply(1:reps,
                                              FUN = draw.bs.data,
-                                             future.seed = seed,
+                                             future.seed = TRUE,
                                              f = betafunc,
                                              data = sampledata)
 
@@ -901,7 +892,6 @@ farg4 <- list(lpmodel = lpm2.list,
 fsst.out4 <- list()
 for (i in seq_along(i.cores)) {
   plan(multisession, workers = i.cores[[i]])
-  RNGkind(kind = "L'Ecuyer-CMRG")
   set.seed(1)
   fsst.out4[[i]] <- do.call(fsst, farg4)
 }
@@ -922,12 +912,10 @@ bobs2 <- list()
 bobs2 <- lpm2$beta.obs(sampledata)$beta
 ## Estimator of asymptotic variance of beta.obs
 set.seed(1)
-RNGkind(kind = "L'Ecuyer-CMRG")
-seed <- .Random.seed
 bobs.bs2 <- list()
 bobs.bs2 <- future.apply::future_lapply(1:reps,
                                         FUN = fsst.bs.fn,
-                                        future.seed = seed,
+                                        future.seed = TRUE,
                                         data = sampledata,
                                         lpmodel = lpm2)
 

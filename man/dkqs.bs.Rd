@@ -14,7 +14,6 @@ dkqs.bs(
   tau.list,
   solver,
   progress,
-  seed,
   n
 )
 }
@@ -50,8 +49,6 @@ The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \item{progress}{The boolean variable for whether the progress bars should
 be displayed. If it is set as \code{TRUE}, the progress bars will be
 displayed while the code is running.}
-
-\item{seed}{The \code{.Random.seed} obtained in the beginning of the code.}
 
 \item{n}{Sample size (only required if \code{data} is omitted in the input).}
 }

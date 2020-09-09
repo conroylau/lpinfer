@@ -45,7 +45,6 @@ Returns the updated parameters back to the function
    \itemize{
       \item{\code{data}}
       \item{\code{lpmodel}}
-      \item{\code{seed}}
       \item{\code{solver}}``
       \item{\code{solver.name}}
       \item{\code{test.logical}}

@@ -69,14 +69,13 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
   subsample.return <- subsample.check(data, lpmodel, beta.tgt, R, Rmulti,
                                       solver, norm, phi, n, replace, progress)
 
-  # Update the arguments and seed
+  # Update the arguments
   data <- subsample.return$data
   lpmodel <- subsample.return$lpmodel
   solver <- subsample.return$solver
   solver.name <- subsample.return$solver.name
   norm <- subsample.return$norm
   test.logical <- subsample.return$test.logical
-  seed <- subsample.return$seed
 
   # Compute size of each subsample
   if (!is.null(data)) {
@@ -104,7 +103,7 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
     # Step 3: Subsampling procedure
     # ---------------- #
     T_subsample <- subsample.bs(data, R, maxR, lpmodel, beta.tgt, norm, solver,
-                                replace, progress, m, seed, n)
+                                replace, progress, m, n)
     R.succ <- T_subsample$R.succ
 
     if (R.succ != 0) {
@@ -314,7 +313,7 @@ subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver, n,
 #' @export
 #'
 subsample.bs <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
-                         replace, progress, m, seed, n) {
+                         replace, progress, m, n) {
   # ---------------- #
   # Step 1: Initialize the quantities and compute the lists
   # ---------------- #
@@ -353,7 +352,7 @@ subsample.bs <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
 
       subsample.return <- future.apply::future_lapply(bs.list,
                                                       FUN = subsample.bs.fn,
-                                                      future.seed = seed,
+                                                      future.seed = TRUE,
                                                       data = data,
                                                       lpmodel = lpmodel,
                                                       beta.tgt = beta.tgt,
@@ -377,9 +376,6 @@ subsample.bs <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
     error.list <- post.return$error.list
     R.succ <- post.return$R.succ
     R.eval <- post.return$R.eval
-
-    # Update seed
-    seed <- .Random.seed
   }
 
   # ---------------- #
@@ -594,7 +590,6 @@ summary.subsample <- function(x, ...) {
 #'    \itemize{
 #'       \item{\code{data}}
 #'       \item{\code{lpmodel}}
-#'       \item{\code{seed}}
 #'       \item{\code{solver}}
 #'       \item{\code{solver.name}}
 #'       \item{\code{norm}}
@@ -655,9 +650,6 @@ subsample.check <- function(data, lpmodel, beta.tgt, R, Rmulti, solver, norm,
   check.numeric(beta.tgt, "beta.tgt")
   test.logical <- check.betatgt(data, lpmodel, beta.tgt, solver)
 
-  # Obtain the seed
-  seed <- lpinfer.seed()
-
   # ---------------- #
   # Step 2: Return results
   # ---------------- #
@@ -666,6 +658,5 @@ subsample.check <- function(data, lpmodel, beta.tgt, R, Rmulti, solver, norm,
               solver = solver,
               solver.name = solver.name,
               norm = norm,
-              test.logical = test.logical,
-              seed = seed))
+              test.logical = test.logical))
 }

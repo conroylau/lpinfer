@@ -15,7 +15,6 @@ subsample.bs(
   replace,
   progress,
   m,
-  seed,
   n
 )
 }
@@ -53,8 +52,6 @@ be displayed. If it is set as \code{TRUE}, the progress bars will be
 displayed while the code is running.}
 
 \item{m}{Size of each subsample.}
-
-\item{seed}{The \code{.Random.seed} obtained in the beginning of the code.}
 
 \item{n}{Sample size (only required if \code{data} is omitted in the input).}
 }

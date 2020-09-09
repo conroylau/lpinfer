@@ -15,7 +15,6 @@ chorussell.bs(
   n,
   estimate,
   solver,
-  seed,
   progress
 )
 }
@@ -55,8 +54,6 @@ estimated or not.}
 are used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
-
-\item{seed}{The \code{.Random.seed} obtained in the beginning of the code.}
 
 \item{progress}{The boolean variable for whether the progress bars should
 be displayed. If it is set as \code{TRUE}, the progress bars will be

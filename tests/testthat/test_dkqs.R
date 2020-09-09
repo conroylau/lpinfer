@@ -83,7 +83,7 @@ lpmodel.twom <- lpmodel(A.obs    = A_obs_twom,
 # Output 1: beta.obs is a function
 # ---------------- #
 # List of cores, lpmodel and norm objects to be used
-i.cores <- list(1, 8)
+i.cores <- list(1)
 j.lpmodel <- list(lpmodel.full, lpmodel.twom)
 k.solver <- list("gurobi", "Rcplex", "limSolve")
 
@@ -96,7 +96,6 @@ for (i in seq_along(i.cores)) {
     farg$lpmodel <- j.lpmodel[[j]]
     dkqs.out[[i]][[j]] <- list()
     for (k in seq_along(k.solver)) {
-      RNGkind(kind = "L'Ecuyer-CMRG")
       set.seed(1)
       farg$solver <- k.solver[[k]]
       dkqs.out[[i]][[j]][[k]] <- do.call(dkqs, farg)
@@ -116,16 +115,15 @@ draw.bs.data <- function(x, f, data) {
 
 # Draw bootstrap data for the full information and two moments method
 set.seed(1)
-RNGkind(kind = "L'Ecuyer-CMRG")
-seed <- .Random.seed
 bobs.bs.full.list <- future.apply::future_lapply(1:reps,
                                                  FUN = draw.bs.data,
-                                                 future.seed = seed,
+                                                 future.seed = TRUE,
                                                  f = func_full_info,
                                                  data = sampledata)
+set.seed(1)
 bobs.bs.twom.list <- future.apply::future_lapply(1:reps,
                                                  FUN = draw.bs.data,
-                                                 future.seed = seed,
+                                                 future.seed = TRUE,
                                                  f = func_two_moment,
                                                  data = sampledata)
 
@@ -155,7 +153,6 @@ for (i in seq_along(i.cores)) {
     farg2$lpmodel <- j.lpmodel2[[j]]
     dkqs.out2[[i]][[j]] <- list()
     for (k in seq_along(k.solver)) {
-      RNGkind(kind = "L'Ecuyer-CMRG")
       set.seed(1)
       farg2$solver <- k.solver[[k]]
       dkqs.out2[[i]][[j]][[k]] <- do.call(dkqs, farg2)
@@ -317,16 +314,14 @@ dkqs.fn <- function(x, data, lpmodel, beta.obs, s.star) {
 }
 
 ## Compute the test statistics by 'future'
-set.seed(1)
-RNGkind(kind = "L'Ecuyer-CMRG")
 T.bs <- list()
-seed <- .Random.seed
 for (j in seq_along(j.lpmodel)) {
+  set.seed(1)
   lpm <- j.lpmodel[[j]]
   T.bs[[j]] <-
     unlist(future.apply::future_lapply(1:reps,
                                        FUN = dkqs.fn,
-                                       future.seed = seed,
+                                       future.seed = TRUE,
                                        data = sampledata,
                                        lpmodel = lpm,
                                        beta.obs = lpm$beta.obs(sampledata),

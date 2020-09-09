@@ -123,7 +123,7 @@ lpmodel.twom <- lpmodel(A.obs    = A_obs_twom,
 # Output 1: beta.obs is a function
 # ---------------- #
 # List of cores, lpmodel and norm objects to be used
-i.cores <- list(1, 8)
+i.cores <- list(1)
 j.lpmodel <- list(lpmodel.full, lpmodel.twom)
 k.norm <- list(1, 2)
 l.solver <- list("gurobi", "Rcplex", "limSolve")
@@ -140,7 +140,6 @@ for (i in seq_along(i.cores)) {
       farg$norm <- k.norm[[k]]
       ss.out[[i]][[j]][[k]] <- list()
       for (l in seq_along(l.solver)) {
-        RNGkind(kind = "L'Ecuyer-CMRG")
         set.seed(1)
         farg$solver <- l.solver[[l]]
         ss.out[[i]][[j]][[k]][[l]] <- do.call(subsample, farg)
@@ -163,16 +162,15 @@ draw.bs.data <- function(x, f, data) {
 
 # Draw bootstrap data for the full information and two moments method
 set.seed(1)
-RNGkind(kind = "L'Ecuyer-CMRG")
-seed <- .Random.seed
 bobs.bs.full.list <- future.apply::future_lapply(1:reps,
                                                  FUN = draw.bs.data,
-                                                 future.seed = seed,
+                                                 future.seed = TRUE,
                                                  f = func_full_info,
                                                  data = sampledata)
+set.seed(1)
 bobs.bs.twom.list <- future.apply::future_lapply(1:reps,
                                                  FUN = draw.bs.data,
-                                                 future.seed = seed,
+                                                 future.seed = TRUE,
                                                  f = func_two_moment,
                                                  data = sampledata)
 
@@ -209,7 +207,6 @@ for (i in seq_along(i.cores)) {
       farg2$norm <- k.norm[[k]]
       ss.out2[[i]][[j]][[k]] <- list()
       for (l in seq_along(l.solver)) {
-        RNGkind(kind = "L'Ecuyer-CMRG")
         set.seed(1)
         farg2$solver <- l.solver[[l]]
         ss.out2[[i]][[j]][[k]][[l]] <- do.call(subsample, farg2)
@@ -333,10 +330,6 @@ ss.full.Tn.temp <- list()
 ss.twom.Tn.temp <- list()
 
 ## Draw the bootstrap data
-set.seed(1)
-RNGkind(kind = "L'Ecuyer-CMRG")
-seed <- .Random.seed
-
 ## Function to compute one bootstrap replication
 ss.fn <- function(x, data, lpmodel, m, ng, norm) {
   # Draw bootstrap data
@@ -363,10 +356,11 @@ ss.bs.ts <- list()
 for (j in seq_along(ngs)) {
   ss.bs.ts[[j]] <- list()
   for (k in seq_along(k.norm)) {
+    set.seed(1)
     ss.bs.ts[[j]][[k]] <-
       unlist(future.apply::future_lapply(1:reps,
                                          FUN = ss.fn,
-                                         future.seed = seed,
+                                         future.seed = TRUE,
                                          data = sampledata,
                                          lpmodel = j.lpmodel[[j]],
                                          m = m,

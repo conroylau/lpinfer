@@ -67,13 +67,12 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
   dkqs.return <- dkqs.check(data, lpmodel, beta.tgt, R, Rmulti, tau, n, solver,
                             progress)
 
-  # Update the arguments and seed
+  # Update the arguments
   data <- dkqs.return$data
   lpmodel <- dkqs.return$lpmodel
   solver <- dkqs.return$solver
   solver.name <- dkqs.return$solver.name
   test.logical <- dkqs.return$test.logical
-  seed <- dkqs.return$seed
 
   # Compute the maximum number of iterations
   maxR <- ceiling(R * Rmulti)
@@ -183,7 +182,7 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       # Step 7: Compute the bootstrap beta and estimates
       # ---------------- #
       T.bs.return <- dkqs.bs(data, lpmodel, beta.tgt, R, maxR, s.star.list,
-                             tau.feasible, solver, progress, seed, n)
+                             tau.feasible, solver, progress, n)
       R.succ <- T.bs.return$R.succ
 
       if (R.succ != 0) {
@@ -433,7 +432,6 @@ dkqs.qlp <- function(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
 #' @param tau.list The list of feasible parameters \eqn{\tau}.
 #' @param maxR Maximum number of bootstrap replications to be considered in
 #'    case there are some errors.
-#' @param seed The \code{.Random.seed} obtained in the beginning of the code.
 #' @inheritParams dkqs
 #' @inheritParams dkqs.qlp
 #'
@@ -449,7 +447,7 @@ dkqs.qlp <- function(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
 #' @export
 #'
 dkqs.bs <- function(data, lpmodel, beta.tgt, R, maxR, s.star.list, tau.list,
-                    solver, progress, seed, n) {
+                    solver, progress, n) {
   # ---------------- #
   # Step 1: Initialize and assigning the lists
   # ---------------- #
@@ -491,7 +489,7 @@ dkqs.bs <- function(data, lpmodel, beta.tgt, R, maxR, s.star.list, tau.list,
       }
       dkqs.return <- future.apply::future_lapply(bs.list,
                                                  FUN = dkqs.bs.fn,
-                                                 future.seed = seed,
+                                                 future.seed = TRUE,
                                                  data = data,
                                                  lpmodel = lpmodel,
                                                  beta.obs = beta.obs.hat,
@@ -516,9 +514,6 @@ dkqs.bs <- function(data, lpmodel, beta.tgt, R, maxR, s.star.list, tau.list,
     error.list <- post.return$error.list
     R.succ <- post.return$R.succ
     R.eval <- post.return$R.eval
-
-    # Update seed
-    seed <- .Random.seed
   }
 
   # ---------------- #
@@ -535,7 +530,6 @@ dkqs.bs <- function(data, lpmodel, beta.tgt, R, maxR, s.star.list, tau.list,
     T.bs[[i]] <- T.list[seq_along(T.list) %% length(tau.list) == k]
   }
 
-  # ---------------- #
   # Step 4: Consolidate the error messages
   # ---------------- #
   if (R.eval != R.succ) {
@@ -610,9 +604,9 @@ dkqs.bs.fn <- function(x, data, lpmodel, beta.obs.hat, beta.tgt, s.star.list,
   msg <- NULL
 
   # Replace lpmodel by x if x is a list
-  if (is.list(lpmodel$beta.obs)) {
-    lpm <- lpmodel
-    lpm$beta.obs <- lpmodel$beta.obs
+  # Replace lpmodel by x if x is a list
+  if (is.list(x)) {
+    lpm <- lpmodel.update(lpmodel, x)
   } else {
     lpm <- lpmodel
   }
@@ -771,7 +765,6 @@ tau.constraints <- function(length.tau, coeff.tau, coeff.x, ind.x, rhs, sense,
 #'    \itemize{
 #'       \item{\code{data}}
 #'       \item{\code{lpmodel}}
-#'       \item{\code{seed}}
 #'       \item{\code{solver}}``
 #'       \item{\code{solver.name}}
 #'       \item{\code{test.logical}}
@@ -830,15 +823,11 @@ dkqs.check <- function(data, lpmodel, beta.tgt, R, Rmulti, tau, n, solver,
   lpmodel.temp$beta.shp <- 1
   test.logical <- check.betatgt(data, lpmodel.temp, beta.tgt, solver)
 
-  # Obtain the seed
-  seed <- lpinfer.seed()
-
   # ---------------- #
   # Step 2: Return results
   # ---------------- #
   return(list(data = data,
               lpmodel = lpmodel,
-              seed = seed,
               solver = solver,
               solver.name = solver.name,
               test.logical = test.logical))

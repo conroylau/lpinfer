@@ -109,21 +109,6 @@ post.bs <- function(test.return, i0, i1, R.eval, T.list = NULL,
               lb.list = lb.list))
 }
 
-#' Gets the current seed with RNG kind "L'Ecuyer-CMRG"
-#'
-#' @description This function gets the current seed with RNG kind
-#'   "L'Ecuyer-CMRG".
-#'
-#' @return Returns a \code{seed}.
-#'   \item{seed}{Seed with RNG kind "L'Ecuyer-CMRG".}
-#'
-lpinfer.seed <- function() {
-  RNGkind("L'Ecuyer-CMRG")
-  seed <- .Random.seed
-
-  return(seed)
-}
-
 #' Matches the id of the error messages
 #'
 #' @description This function is used after the bootstrap replications. This

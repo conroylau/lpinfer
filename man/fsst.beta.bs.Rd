@@ -14,7 +14,6 @@ fsst.beta.bs(
   progress,
   df.error,
   iseq,
-  seed,
   eval.count
 )
 }
@@ -47,8 +46,6 @@ displayed while the code is running.}
 with error(s) and the corresponding error message(s).}
 
 \item{iseq}{The list of indices or betas to iterate over.}
-
-\item{seed}{The \code{.Random.seed} obtained in the beginning of the code.}
 
 \item{eval.count}{Count for the number of times the \code{future_lapply}
 function has been called. If this object is zero, it means that the

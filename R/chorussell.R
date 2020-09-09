@@ -57,12 +57,11 @@ chorussell <- function(data = NULL, lpmodel, beta.tgt, n = NULL, R = 100,
                                         kappa, norm, n, estimate, solver,
                                         ci, alpha, tol, progress)
 
-  # Update the arguments and seed
+  # Update the arguments
   data <- chorussell.return$data
   solver <- chorussell.return$solver
   solver.name <- chorussell.return$solver.name
   test.logical <- chorussell.return$test.logical
-  seed <- chorussell.return$seed
   n <- chorussell.return$n
 
   # Compute the maximum number of iterations
@@ -101,7 +100,7 @@ chorussell <- function(data = NULL, lpmodel, beta.tgt, n = NULL, R = 100,
     # Step 3: Obtain estimated bounds from bootstrap data
     # ---------------- #
     cr.bs.return <- chorussell.bs(data, lpmodel, beta.tgt, R, maxR, kappa,
-                                  norm, n, estimate, solver.name, seed,
+                                  norm, n, estimate, solver.name,
                                   progress)
     ub.bs <- cr.bs.return$ub
     lb.bs <- cr.bs.return$lb
@@ -374,7 +373,7 @@ chorussell.simp.fn <- function(x, can1, alpha, pbar, bd, progress) {
 #' @export
 #'
 chorussell.bs <- function(data, lpmodel, beta.tgt, R, maxR, kappa, norm,
-                          n, estimate, solver, seed, progress) {
+                          n, estimate, solver, progress) {
   # ---------------- #
   # Step 1: Initialization
   # ---------------- #
@@ -413,7 +412,7 @@ chorussell.bs <- function(data, lpmodel, beta.tgt, R, maxR, kappa, norm,
       }
       chorussell.return <- future.apply::future_lapply(bs.list,
                                                        FUN = chorussell.bs.fn,
-                                                       future.seed = seed,
+                                                       future.seed = TRUE,
                                                        data = data,
                                                        lpmodel = lpmodel,
                                                        beta.tgt = beta.tgt,
@@ -441,9 +440,6 @@ chorussell.bs <- function(data, lpmodel, beta.tgt, R, maxR, kappa, norm,
     error.list <- post.return$error.list
     R.succ <- length(lb.list)
     R.eval <- post.return$R.eval
-
-    # Update seed
-    seed <- .Random.seed
   }
 
   # ---------------- #
@@ -941,7 +937,6 @@ chorussell.lp.fn.unbd <- function(x, lb.can1, lb.can2, ub.can1, ub.can2,
 #'   \code{chorussell}. The following information are updated:
 #'    \itemize{
 #'       \item{\code{data}}
-#'       \item{\code{seed}}
 #'       \item{\code{solver}}
 #'       \item{\code{solver.name}}
 #'       \item{\code{test.logical}}
@@ -1005,25 +1000,19 @@ chorussell.check <- function(data, lpmodel, beta.tgt, R, Rmulti, kappa,
   test.logical <- check.betatgt(data, lpmodel, beta.tgt, solver)
 
   # ---------------- #
-  # Step 6: Obtain the seed
-  # ---------------- #
-  seed <- lpinfer.seed()
-
-  # ---------------- #
-  # Step 7: Check Boolean
+  # Step 6: Check Boolean
   # ---------------- #
   check.boolean(estimate, "estimate")
   check.boolean(ci, "ci")
   check.boolean(progress, "progress")
 
   # ---------------- #
-  # Step 8: Return updated items
+  # Step 7: Return updated items
   # ---------------- #
   return(list(solver = solver,
               solver.name = solver.name,
               data = data,
               test.logical = test.logical,
-              seed = seed,
               n = n))
 }
 
