@@ -474,12 +474,14 @@ dkqs.bs <- function(data, lpmodel, beta.tgt, R, maxR, s.star.list, tau.list,
   # ---------------- #
   eval.count <- 0
   while ((R.succ < R) & (R.eval != maxR)) {
+
     # Evaluate the list of indices to be passed to 'future_lapply'
-    bs.temp <- bs.assign(R, R.eval, R.succ, maxR, any.list)
+    bs.temp <- bs.assign(R, R.eval, R.succ, maxR, any.list, lpmodel, data,
+                         n, TRUE)
     i0 <- bs.temp$i0
     i1 <- bs.temp$i1
     bs.list <- bs.temp$bs.list
-
+    
     # Obtain results from the bootstrap replications
     progressr::with_progress({
       if (isTRUE(progress)) {
@@ -530,6 +532,7 @@ dkqs.bs <- function(data, lpmodel, beta.tgt, R, maxR, s.star.list, tau.list,
     T.bs[[i]] <- T.list[seq_along(T.list) %% length(tau.list) == k]
   }
 
+  # ---------------- #
   # Step 4: Consolidate the error messages
   # ---------------- #
   if (R.eval != R.succ) {
@@ -603,7 +606,6 @@ dkqs.bs.fn <- function(x, data, lpmodel, beta.obs.hat, beta.tgt, s.star.list,
   tau.error <- NULL
   msg <- NULL
 
-  # Replace lpmodel by x if x is a list
   # Replace lpmodel by x if x is a list
   if (is.list(x)) {
     lpm <- lpmodel.update(lpmodel, x)

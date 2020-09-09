@@ -4,7 +4,17 @@
 \alias{bs.assign}
 \title{Auxiliary function in the bootstrap replications}
 \usage{
-bs.assign(R, R.eval, R.succ, maxR, any.list)
+bs.assign(
+  R,
+  R.eval,
+  R.succ,
+  maxR,
+  any.list,
+  lpmodel,
+  data = NULL,
+  m,
+  replace = TRUE
+)
 }
 \arguments{
 \item{R}{Number of bootstrap replications.}
@@ -18,6 +28,21 @@ bs.assign(R, R.eval, R.succ, maxR, any.list)
 \item{any.list}{An object returned from the \code{lpmodel.anylist}
 function, which indicates whether at least one of the components in
 \code{lpmodel} is a \code{list}.}
+
+\item{lpmodel}{The \code{lpmodel} object used in the test. The following
+components are required in the \code{lpmodel} for the DKQS test:
+ \itemize{
+   \item{\code{A.tgt}}
+   \item{\code{A.obs}}
+   \item{\code{beta.obs}}
+ }}
+
+\item{data}{Data used in the tests.}
+
+\item{m}{Size of each subsample.}
+
+\item{replace}{Boolean variable to indicate whether the function samples
+the data with or without replacement.}
 }
 \value{
 Returns the following three objects.

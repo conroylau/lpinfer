@@ -337,7 +337,8 @@ subsample.bs <- function(data, R, maxR, lpmodel, beta.tgt, norm, solver,
   eval.count <- 0
   while ((R.succ < R) & (R.eval != maxR)) {
     # Evaluate the list of indices to be passed to 'future_lapply'
-    bs.temp <- bs.assign(R, R.eval, R.succ, maxR, any.list)
+    bs.temp <- bs.assign(R, R.eval, R.succ, maxR, any.list, lpmodel, data,
+                         m, replace)
     i0 <- bs.temp$i0
     i1 <- bs.temp$i1
     bs.list <- bs.temp$bs.list
@@ -465,7 +466,7 @@ subsample.bs.fn <- function(x, data, lpmodel, beta.tgt, norm, m, solver,
   } else {
     lpm <- lpmodel
   }
-
+  
   # ---------------- #
   # Step 3: Conduct one bootstrap/subsample replication
   # ---------------- #
@@ -481,7 +482,7 @@ subsample.bs.fn <- function(x, data, lpmodel, beta.tgt, norm, m, solver,
   result <- tryCatch({
     # The 'lpm' object does not contain the asymptotic variance estimator
     beta.obs.hat <- lpmodel.beta.eval(data.bs, lpm$beta.obs, 1)$beta.obs
-    omega.hat <- lpmodel.beta.eval(data.bs, lpmodel$beta.obs, 1)$omega
+    omega.hat <- lpmodel.beta.eval(data.bs, lpm$beta.obs, 1)$omega
     sub.return <- subsample.prob(data.bs, lpm, beta.tgt, norm, solver, m,
                                  beta.obs.hat, omega.hat)
     sub.return

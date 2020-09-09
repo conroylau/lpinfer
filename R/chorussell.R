@@ -398,7 +398,7 @@ chorussell.bs <- function(data, lpmodel, beta.tgt, R, maxR, kappa, norm,
   # ---------------- #
   while ((R.succ < R) & (R.eval != maxR)) {
     # Evaluate the list of indices to be passed to 'future_lapply'
-    bs.temp <- bs.assign(R, R.eval, R.succ, maxR, any.list)
+    bs.temp <- bs.assign(R, R.eval, R.succ, maxR, any.list, lpmodel, data)
     i0 <- bs.temp$i0
     i1 <- bs.temp$i1
     bs.list <- bs.temp$bs.list

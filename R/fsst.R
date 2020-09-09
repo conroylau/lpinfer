@@ -549,7 +549,8 @@ fsst.beta.bs <- function(n, data, beta.obs.hat, lpmodel, R, maxR, progress,
    while ((R.succ < R) & (R.eval != maxR)) {
       # Compute the list of indices to be passed to 'future_lapply'
       if (identical(iseq, 1:maxR)) {
-         bs.temp <- bs.assign(R, R.eval, R.succ, maxR, any.list)
+         bs.temp <- bs.assign(R, R.eval, R.succ, maxR, any.list, lpmodel, data,
+                              n)
          i0 <- bs.temp$i0
          i1 <- bs.temp$i1
          bs.list <- bs.temp$bs.list
@@ -661,7 +662,7 @@ fsst.beta.bs.fn <- function(x, data, lpmodel, pbar, progress, eval.count,
 
    # Bootstrap estimator
    result <- tryCatch({
-      beta.obs.return <- lpmodel.beta.eval(data.bs, lpmodel$beta.obs, 1)[[1]]
+      beta.obs.return <- lpmodel.beta.eval(data.bs, lpm$beta.obs, 1)[[1]]
       list(beta.obs.return = beta.obs.return)
    }, warning = function(w) {
       return(list(status = "warning",

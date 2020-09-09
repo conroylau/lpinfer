@@ -6,6 +6,7 @@
 #'   \code{lpmodel.anylist} function.
 #'
 #' @inheritParams dkqs
+#' @inheritParams subsample.bs
 #' @param R.eval Number of bootstrap replications that has been evaluated/
 #' @param R.succ Number of successful bootstrap replications.
 #' @param maxR Maximum number of bootstrap replications.
@@ -21,7 +22,8 @@
 #'
 #' @export
 #'
-bs.assign <- function(R, R.eval, R.succ, maxR, any.list) {
+bs.assign <- function(R, R.eval, R.succ, maxR, any.list, lpmodel, data = NULL,
+                      m, replace = TRUE) {
   # Evaluate the indices
   i0 <- min(R.eval + 1, maxR)
   i1 <- min(R - R.succ + R.eval, maxR)
@@ -30,7 +32,25 @@ bs.assign <- function(R, R.eval, R.succ, maxR, any.list) {
   if (isTRUE(any.list$list)) {
     bs.list <- any.list$consol[i0:i1]
   } else {
-    bs.list <- i0:i1
+    bs.list <- as.list(i0:i1)
+  }
+  
+  # Temporary solution to the missing globals problem
+  names <- c("A.obs", "A.shp", "A.tgt", "beta.obs", "beta.shp")
+  for (i in names) {
+    if (is.function(lpmodel[[i]])) {
+      for (j in seq_along(bs.list)) {
+        if (!is.list(bs.list[[j]])) {
+          bs.list[[j]] <- list()
+        }
+        data.bs <- as.data.frame(data[sample(1:nrow(data), m, replace),])
+        if (i == "beta.obs") {
+          bs.list[[j]][[i]] <- lpmodel.beta.eval(data.bs, lpmodel[[i]], 1)
+        } else {
+          bs.list[[j]][[i]] <- lpmodel.eval(data.bs, lpmodel[[i]], 1)
+        }
+      }
+    }
   }
 
   return(list(i0 = i0,
