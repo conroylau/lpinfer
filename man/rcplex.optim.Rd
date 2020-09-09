@@ -4,7 +4,7 @@
 \alias{rcplex.optim}
 \title{LP and QP solver by \code{Rcplex}}
 \usage{
-rcplex.optim(Af, bf, nf, A, rhs, sense, modelsense, lb, weight = NULL)
+rcplex.optim(Af, bf, nf, A, rhs, sense, modelsense, lb, weight = NULL, ...)
 }
 \arguments{
 \item{Af}{The matrix that is involved in the objective function.}
@@ -25,6 +25,9 @@ objective function.}
 \item{lb}{The lower bound vector.}
 
 \item{weight}{Weighting matrix.}
+
+\item{...}{List of options to be passed to the Gurobi solver. This part is
+optional.}
 }
 \value{
 Returns the optimal point and optimal value.

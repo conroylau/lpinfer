@@ -10,8 +10,7 @@ estbounds(
   kappa = 1e-05,
   norm = 2,
   estimate = TRUE,
-  solver = NULL,
-  progress = TRUE
+  solver = NULL
 )
 }
 \arguments{
@@ -41,10 +40,6 @@ estimated or not.}
 are used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
-
-\item{progress}{The boolean variable for whether the progress bars should
-be displayed. If it is set as \code{TRUE}, the progress bars will be
-displayed while the code is running.}
 }
 \value{
 Returns the bounds subject to the shape constraints.

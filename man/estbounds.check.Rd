@@ -4,7 +4,7 @@
 \alias{estbounds.check}
 \title{Checks and updates the input in \code{estbounds}}
 \usage{
-estbounds.check(data, lpmodel, kappa, norm, solver, estimate, progress)
+estbounds.check(data, lpmodel, kappa, norm, solver, estimate)
 }
 \arguments{
 \item{data}{Data used in the tests.}
@@ -33,10 +33,6 @@ The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 
 \item{estimate}{Boolean variable to indicate whether the bounds should be
 estimated or not.}
-
-\item{progress}{The boolean variable for whether the progress bars should
-be displayed. If it is set as \code{TRUE}, the progress bars will be
-displayed while the code is running.}
 }
 \value{
 Returns the updated parameters and objects back to the function
