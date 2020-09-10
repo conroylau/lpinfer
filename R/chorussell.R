@@ -965,13 +965,13 @@ chorussell.check <- function(data, lpmodel, beta.tgt, R, Rmulti, kappa,
   lpmodel <- check.lpmodel(data = data,
                            lpmodel = lpmodel,
                            name.var = "lpmodel",
-                           A.tgt.cat = "matrix",
-                           A.obs.cat = "matrix",
-                           A.shp.cat = "matrix",
+                           A.tgt.cat = c("matrix", "function_mat", "list"),
+                           A.obs.cat = c("matrix", "function_mat", "list"),
+                           A.shp.cat = c("matrix", "function_mat", "list"),
                            beta.obs.cat = c("function_mat",
                                             "list",
                                             "function_obs_var"),
-                           beta.shp.cat = "matrix",
+                           beta.shp.cat = c("matrix", "function_mat", "list"),
                            R = R)
 
   # ---------------- #

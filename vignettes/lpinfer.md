@@ -1124,15 +1124,15 @@ be deterministic or stochastic:
 <tbody>
 <tr class="odd">
 <td><code>A.obs</code></td>
-<td style="text-align: left;">Deterministic</td>
+<td style="text-align: left;">Deterministic or stochastic</td>
 </tr>
 <tr class="even">
 <td><code>A.shp</code></td>
-<td style="text-align: left;">Deterministic</td>
+<td style="text-align: left;">Deterministic or stochastic</td>
 </tr>
 <tr class="odd">
 <td><code>A.tgt</code></td>
-<td style="text-align: left;">Deterministic</td>
+<td style="text-align: left;">Deterministic or stochastic</td>
 </tr>
 <tr class="even">
 <td><code>beta.obs</code></td>
@@ -1140,7 +1140,7 @@ be deterministic or stochastic:
 </tr>
 <tr class="odd">
 <td><code>beta.shp</code></td>
-<td style="text-align: left;">Deterministic</td>
+<td style="text-align: left;">Deterministic or stochastic</td>
 </tr>
 </tbody>
 </table>

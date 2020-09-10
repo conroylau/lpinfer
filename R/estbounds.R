@@ -189,22 +189,25 @@ estbounds.original <- function(data, lpmodel, original.sense, solver) {
   # Step 1: Problem set-up
   # ---------------- #
   # Ensure A.tgt is matrix
-  if (!is.matrix(lpmodel$A.tgt)) {
-    A.tgt.matrix <- matrix(lpmodel$A.tgt, nrow = 1)
+  A.tgt.hat <- lpmodel.eval(data, lpmodel$A.tgt, 1)
+  if (!is.matrix(A.tgt.hat)) {
+    A.tgt.matrix <- matrix(A.tgt.hat, nrow = 1)
   } else {
-    A.tgt.matrix <- lpmodel$A.tgt
+    A.tgt.matrix <- A.tgt.hat
   }
   A.tgt.nc <- ncol(A.tgt.matrix)
 
   # Ensure A.shp is matrix
-  if (!is.matrix(lpmodel$A.shp)) {
-    A.shp.matrix <- matrix(lpmodel$A.shp, nrow = 1)
+  A.shp.hat <- lpmodel.eval(data, lpmodel$A.shp, 1)
+  if (!is.matrix(A.shp.hat)) {
+    A.shp.matrix <- matrix(A.shp.hat, nrow = 1)
   } else {
-    A.shp.matrix <- lpmodel$A.shp
+    A.shp.matrix <- A.shp.hat
   }
 
   # Matrices
-  A.original <- rbind(lpmodel$A.obs, A.shp.matrix)
+  A.obs.hat <- lpmodel.eval(data, lpmodel$A.obs, 1)
+  A.original <- rbind(A.obs.hat, A.shp.matrix)
   if (!is.matrix(A.original)) {
     A.original <- matrix(A.original, nrow = 1)
   }
@@ -217,7 +220,8 @@ estbounds.original <- function(data, lpmodel, original.sense, solver) {
              class(lpmodel$beta.obs) == "list") {
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   }
-  beta.original <- c(beta.obs.hat, lpmodel$beta.shp)
+  beta.shp.hat <- lpmodel.eval(data, lpmodel$beta.shp, 1)
+  beta.original <- c(beta.obs.hat, beta.shp.hat)
 
   # Sense constraints
   sense.original <- c(rep("=", nrow(A.original)))
@@ -330,11 +334,7 @@ estbounds2.L1 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
   larg <- firststepsoln$larg
 
   # Ensure A.tgt is matrix
-  if (!is.matrix(lpmodel$A.tgt)) {
-    A.tgt.matrix <- matrix(lpmodel$A.tgt, nrow = 1)
-  } else {
-    A.tgt.matrix <- lpmodel$A.tgt
-  }
+  A.tgt.matrix <- lpmodel.eval(data, lpmodel$A.tgt, 1)
   A.tgt.nr <- nrow(A.tgt.matrix)
 
   # ---------------- #
@@ -410,6 +410,9 @@ estbounds2.L2 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
   # ---------------- #
   # Step 2: Construct the quadratic inequality constraint
   # ---------------- #
+  A.obs.hat <- lpmodel.eval(data, lpmodel$A.obs, 1)
+  A.tgt.hat <- lpmodel.eval(data, lpmodel$A.tgt, 1)
+  
   if (class(lpmodel$beta.obs) == "function") {
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   } else if (class(lpmodel$beta.obs) == "numeric" |
@@ -418,9 +421,10 @@ estbounds2.L2 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   }
   step2_qc <- list()
-  if (is.null(lpmodel$A.obs) == FALSE) {
-    step2_qc$Qc <- t(lpmodel$A.obs) %*% lpmodel$A.obs
-    step2_qc$q <- as.vector(-2 * t(lpmodel$A.obs) %*% beta.obs.hat)
+  if (is.null(A.obs.hat) == FALSE) {
+    
+    step2_qc$Qc <- t(A.obs.hat) %*% A.obs.hat
+    step2_qc$q <- as.vector(-2 * t(A.obs.hat) %*% beta.obs.hat)
     step2_qc$rhs <- Qhat * (1 + kappa) - t(beta.obs.hat) %*% beta.obs.hat
     step2_qc$sense <- "<="
   } else {
@@ -435,7 +439,7 @@ estbounds2.L2 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
   # Step 3: Update objective function
   # ---------------- #
   larg$Af <- 0
-  larg$bf <- lpmodel$A.tgt
+  larg$bf <- A.tgt.hat
   larg$nf <- 1
 
   # ---------------- #
@@ -487,14 +491,14 @@ estbounds.check <- function(data, lpmodel, kappa, norm, solver, estimate) {
   lpmodel <- check.lpmodel(data = data,
                            lpmodel = lpmodel,
                            name.var = "lpmodel",
-                           A.tgt.cat = "matrix",
-                           A.obs.cat = "matrix",
-                           A.shp.cat = "matrix",
+                           A.tgt.cat = c("matrix", "function_mat", "list"),
+                           A.obs.cat = c("matrix", "function_mat", "list"),
+                           A.shp.cat = c("matrix", "function_mat", "list"),
                            beta.obs.cat = c("function_mat",
                                             "list_vector",
                                             "matrix",
                                             "function_obs_var"),
-                           beta.shp.cat = "matrix",
+                           beta.shp.cat = c("matrix", "function_mat", "list"),
                            R = 1,
                            is.estbounds = TRUE)
 
@@ -628,16 +632,20 @@ mincriterion <- function(data = NULL, lpmodel, norm = 2, solver = NULL) {
   # ---------------- #
   # Step 2: Obtain beta_obs and update solver
   # ---------------- #
+  A.obs.hat <- lpmodel.eval(data, lpmodel$A.obs, 1)
+  A.shp.hat <- lpmodel.eval(data, lpmodel$A.shp, 1)
+  A.tgt.hat <- lpmodel.eval(data, lpmodel$A.tgt, 1)
+  
   # Count the dimension of matrices
-  A.tgt.dim <- dim(lpmodel$A.tgt)
+  A.tgt.dim <- dim(A.tgt.hat)
   if (is.null(A.tgt.dim)) {
-    A.tgt.nc <- length(lpmodel$A.tgt)
+    A.tgt.nc <- length(A.tgt.hat)
   } else {
     A.tgt.nc <- A.tgt.dim[2]
   }
 
   # Count the dimension of matrices
-  A.shp.dim <- dim(lpmodel$A.shp)
+  A.shp.dim <- dim(A.shp.hat)
   if (is.null(A.shp.dim)) {
     A.shp.nr <- 1
   } else {
@@ -664,25 +672,27 @@ mincriterion <- function(data = NULL, lpmodel, norm = 2, solver = NULL) {
   # ---------------- #
   # Step 4: Set up argument for the optimizer
   # ---------------- #
+  beta.shp.hat <- lpmodel.eval(data, lpmodel$beta.shp, 1)
+  
   if (norm == 1) {
     # Define the augmented matrices
     k <- length(beta.obs.hat)
     # Introduce slack variables into the matrix
-    if (!is.matrix(lpmodel$A.shp)) {
-      A.shp.mat <- matrix(lpmodel$A.shp, nrow = 1)
+    if (!is.matrix(A.shp.hat)) {
+      A.shp.mat <- matrix(A.shp.hat, nrow = 1)
     } else {
-      A.shp.mat <- lpmodel$A.shp
+      A.shp.mat <- A.shp.hat
     }
     A.aug <- cbind(A.shp.mat, matrix(rep(0, 2 * k * A.shp.nr),
                                          nrow = A.shp.nr))
-    A.slack <- cbind(lpmodel$A.obs, -diag(k), diag(k))
+    A.slack <- cbind(A.obs.hat, -diag(k), diag(k))
     # Combine the constraints
     A.new <- rbind(A.aug, A.slack)
-    beta.new <- c(lpmodel$beta.shp, beta.obs.hat)
+    beta.new <- c(beta.shp.hat, beta.obs.hat)
     # New model sense
     sense.new <- c(sense0, rep("=", k))
     # New objective function
-    c <- c(rep(0, dim(lpmodel$A.obs)[2]), rep(1, k), rep(1, k))
+    c <- c(rep(0, dim(A.obs.hat)[2]), rep(1, k), rep(1, k))
     # New lower bound
     lb.new <- rep(0, length(c))
     # 1-norm
@@ -695,17 +705,17 @@ mincriterion <- function(data = NULL, lpmodel, norm = 2, solver = NULL) {
                       modelsense = "min",
                       lb = lb.new)
   } else if (norm == 2) {
-    if (!is.matrix(lpmodel$A.shp)) {
-      A.shp.new <- matrix(lpmodel$A.shp, nrow = 1)
+    if (!is.matrix(A.shp.hat)) {
+      A.shp.new <- matrix(A.shp.hat, nrow = 1)
     } else {
-      A.shp.new <- lpmodel$A.shp
+      A.shp.new <- A.shp.hat
     }
     # 2-norm
-    optim.arg <- list(Af = lpmodel$A.obs,
+    optim.arg <- list(Af = A.obs.hat,
                       bf = beta.obs.hat,
                       nf = 1,
                       A = A.shp.new,
-                      rhs = lpmodel$beta.shp,
+                      rhs = beta.shp.hat,
                       sense = sense0,
                       modelsense = "min",
                       lb = lb.zero)
@@ -762,14 +772,14 @@ mincriterion.check <- function(data, lpmodel, norm, solver) {
   lpmodel <- check.lpmodel(data = data,
                            lpmodel = lpmodel,
                            name.var = "lpmodel",
-                           A.tgt.cat = "matrix",
-                           A.obs.cat = "matrix",
-                           A.shp.cat = "matrix",
+                           A.tgt.cat = c("matrix", "function_mat", "list"),
+                           A.obs.cat = c("matrix", "function_mat", "list"),
+                           A.shp.cat = c("matrix", "function_mat", "list"),
                            beta.obs.cat = c("function_mat",
                                             "list_vector",
                                             "matrix",
                                             "function_obs_var"),
-                           beta.shp.cat = "matrix",
+                           beta.shp.cat = c("matrix", "function_mat", "list"),
                            R = 1,
                            is.estbounds = TRUE)
 

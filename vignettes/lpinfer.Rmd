@@ -788,11 +788,11 @@ can be deterministic or stochastic:
 
 | Component in `lpmodel`| Property |
 | --------------- | :-------------- |
-|`A.obs`| Deterministic |
-|`A.shp`| Deterministic |
-|`A.tgt`| Deterministic |
+|`A.obs`| Deterministic or stochastic |
+|`A.shp`| Deterministic or stochastic |
+|`A.tgt`| Deterministic or stochastic |
 |`beta.obs`| Stochastic |
-|`beta.shp`| Deterministic |
+|`beta.shp`| Deterministic or stochastic |
 
 #### Example (Returning confidence interval)
 
