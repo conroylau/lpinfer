@@ -6,7 +6,7 @@
 \usage{
 invertci(
   f,
-  farg,
+  farg = list(),
   alpha = 0.05,
   lb0 = NULL,
   lb1 = NULL,
