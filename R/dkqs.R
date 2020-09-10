@@ -810,8 +810,10 @@ dkqs.check <- function(data, lpmodel, beta.tgt, R, Rmulti, tau, n, solver,
   # Check numerics
   check.numeric(beta.tgt, "beta.tgt")
   check.positiveinteger(R, "R")
-  for (i in 1:length(tau)) {
-    check.nonnegative(tau[i], "tau")
+  if (!is.null(tau)) {
+    for (i in 1:length(tau)) {
+      check.nonnegative(tau[i], "tau")
+    }
   }
 
   # Check Boolean
@@ -862,6 +864,7 @@ print.dkqs <- function(x, ...) {
     # Print the p-values
     if (nrow(df.pval) == 1) {
       cat(sprintf(" p-value: %s\n", df.pval[1, 2]))
+      cat(sprintf(" tau used: %s\n", df.pval[1, 1]))
     } else {
       print(df.pval, row.names = FALSE)
     }
