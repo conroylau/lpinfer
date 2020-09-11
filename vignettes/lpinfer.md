@@ -1279,8 +1279,7 @@ estbounds(data = sampledata,
           kappa = 1e-5,
           norm = 2,
           solver = "gurobi",
-          estimate = TRUE,
-          progress = FALSE)
+          estimate = TRUE)
 ```
 
 where
@@ -1320,8 +1319,7 @@ estbounds.full <- estbounds(data = sampledata,
                             kappa = 1e-5,
                             norm = 2,
                             solver = "gurobi",
-                            estimate = TRUE,
-                            progress = FALSE)
+                            estimate = TRUE)
 print(estbounds.full)
 #> Estimated bounds: [0.38316, 0.63344]
 ```
