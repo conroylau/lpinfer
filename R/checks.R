@@ -1043,9 +1043,11 @@ check.cores <- function(x) {
 #'   that is supported depends on the test chosen.
 #'
 #' @return Returns an indicator to show whether the \code{beta.tgt} is within
-#'   the logical bound or not.
-#'   \item{beta.tgt.logi}{Equals 1 if it is within the logical bound.
+#'   the logical bound or not and the logical bounds.
+#'   \item{inout}{Equals 1 if it is within the logical bound.
 #'   Equals 0 otherwise.}
+#'   \item{lb}{Logical lower bound.}
+#'   \item{ub}{Logical upper bound.}
 #'
 #' @export
 #'
@@ -1060,10 +1062,13 @@ check.betatgt <- function(data, lpmodel, beta.tgt, solver) {
   # Step 2: Return the indicator
   # ---------------- #
   if (beta.tgt <= ub & beta.tgt >= lb) {
-    return(1)
+    inout <- 1
   } else {
-    return(0)
+    inout <- 0
   }
+  return(list(inout = inout,
+              lb = lb,
+              ub = ub))
 }
 
 #' Construct the linear program for the function \code{check.betatgt}

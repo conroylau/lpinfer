@@ -25,6 +25,8 @@
 #'     where \code{beta.tgt} is inside the logical bound. If
 #'     \code{test.logical} is 0, it refers to the case where
 #'     \code{beta.tgt} is outside the logical bound.}
+#'   \item{logical.lb}{Logical lower bound.}
+#'   \item{logical.ub}{Logical upper bound.}
 #'   \item{df.error}{Table showing the id of the bootstrap replication(s)
 #'     with error(s) and the corresponding error message(s).}
 #'   \item{R.succ}{Number of successful bootstrap replications.}
@@ -62,6 +64,8 @@ chorussell <- function(data = NULL, lpmodel, beta.tgt, n = NULL, R = 100,
   solver <- chorussell.return$solver
   solver.name <- chorussell.return$solver.name
   test.logical <- chorussell.return$test.logical
+  logical.lb <- chorussell.return$logical.lb
+  logical.ub <- chorussell.return$logical.ub
   n <- chorussell.return$n
 
   # Compute the maximum number of iterations
@@ -164,6 +168,8 @@ chorussell <- function(data = NULL, lpmodel, beta.tgt, n = NULL, R = 100,
                    ub.bs = ub.bs,
                    lb.bs = lb.bs,
                    test.logical = test.logical,
+                   logical.lb = logical.lb,
+                   logical.ub = logical.ub,
                    df.error = df.error,
                    ci = ci,
                    call = call,
@@ -941,6 +947,8 @@ chorussell.lp.fn.unbd <- function(x, lb.can1, lb.can2, ub.can1, ub.can2,
 #'       \item{\code{solver.name}}
 #'       \item{\code{test.logical}}
 #'       \item{\code{n}}
+#'       \item{\code{logical.lb}}
+#'       \item{\code{logical.ub}}
 #'    }
 #'
 #' @export
@@ -997,8 +1005,11 @@ chorussell.check <- function(data, lpmodel, beta.tgt, R, Rmulti, kappa,
   # ---------------- #
   # Step 5: Check whether beta.tgt is within the logical bounds
   # ---------------- #
-  test.logical <- check.betatgt(data, lpmodel, beta.tgt, solver)
-
+  test.return <- check.betatgt(data, lpmodel, beta.tgt, solver)
+  test.logical <- test.return$inout
+  logical.lb <- test.return$lb
+  logical.ub <- test.return$ub
+  
   # ---------------- #
   # Step 6: Check Boolean
   # ---------------- #
@@ -1013,6 +1024,8 @@ chorussell.check <- function(data, lpmodel, beta.tgt, R, Rmulti, kappa,
               solver.name = solver.name,
               data = data,
               test.logical = test.logical,
+              logical.lb = logical.lb,
+              logical.ub = logical.ub,
               n = n))
 }
 

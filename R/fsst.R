@@ -54,6 +54,8 @@
 #'     where \code{beta.tgt} is inside the logical bound. If
 #'     \code{test.logical} is 0, it refers to the case where
 #'     \code{beta.tgt} is outside the logical bound.}
+#'   \item{logical.lb}{Logical lower bound.}
+#'   \item{logical.ub}{Logical upper bound.}
 #'   \item{df.error}{Table showing the id of the bootstrap replication(s)
 #'     with error(s) and the corresponding error message(s).}
 #'   \item{R.succ}{Number of successful bootstrap replications.}
@@ -79,6 +81,8 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
    solver <- fsst.return$solver
    solver.name <- fsst.return$solver.name
    test.logical <- fsst.return$test.logical
+   logical.lb <- fsst.return$logical.lb
+   logical.ub <- fsst.return$logical.ub
 
    # Compute the maximum number of iterations
    maxR <- ceiling(R * Rmulti)
@@ -441,6 +445,8 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                         omega.i = omega.i,
                         beta.obs.bs = beta.obs.bs,
                         test.logical = test.logical,
+                        logical.lb = logical.lb,
+                        logical.ub = logical.ub,
                         R.succ = R.succ,
                         df.error = df.error)
       } else {
@@ -452,6 +458,8 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                         rho = rho,
                         rhobar.i = NA,
                         test.logical = test.logical,
+                        logical.lb = logical.lb,
+                        logical.ub = logical.ub,
                         R.succ = R.succ,
                         df.error = df.error)
       }
@@ -462,7 +470,9 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                      call = call,
                      solver.name = solver.name,
                      rho = rho,
-                     test.logical = test.logical)
+                     test.logical = test.logical,
+                     logical.lb = logical.lb,
+                     logical.ub = logical.ub)
 
       # Print warning message
       infeasible.betatgt.warning()
@@ -1746,6 +1756,8 @@ fsst.pval <- function(range.n, cone.n, range.n.list, cone.n.list, R,
 #'       \item{\code{solver}}
 #'       \item{\code{solver.name}}
 #'       \item{\code{test.logical}}
+#'       \item{\code{logical.lb}}
+#'       \item{\code{logical.ub}}
 #'    }
 #'
 #' @export
@@ -1819,7 +1831,10 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
    # ---------------- #
    # Step 6: Check whether beta.tgt is within the logical bounds
    # ---------------- #
-   test.logical <- check.betatgt(data, lpmodel, beta.tgt, solver)
+   test.return <- check.betatgt(data, lpmodel, beta.tgt, solver)
+   test.logical <- test.return$inout
+   logical.lb <- test.return$lb
+   logical.ub <- test.return$ub
 
    # ---------------- #
    # Step 7: Return updated items
@@ -1827,7 +1842,9 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
    return(list(solver = solver,
                solver.name = solver.name,
                data = data,
-               test.logical = test.logical))
+               test.logical = test.logical,
+               logical.lb = logical.lb,
+               logical.ub = logical.ub))
 }
 
 #' Print results from \code{fsst}

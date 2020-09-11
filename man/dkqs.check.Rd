@@ -48,6 +48,8 @@ Returns the updated parameters back to the function
       \item{\code{solver}}``
       \item{\code{solver.name}}
       \item{\code{test.logical}}
+      \item{\code{lb}}
+      \item{\code{ub}}
    }
 }
 \description{

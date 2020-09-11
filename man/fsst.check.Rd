@@ -77,6 +77,8 @@ Returns the updated parameters back to the function \code{fsst}.
       \item{\code{solver}}
       \item{\code{solver.name}}
       \item{\code{test.logical}}
+      \item{\code{logical.lb}}
+      \item{\code{logical.ub}}
    }
 }
 \description{

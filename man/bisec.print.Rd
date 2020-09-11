@@ -28,6 +28,8 @@ be displayed in the procedure of constructing confidence interval. If
 it is set as \code{TRUE}, the messages are displayed throughout the
 procedure. Otherwise, the messages will not be displayed.}
 
+\item{dp}{Number of decimal places in the output.}
+
 \item{df_bis}{Data frame storing the information from the bisection method.}
 }
 \value{

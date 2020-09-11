@@ -50,6 +50,8 @@
 #'     where \code{beta.tgt} is inside the logical bound. If
 #'     \code{test.logical} is 0, it refers to the case where
 #'     \code{beta.tgt} is outside the logical bound.}
+#'   \item{logical.lb}{Logical lower bound.}
+#'   \item{logical.ub}{Logical upper bound.}
 #'   \item{df.error}{Table showing the id of the bootstrap replication(s)
 #'     with error(s) and the corresponding error message(s).}
 #'   \item{R.succ}{Number of successful bootstrap replications.}
@@ -76,6 +78,8 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
   solver.name <- subsample.return$solver.name
   norm <- subsample.return$norm
   test.logical <- subsample.return$test.logical
+  logical.lb <- subsample.return$logical.lb
+  logical.ub <- subsample.return$logical.ub
 
   # Compute size of each subsample
   if (!is.null(data)) {
@@ -136,6 +140,8 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                    norm = norm,
                    subsample.size = m,
                    test.logical = test.logical,
+                   logical.lb = logical.lb,
+                   logical.ub = logical.ub,
                    df.error = T_subsample$df.error,
                    R.succ = T_subsample$R.succ)
   } else {
@@ -147,7 +153,9 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                    phi = phi,
                    norm = norm,
                    subsample.size = m,
-                   test.logical = test.logical)
+                   test.logical = test.logical,
+                   logical.lb = logical.lb,
+                   logical.ub = logical.ub)
 
     # Print warning message
     infeasible.betatgt.warning()
@@ -595,6 +603,8 @@ summary.subsample <- function(x, ...) {
 #'       \item{\code{solver.name}}
 #'       \item{\code{norm}}
 #'       \item{\code{test.logical}}
+#'       \item{\code{logical.lb}}
+#'       \item{\code{logical.ub}}
 #'    }
 #'
 #' @export
@@ -649,7 +659,10 @@ subsample.check <- function(data, lpmodel, beta.tgt, R, Rmulti, solver, norm,
 
   # Check whether beta.tgt is within the logical bounds
   check.numeric(beta.tgt, "beta.tgt")
-  test.logical <- check.betatgt(data, lpmodel, beta.tgt, solver)
+  test.return <- check.betatgt(data, lpmodel, beta.tgt, solver)
+  test.logical <- test.return$inout
+  logical.lb <- test.return$lb
+  logical.ub <- test.return$ub
 
   # ---------------- #
   # Step 2: Return results
@@ -659,5 +672,7 @@ subsample.check <- function(data, lpmodel, beta.tgt, R, Rmulti, solver, norm,
               solver = solver,
               solver.name = solver.name,
               norm = norm,
-              test.logical = test.logical))
+              test.logical = test.logical,
+              logical.lb = logical.lb,
+              logical.ub = logical.ub))
 }

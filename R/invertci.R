@@ -3,8 +3,6 @@
 #' @description This function constructs the confidence interval using the
 #'    bisection method.
 #'
-#' @import parallel foreach doMC
-#'
 #' @param f Function that represents a testing procedure.
 #' @param farg List of arguments to be passed to the function of testing
 #'    procedure.
@@ -21,6 +19,7 @@
 #' @param max.iter Maximum number of iterations in the bisection method.
 #' @param df_ci Data frame that consists the points and the corresponding
 #'    \eqn{p}-values that have been tested in the previous iterations.
+#' @param dp Number of decimal places in the output.
 #' @param progress The boolean variable for whether the result messages should
 #'    be displayed in the procedure of constructing confidence interval. If
 #'    it is set as \code{TRUE}, the messages are displayed throughout the
@@ -28,9 +27,9 @@
 #'
 #' @returns Returns the confidence interval and a data frame that contains the
 #'    points being tested in the procedure.
-#'    \item{up}{Upper bound of the confidence interval.}
-#'    \item{low}{Lower bound of the confidence interval.}
-#'    \item{df_ci}{data frame that consists of the points and the corresponding
+#'    \item{ub}{Upper bound of the confidence interval.}
+#'    \item{lb}{Lower bound of the confidence interval.}
+#'    \item{df_ci}{Data frame that consists of the points and the corresponding
 #'       \eqn{p}-values that have been tested in constructing the confidence
 #'       intervals.}
 #'    \item{df_ub}{Data frame storing the information for the bisection
@@ -51,7 +50,7 @@
 #'
 invertci <- function(f, farg = list(), alpha = .05, lb0 = NULL, lb1 = NULL,
                      ub0 = NULL, ub1 = NULL, tol = .0001, max.iter = 20,
-                     df_ci = NULL, progress = TRUE) {
+                     df_ci = NULL, dp = 5, progress = TRUE) {
   # ---------------- #
   # Step 1: Update call, check and update the arguments
   # ---------------- #
@@ -67,9 +66,6 @@ invertci <- function(f, farg = list(), alpha = .05, lb0 = NULL, lb1 = NULL,
   lb1 <- invertci.return$lb1
   ub0 <- invertci.return$ub0
   ub1 <- invertci.return$ub1
-
-  # Compute the number of decimal places in tol
-  dp <- decimal.places(tol)
 
   # Initialize lists
   df_ub_list <- NULL
@@ -248,7 +244,6 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, df_ci,
   ### Left end-point a
   a <- b0
   fb0_return <- bisec.eval(f, farg, a, df_ci)
-  fb0 <- fb0_return$pval
   df_ci <- fb0_return$df_ci
   # Print information
   if (progress == TRUE) {
@@ -261,16 +256,12 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, df_ci,
   ### Right end-point b
   b <- b1
   fb1_return <- bisec.eval(f, farg, b, df_ci)
-  fb1 <- fb1_return$pval
   df_ci <- fb1_return$df_ci
   # Print information
   df_bis <- bisec.print("right end", alpha_2sided, fb1_return, "NA", b,
                         progress, dp, df_bis)$df_bis
 
   # If fb1 and fb0 are of the same sign, ask user to choose another interval
-  if ((fb1 - alpha_2sided) * (fb0 - alpha_2sided) > 0) {
-    stop("Please choose another interval.")
-  }
   # Compute mid-point and evaluate the corresponding p-value
   c <- (b + a)/2
   fc_return <- bisec.eval(f, farg, c, df_ci)
@@ -285,8 +276,8 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, df_ci,
     # is below the tolerance level.
     if (abs(b - a) < tol) {
       if (progress == TRUE) {
-        tol_msg <- paste(" >>> Length of interval is below tolerance level. ",
-                         "Bisection method is completed.\n", sep = "")
+        tol_msg <- paste0(" >>> Length of interval is below tolerance level. ",
+                          "Bisection method is completed.\n", sep = "")
       }
       last_iter_msg <- "Length of interval is below tolerance level"
       if (progress == TRUE) {
@@ -367,7 +358,11 @@ bisec.eval <- function(f, farg, pt, df_ci) {
   if ((is.null(df_match) == TRUE) | (dim(df_match)[1] == 0)) {
     farg$beta.tgt <- pt
     test_return <- do.call(f, farg)
-    pval = test_return$pval
+    if (is.data.frame(test_return$pval)) {
+      pval <- test_return$pval[1, 2]
+    } else {
+      pval <- test_return$pval
+    }
     df_ci[df_n + 1, 1] <- pt
     df_ci[df_n + 1, 2] <- pval
   } else {
@@ -416,34 +411,6 @@ ci.inout <- function(pval, alpha, type) {
   }
 
   return(part)
-}
-
-#' Compute the logical upper and lower bounds for dkqs
-#'
-#' @description This function computes the logical upper and lower bounds for
-#'    the test \code{dkqs}.
-#'
-#' @inheritParams invertci
-#'
-#' @return Returns the logical upper and lower bounds for dkqs.
-#'    \item{lb0}{Logical lower bound for \code{dkqs}.}
-#'    \item{ub0}{Logical upper bound for \code{dkqs}.}
-#'
-#' @export
-#'
-dkqs.logicalb <- function(f, farg) {
-
-  #### Step 1: Assign a value to beta_tgt for returning the results
-  farg$beta.tgt <- 0
-
-  #### Step 2: Run dkqs to obtain the logical bounds
-  dkqs_return <- do.call(f, farg)
-  lb0 <- dkqs_return$lb0
-  ub0 <- dkqs_return$ub0
-
-  #### Step 3: Return results
-  invisible(list(lb0 = lb0,
-                 ub0 = ub0))
 }
 
 #' Print messages in bisection procedure and store results
@@ -528,32 +495,6 @@ bisec.print <- function(procedure, alphahalf, returnlist, a, b, progress, dp,
   # Step 5: Return information
   # ---------------- #
   invisible(list(df_bis = df_bis))
-}
-
-#' Auxiliary function: Count decimal places
-#'
-#' @description This function returns the number of decimal places of a real
-#'    snumber.
-#'
-#' @param x Real number.
-#'
-#' @return Returns the number of decimal places of the number.
-#'    \item{dp}{Number of decimal places of the number \code{x}.}
-#'
-#' @export
-#'
-decimal.places <- function(x) {
-  if ((x %% 1) == 0) {
-    # Case 1: x is an integer
-    invisible(0)
-  } else {
-    # Case 2: x is not an integer
-    x <- as.character(x)
-    xsplit <- strsplit(x, ".", fixed = TRUE)
-    # Count the number of digits after the dot
-    dp <- nchar(xsplit[[1]][2])
-    invisible(dp)
-  }
 }
 
 #' Print results from \code{invertci}
@@ -820,13 +761,12 @@ summary.bisection.print <- function(df_bis, i) {
   # Step 2: Print results
   # ---------------- #
   cat(paste(print.iter1,
-            print.iter2,"\t",
-            print.iter3,"\t",
-            format(round(print.iter4, digits = 5), nsmall = 5),"\t",
-            print.iter5,"\t",
-            print.iter6,"\t\n"))
+            print.iter2, "\t",
+            print.iter3, "\t",
+            format(round(print.iter4, digits = 5), nsmall = 5), "\t",
+            print.iter5, "\t",
+            print.iter6, "\t\n"))
 }
-
 
 #' Checks and updates the input of the function \code{invertci}
 #'
@@ -846,12 +786,11 @@ summary.bisection.print <- function(df_bis, i) {
 #'       \item{\code{ub0}}
 #'       \item{\code{ub1}}
 #'    }
-#
+#'
 #' @export
 #'
 invertci.check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max.iter,
                            df_ci, progress) {
-
   # ---------------- #
   # Step 1: Conduct the checks
   # ---------------- #
@@ -867,39 +806,27 @@ invertci.check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max.iter,
   }
 
   # Part 3. Check alpha
-  for (i in 1:length(alpha)) {
+  for (i in seq_along(alpha)) {
     check.numrange(alpha[i], "alpha", "closed", 0, "closed", 1)
   }
 
   # lb and ub are not required if f is chorussell
   if (!identical(f, chorussell)) {
     # Part 4: Check lb0 and ub0
-    if (is.null(lb0) | is.null(ub0)) {
-      # Part A: If lb0 and ub0 are null, check whether if the function is dkqs
-      # If yes, compute lb0 and ub0. Otherwise, return terminate the function.
-      if (as.character(substitute(f)) == "dkqs") {
-        logicalb_return = dkqs.logicalb(f, farg)
-        if (is.null(lb0)) {
-          lb0 = logicalb_return$lb0
-        }
-        if (is.null(ub0)) {
-          ub0 = logicalb_return$ub0
-        }
-      } else {
-        if (is.null(ub0) | !is.null(lb0)) {
-          stop("Please provide the logical upper bound 'ub0'.", call. = FALSE)
-        } else if (is.null(lb0) | !is.null(ub0)) {
-          stop("Please provide the logical lower bound 'lb0'.", call. = FALSE)
-        } else {
-          stop("Please provide the logical lower bound 'lb0' and the logical
-             upper bound 'ub0'.", call. = FALSE)
-        }
-      }
+    farg$beta.tgt <- 0
+    freturn <- do.call(f, farg)
+    ## Lower bound
+    if (is.null(lb0)) {
+      lb0 <- freturn$logical.lb
     } else {
-      # Part B: If lb0 and ub0 are both nonnull, check whether they are numeric.
       if (!(is.numeric(lb0) == TRUE & length(lb0) == 1)) {
         stop("The argument 'lb0' must be a scalar.", call. = FALSE)
       }
+    }
+    ## Upper bound
+    if (is.null(ub0)) {
+      ub0 <- freturn$logical.ub
+    } else {
       if (!(is.numeric(ub0) == TRUE & length(ub0) == 1)) {
         stop("The argument 'ub0' must be a scalar.", call. = FALSE)
       }
@@ -940,10 +867,7 @@ invertci.check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max.iter,
   }
 
   # Part 7: Check tol
-  if ((is.numeric(tol) == TRUE & length(tol) == 1 & tol > 0) == FALSE) {
-    stop("The tolerance level ('tol') must be a positive scalar.",
-         call. = FALSE)
-  }
+  check.positive(tol, "tol")
 
   # Part 8: Check max.iter
   check.positiveinteger(max.iter, "max.iter")
@@ -951,9 +875,9 @@ invertci.check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max.iter,
   # Part 9: Check df_ci
   if (is.null(df_ci) == TRUE) {
     # Part A: If df_ci is null
-    df_ci = data.frame(matrix(vector(), 0, 2,
-                              dimnames = list(c(), c("point", "value"))),
-                       stringsAsFactors = F)
+    df_ci <- data.frame(matrix(vector(), 0, 2,
+                               dimnames = list(c(), c("point", "value"))),
+                        stringsAsFactors = F)
   } else {
     # Part B: If df_ci is non-null
     if (class(df_ci) %in% c("data.frame", "matrix") == TRUE) {
@@ -973,7 +897,6 @@ invertci.check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max.iter,
           (sum(df_ci[, 2] >= 0) != nrow(df_ci))) {
         stop("The p-values have to be in the interval [0,1].")
       }
-
     } else {
       stop(gsub("\\s+", " ",
                 "The data provided 'df_ci' must either be a data.frame,

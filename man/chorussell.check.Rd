@@ -79,6 +79,8 @@ Returns the updated parameters back to the function
       \item{\code{solver.name}}
       \item{\code{test.logical}}
       \item{\code{n}}
+      \item{\code{logical.lb}}
+      \item{\code{logical.ub}}
    }
 }
 \description{

@@ -77,6 +77,8 @@ Returns a list of output calculated from the function:
     where \code{beta.tgt} is inside the logical bound. If
     \code{test.logical} is 0, it refers to the case where
     \code{beta.tgt} is outside the logical bound.}
+  \item{logical.lb}{Logical lower bound.}
+  \item{logical.ub}{Logical upper bound.}
   \item{df.error}{Table showing the id of the bootstrap replication(s)
     with error(s) and the corresponding error message(s).}
   \item{R.succ}{Number of successful bootstrap replications.}

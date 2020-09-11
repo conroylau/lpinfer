@@ -67,6 +67,8 @@ Returns the updated parameters and objects back to the function
       \item{\code{solver.name}}
       \item{\code{norm}}
       \item{\code{test.logical}}
+      \item{\code{logical.lb}}
+      \item{\code{logical.ub}}
    }
 }
 \description{

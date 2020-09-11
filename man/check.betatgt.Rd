@@ -18,9 +18,11 @@ that is supported depends on the test chosen.}
 }
 \value{
 Returns an indicator to show whether the \code{beta.tgt} is within
-  the logical bound or not.
-  \item{beta.tgt.logi}{Equals 1 if it is within the logical bound.
+  the logical bound or not and the logical bounds.
+  \item{inout}{Equals 1 if it is within the logical bound.
   Equals 0 otherwise.}
+  \item{lb}{Logical lower bound.}
+  \item{ub}{Logical upper bound.}
 }
 \description{
 This function checks whether the parameter \code{beta.tgt}

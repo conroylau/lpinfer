@@ -36,8 +36,6 @@
 #'      \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}} for each \eqn{\tau}.}
 #'   \item{beta.bs.bar}{The list of \eqn{\tau}-tightened re-centered bootstrap
 #'      estimators \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}.}
-#'   \item{lb0}{Logical lower bound of the problem for each \eqn{\tau}.}
-#'   \item{ub0}{Logical upper bound of the problem for each \eqn{\tau}.}
 #'   \item{solver}{Solver used.}
 #'   \item{cv.table}{Table of critical values.}
 #'   \item{call}{The function that has been called.}
@@ -46,12 +44,16 @@
 #'     where \code{beta.tgt} is inside the logical bounds. If
 #'     \code{test.logical} is 0, it refers to the case where
 #'     \code{beta.tgt} is outside the logical bounds.}
+#'   \item{logical.lb}{Logical lower bound.}
+#'   \item{logical.ub}{Logical upper bound.}
 #'   \item{df.error}{Table showing the id of the bootstrap replication(s)
 #'     with error(s) and the corresponding error message(s).}
 #'   \item{R.succ}{Number of successful bootstrap replications.}
 #'
 #' @details If the value of the test statistic \eqn{T_n} is zero, the
 #'    bootstrap procedure will be skipped and the \eqn{p}-value is zero.
+#'
+#' @example ./example/dkqs_example.R
 #'
 #' @export
 #'
@@ -73,6 +75,8 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
   solver <- dkqs.return$solver
   solver.name <- dkqs.return$solver.name
   test.logical <- dkqs.return$test.logical
+  logical.lb <- dkqs.return$logical.lb
+  logical.ub <- dkqs.return$logical.ub
 
   # Compute the maximum number of iterations
   maxR <- ceiling(R * Rmulti)
@@ -220,6 +224,8 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                    cv.table = cv.table,
                    call = call,
                    test.logical = test.logical,
+                   logical.lb = logical.lb,
+                   logical.ub = logical.ub,
                    df.error = T.bs.return$df.error,
                    R.succ = T.bs.return$R.succ)
   } else {
@@ -228,7 +234,9 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
     output <- list(pval = 0,
                    solver = solver.name,
                    call = call,
-                   test.logical = test.logical)
+                   test.logical = test.logical,
+                   logical.lb = logical.lb,
+                   logical.ub = logical.ub)
 
     # Print warning message
     infeasible.betatgt.warning()
@@ -770,6 +778,8 @@ tau.constraints <- function(length.tau, coeff.tau, coeff.x, ind.x, rhs, sense,
 #'       \item{\code{solver}}``
 #'       \item{\code{solver.name}}
 #'       \item{\code{test.logical}}
+#'       \item{\code{lb}}
+#'       \item{\code{ub}}
 #'    }
 #'
 #' @export
@@ -825,8 +835,11 @@ dkqs.check <- function(data, lpmodel, beta.tgt, R, Rmulti, tau, n, solver,
   lpmodel.temp <- lpmodel
   lpmodel.temp$A.shp <- rep(1, ncol(lpmodel$A.obs))
   lpmodel.temp$beta.shp <- 1
-  test.logical <- check.betatgt(data, lpmodel.temp, beta.tgt, solver)
-
+  test.return <- check.betatgt(data, lpmodel.temp, beta.tgt, solver)
+  test.logical <- test.return$inout
+  logical.lb <- test.return$lb
+  logical.ub <- test.return$ub
+  
   # ---------------- #
   # Step 2: Return results
   # ---------------- #
@@ -834,7 +847,9 @@ dkqs.check <- function(data, lpmodel, beta.tgt, R, Rmulti, tau, n, solver,
               lpmodel = lpmodel,
               solver = solver,
               solver.name = solver.name,
-              test.logical = test.logical))
+              test.logical = test.logical,
+              logical.lb = logical.lb,
+              logical.ub = logical.ub))
 }
 
 #' Print results from \code{dkqs}

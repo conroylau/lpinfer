@@ -15,6 +15,7 @@ invertci(
   tol = 1e-04,
   max.iter = 20,
   df_ci = NULL,
+  dp = 5,
   progress = TRUE
 )
 }
@@ -45,6 +46,8 @@ is not required if the function \code{chorussell} is used.}
 \item{df_ci}{Data frame that consists the points and the corresponding
 \eqn{p}-values that have been tested in the previous iterations.}
 
+\item{dp}{Number of decimal places in the output.}
+
 \item{progress}{The boolean variable for whether the result messages should
 be displayed in the procedure of constructing confidence interval. If
 it is set as \code{TRUE}, the messages are displayed throughout the
@@ -53,9 +56,9 @@ procedure. Otherwise, the messages will not be displayed.}
 \value{
 Returns the confidence interval and a data frame that contains the
    points being tested in the procedure.
-   \item{up}{Upper bound of the confidence interval.}
-   \item{low}{Lower bound of the confidence interval.}
-   \item{df_ci}{data frame that consists of the points and the corresponding
+   \item{ub}{Upper bound of the confidence interval.}
+   \item{lb}{Lower bound of the confidence interval.}
+   \item{df_ci}{Data frame that consists of the points and the corresponding
       \eqn{p}-values that have been tested in constructing the confidence
       intervals.}
    \item{df_ub}{Data frame storing the information for the bisection
