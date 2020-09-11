@@ -1,1 +1,1 @@
-/Users/conroylam/Desktop/Research/Alexander Torgovitsky/2. Linear program/package/lpinfer/vignettes/lpinfer.md
+vignettes/lpinfer.md
