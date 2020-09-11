@@ -1659,6 +1659,14 @@ more details.
 For further examples on different procedures in this package, please
 refer to the codes in the `example` folder for more details.
 
+The following command can be used to set `path` as the string that contains
+the path to the `example` folder.
+
+``` r
+path0 <- .libPaths()
+path <- paste0(path0, "/lpinfer/example")
+```
+
 ## Help, Feature Requests and Bug Reports
 
 Please post an issue on the [issues
