@@ -1,24 +1,19 @@
 ---
-title: 'lpinfer: An R Package for Inference in Linear Programs'
-author: ''
+title: "lpinfer: An R Package for Inference in Linear Programs"
+author: ""
+bibliography: refs.bib
 output:
-  md_document:
-    preserve_yaml: yes
-    toc: yes
-    df_print: paged  
-  pdf_document:
-    toc: yes
-    df_print: paged
   github_document:
-    keep_html: yes
-    toc: yes
+    keep_html: true
+    toc: true
+  pdf_document:
+    toc: true
     df_print: paged
   html_document:
-    keep_md: yes
-    toc: yes
+    keep_md: true
+    toc: true
     df_print: paged
-bibliography: refs.bib
-vignette: |
+vignette: >
   %\VignetteIndexEntry{lpinfer} 
   %\VignetteEncoding{UTF-8} 
   %\VignetteEngine{knitr::rmarkdown}
