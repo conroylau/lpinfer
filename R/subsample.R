@@ -114,8 +114,14 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       # ---------------- #
       # Step 4: Compute the p-value (using the p_eval function in dkqs)
       # ---------------- #
+      # Obtain the result
       pval_return <- pval(T_subsample$T.sub, Treturn$objval)
-      pval <- pval_return$p
+      
+      # Create a data frame of p-values
+      pval.df <- data.frame(matrix(vector(), nrow = 1, ncol = 2))
+      colnames(pval.df) <- c("phi", "p-value")
+      pval.df[1, 1] <- phi
+      pval.df[1, 2] <- pval_return$p
 
       # ---------------- #
       # Step 5: Generate a table of critical values
@@ -130,7 +136,7 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
     # ---------------- #
     # Step 6: Assign the return list
     # ---------------- #
-    output <- list(pval = as.numeric(pval),
+    output <- list(pval = pval.df,
                    T.n = as.numeric(Treturn$objval),
                    T.sub = T_subsample$T.sub,
                    solver = solver.name,
@@ -531,7 +537,7 @@ subsample.bs.fn <- function(x, data, lpmodel, beta.tgt, norm, m, solver,
 print.subsample <- function(x, ...) {
   if (x$test.logical == 1) {
     # Case 1: 'beta.tgt' is within the logical bound
-    cat(sprintf("p-value: %s\n", round(x$pval, digits = 5)))
+    cat(sprintf("p-value: %s\n", round(x$pval[1, 2], digits = 5)))
   } else {
     # Case 2: 'beta.tgt' is outside the logical bound
     infeasible.pval.msg()
