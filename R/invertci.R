@@ -54,6 +54,9 @@ invertci <- function(f, farg = list(), alpha = .05, lb0 = NULL, lb1 = NULL,
   # ---------------- #
   # Step 1: Update call, check and update the arguments
   # ---------------- #
+  # Extract the current RNG state
+  rngstate <- .Random.seed
+
   # Obtain call information
   call <- match.call()
 
@@ -96,7 +99,7 @@ invertci <- function(f, farg = list(), alpha = .05, lb0 = NULL, lb1 = NULL,
         cat("\n === Computing upper bound of confidence interval ===\n")
       }
       ub_return <- ci.bisection(f, farg, alpha[i], ub1, ub0, tol, max.iter,
-                                df_ci, progress, 1, dp)
+                                df_ci, progress, 1, dp, rngstate)
       # Update data frame
       df_ci <- ub_return$df_ci
       # Data frame storing all messages in each iteration
@@ -111,7 +114,7 @@ invertci <- function(f, farg = list(), alpha = .05, lb0 = NULL, lb1 = NULL,
         cat("\n === Computing lower bound of confidence interval ===\n")
       }
       lb_return <- ci.bisection(f, farg, alpha[i], lb0, lb1, tol, max.iter,
-                                df_ci, progress, -1, dp)
+                                df_ci, progress, -1, dp, rngstate)
       # Update data frame
       df_ci <- lb_return$df_ci
       # Data frame storing all messages in each iteration
@@ -209,6 +212,7 @@ invertci <- function(f, farg = list(), alpha = .05, lb0 = NULL, lb1 = NULL,
 #' @param dp Number of decimal places to be displayed for the \eqn{p}-values
 #'    and confidence intervals in the messages if \code{progress} is set
 #'    as \code{TRUE}.
+#' @param rngstate The current RNG state obtained from \code{.Random.seed}.
 #' @inheritParams invertci
 #'
 #' @return Return the solution of the bisection method and the updated
@@ -223,7 +227,7 @@ invertci <- function(f, farg = list(), alpha = .05, lb0 = NULL, lb1 = NULL,
 #' @export
 #'
 ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, df_ci,
-                         progress, type, dp) {
+                         progress, type, dp, rngstate) {
 
   # ---------------- #
   # Step 1: Evaluate the end-points and the mid-point of b0 and b1
@@ -243,7 +247,7 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, df_ci,
 
   ### Left end-point a
   a <- b0
-  fb0_return <- bisec.eval(f, farg, a, df_ci)
+  fb0_return <- bisec.eval(f, farg, a, df_ci, rngstate)
   df_ci <- fb0_return$df_ci
   # Print information
   if (progress == TRUE) {
@@ -255,7 +259,7 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, df_ci,
 
   ### Right end-point b
   b <- b1
-  fb1_return <- bisec.eval(f, farg, b, df_ci)
+  fb1_return <- bisec.eval(f, farg, b, df_ci, rngstate)
   df_ci <- fb1_return$df_ci
   # Print information
   df_bis <- bisec.print("right end", alpha_2sided, fb1_return, "NA", b,
@@ -264,7 +268,7 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, df_ci,
   # If fb1 and fb0 are of the same sign, ask user to choose another interval
   # Compute mid-point and evaluate the corresponding p-value
   c <- (b + a)/2
-  fc_return <- bisec.eval(f, farg, c, df_ci)
+  fc_return <- bisec.eval(f, farg, c, df_ci, rngstate)
   fc <- fc_return$pval
   df_ci <- fc_return$df_ci
 
@@ -301,7 +305,7 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, df_ci,
     c <- (a + b)/2
 
     # Update data frame and p-value
-    fc_return <- bisec.eval(f, farg, c, df_ci)
+    fc_return <- bisec.eval(f, farg, c, df_ci, rngstate)
     fc <- fc_return$pval
     df_ci <- fc_return$df_ci
   }
@@ -334,6 +338,7 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, df_ci,
 #'    evaluated. Otherwise, it will use the previous data.
 #'
 #' @inheritParams invertci
+#' @inheritParams ci.bisection
 #' @param pt Point to be evaluated in the bisection method.
 #'
 #' @return Returns the \eqn{p}-value of the point considered and an updated
@@ -344,7 +349,7 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, df_ci,
 #'
 #' @export
 #'
-bisec.eval <- function(f, farg, pt, df_ci) {
+bisec.eval <- function(f, farg, pt, df_ci, rngstate) {
   # ---------------- #
   # Step 1: Check if the data point has appeared in previous iterations.
   # ---------------- #
@@ -357,6 +362,7 @@ bisec.eval <- function(f, farg, pt, df_ci) {
   # ---------------- #
   if ((is.null(df_match) == TRUE) | (dim(df_match)[1] == 0)) {
     farg$beta.tgt <- pt
+    assign(x = ".Random.seed", value = rngstate, envir = .GlobalEnv)
     test_return <- do.call(f, farg)
     if (is.data.frame(test_return$pval)) {
       pval <- test_return$pval[1, 2]

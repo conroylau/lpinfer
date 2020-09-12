@@ -4,7 +4,20 @@
 \alias{ci.bisection}
 \title{Bisection method}
 \usage{
-ci.bisection(f, farg, alpha, b0, b1, tol, max.iter, df_ci, progress, type, dp)
+ci.bisection(
+  f,
+  farg,
+  alpha,
+  b0,
+  b1,
+  tol,
+  max.iter,
+  df_ci,
+  progress,
+  type,
+  dp,
+  rngstate
+)
 }
 \arguments{
 \item{f}{Function that represents a testing procedure.}
@@ -38,6 +51,8 @@ lower bound of the confidence interval.}
 \item{dp}{Number of decimal places to be displayed for the \eqn{p}-values
 and confidence intervals in the messages if \code{progress} is set
 as \code{TRUE}.}
+
+\item{rngstate}{The current RNG state obtained from \code{.Random.seed}.}
 }
 \value{
 Return the solution of the bisection method and the updated
