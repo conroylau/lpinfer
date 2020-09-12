@@ -37,7 +37,7 @@
 #' @return Returns a list of output calculated from the function:
 #'   \item{pval}{\eqn{p}-value.}
 #'   \item{T.n}{Test statistic \eqn{T_n}.}
-#'   \item{T.sub}{List of bootstrap estimates of the test statistics
+#'   \item{T.bs}{List of bootstrap estimates of the test statistics
 #'     from the subsampling procedure.}
 #'   \item{solver}{Solver used.}
 #'   \item{cv.table}{Table of critical values.}
@@ -138,35 +138,30 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
     # ---------------- #
     output <- list(pval = pval.df,
                    T.n = as.numeric(Treturn$objval),
-                   T.sub = T_subsample$T.sub,
-                   solver = solver.name,
+                   T.bs = T_subsample$T.sub,
                    cv.table = cv.table,
-                   call = call,
-                   phi = phi,
-                   norm = norm,
-                   subsample.size = m,
-                   test.logical = test.logical,
-                   logical.lb = logical.lb,
-                   logical.ub = logical.ub,
                    df.error = T_subsample$df.error,
                    R.succ = T_subsample$R.succ)
   } else {
     ### Case 2: test.logical == 0. Set the p-value as 0 directly because
     ### beta.tgt is outside the logical bounds
-    output <- list(pval = 0,
-                   solver = solver.name,
-                   call = call,
-                   phi = phi,
-                   norm = norm,
-                   subsample.size = m,
-                   test.logical = test.logical,
-                   logical.lb = logical.lb,
-                   logical.ub = logical.ub)
+    output <- list(pval = 0)
 
     # Print warning message
     infeasible.betatgt.warning()
   }
-
+  # Assign the common objects in the output list
+  output <- append(output,
+                   list(solver = solver.name,
+                        call = call,
+                        phi = phi,
+                        norm = norm,
+                        subsample.size = m,
+                        test.logical = test.logical,
+                        logical.lb = logical.lb,
+                        logical.ub = logical.ub))
+  
+  # Assign class
   attr(output, "class") <- "subsample"
 
   return(output)

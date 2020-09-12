@@ -217,30 +217,26 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                    tau.max = tau.return$objval,
                    T.n = T.n,
                    T.bs = T.bs.return$T.bs,
-                   beta.bs.bar = T.bs.return$beta.bs.bar.list,
-                   lb0 = lb.df,
-                   ub0 = ub.df,
-                   solver = solver.name,
                    cv.table = cv.table,
-                   call = call,
-                   test.logical = test.logical,
-                   logical.lb = logical.lb,
-                   logical.ub = logical.ub,
                    df.error = T.bs.return$df.error,
                    R.succ = T.bs.return$R.succ)
   } else {
     ### Case 2: test.logical == 0. Set the p-value as 0 directly because
     ### beta.tgt is outside the logical bounds
-    output <- list(pval = 0,
-                   solver = solver.name,
-                   call = call,
-                   test.logical = test.logical,
-                   logical.lb = logical.lb,
-                   logical.ub = logical.ub)
+    output <- list(pval = 0)
 
     # Print warning message
     infeasible.betatgt.warning()
   }
+  # Assign the common objects in the output list
+  output <- append(output,
+                   list(solver = solver.name,
+                        call = call,
+                        test.logical = test.logical,
+                        logical.lb = logical.lb,
+                        logical.ub = logical.ub))
+
+  # Assign class
   attr(output, "class") <- "dkqs"
 
   # Return output

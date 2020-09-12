@@ -443,7 +443,7 @@ tests.dkqs <- function(dkqs.out, test.name) {
     for (i in seq_along(i.cores)) {
       for (j in seq_along(j.lpmodel)) {
         for (k in seq_along(k.solver)) {
-          expect_equal(theta.down$objval, dkqs.out[[i]][[j]][[k]]$lb0[1,2])
+          expect_equal(theta.down$objval, dkqs.out[[i]][[j]][[k]]$logical.lb)
         }
       }
     }
@@ -454,7 +454,7 @@ tests.dkqs <- function(dkqs.out, test.name) {
     for (i in seq_along(i.cores)) {
       for (j in seq_along(j.lpmodel)) {
         for (k in seq_along(k.solver)) {
-          expect_equal(theta.up$objval, dkqs.out[[i]][[j]][[k]]$ub0[1,2])
+          expect_equal(theta.up$objval, dkqs.out[[i]][[j]][[k]]$logical.ub)
         }
       }
     }

@@ -64,7 +64,7 @@ displayed while the code is running.}
 Returns a list of output calculated from the function:
   \item{pval}{\eqn{p}-value.}
   \item{T.n}{Test statistic \eqn{T_n}.}
-  \item{T.sub}{List of bootstrap estimates of the test statistics
+  \item{T.bs}{List of bootstrap estimates of the test statistics
     from the subsampling procedure.}
   \item{solver}{Solver used.}
   \item{cv.table}{Table of critical values.}

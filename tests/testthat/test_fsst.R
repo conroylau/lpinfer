@@ -717,7 +717,7 @@ tests.fsst.dgeqp <- function(fsst.out, test.name) {
     for (i in seq_along(i.cores)) {
       for (j in 1:2) {
         for (k in 1:2) {
-          expect_equal("gurobi", fsst.out[[i]][[j]][[k]]$solver.name)
+          expect_equal("gurobi", fsst.out[[i]][[j]][[k]]$solver)
         }
       }
     }
@@ -1087,7 +1087,7 @@ tests.fsst.dlp <- function(fsst.out, test.name) {
   # 6. Solver name
   test_that(sprintf("%s 'd < p': Solver name", test.name1), {
     for (i in seq_along(i.cores)) {
-      expect_equal("gurobi", fsst.out[[i]]$solver.name)
+      expect_equal("gurobi", fsst.out[[i]]$solver)
     }
   })
 

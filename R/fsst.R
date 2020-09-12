@@ -431,53 +431,42 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          # Assign the list of objects returned
          output <- list(pval = df.pval,
                         cv.table = cv.table,
-                        call = call,
                         range = range.n,
                         cone = cone.n$objval,
                         test = max(range.n, cone.n$objval),
                         cone.n.list = cone.n.list,
                         range.n.list = range.n.list,
-                        solver.name = solver.name,
-                        rho = rho,
                         rhobar.i = rhobar.i,
                         lambda.data = lambda.dd,
                         var.method = var.method,
                         omega.i = omega.i,
-                        beta.obs.bs = beta.obs.bs,
-                        test.logical = test.logical,
-                        logical.lb = logical.lb,
-                        logical.ub = logical.ub,
                         R.succ = R.succ,
                         df.error = df.error)
       } else {
          df.pval[, 2] <- NA
          output <- list(pval = df.pval,
                         cv.table = NA,
-                        call = call,
-                        solver.name = solver.name,
-                        rho = rho,
                         rhobar.i = NA,
-                        test.logical = test.logical,
-                        logical.lb = logical.lb,
-                        logical.ub = logical.ub,
                         R.succ = R.succ,
                         df.error = df.error)
       }
    } else {
       ### Case 2: test.logical == 0. Set the p-value as 0 directly because
       ### beta.tgt is outside the logical bounds
-      output <- list(pval = 0,
-                     call = call,
-                     solver.name = solver.name,
-                     rho = rho,
-                     test.logical = test.logical,
-                     logical.lb = logical.lb,
-                     logical.ub = logical.ub)
+      output <- list(pval = 0)
 
       # Print warning message
       infeasible.betatgt.warning()
    }
-
+   # Assign the common objects in the output list
+   output <- append(output,
+                    list(solver = solver.name,
+                         call = call,
+                         rho = rho,
+                         test.logical = test.logical,
+                         logical.lb = logical.lb,
+                         logical.ub = logical.ub))
+   
    # Assign class
    attr(output, "class") <- "fsst"
 
