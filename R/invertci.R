@@ -771,7 +771,7 @@ summary.bisection.print <- function(df_bis, i) {
             print.iter3, "\t",
             format(round(print.iter4, digits = 5), nsmall = 5), "\t",
             print.iter5, "\t",
-            print.iter6, "\t\n"))
+            print.iter6, "\n"))
 }
 
 #' Checks and updates the input of the function \code{invertci}
