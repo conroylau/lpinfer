@@ -486,6 +486,9 @@ dkqs.bs <- function(data, lpmodel, beta.tgt, R, maxR, s.star.list, tau.list,
     i1 <- bs.temp$i1
     bs.list <- bs.temp$bs.list
     
+    # Set the default for progress bar
+    progressr::handlers("progress")
+    
     # Obtain results from the bootstrap replications
     progressr::with_progress({
       if (isTRUE(progress)) {

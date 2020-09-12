@@ -558,7 +558,10 @@ fsst.beta.bs <- function(n, data, beta.obs.hat, lpmodel, R, maxR, progress,
          i0 <- bs.list[1]
          i1 <- tail(bs.list, n = 1)
       }
-
+      
+      # Set the default for progress bar
+      progressr::handlers("progress")
+      
       # Obtain results from the bootstrap replications
       progressr::with_progress({
          if (isTRUE(progress)) {

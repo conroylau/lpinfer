@@ -275,12 +275,12 @@ chorussell.simp <- function(lb.can1, lb.can2, ub.can1, ub.can2, alpha,
   lb.can <- c(lb.can1, lb.can2)
   ub.can <- c(ub.can1, ub.can2)
 
-  # Set the default
-  progressr::handlers("progress")
-
   # ---------------- #
   # Step 2: Obtain the updated candidates
   # ---------------- #
+  # Set the default for progress bar
+  progressr::handlers("progress")
+
   # Lower bound
   progressr::with_progress({
     if (isTRUE(progress)) {
