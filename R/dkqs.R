@@ -877,8 +877,8 @@ print.dkqs <- function(x, ...) {
 
     # Print the p-values
     if (nrow(df.pval) == 1) {
-      cat(sprintf(" p-value: %s\n", df.pval[1, 2]))
-      cat(sprintf(" tau used: %s\n", df.pval[1, 1]))
+      cat(sprintf(" p-value: %s\n", round(df.pval[1, 2], digits = 5)))
+      cat(sprintf(" tau used: %s\n", round(df.pval[1, 1], digits = 5)))
     } else {
       print(df.pval, row.names = FALSE)
     }
