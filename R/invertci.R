@@ -77,6 +77,9 @@ invertci <- function(f, farg = list(), alpha = .05, lb0 = NULL, lb1 = NULL,
   ub_list <- NULL
   lb_list <- NULL
   iter_list <- NULL
+  
+  # Initialize message for constructing confidence intervals
+  comp.bound <- "\n === Computing %s bound of confidence interval ===\n"
 
   # ---------------- #
   # Step 2: Return confidence interval and data frame
@@ -85,7 +88,7 @@ invertci <- function(f, farg = list(), alpha = .05, lb0 = NULL, lb1 = NULL,
   for (i in 1:length(alpha)) {
     if (!identical(f, chorussell)) {
       # If `f` is not `chorussell`, use the bisection method in `invertci`
-      if (i > 1 & (progress == TRUE)) {
+      if (i > 1 & (isTRUE(progress))) {
         cat("\n")
       }
 
@@ -93,10 +96,10 @@ invertci <- function(f, farg = list(), alpha = .05, lb0 = NULL, lb1 = NULL,
       termination <- NULL
 
       ### Compute upper bound of confidence interval
-      if (progress == TRUE) {
+      if (isTRUE(progress)) {
         cat(sprintf(" < Constructing confidence interval for alpha = %s >\n",
                     alpha[i]))
-        cat("\n === Computing upper bound of confidence interval ===\n")
+        cat(sprintf(comp.bound, "upper"))
       }
       ub_return <- ci.bisection(f, farg, alpha[i], ub1, ub0, tol, max.iter,
                                 df_ci, progress, 1, dp, rngstate)
@@ -110,8 +113,8 @@ invertci <- function(f, farg = list(), alpha = .05, lb0 = NULL, lb1 = NULL,
       ub <- ub_return$pt
 
       ### Compute lower bound of confidence interval
-      if (progress == TRUE) {
-        cat("\n === Computing lower bound of confidence interval ===\n")
+      if (isTRUE(progress)) {
+        cat(sprintf(comp.bound, "lower"))
       }
       lb_return <- ci.bisection(f, farg, alpha[i], lb0, lb1, tol, max.iter,
                                 df_ci, progress, -1, dp, rngstate)
@@ -250,7 +253,7 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, df_ci,
   fb0_return <- bisec.eval(f, farg, a, df_ci, rngstate)
   df_ci <- fb0_return$df_ci
   # Print information
-  if (progress == TRUE) {
+  if (isTRUE(progress)) {
     cat(paste0(" Iteration\t Lower bound \t Upper bound \t Test point \t ",
                "p-value\t Reject?\n"))
   }
@@ -279,12 +282,12 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, df_ci,
     # Bisection method is completed if the difference between the two points
     # is below the tolerance level.
     if (abs(b - a) < tol) {
-      if (progress == TRUE) {
+      if (isTRUE(progress)) {
         tol_msg <- paste0(" >>> Length of interval is below tolerance level. ",
                           "Bisection method is completed.\n", sep = "")
       }
       last_iter_msg <- "Length of interval is below tolerance level"
-      if (progress == TRUE) {
+      if (isTRUE(progress)) {
         cat(tol_msg)
       }
       break
@@ -315,7 +318,7 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, df_ci,
     last_iter_msg <- "Reached maximum number of iterations"
     iter_msg <- paste(" >>> Reached the maximum number of iterations. ",
                       "Bisection method is completed.\n", sep = "")
-    if (progress == TRUE) {
+    if (isTRUE(progress)) {
       cat(iter_msg)
     }
   }
@@ -493,7 +496,7 @@ bisec.print <- function(procedure, alphahalf, returnlist, a, b, progress, dp,
   # ---------------- #
   # Step 4: Print information
   # ---------------- #
-  if (progress == TRUE) {
+  if (isTRUE(progress)) {
     summary.bisection.print(df_bis, df_bis_row + 1)
   }
 
@@ -536,7 +539,6 @@ print.invertci <- function(x, ...) {
 #' @export
 #'
 print.invertci_single <- function(x, ...) {
-  cat("\n")
   cat(sprintf("Confidence interval: [%s, %s]\n",
               round(x$lb, digits = 5),
               round(x$ub, digits = 5)))
@@ -589,10 +591,13 @@ print.invertci_multiple <- function(x, ...) {
 #' @export
 #'
 summary.invertci <- function(x, alphas = NULL, ...) {
+  # String containing the general message to be printed
+  msg.bound <- "=== Iterations in constructing %s bound:"
+  
   if (length(x$alpha) == 1) {
-    summary.invertci_single(x, alphas)
+    summary.invertci_single(x, alphas, msg.bound)
   } else {
-    summary.invertci_multiple(x, alphas)
+    summary.invertci_multiple(x, alphas, msg.bound)
   }
 }
 
@@ -602,15 +607,15 @@ summary.invertci <- function(x, alphas = NULL, ...) {
 #'    function \code{invertci}.
 #'
 #' @param x Object returned from \code{invertci}.
+#' @param msg.bound String containing the general message to be printed.
 #' @param ... Additional arguments.
+#' @inheritParams invertci
 #'
 #' @return Print the summary of the basic set of results from \code{invertci}.
 #'
 #' @export
 #'
-summary.invertci_single <- function(x, alphas, ...) {
-  cat("\n")
-
+summary.invertci_single <- function(x, alphas, msg.bound, ...) {
   # ---------------- #
   # Step 1: Summary of results
   # ---------------- #
@@ -628,14 +633,14 @@ summary.invertci_single <- function(x, alphas, ...) {
     # Step 2: Messages in constructing the upper bound
     # ---------------- #
     cat("Details:\n\n")
-    cat("=== Iterations in constructing upper bound:")
+    cat(sprintf(msg.bound, "upper"))
     consolidate.invertci(x$df_ub, x$termination$ub)
     cat("\n\n")
 
     # ---------------- #
     # Step 3: Messages in constructing the lower bound
     # ---------------- #
-    cat("=== Iterations in constructing lower bound:")
+    cat(sprintf(msg.bound, "lower"))
     consolidate.invertci(x$df_lb, x$termination$lb)
     cat("\n\n")
   }
@@ -648,12 +653,13 @@ summary.invertci_single <- function(x, alphas, ...) {
 #'
 #' @param x Object returned from \code{invertci}.
 #' @param ... Additional arguments.
+#' @inheritParams summary.invertci_single
 #'
 #' @return Print the summary of the basic set of results from \code{invertci}.
 #'
 #' @export
 #'
-summary.invertci_multiple <- function(x, alphas, ...) {
+summary.invertci_multiple <- function(x, alphas, msg.bound, ...) {
   # ---------------- #
   # Step 1: Print the basic set of results
   # ---------------- #
@@ -702,14 +708,14 @@ summary.invertci_multiple <- function(x, alphas, ...) {
         # ---------------- #
         # Step 3: Messages in constructing the upper bound
         # ---------------- #
-        cat("=== Iterations in constructing upper bound:")
+        cat(sprintf(msg.bound, "upper"))
         consolidate.invertci(x$df_ub[[i]], x$termination[[i]]$ub)
         cat("\n\n")
 
         # ---------------- #
         # Step 4: Messages in constructing the lower bound
         # ---------------- #
-        cat("=== Iterations in constructing lower bound:")
+        cat(sprintf(msg.bound, "lower"))
         consolidate.invertci(x$df_lb[[i]], x$termination[[i]]$lb)
         cat("\n\n")
       }
