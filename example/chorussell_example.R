@@ -1,11 +1,10 @@
 ## ========================================================================= ##
 ##
-##  Example file for chorussell function
+##  Example for the chorussell function
 ##
-##  This is an example code for applying chorussell procedure on the missing
-##  data problem using the sample data. This file illustrates how the module
-##  can be used to obtain the p-values using the ull-information and two
-##  moments approach.
+##  This followings illustrate how the function can be used to compute
+##  p-values and construct confidence intervals using the missing data
+##  problem.
 ##
 ## ========================================================================= ##
 rm(list = ls())

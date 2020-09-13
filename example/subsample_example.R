@@ -1,11 +1,9 @@
 ## ========================================================================= ##
 ##
-##  Example file for subsample function
+##  Example for the subsample function
 ##
-##  This is an example code for applying subsampling procedure on the missing
-##  data problem using the sample data. This file illustrates how the module
-##  can be used to obtain the p-values using the ull-information and two
-##  moments approach.
+##  This followings illustrate how the function can be used to compute
+##  p-values using the missing data problem.
 ##
 ## ========================================================================= ##
 rm(list = ls())

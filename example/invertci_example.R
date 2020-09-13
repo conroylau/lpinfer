@@ -1,11 +1,11 @@
 ## ========================================================================= ##
 ##
-##  Example file for invertci function
+##  Example for the invertci function
 ##
-##  This is an example code for applying the invertci procedure on the missing
-##  data problem using the sample data. This file illustrates how the module
-##  can be used to obtain the confidence interval
-##  for the subsampling procedure problem.
+##  This followings illustrate how the function can be used to construct
+##  confidence intervals for the target parameter under different procedures.
+##  The missing data problem is used with the subsampling procedure in
+##  constructing the confidence intervals.
 ##
 ## ========================================================================= ##
 rm(list = ls())

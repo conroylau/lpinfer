@@ -1,12 +1,11 @@
 ## ========================================================================= ##
 ##
-##  Example file for the estbounds function
+##  Example for the estbounds function
 ##
-##  This is an example code for applying the estbounds procedure on the missing
-##  data problem using the sample data by Torgovitsky (2019). This file
-##  illustrates how the module can be used to obtain the p-values using the
-##  full-information and two moments approach. Currently, only Gurobi is
-##  supported for the problem with a 2-norm.
+##  This followings illustrate how the function can be used to estimate the
+##  bounds subject to shape constraints using the missing data problem. 
+##  Currently, only Gurobi is supported for the estbounds function with a
+##  2-norm.
 ##
 ## ========================================================================= ##
 rm(list = ls())

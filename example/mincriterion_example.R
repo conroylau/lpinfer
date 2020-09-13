@@ -1,11 +1,10 @@
 ## ========================================================================= ##
 ##
-##  Example file for the mincriterion function
+##  Example for the mincriterion function
 ##
-##  This is an example code for applying the mincriterion function on
-##  the missing data problem using the sample data by Torgovitsky (2019).
-##  This file illustrates how the module can be used to obtain the solution
-##  to the first stage problems in estbounds.
+##  This followings illustrate how the function can be used to estimate the
+##  solution to the first-stage problem in the estbounds function using the
+##  missing data problem.
 ##
 ## ========================================================================= ##
 rm(list = ls())

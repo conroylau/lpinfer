@@ -1,6 +1,6 @@
 ## ========================================================================= ##
 ##
-##  Example for standard.lpmodel
+##  Example for the standard.lpmodel function
 ##
 ##  The following illustrates how to convert an lpmodel.natural object into an
 ##  lpmodel object.
