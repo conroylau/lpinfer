@@ -85,12 +85,10 @@ If the value of the test statistic \eqn{T_n} is zero, the
 \examples{
 ## ========================================================================= ##
 ##
-##  Example file for dkqs function
+##  Example for the dkqs function
 ##
-##  This is an example code for applying dkqs procedure on the missing
-##  data problem using the sample data. This file illustrates how the module
-##  can be used to obtain the p-values using the ull-information and two
-##  moments approach.
+##  This followings illustrate how the function can be used to compute
+##  p-values using the missing data problem.
 ##
 ## ========================================================================= ##
 rm(list = ls())

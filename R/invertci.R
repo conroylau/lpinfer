@@ -46,6 +46,8 @@
 #'    \code{progress} is set as \code{TRUE}) is equal to the number of decimal
 #'    places in the variable \code{tol}.
 #'
+#' @example ./example/invertci_example.R
+#'
 #' @export
 #'
 invertci <- function(f, farg = list(), alpha = .05, lb0 = NULL, lb1 = NULL,

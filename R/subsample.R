@@ -56,6 +56,8 @@
 #'     with error(s) and the corresponding error message(s).}
 #'   \item{R.succ}{Number of successful bootstrap replications.}
 #'
+#' @example ./example/subsample_example.R
+#' 
 #' @export
 #'
 subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,

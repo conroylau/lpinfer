@@ -71,6 +71,8 @@ standard.form <- function(A, b, sense, lb = NULL, obj = NULL) {
 #' @return Returns a \code{lpmodel} object.
 #'   \item{lpmodel}{A \code{lpmodel} object.}
 #'
+#' @example ./example/standard.lpmodel_example.R
+#'
 #' @export
 #'
 standard.lpmodel <- function(lpm.natural) {
