@@ -79,123 +79,192 @@ invertci <- function(f, farg = list(), alpha = .05, lb0 = NULL, lb1 = NULL,
   ub_list <- NULL
   lb_list <- NULL
   iter_list <- NULL
-  
+
   # Initialize message for constructing confidence intervals
   comp.bound <- "\n === Computing %s bound of confidence interval ===\n"
 
   # ---------------- #
-  # Step 2: Return confidence interval and data frame
+  # Step 2: Compute the left end-point for the first tuning parameter and
+  # the first alpha
   # ---------------- #
+  # This step is skipped if the chorussell procedure is used
+  if (!identical(f, chorussell)) {
+    # Append the test point
+    farg$beta.tgt <- ub1
+
+    # Run the procedure once and obtain the pval data frame
+    init.return <- do.call(f, farg)
+    pval <- init.return$pval
+
+    # Parameter names are located in the first (n - 1) columns of pval
+    pval.col <- ncol(pval)
+
+    # Parameter name and the list of parameters
+    para.name <- colnames(pval)[1:(pval.col - 1)]
+    para.vals <- data.frame(pval[, 1:(pval.col - 1)])
+    colnames(para.vals) <- para.name
+  }
+
+  # ---------------- #
+  # Step 3: Return confidence interval and data frame
+  # ---------------- #
+  # Sort alpha
   alpha <- sort(alpha)
-  for (i in 1:length(alpha)) {
-    if (!identical(f, chorussell)) {
-      # If `f` is not `chorussell`, use the bisection method in `invertci`
-      if (i > 1 & (isTRUE(progress))) {
-        cat("\n")
-      }
 
-      df_ci <- invertci.return$df_ci
-      termination <- NULL
+  # Initialize empty lists
+  df_ub_list <- list()
+  df_lb_list <- list()
+  termination_list <- list()
+  lb_list <- list()
+  ub_list <- list()
+  iter_list <- list()
 
-      ### Compute upper bound of confidence interval
-      if (isTRUE(progress)) {
-        cat(sprintf(" < Constructing confidence interval for alpha = %s >\n",
-                    alpha[i]))
-        cat(sprintf(comp.bound, "upper"))
-      }
-      ub_return <- ci.bisection(f, farg, alpha[i], ub1, ub0, tol, max.iter,
-                                df_ci, progress, 1, dp, rngstate)
-      # Update data frame
-      df_ci <- ub_return$df_ci
-      # Data frame storing all messages in each iteration
-      df_ub <- ub_return$df_bis
-      # Obtain termination message
-      termination$ub <- ub_return$last_iter_msg
-      # Obtain upper bound
-      ub <- ub_return$pt
+  # Loop through each alpha and each set of tuning parameters
+  for (i in seq_along(alpha)) {
+    # Initialize list per alpha
+    df_ub_list[[i]] <- list()
+    df_lb_list[[i]] <- list()
+    termination_list[[i]] <- list()
+    lb_list[[i]] <- list()
+    ub_list[[i]] <- list()
+    iter_list[[i]] <- list()
 
-      ### Compute lower bound of confidence interval
-      if (isTRUE(progress)) {
-        cat(sprintf(comp.bound, "lower"))
-      }
-      lb_return <- ci.bisection(f, farg, alpha[i], lb0, lb1, tol, max.iter,
-                                df_ci, progress, -1, dp, rngstate)
-      # Update data frame
-      df_ci <- lb_return$df_ci
-      # Data frame storing all messages in each iteration
-      df_lb <- lb_return$df_bis
-      # Obtain termination message
-      termination$lb <- lb_return$last_iter_msg
-      # Obtain lower bound
-      lb <- lb_return$pt
+    for (j in 1:nrow(pval)) {
+      if (!identical(f, chorussell)) {
+        # Assign the new farg object based on the j-th set of tuning parameters
+        for (k in seq_along(para.name)) {
+          farg[[para.name[k]]] <- para.vals[j, k]
+        }
 
-      # Compute the number of Iterations
-      iter <- lb_return$iter + ub_return$iter
+        # If `f` is not `chorussell`, use the bisection method in `invertci`
+        if (i > 1 & (isTRUE(progress))) {
+          cat("\n")
+        }
 
-      # ---------------- #
-      # Step 3: Store information as list if alphas is a vector
-      # ---------------- #
-      if (length(alpha) > 1) {
-        df_ub_list <- c(df_ub_list, list(df_ub))
-        df_lb_list <- c(df_lb_list, list(df_lb))
-        termination_list <- c(termination_list, list(termination))
-        lb_list <- c(lb_list, list(lb))
-        ub_list <- c(ub_list, list(ub))
-        iter_list <- c(iter_list, list(iter))
-      }
-    } else {
-      # If `f` is `chorussell`, use the bisection method in `chorussell`
-      farg$tol <- tol
-      farg$alpha <- alpha[i]
-      farg$ci <- TRUE
-      chorussell.return <- do.call(chorussell, farg)
-      lb <- chorussell.return$ci.df[1, 2]
-      ub <- chorussell.return$ci.df[1, 3]
-      iter <- chorussell.return$iter
+        # Append the result that has already been evaluated in step 2
+        df_ci <- invertci.return$df_ci
+        df_ci[nrow(df_ci) + 1, 1] <- ub1
+        df_ci[nrow(df_ci), 2] <- pval[j ,2]
 
-      if (length(alpha) > 1) {
-        lb_list <- c(lb_list, list(lb))
-        ub_list <- c(ub_list, list(ub))
-        iter_list <- c(iter_list, list(iter))
+        termination <- NULL
+
+        ### Compute upper bound of confidence interval
+        if (isTRUE(progress)) {
+          # Print the significance level being considered
+          cat(sprintf(paste0("********** Constructing confidence interval ",
+                             "for significance level = %s **********"),
+                      alpha[i]))
+
+          # Print the parameters being considered
+          invertci.show.param(para.name, para.vals, j)
+
+          # Print the interval being considered
+          cat(sprintf(comp.bound, "upper"))
+        }
+        ub_return <- ci.bisection(f, farg, alpha[i], ub1, ub0, tol, max.iter,
+                                  df_ci, progress, 1, dp, rngstate)
+        # Update data frame
+        df_ci <- ub_return$df_ci
+        # Data frame storing all messages in each iteration
+        df_ub <- ub_return$df_bis
+        # Obtain termination message
+        termination$ub <- ub_return$last_iter_msg
+        # Obtain upper bound
+        ub <- ub_return$pt
+
+        ### Compute lower bound of confidence interval
+        if (isTRUE(progress)) {
+          cat(sprintf(comp.bound, "lower"))
+        }
+        lb_return <- ci.bisection(f, farg, alpha[i], lb0, lb1, tol, max.iter,
+                                  df_ci, progress, -1, dp, rngstate)
+        # Update data frame
+        df_ci <- lb_return$df_ci
+        # Data frame storing all messages in each iteration
+        df_lb <- lb_return$df_bis
+        # Obtain termination message
+        termination$lb <- lb_return$last_iter_msg
+        # Obtain lower bound
+        lb <- lb_return$pt
+
+        # Compute the number of Iterations
+        iter <- lb_return$iter + ub_return$iter
+
+        # ---------------- #
+        # Step 4: Store the information as a list
+        # ---------------- #
+        df_ub_list[[i]][[j]] <- df_ub
+        df_lb_list[[i]][[j]] <- df_lb
+        termination_list[[i]][[j]] <- termination
+        lb_list[[i]][[j]] <- lb
+        ub_list[[i]][[j]] <- ub
+        iter_list[[i]][[j]] <- iter
+      } else {
+        # If `f` is `chorussell`, use the bisection method in `chorussell`
+        farg$tol <- tol
+        farg$alpha <- alpha[i]
+        farg$ci <- TRUE
+        chorussell.return <- do.call(chorussell, farg)
+        lb <- chorussell.return$ci.df[1, 2]
+        ub <- chorussell.return$ci.df[1, 3]
+        iter <- chorussell.return$iter
+
+        # Consolidate the results
+        lb_list[[i]][[j]] <- lb
+        ub_list[[i]][[j]] <- ub
+        iter_list[[i]][[j]] <- iter
       }
     }
   }
 
   # ---------------- #
-  # Step 4: Store information as list if alphas is a vector
+  # Step 5: Consolidate the data frame of confidence intervals
   # ---------------- #
-  if (length(alpha) > 1) {
-    if (!identical(f, chorussell)) {
-      df_lb <- df_lb_list
-      df_ub <- df_ub_list
-      termination <- termination_list
-      lb <- lb_list
-      ub <- ub_list
-      iter <- iter_list
-    } else {
-      lb <- lb_list
-      ub <- ub_list
-      iter <- iter_list
+  # Initialize data frame
+  nr.p <- nrow(para.vals)
+  nc.p <- ncol(para.vals)
+  consol.ci <- data.frame(matrix(vector(),
+                                 nrow = nr.p * length(alpha),
+                                 ncol = ncol(para.vals) + 2))
+  colnames(consol.ci) <- c("alpha", para.name, "ci")
+
+  # Consolidate data
+  for (i in seq_along(alpha)) {
+    ## Append the alphas
+    consol.ci[(nr.p * (i - 1) + 1):(nr.p * i), 1] <- alpha[i]
+
+    ## Append the tuning parameters
+    consol.ci[(nr.p * (i - 1) + 1):(nr.p * i), 2:(nc.p + 1)] <- para.vals
+
+    ## Append the confidence intervals
+    for (j in 1:nr.p) {
+      consol.ci[j + (i - 1) * nr.p, ncol(consol.ci)] <-
+        sprintf("[%s, %s]",
+                lb_list[[i]][[j]],
+                ub_list[[i]][[j]])
     }
   }
 
   # ---------------- #
-  # Step 5: Assign the return list and return output
+  # Step 6: Assign the return list and return output
   # ---------------- #
-  output <- list(ub = ub,
-                 lb = lb,
+  output <- list(ub = ub_list,
+                 lb = lb_list,
                  df_ci = df_ci,
                  tol = tol,
                  alpha = alpha,
-                 iter = iter,
-                 call = call)
+                 iter = iter_list,
+                 call = call,
+                 consol.ci = consol.ci)
 
   # The following information are returned only if `f` is not `chorussell`
   if (!identical(f, chorussell)) {
     output$max.iter <- max.iter
-    output$df_ub <- df_ub
-    output$df_lb <- df_lb
-    output$termination <- termination
+    output$df_ub <- df_ub_list
+    output$df_lb <- df_lb_list
+    output$termination <- termination_list
+    output$para.name <- para.name
+    output$para.vals <- para.vals
   }
   attr(output, "class") <- "invertci"
 
@@ -203,7 +272,7 @@ invertci <- function(f, farg = list(), alpha = .05, lb0 = NULL, lb1 = NULL,
   return(output)
 }
 
-#' Bisection method
+#' Bisection method for constructing confidence intervals
 #'
 #' @description This function constructs the two-sided confidence interval
 #'    of a given testing procedure using the bisection method.
@@ -456,7 +525,6 @@ bisec.print <- function(procedure, alphahalf, returnlist, a, b, progress, dp,
   # Step 1: Obtain information about the current data frame
   # ---------------- #
   df_bis_row <- nrow(df_bis)
-  space6 <- "      "
   # Update decision
   if (returnlist$pval < alphahalf) {
     decision <- TRUE
@@ -521,7 +589,7 @@ bisec.print <- function(procedure, alphahalf, returnlist, a, b, progress, dp,
 #' @export
 #'
 print.invertci <- function(x, ...) {
-  if (length(x$alpha) == 1) {
+  if ((length(x$alpha) == 1) & (nrow(x$para.vals) == 1)) {
     print.invertci_single(x)
   } else {
     print.invertci_multiple(x)
@@ -542,8 +610,8 @@ print.invertci <- function(x, ...) {
 #'
 print.invertci_single <- function(x, ...) {
   cat(sprintf("Confidence interval: [%s, %s]\n",
-              round(x$lb, digits = 5),
-              round(x$ub, digits = 5)))
+              round(x$lb[[1]][[1]], digits = 5),
+              round(x$ub[[1]][[1]], digits = 5)))
 }
 
 #' Print results from \code{invertci} with vector-valued alpha
@@ -558,25 +626,16 @@ print.invertci_single <- function(x, ...) {
 #'
 #' @export
 #'
-print.invertci_multiple <- function(x, ...) {
-  # ---------------- #
-  # Step 1: Consolidate the data frame
-  # ---------------- #
-  n.alpha <- length(x$alpha)
-  df <- data.frame(matrix(vector(), nrow = n.alpha + 1, ncol = 1))
-
-  # ---------------- #
-  # Step 2: Print the results
-  # ---------------- #
-  colnames(df) <- NULL
-  rownames(df) <- c("Significance level", round(x$alpha, digits = 5))
-  df[1, 1] <- "Confidence interval"
-  for (i in 1:n.alpha) {
-    df[i + 1, 1] <- sprintf("[%s, %s]",
-                       round(x$lb[[i]], digits = 5),
-                       round(x$ub[[i]], digits = 5))
+print.invertci_multiple <- function(x, alphas = NULL, ...) {
+  cat("Confidence intervals:\n")
+  df <- x$consol.ci
+  colnames(df)[1] <- "Significance level"
+  colnames(df)[ncol(df)] <- "Confidence interval"
+  if (is.null(alphas)) {
+    print(df, row.names = FALSE, digits = 5)
+  } else {
+    print(df[df[, 1] %in% alphas, ], row.names = FALSE, digits = 5)
   }
-  print(df)
 }
 
 #' Summary of results from \code{invertci}
@@ -595,8 +654,8 @@ print.invertci_multiple <- function(x, ...) {
 summary.invertci <- function(x, alphas = NULL, ...) {
   # String containing the general message to be printed
   msg.bound <- "=== Iterations in constructing %s bound:"
-  
-  if (length(x$alpha) == 1) {
+
+  if ((length(x$alpha) == 1) & (nrow(x$para.vals) == 1)) {
     summary.invertci_single(x, alphas, msg.bound)
   } else {
     summary.invertci_multiple(x, alphas, msg.bound)
@@ -622,9 +681,10 @@ summary.invertci_single <- function(x, alphas, msg.bound, ...) {
   # Step 1: Summary of results
   # ---------------- #
   cat(sprintf("Significance level: %s\n", round(x$alpha, digits = 5)))
-  cat(sprintf("Confidence interval: [%s, %s]\n", round(x$lb, digits = 5),
-              round(x$ub, digits = 5)))
-  cat(sprintf("\nMaximum number of iterations: %s\n", x$max.iter))
+  cat(sprintf("Confidence interval: [%s, %s]\n",
+              round(x$lb[[1]][[1]], digits = 5),
+              round(x$ub[[1]][[1]], digits = 5)))
+  cat(sprintf("\nMaximum number of iterations: %s\n", x$max.iter[[1]][[1]]))
   cat(sprintf("Tolerance level: %s\n", x$tol))
 
   # Display the details if `f` is not `chorussell` (where x$df_ub and
@@ -636,15 +696,14 @@ summary.invertci_single <- function(x, alphas, msg.bound, ...) {
     # ---------------- #
     cat("Details:\n\n")
     cat(sprintf(msg.bound, "upper"))
-    consolidate.invertci(x$df_ub, x$termination$ub)
-    cat("\n\n")
+    consolidate.invertci(x$df_ub[[1]][[1]], x$termination$ub)
+    cat("\n")
 
     # ---------------- #
     # Step 3: Messages in constructing the lower bound
     # ---------------- #
     cat(sprintf(msg.bound, "lower"))
-    consolidate.invertci(x$df_lb, x$termination$lb)
-    cat("\n\n")
+    consolidate.invertci(x$df_lb[[1]][[1]], x$termination$lb)
   }
 }
 
@@ -655,6 +714,7 @@ summary.invertci_single <- function(x, alphas, msg.bound, ...) {
 #'
 #' @param x Object returned from \code{invertci}.
 #' @param ... Additional arguments.
+#' @inheritParams summary.invertci
 #' @inheritParams summary.invertci_single
 #'
 #' @return Print the summary of the basic set of results from \code{invertci}.
@@ -663,63 +723,61 @@ summary.invertci_single <- function(x, alphas, msg.bound, ...) {
 #'
 summary.invertci_multiple <- function(x, alphas, msg.bound, ...) {
   # ---------------- #
-  # Step 1: Print the basic set of results
+  # Step 1: Extract the list of alphas that the user would like to check
   # ---------------- #
-  cat(sprintf("Maximum number of iterations: %s\n", x$max.iter))
-  cat(sprintf("Tolerance level: %s", x$tol))
-
-  # ---------------- #
-  # Step 2: Check if users want to print a specific set of iterations only
-  # ---------------- #
+  alphas <- sort(alphas)
+  # If null, then simply assign it as the alphas considered in the procedure
   if (is.null(alphas)) {
-    alphas.seq <- 1:length(x$alpha)
+    alphas <- x$alpha
   } else {
-    alphas.seq <- which(x$alpha %in% alphas)
+    alphas <- alphas[which(x$alpha %in% alphas)]
   }
 
-  # Display the details
-  if (length(alphas.seq) != 0) {
+  # Do not display results if `alphas` provided do not match x$alphas
+  if (length(which(x$alpha %in% alphas)) != 0) {
+    # ---------------- #
+    # Step 2: Print the confidence intervals and relevant parameters
+    # ---------------- #
+    # Print confidence interval
+    print.invertci_multiple(x, alphas)
     cat("\n")
-    # Display the confidence intervals
-    n.alpha <- length(alphas.seq)
-    df <- data.frame(matrix(vector(), nrow = n.alpha + 1, ncol = 1))
+
+    # Print the relevant parameters
+    cat(sprintf("Maximum number of iterations: %s\n", x$max.iter))
+    cat(sprintf("Tolerance level: %s\n", x$tol))
 
     # ---------------- #
-    # Step 2: Print the results
+    # Step 3: Print the details of each iteration
     # ---------------- #
-    colnames(df) <- NULL
-    rownames(df) <- c("Significance level", round(x$alpha[alphas.seq],
-                                                  digits = 5))
-    df[1, 1] <- "Confidence interval"
-    for (i in 1:n.alpha) {
-      df[i + 1, 1] <- sprintf("[%s, %s]",
-                             round(x$lb[[i]], digits = 5),
-                             round(x$ub[[i]], digits = 5))
-    }
-    print(df)
-
     # Display the details if `f` is not `chorussell` (where x$df_ub and
     # x$df_lb will be NULL)
     if (!is.null(x$df_ub)) {
       cat("\n")
       cat("Details:\n\n")
-      for (i in alphas.seq) {
-        cat(sprintf("<Confidence interval for significance level = %s>\n\n",
-                    x$alpha[i]))
+      for (i in seq_along(x$alpha)) {
+        # Only print the result if alpha appears in alphas
+        if (x$alpha[i] %in% alphas) {
+          # Print the significance level
+          cat(sprintf(paste0("********** Confidence interval for significance",
+                             "level = %s **********"),
+                      x$alpha[i]))
 
-        # ---------------- #
-        # Step 3: Messages in constructing the upper bound
-        # ---------------- #
-        cat(sprintf(msg.bound, "upper"))
-        consolidate.invertci(x$df_ub[[i]], x$termination[[i]]$ub)
-        cat("\n\n")
+          for (j in 1:nrow(x$para.vals)) {
+            # Print the parameters
+            invertci.show.param(x$para.name, x$para.vals, j)
 
-        # ---------------- #
-        # Step 4: Messages in constructing the lower bound
-        # ---------------- #
-        cat(sprintf(msg.bound, "lower"))
-        consolidate.invertci(x$df_lb[[i]], x$termination[[i]]$lb)
-        cat("\n\n")
+            # Upper bound
+            cat(sprintf(msg.bound, "upper"))
+            consolidate.invertci(x$df_ub[[i]][[j]],
+                                 x$termination[[i]][[j]]$ub)
+
+            # Lower bound
+            cat(sprintf(msg.bound, "lower"))
+            consolidate.invertci(x$df_lb[[i]][[j]],
+                                 x$termination[[i]][[j]]$lb)
+          }
+          cat("\n")
+        }
       }
     }
   }
@@ -956,4 +1014,33 @@ consolidate.invertci <- function(df, msg) {
   colnames(df.consol) <- NULL
   print(df.consol)
   cat(sprintf("Reason for termination: %s\n", msg))
+}
+
+#' Print the parameters used in the bisection method
+#'
+#' @description This function is used to print the tuning parameters that are
+#'   relevant to the current set of iterations in the \code{invertci} function.
+#'
+#' @param para.name Name(s) of the parameter(s).
+#' @param para.vals Value(s) of the parameter(s).
+#' @param j Row number for the parameters being used.
+#'
+#' @return Nothing is returned.
+#'
+#' @export
+#'
+invertci.show.param <- function(para.name, para.vals, j) {
+  # Initialize the data.frame
+  para.temp <- data.frame(matrix(vector(),
+                                 ncol = length(para.name),
+                                 nrow = 2))
+
+  # Assign the parameters and the row names
+  para.temp[1, ] <- para.name
+  para.temp[2, ] <- round(para.vals[j, ], digits = 5)
+  colnames(para.temp) <- NULL
+  rownames(para.temp) <- c("Parameters:   ", "")
+
+  # Print the parameters
+  print(para.temp, digits = 5)
 }

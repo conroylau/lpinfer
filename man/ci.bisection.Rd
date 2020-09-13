@@ -2,7 +2,7 @@
 % Please edit documentation in R/invertci.R
 \name{ci.bisection}
 \alias{ci.bisection}
-\title{Bisection method}
+\title{Bisection method for constructing confidence intervals}
 \usage{
 ci.bisection(
   f,

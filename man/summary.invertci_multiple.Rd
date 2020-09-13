@@ -4,10 +4,14 @@
 \alias{summary.invertci_multiple}
 \title{Summary of results from \code{invertci} with multiple alphas}
 \usage{
-\method{summary}{invertci_multiple}(x, alphas, ...)
+\method{summary}{invertci_multiple}(x, alphas, msg.bound, ...)
 }
 \arguments{
 \item{x}{Object returned from \code{invertci}.}
+
+\item{alphas}{List of alphas that the user would like to print.}
+
+\item{msg.bound}{String containing the general message to be printed.}
 
 \item{...}{Additional arguments.}
 }

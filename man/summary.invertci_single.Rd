@@ -4,10 +4,12 @@
 \alias{summary.invertci_single}
 \title{Summary of results from \code{invertci} for a single alpha}
 \usage{
-\method{summary}{invertci_single}(x, alphas, ...)
+\method{summary}{invertci_single}(x, alphas, msg.bound, ...)
 }
 \arguments{
 \item{x}{Object returned from \code{invertci}.}
+
+\item{msg.bound}{String containing the general message to be printed.}
 
 \item{...}{Additional arguments.}
 }
