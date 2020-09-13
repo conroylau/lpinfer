@@ -39,7 +39,7 @@ chorussell.lp.fn(
 
 \item{ub.can}{All candidates of the upper bounds.}
 
-\item{alpha}{Significance level.}
+\item{alpha}{Significance level. This can be a vector.}
 
 \item{pbar}{Progress bar object.}
 

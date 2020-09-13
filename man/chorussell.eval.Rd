@@ -48,7 +48,7 @@ chorussell.eval(
 \code{TRUE}, then a confidence interval is returned. Otherwise, a
 \eqn{p}-value is returned.}
 
-\item{alpha}{Significance level.}
+\item{alpha}{Significance level. This can be a vector.}
 
 \item{remove.const}{Determine whether the constraints are to be removed.}
 

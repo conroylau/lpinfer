@@ -65,7 +65,7 @@ The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{TRUE}, then a confidence interval is returned. Otherwise, a
 \eqn{p}-value is returned.}
 
-\item{alpha}{Significance level.}
+\item{alpha}{Significance level. This can be a vector.}
 
 \item{progress}{The boolean variable for whether the progress bars should
 be displayed. If it is set as \code{TRUE}, the progress bars will be

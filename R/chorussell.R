@@ -9,7 +9,7 @@
 #'   \eqn{(1-\alpha)}-confidence interval is returned. If \code{ci} is
 #'   \code{TRUE}, then a confidence interval is returned. Otherwise, a
 #'   \eqn{p}-value is returned.
-#' @param alpha Significance level.
+#' @param alpha Significance level. This can be a vector.
 #' @param kappa Tuning parameter used in the second step of the two-step
 #'    procedure for obtaining the bounds subject to the shape constraints.
 #'    It can be any nonnegative number or a vector of nonnegative numbers.
@@ -75,6 +75,9 @@ chorussell <- function(data = NULL, lpmodel, beta.tgt, n = NULL, R = 100,
 
   # Sort kappa
   kappa <- sort(kappa)
+
+  # Sort alpha
+  alpha <- sort(alpha)
 
   ### Case 1: test.logical == 1. Proceed with the calculation because
   ### beta.tgt is inside the logical bounds
@@ -182,6 +185,7 @@ chorussell <- function(data = NULL, lpmodel, beta.tgt, n = NULL, R = 100,
 
     # Append the p-value or confidence interval based on ci
     if (isFALSE(ci)) {
+      # p-values
       pval.df <- data.frame(matrix(vector(), nrow = length(kappa), ncol = 2))
       colnames(pval.df) <- c("kappa", "pvalue")
       for (i in seq_along(kappa)) {
@@ -190,12 +194,20 @@ chorussell <- function(data = NULL, lpmodel, beta.tgt, n = NULL, R = 100,
       }
       output$pval <- pval.df
     } else {
-      ci.df <- data.frame(matrix(vector(), nrow = length(kappa), ncol = 3))
-      colnames(ci.df) <- c("kappa", "lb", "ub")
+      # Confidence intervals
+      ci.df <- data.frame(matrix(vector(),
+                                 nrow = length(kappa) * length(alpha),
+                                 ncol = 4))
+      colnames(ci.df) <- c("alpha", "kappa", "lb", "ub")
+      k <- 1
       for (i in seq_along(kappa)) {
-        ci.df[i, 1] <- kappa[i]
-        ci.df[i, 2] <- as.numeric(cr.lp.return[[i]]$bd[1])
-        ci.df[i, 3] <- as.numeric(cr.lp.return[[i]]$bd[2])
+        for (j in seq_along(alpha)) {
+          ci.df[k, 1] <- alpha[j]
+          ci.df[k, 2] <- kappa[i]
+          ci.df[k, 3] <- as.numeric(cr.lp.return[[i]][[j]]$bd[1])
+          ci.df[k, 4] <- as.numeric(cr.lp.return[[i]][[j]]$bd[2])
+          k <- k + 1
+        }
       }
       output$ci.df <- ci.df
       output$alpha <- alpha
@@ -644,9 +656,14 @@ chorussell.eval <- function(beta.tgt, lb.can1, lb.can2, ub.can1, ub.can2, n, R,
     # ---------------- #
     # Case 2: ci == TRUE, i.e. computes the (1 - alpha) confidence interval
     # ---------------- #
-    cr.bd.return <- chorussell.lp(lb.can1, lb.can2, ub.can1, ub.can2, n, R,
-                                  alpha, ub, lb, remove.const, ci, kappa, 0,
-                                  progress)
+    # Computes the confidence interval for each alpha
+    cr.bd.return <- list()
+    for (j in seq_along(alpha)) {
+      cr.bd.temp <- chorussell.lp(lb.can1, lb.can2, ub.can1, ub.can2, n, R,
+                                  alpha[j], ub, lb, remove.const, ci, kappa,
+                                  0, progress)
+      cr.bd.return[[j]] <- cr.bd.temp
+    }
     return(cr.bd.return)
   }
 }
@@ -995,14 +1012,20 @@ chorussell.check <- function(data, lpmodel, beta.tgt, R, Rmulti, kappa,
   # Step 4: Check numerics
   # ---------------- #
   check.numeric(beta.tgt, "beta.tgt")
-  for (i in seq_along(kappa)) {
-    check.nonnegative(kappa[i], "kappa")
-  }
   check.positiveinteger(R, "R")
   check.nonnegative(tol, "tol")
   check.norm(norm, "norm")
   check.numrange(Rmulti, "Rmulti", "closed", 1, "open", Inf)
-  check.numrange(alpha, "alpha", "closed", 0, "closed", 1)
+
+  # Alpha can be a vector
+  for (i in seq_along(alpha)) {
+    check.numrange(alpha[i], "alpha", "closed", 0, "closed", 1)
+  }
+
+  # Kappa can be a vector
+  for (i in seq_along(kappa)) {
+    check.nonnegative(kappa[i], "kappa")
+  }
 
   # ---------------- #
   # Step 5: Check whether beta.tgt is within the logical bounds
@@ -1011,7 +1034,7 @@ chorussell.check <- function(data, lpmodel, beta.tgt, R, Rmulti, kappa,
   test.logical <- test.return$inout
   logical.lb <- test.return$lb
   logical.ub <- test.return$ub
-  
+
   # ---------------- #
   # Step 6: Check Boolean
   # ---------------- #
@@ -1070,18 +1093,20 @@ print.chorussell <- function(x, ...) {
       if (n.ci.df == 1) {
         cat(sprintf("%s%%-confidence interval: [%s, %s]\n",
                     round(100 * (1 - x$alpha), digits = digits),
-                    round(x$ci.df[1, 2], digits = digits),
-                    round(x$ci.df[1, 3], digits = digits)))
+                    round(x$ci.df[1, 3], digits = digits),
+                    round(x$ci.df[1, 4], digits = digits)))
       } else {
-        cat(sprintf("%s%%-confidence intervals: \n",
-                    round(100 * (1 - x$alpha), digits = digits)))
-        ci.df.int <- data.frame(matrix(vector(), nrow = n.ci.df, ncol = 2))
-        colnames(ci.df.int) <- c("kappa", "intervals")
-        ci.df.int$kappa <- ci.df[,1]
+        cat("Confidence intervals: \n")
+        ci.df.int <- data.frame(matrix(vector(), nrow = n.ci.df, ncol = 3))
+        colnames(ci.df.int) <- c("Significance level",
+                                 "kappa",
+                                 "Confidence intervals")
+        ci.df.int[, 1] <- ci.df[, 1]
+        ci.df.int[, 2] <- ci.df[, 2]
         for (i in 1:n.ci.df) {
-          ci.df.int[i, 2] <- sprintf("[%s, %s]",
-                                     round(x$ci.df[i, 2], digits = digits),
-                                     round(x$ci.df[i, 3], digits = digits))
+          ci.df.int[i, 3] <- sprintf("[%s, %s]",
+                                     round(x$ci.df[i, 3], digits = digits),
+                                     round(x$ci.df[i, 4], digits = digits))
         }
         print(ci.df.int, row.names = FALSE)
       }

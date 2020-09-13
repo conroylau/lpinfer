@@ -11,7 +11,7 @@ chorussell.simp.fn(x, can1, alpha, pbar, bd, progress)
 
 \item{can1}{This refers to either \code{lb.can1} or \code{ub.can1}.}
 
-\item{alpha}{Significance level.}
+\item{alpha}{Significance level. This can be a vector.}
 
 \item{pbar}{Progress bar object.}
 

@@ -21,7 +21,7 @@ chorussell.simp(lb.can1, lb.can2, ub.can1, ub.can2, alpha, progress)
 \eqn{\sqrt{n}\left(\hat{\theta}^b_{\rm ub} - \hat{\theta}_{\rm ub} +
 \Delta \right)}.}
 
-\item{alpha}{Significance level.}
+\item{alpha}{Significance level. This can be a vector.}
 
 \item{progress}{The boolean variable for whether the progress bars should
 be displayed. If it is set as \code{TRUE}, the progress bars will be

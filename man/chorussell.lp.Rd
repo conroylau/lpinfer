@@ -41,7 +41,7 @@ chorussell.lp(
 
 \item{R}{Number of bootstrap replications.}
 
-\item{alpha}{Significance level.}
+\item{alpha}{Significance level. This can be a vector.}
 
 \item{remove.const}{Determine whether the constraints are to be removed.}
 
