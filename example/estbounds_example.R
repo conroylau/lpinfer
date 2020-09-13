@@ -32,24 +32,9 @@ beta.tgt <- .2
 kappa <- 1e-5
 
 # ---------------- #
-# Step 3: Run mincriterion
+# Step 3: Run estbounds
 # ---------------- #
-# Example 1 - Running mincriterion with 1-norm and full-information approach
-minc1 <- mincriterion(data = data,
-                      lpmodel = lpmodel.full,
-                      norm = 1,
-                      solver = "gurobi")
-
-# Example 2 - Running mincriterion with 2-norm and two-moments approach
-minc2 <- mincriterion(data = data,
-                      lpmodel = lpmodel.twom,
-                      norm = 2,
-                      solver = "gurobi")
-
-# ---------------- #
-# Step 4: Run estbounds
-# ---------------- #
-# Example 3 - Compute the true bounds by setting estimate = FALSE
+# Example 1 - Compute the true bounds by setting estimate = FALSE
 estb1 <- estbounds(data = data,
                    lpmodel = lpmodel.full,
                    kappa = kappa,
@@ -57,7 +42,7 @@ estb1 <- estbounds(data = data,
                    solver = "gurobi",
                    estimate = FALSE)
 
-# Example 4 - Estimated bounds with full-information approach and 1-norm
+# Example 2 - Estimated bounds with full-information approach and 1-norm
 estb2 <- estbounds(data = data,
                    lpmodel = lpmodel.full,
                    kappa = kappa,
@@ -65,7 +50,7 @@ estb2 <- estbounds(data = data,
                    solver = "gurobi",
                    estimate = FALSE)
 
-# Example 5 - Estimated bounds with two-moments approach and 2-norm
+# Example 3 - Estimated bounds with two-moments approach and 2-norm
 estb3 <- estbounds(data = data,
                    lpmodel = lpmodel.twom,
                    kappa = kappa,
