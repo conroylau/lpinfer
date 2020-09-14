@@ -1,1 +1,0 @@
-vignettes/lpinfer.md
