@@ -467,6 +467,11 @@ chorussell.bs <- function(data, lpmodel, beta.tgt, R, maxR, kappa, norm,
   # ---------------- #
   ub.bs <- list()
   lb.bs <- list()
+
+  # Unlist ub.bs and lb.bs
+  ubb <- unlist(ub.list, use.names = FALSE)
+  lbb <- unlist(lb.list, use.names = FALSE)
+
   for (i in seq_along(unlist(kappa))) {
     # Make sure that the remainder is 0 if i == length(kappa)
     if (i == length(kappa)) {
@@ -474,9 +479,9 @@ chorussell.bs <- function(data, lpmodel, beta.tgt, R, maxR, kappa, norm,
     } else {
       k <- i
     }
-    ub.bs[[i]] <- unlist(ub.list[seq_along(ub.list) %% length(kappa) == k],
+    ub.bs[[i]] <- unlist(ubb[seq_along(ubb) %% length(kappa) == k],
                          use.names = FALSE)
-    lb.bs[[i]] <- unlist(lb.list[seq_along(lb.list) %% length(kappa) == k],
+    lb.bs[[i]] <- unlist(lbb[seq_along(lbb) %% length(kappa) == k],
                          use.names = FALSE)
   }
 
