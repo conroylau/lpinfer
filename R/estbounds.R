@@ -59,10 +59,10 @@
 #'   \item{solver}{Name of the solver used.}
 #'
 #' @example ./example/estbounds_example.R
-#' 
+#'
 #' @export
 #'
-estbounds <- function(data = NULL, lpmodel, kappa = 1e-5, norm = 2,
+estbounds <- function(data = NULL, lpmodel, kappa = 0, norm = 2,
                       estimate = TRUE, solver = NULL) {
   # ---------------- #
   # Step 1: Obtain call, check and update input
@@ -414,7 +414,7 @@ estbounds2.L2 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
   # ---------------- #
   A.obs.hat <- lpmodel.eval(data, lpmodel$A.obs, 1)
   A.tgt.hat <- lpmodel.eval(data, lpmodel$A.tgt, 1)
-  
+
   if (class(lpmodel$beta.obs) == "function") {
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   } else if (class(lpmodel$beta.obs) == "numeric" |
@@ -424,7 +424,7 @@ estbounds2.L2 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
   }
   step2_qc <- list()
   if (is.null(A.obs.hat) == FALSE) {
-    
+
     step2_qc$Qc <- t(A.obs.hat) %*% A.obs.hat
     step2_qc$q <- as.vector(-2 * t(A.obs.hat) %*% beta.obs.hat)
     step2_qc$rhs <- Qhat * (1 + kappa) - t(beta.obs.hat) %*% beta.obs.hat
@@ -639,7 +639,7 @@ mincriterion <- function(data = NULL, lpmodel, norm = 2, solver = NULL) {
   A.obs.hat <- lpmodel.eval(data, lpmodel$A.obs, 1)
   A.shp.hat <- lpmodel.eval(data, lpmodel$A.shp, 1)
   A.tgt.hat <- lpmodel.eval(data, lpmodel$A.tgt, 1)
-  
+
   # Count the dimension of matrices
   A.tgt.dim <- dim(A.tgt.hat)
   if (is.null(A.tgt.dim)) {
@@ -677,7 +677,7 @@ mincriterion <- function(data = NULL, lpmodel, norm = 2, solver = NULL) {
   # Step 4: Set up argument for the optimizer
   # ---------------- #
   beta.shp.hat <- lpmodel.eval(data, lpmodel$beta.shp, 1)
-  
+
   if (norm == 1) {
     # Define the augmented matrices
     k <- length(beta.obs.hat)
