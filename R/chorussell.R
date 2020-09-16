@@ -42,7 +42,7 @@
 #' @details See the details section of \code{\link[lpinfer]{estbounds}} for a
 #'   list of strings acceptable for the option \code{norm}.
 #'
-#' @example ./example/chorussell_example.R
+#' @example ./inst/example/chorussell_example.R
 #'
 #' @export
 #'

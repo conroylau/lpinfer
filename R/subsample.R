@@ -56,8 +56,8 @@
 #'     with error(s) and the corresponding error message(s).}
 #'   \item{R.succ}{Number of successful bootstrap replications.}
 #'
-#' @example ./example/subsample_example.R
-#' 
+#' @example ./inst/example/subsample_example.R
+#'
 #' @export
 #'
 subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
@@ -68,7 +68,7 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
   # ---------------- #
   # Extract the current RNG state
   rngstate <- .Random.seed
-  
+
   # Obtain the call information
   call <- match.call()
 
@@ -94,12 +94,12 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
 
   # Compute the maximum number of iterations
   maxR <- ceiling(R * Rmulti)
-  
+
   # List of RNG states and the corresponding number of iterations
   seed.list <- list()
   seed.list[[1]] <- list(seed = rngstate,
                          iter = R)
-  
+
   ### Case 1: test.logical == 1. Proceed with the calculation because
   ### beta.tgt is inside the logical bounds
   if (test.logical == 1) {
@@ -107,7 +107,7 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
     beta.obs.return <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)
     beta.obs.hat <- beta.obs.return$beta.obs
     omega.hat0 <- beta.obs.return$omega
-    
+
     # Initialize parameters
     R.succ <- -1
     i1 <- -1
@@ -115,11 +115,11 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
     new.error.bs <- 0
     beta.obs.bs <- list()
     beta.obs.full <- list()
-    
+
     # Initialize a table to contain the error messages
     df.error <- data.frame(matrix(vector(), ncol = 3))
     colnames(df.error) <- c("Iteration", "phi", "Error message")
-    
+
     # Start for-loop
     while (((R.succ < R) & (i1 < maxR)) | new.error.bs != 0) {
       # Assign the indices
@@ -141,7 +141,7 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
         eval.count <- eval.count + 1
         seed.list[[length(seed.list)]]$iter <- i1 - i0 + 1
       }
-      
+
       # ---------------- #
       # Step 3: Bootstrap variance matrix if it is not provided
       # ---------------- #
@@ -150,26 +150,26 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
         assign(x = ".Random.seed", value = rngstate, envir = .GlobalEnv)
         # Write a new function just for computing the beta bs
         beta.obs.return <- beta.bs(data, lpmodel, seed.list, df.error)
-        
+
         # Store the new RNG state
         seed.list[[length(seed.list) + 1]] <- list(seed = .Random.seed)
-        
+
         # Obtain the list of beta.obs
         beta.obs.bs.new <- beta.obs.return$beta.obs.bs
         beta.obs.full <- c(beta.obs.full, beta.obs.bs.new)
-        
+
         # Consolidate the error messages (if any)
         df.error <- beta.obs.return$df.error
         error.id.new <- beta.obs.return$error.id
         error.id <- c(error.id, error.id.new)
         R.succ <- beta.obs.return$R.succ
-        
+
         # Next if there is some problematic draws
         new.error.bs <- beta.obs.return$R.eval - R.succ
         if (new.error.bs != 0) {
           next
         }
-        
+
         # Remove the problematic draws in computing variance matrix
         if (!is.null(error.id)) {
           beta.obs.bs <- beta.obs.full[-c(error.id)]
@@ -182,14 +182,14 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
         ## Case 2: Variance matrix is provided by the user
         omega.hat <- omega.hat0
       }
-      
+
       # ---------------- #
       # Step 3: Solve for T.n
       # ---------------- #
       # Solve the main problem with the full sample
       Treturn <- subsample.prob(data, lpmodel, beta.tgt, norm, solver, n,
                                 beta.obs.hat, omega.hat)
-      
+
       # ---------------- #
       # Step 4: Subsampling procedure
       # ---------------- #
@@ -197,13 +197,13 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       Tsub.return <- subsample.bs(data, i1, lpmodel, beta.tgt, norm, solver,
                                   replace, progress, m, n, omega.hat, df.error,
                                   eval.count, error.id, seed.list)
-      
+
       T.sub <- Tsub.return$T.sub
       df.error <- Tsub.return$df.error
       error.id <- Tsub.return$error.id
       R.eval <- Tsub.return$R.eval
       R.succ <- Tsub.return$R.succ
-      
+
       # Next if there is some problematic draws
       if (Tsub.return$new.error != 0) {
         next
@@ -216,7 +216,7 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       # ---------------- #
       # # Obtain the result
       pval_return <- pval(T.sub, Treturn$objval)
-      
+
       # Create a data frame of p-values
       pval.df <- data.frame(matrix(vector(), nrow = 1, ncol = 2))
       colnames(pval.df) <- c("phi", "p-value")
@@ -228,7 +228,7 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       # ---------------- #
       cv.table <- construct.cv.table(phi, "phi", Treturn$objval,
                                      T.sub)
-      
+
     } else {
       pval <- NA
       cv.table <- NA
@@ -261,7 +261,7 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                         test.logical = test.logical,
                         logical.lb = logical.lb,
                         logical.ub = logical.ub))
-  
+
   # Assign class
   attr(output, "class") <- "subsample"
 
@@ -435,15 +435,15 @@ subsample.bs <- function(data, i1, lpmodel, beta.tgt, norm, solver,
   T.sub <- list()
   beta.sub.temp <- list()
   error.list <- list()
-  
+
   # Check if there is any list objects in 'lpmodel'
   any.list <- lpmodel.anylist(lpmodel)
-  
+
   # If there is some list objects, set maxR as the max length of the list
   if (isTRUE(any.list$list)) {
     maxR <- length(any.list$consol)
   }
-  
+
   # ---------------- #
   # Step 2: Subsampling
   # ---------------- #
@@ -451,7 +451,7 @@ subsample.bs <- function(data, i1, lpmodel, beta.tgt, norm, solver,
   for (i in seq_along(iter.list)) {
     # Set seed
     assign(x = ".Random.seed", value = seed.list[[i]]$seed, envir = .GlobalEnv)
-    
+
     # Set the indices
     bs.temp <- bs.assign(seed.list[[i]]$iter, R.eval, R.succ,
                          seed.list[[i]]$iter, any.list, lpmodel, data, m,
@@ -459,10 +459,10 @@ subsample.bs <- function(data, i1, lpmodel, beta.tgt, norm, solver,
     i0 <- bs.temp$i0
     i1 <- bs.temp$i1
     bs.list <- bs.temp$bs.list
-    
+
     # Set the default for progress bar
     progressr::handlers("progress")
-    
+
     # Obtain results from the bootstrap replications
     progressr::with_progress({
       if (isTRUE(progress)) {
@@ -470,7 +470,7 @@ subsample.bs <- function(data, i1, lpmodel, beta.tgt, norm, solver,
       } else {
         pbar <- NULL
       }
-      
+
       # Obtain results from future_lapply
       subsample.return <- future.apply::future_lapply(bs.list,
                                                       FUN = subsample.bs.fn,
@@ -489,12 +489,12 @@ subsample.bs <- function(data, i1, lpmodel, beta.tgt, norm, solver,
                                                       n.bs = i1 - i0 + 1,
                                                       omega.hat = omega.hat)
     })
-    
+
     # Extract the test satistics and list of errors
     T.sub <- c(T.sub, sapply(subsample.return, "[", "Ts"))
     error.list <- c(error.list, sapply(subsample.return, "[", "msg"))
   }
-  
+
   # ---------------- #
   # Step 3: Consolidate the error messages
   # ---------------- #
@@ -504,7 +504,7 @@ subsample.bs <- function(data, i1, lpmodel, beta.tgt, norm, solver,
   } else {
     error0 <- nrow(df.error)
   }
-  
+
   ns <- length(iter.list)
   if (length(unlist(error.list)) != 0) {
     # New error messages
@@ -513,13 +513,13 @@ subsample.bs <- function(data, i1, lpmodel, beta.tgt, norm, solver,
                             lambda = NA,
                             message = unlist(error.list[new.ind]))
     df.error1 <- error.id.match(error.list[new.ind], df.error1)
-    
+
     # Merge with the previous error messages
     df.error <- rbind(df.error, df.error1)
-    
+
     # New errors
     new.error <- nrow(df.error) - error0
-    
+
     # Consolidate the error ids and get the list of nonproblematic test
     # statistics
     error.id1 <- df.error$id
@@ -531,11 +531,11 @@ subsample.bs <- function(data, i1, lpmodel, beta.tgt, norm, solver,
     error.id <- error.id
     new.error <- 0
   }
-  
+
   # Compute the number of evaluations and successful evaluations
   R.succ <- length(T.sub)
   R.eval <- i1
-  
+
   return(list(T.sub = T.sub,
               df.error = df.error,
               error.id = error.id,
@@ -601,7 +601,7 @@ subsample.bs.fn <- function(x, data, lpmodel, beta.tgt, norm, m, solver,
   } else {
     lpm <- lpmodel
   }
-  
+
   # ---------------- #
   # Step 3: Conduct one bootstrap/subsample replication
   # ---------------- #
@@ -804,31 +804,40 @@ subsample.check <- function(data, lpmodel, beta.tgt, R, Rmulti, solver, norm,
 }
 
 #' Evaluate the bootstrap betas
-#' 
-#' @description 
-#' 
-#' @param 
-#' 
-#' @return 
-#' 
+#'
+#' @description This function computes the bootstrap estimates of
+#'   \eqn{\beta_{\rm obs}}.
+#'
+#' @inheritParams dkqs
+#' @inheritParams subsample
+#' @inheritParams subsample.bs
+#'
+#' @return Returns the following objects:
+#'   \item{beta.obs.bs}{Bootstrap estimates of eqn{\beta_{\rm obs}}.}
+#'   \item{df.error}{Table showing the id of the bootstrap replication(s)
+#'     with error(s) and the corresponding error message(s).}
+#'   \item{error.id}{List of problematic IDs.}
+#'   \item{R.eval}{Number of bootstrap replications that have been conducted.}
+#'   \item{R.succ}{Number of successful bootstrap replications.}
+#'
 #' @export
-#' 
+#'
 beta.bs <- function(data, lpmodel, seed.list, df.error) {
   # Initialize
   beta.list <- list()
   msg.list <- list()
-  
+
   # Assign the RNG state
   assign(x = ".Random.seed",
          value = seed.list[[length(seed.list)]]$seed,
          envir = .GlobalEnv)
- 
+
   ind <- unlist(sapply(seed.list, "[", "iter"), use.names = FALSE)
-  
+
   # Compute the bootstrap betas
   for (i in 1:ind[length(seed.list)]) {
     data.bs <- as.data.frame(data[sample(1:nrow(data), replace = TRUE),])
-    
+
     # Compute the bootstrap beta
     result <- tryCatch({
       beta.obs.return <- lpmodel.beta.eval(data.bs, lpmodel$beta.obs, 1)
@@ -840,7 +849,7 @@ beta.bs <- function(data, lpmodel, seed.list, df.error) {
       return(list(status = "error",
                   msg = e))
     })
-    
+
     # Assign either the beta or the error message
     if (is.null(result$status)) {
       beta.list[[i]] <- result$beta.obs.return$beta.obs
@@ -850,11 +859,11 @@ beta.bs <- function(data, lpmodel, seed.list, df.error) {
       msg.list[[i]] <- result$msg$message
     }
   }
-  
+
   # Other parameters
   R.eval <- ind[length(seed.list)]
   R.succ <- R.eval - length(unlist(msg.list))
-  
+
   # ---------------- #
   # Step 3: Consolidate the error messages
   # ---------------- #
@@ -863,7 +872,7 @@ beta.bs <- function(data, lpmodel, seed.list, df.error) {
     df.error1 <- data.frame(id = NA,
                             lambda = NA,
                             message = unlist(msg.list))
-    
+
     # Match the id of the error messages
     df.error1 <- error.id.match(msg.list, df.error1)
     error.id <- df.error1$id + sum(ind) - ind[length(seed.list)]
@@ -882,7 +891,7 @@ beta.bs <- function(data, lpmodel, seed.list, df.error) {
     df.error <- df.error
     error.id <- NULL
   }
-  
+
   return(list(beta.obs.bs = beta.list,
               df.error = df.error,
               error.id = error.id,

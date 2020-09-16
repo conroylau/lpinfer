@@ -53,7 +53,7 @@
 #' @details If the value of the test statistic \eqn{T_n} is zero, the
 #'    bootstrap procedure will be skipped and the \eqn{p}-value is zero.
 #'
-#' @example ./example/dkqs_example.R
+#' @example ./inst/example/dkqs_example.R
 #'
 #' @export
 #'

@@ -7,7 +7,7 @@
 estbounds(
   data = NULL,
   lpmodel,
-  kappa = 1e-05,
+  kappa = 0,
   norm = 2,
   estimate = TRUE,
   solver = NULL
@@ -105,7 +105,7 @@ library(future)
 # ---------------- #
 # Part 2: Data and lpmodel preparation
 # ---------------- #
-source("./example/dgp_missingdata.R")
+source("./inst/example/dgp_missingdata.R")
 J <- 5
 N <- 1000
 data <- missingdata_draw(J = J, n = N, seed = 1, prob.obs = .5)

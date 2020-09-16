@@ -46,7 +46,7 @@
 #'    \code{progress} is set as \code{TRUE}) is equal to the number of decimal
 #'    places in the variable \code{tol}.
 #'
-#' @example ./example/invertci_example.R
+#' @example ./inst/example/invertci_example.R
 #'
 #' @export
 #'
@@ -225,8 +225,8 @@ invertci <- function(f, farg = list(), alpha = .05, lb0 = NULL, lb1 = NULL,
   nc.p <- ncol(para.vals)
   consol.ci <- data.frame(matrix(vector(),
                                  nrow = nr.p * length(alpha),
-                                 ncol = ncol(para.vals) + 2))
-  colnames(consol.ci) <- c("alpha", para.name, "ci")
+                                 ncol = ncol(para.vals) + 3))
+  colnames(consol.ci) <- c("alpha", para.name, "lb", "ub")
 
   # Consolidate data
   for (i in seq_along(alpha)) {
@@ -238,24 +238,20 @@ invertci <- function(f, farg = list(), alpha = .05, lb0 = NULL, lb1 = NULL,
 
     ## Append the confidence intervals
     for (j in 1:nr.p) {
-      consol.ci[j + (i - 1) * nr.p, ncol(consol.ci)] <-
-        sprintf("[%s, %s]",
-                lb_list[[i]][[j]],
-                ub_list[[i]][[j]])
+      consol.ci[j + (i - 1) * nr.p, ncol(consol.ci) - 1] <- lb_list[[i]][[j]]
+      consol.ci[j + (i - 1) * nr.p, ncol(consol.ci)] <- ub_list[[i]][[j]]
     }
   }
 
   # ---------------- #
   # Step 6: Assign the return list and return output
   # ---------------- #
-  output <- list(ub = ub_list,
-                 lb = lb_list,
-                 df_ci = df_ci,
+  output <- list(pvals = df_ci,
                  tol = tol,
                  alpha = alpha,
                  iter = iter_list,
                  call = call,
-                 consol.ci = consol.ci)
+                 ci = consol.ci)
 
   # The following information are returned only if `f` is not `chorussell`
   if (!identical(f, chorussell)) {
@@ -610,8 +606,8 @@ print.invertci <- function(x, ...) {
 #'
 print.invertci_single <- function(x, ...) {
   cat(sprintf("Confidence interval: [%s, %s]\n",
-              round(x$lb[[1]][[1]], digits = 5),
-              round(x$ub[[1]][[1]], digits = 5)))
+              round(x$ci[1, 3], digits = 5),
+              round(x$ci[1, 4], digits = 5)))
 }
 
 #' Print results from \code{invertci} with vector-valued alpha
@@ -628,9 +624,19 @@ print.invertci_single <- function(x, ...) {
 #'
 print.invertci_multiple <- function(x, alphas = NULL, ...) {
   cat("Confidence intervals:\n")
-  df <- x$consol.ci
+  df <- x$ci
+  # Create column of confidence intervals
   colnames(df)[1] <- "Significance level"
+  df$ci <- sprintf("[%s, %s]",
+                   round(df$lb, digits = 5),
+                   round(df$ub, digits = 5))
   colnames(df)[ncol(df)] <- "Confidence interval"
+
+  # Drop the columns of upper and lower bounds
+  df$lb <- NULL
+  df$ub <- NULL
+
+  # Print object
   if (is.null(alphas)) {
     print(df, row.names = FALSE, digits = 5)
   } else {
@@ -682,8 +688,8 @@ summary.invertci_single <- function(x, alphas, msg.bound, ...) {
   # ---------------- #
   cat(sprintf("Significance level: %s\n", round(x$alpha, digits = 5)))
   cat(sprintf("Confidence interval: [%s, %s]\n",
-              round(x$lb[[1]][[1]], digits = 5),
-              round(x$ub[[1]][[1]], digits = 5)))
+              round(x$ci[1, 3], digits = 5),
+              round(x$ci[1, 4], digits = 5)))
   cat(sprintf("\nMaximum number of iterations: %s\n", x$max.iter[[1]][[1]]))
   cat(sprintf("Tolerance level: %s\n", x$tol))
 

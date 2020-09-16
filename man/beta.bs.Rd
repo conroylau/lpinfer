@@ -6,9 +6,29 @@
 \usage{
 beta.bs(data, lpmodel, seed.list, df.error)
 }
-\value{
+\arguments{
+\item{data}{Data used in the tests.}
 
+\item{lpmodel}{The \code{lpmodel} object used in the test. The following
+components are required in the \code{lpmodel} for the DKQS test:
+ \itemize{
+   \item{\code{A.tgt}}
+   \item{\code{A.obs}}
+   \item{\code{beta.obs}}
+ }}
+
+\item{seed.list}{List of RNG states and the corresponding iterations.}
+}
+\value{
+Returns the following objects:
+  \item{beta.obs.bs}{Bootstrap estimates of eqn{\beta_{\rm obs}}.}
+  \item{df.error}{Table showing the id of the bootstrap replication(s)
+    with error(s) and the corresponding error message(s).}
+  \item{error.id}{List of problematic IDs.}
+  \item{R.eval}{Number of bootstrap replications that have been conducted.}
+  \item{R.succ}{Number of successful bootstrap replications.}
 }
 \description{
-
+This function computes the bootstrap estimates of
+  \eqn{\beta_{\rm obs}}.
 }

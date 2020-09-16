@@ -58,7 +58,7 @@
 #'   \item{lb.status}{Status of the optimization problem for the lower bound.}
 #'   \item{solver}{Name of the solver used.}
 #'
-#' @example ./example/estbounds_example.R
+#' @example ./inst/example/estbounds_example.R
 #'
 #' @export
 #'
@@ -612,7 +612,7 @@ summary.estbounds <- function(x, ...) {
 #'  \item{solver}{The solver used in the estimation problem}
 #'  \item{call}{The details of the function that has been called.}
 #'
-#' @example ./example/mincriterion_example.R
+#' @example ./inst/example/mincriterion_example.R
 #'
 #' @export
 #'
