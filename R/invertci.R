@@ -151,9 +151,9 @@ invertci <- function(f, farg = list(), alpha = .05, lb0 = NULL, lb1 = NULL,
         ### Compute upper bound of confidence interval
         if (isTRUE(progress)) {
           # Print the significance level being considered
-          cat(sprintf(paste0("********** Constructing confidence interval ",
-                             "for significance level = %s **********"),
-                      alpha[i]))
+          cat(sprintf(paste0("********** Constructing %s%% ",
+                             "confidence interval **********"),
+                      round((1 - alpha[i]) * 100, digits = 5)))
 
           # Print the parameters being considered
           invertci.show.param(para.name, para.vals, j)
