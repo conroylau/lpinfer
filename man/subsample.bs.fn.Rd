@@ -17,7 +17,8 @@ subsample.bs.fn(
   pbar,
   eval.count,
   n.bs,
-  progress
+  progress,
+  omega.hat
 )
 }
 \arguments{
@@ -67,6 +68,8 @@ replications.}
 \item{progress}{The boolean variable for whether the progress bars should
 be displayed. If it is set as \code{TRUE}, the progress bars will be
 displayed while the code is running.}
+
+\item{omega.hat}{Estimator of the asymptotic variance.}
 }
 \value{
 Returns a list of output that are obtained from the subsampling

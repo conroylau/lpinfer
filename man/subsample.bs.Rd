@@ -6,8 +6,7 @@
 \usage{
 subsample.bs(
   data,
-  R,
-  maxR,
+  i1,
   lpmodel,
   beta.tgt,
   norm,
@@ -15,16 +14,16 @@ subsample.bs(
   replace,
   progress,
   m,
-  n
+  n,
+  omega.hat,
+  df.error,
+  eval.count,
+  error.id,
+  seed.list
 )
 }
 \arguments{
 \item{data}{Data used in the tests.}
-
-\item{R}{Number of bootstrap replications.}
-
-\item{maxR}{Maximum number of bootstrap replications to be considered in
-case there are some errors.}
 
 \item{lpmodel}{The \code{lpmodel} object used in the test. The following
 components are required in the \code{lpmodel} for the DKQS test:
@@ -54,6 +53,12 @@ displayed while the code is running.}
 \item{m}{Size of each subsample.}
 
 \item{n}{Sample size (only required if \code{data} is omitted in the input).}
+
+\item{omega.hat}{Estimator of the asymptotic variance.}
+
+\item{error.id}{List of ID that corresponds to problematic bootstrap draws.}
+
+\item{seed.list}{List of RNG states and the corresponding iterations.}
 }
 \value{
 Returns a list of output that are obtained from the subsampling

@@ -835,7 +835,9 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R) {
     # Category 4: Check if it is a function that produces two matrices
     # Category 5: If it is a list that contains two elements - one matrix
     # and one vector
-    if ("function_obs_var" %in% mat.cat | "list_vector" %in% mat.cat) {
+    if ("function_obs_var_bs" %in% mat.cat |
+        "function_obs_var" %in% mat.cat |
+        "list_vector" %in% mat.cat) {
       if (class(mat) == "function" | "list_vector" %in% mat.cat) {
         # Check whether the function can accept 'data' in the 'data.frame'
         # format
@@ -853,7 +855,11 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R) {
 
         # Check if there are two outputs of the function
         if (length(func.output) != 2) {
-          stop(msg.vecmat, call. = FALSE)
+          if (!("function_obs_var_bs" %in% mat.cat)) {
+            stop(msg.vecmat, call. = FALSE)
+          } else {
+            return(list(sample = func.output))
+          }
         } else {
           for (i in 1:2) {
             if (class(func.output[[i]]) == "numeric") {
@@ -866,7 +872,11 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R) {
           # Check if one of out1 and out2 if a vector and the remaining one is
           # a matrix
           if ((ncol(out1) != 1 & ncol(out2) != 1)) {
-            stop(msg.vecmat, call. = FALSE)
+            if (!("function_obs_var_bs" %in% mat.cat)) {
+              stop(msg.vecmat, call. = FALSE)
+            } else {
+              return(list(sample = func.output))
+            }
           } else if (ncol(out1) == 1) {
             sample <- out1
             mat <- out2
@@ -878,7 +888,11 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R) {
         return(list(mat = mat,
                     sample = sample))
       } else if (length(mat.cat) == 1) {
-        stop(msg.vecmat,  call. = FALSE)
+        if (!("function_obs_var_bs" %in% mat.cat)) {
+          stop(msg.vecmat, call. = FALSE)
+        } else {
+          return(list(sample = func.output))
+        }
       } else {
         err.ind <- c(err.ind, 4)
       }
