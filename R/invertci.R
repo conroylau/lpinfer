@@ -27,9 +27,7 @@
 #'
 #' @returns Returns the confidence interval and a data frame that contains the
 #'    points being tested in the procedure.
-#'    \item{ub}{Upper bound of the confidence interval.}
-#'    \item{lb}{Lower bound of the confidence interval.}
-#'    \item{df_ci}{Data frame that consists of the points and the corresponding
+#'    \item{pvals}{Data frame that consists of the points and the corresponding
 #'       \eqn{p}-values that have been tested in constructing the confidence
 #'       intervals.}
 #'    \item{df_ub}{Data frame storing the information for the bisection
@@ -223,23 +221,23 @@ invertci <- function(f, farg = list(), alpha = .05, lb0 = NULL, lb1 = NULL,
   # Initialize data frame
   nr.p <- nrow(para.vals)
   nc.p <- ncol(para.vals)
-  consol.ci <- data.frame(matrix(vector(),
-                                 nrow = nr.p * length(alpha),
-                                 ncol = ncol(para.vals) + 3))
-  colnames(consol.ci) <- c("alpha", para.name, "lb", "ub")
+  ci <- data.frame(matrix(vector(),
+                          nrow = nr.p * length(alpha),
+                          ncol = ncol(para.vals) + 3))
+  colnames(ci) <- c("alpha", para.name, "lb", "ub")
 
   # Consolidate data
   for (i in seq_along(alpha)) {
     ## Append the alphas
-    consol.ci[(nr.p * (i - 1) + 1):(nr.p * i), 1] <- alpha[i]
+    ci[(nr.p * (i - 1) + 1):(nr.p * i), 1] <- alpha[i]
 
     ## Append the tuning parameters
-    consol.ci[(nr.p * (i - 1) + 1):(nr.p * i), 2:(nc.p + 1)] <- para.vals
+    ci[(nr.p * (i - 1) + 1):(nr.p * i), 2:(nc.p + 1)] <- para.vals
 
     ## Append the confidence intervals
     for (j in 1:nr.p) {
-      consol.ci[j + (i - 1) * nr.p, ncol(consol.ci) - 1] <- lb_list[[i]][[j]]
-      consol.ci[j + (i - 1) * nr.p, ncol(consol.ci)] <- ub_list[[i]][[j]]
+      ci[j + (i - 1) * nr.p, ncol(ci) - 1] <- lb_list[[i]][[j]]
+      ci[j + (i - 1) * nr.p, ncol(ci)] <- ub_list[[i]][[j]]
     }
   }
 
@@ -251,7 +249,7 @@ invertci <- function(f, farg = list(), alpha = .05, lb0 = NULL, lb1 = NULL,
                  alpha = alpha,
                  iter = iter_list,
                  call = call,
-                 ci = consol.ci)
+                 ci = ci)
 
   # The following information are returned only if `f` is not `chorussell`
   if (!identical(f, chorussell)) {

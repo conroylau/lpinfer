@@ -56,9 +56,7 @@ procedure. Otherwise, the messages will not be displayed.}
 \value{
 Returns the confidence interval and a data frame that contains the
    points being tested in the procedure.
-   \item{ub}{Upper bound of the confidence interval.}
-   \item{lb}{Lower bound of the confidence interval.}
-   \item{df_ci}{Data frame that consists of the points and the corresponding
+   \item{pvals}{Data frame that consists of the points and the corresponding
       \eqn{p}-values that have been tested in constructing the confidence
       intervals.}
    \item{df_ub}{Data frame storing the information for the bisection
