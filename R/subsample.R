@@ -813,7 +813,7 @@ subsample.check <- function(data, lpmodel, beta.tgt, R, Rmulti, solver, norm,
 #' @inheritParams subsample.bs
 #'
 #' @return Returns the following objects:
-#'   \item{beta.obs.bs}{Bootstrap estimates of eqn{\beta_{\rm obs}}.}
+#'   \item{beta.obs.bs}{Bootstrap estimates of \eqn{\beta_{\rm obs}}.}
 #'   \item{df.error}{Table showing the id of the bootstrap replication(s)
 #'     with error(s) and the corresponding error message(s).}
 #'   \item{error.id}{List of problematic IDs.}
