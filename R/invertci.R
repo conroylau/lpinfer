@@ -127,8 +127,8 @@ invertci <- function(f, farg = list(), alpha = .05, lb0 = NULL, lb1 = NULL,
     ub_list[[i]] <- list()
     iter_list[[i]] <- list()
 
-    for (j in 1:nrow(pval)) {
-      if (!identical(f, chorussell)) {
+    if (!identical(f, chorussell)) {
+      for (j in 1:nrow(pval)) {
         # Assign the new farg object based on the j-th set of tuning parameters
         for (k in seq_along(para.name)) {
           farg[[para.name[k]]] <- para.vals[j, k]
@@ -197,21 +197,23 @@ invertci <- function(f, farg = list(), alpha = .05, lb0 = NULL, lb1 = NULL,
         lb_list[[i]][[j]] <- lb
         ub_list[[i]][[j]] <- ub
         iter_list[[i]][[j]] <- iter
-      } else {
-        # If `f` is `chorussell`, use the bisection method in `chorussell`
-        farg$tol <- tol
-        farg$alpha <- alpha[i]
-        farg$ci <- TRUE
-        chorussell.return <- do.call(chorussell, farg)
-        lb <- chorussell.return$ci.df[1, 2]
-        ub <- chorussell.return$ci.df[1, 3]
-        iter <- chorussell.return$iter
-
-        # Consolidate the results
-        lb_list[[i]][[j]] <- lb
-        ub_list[[i]][[j]] <- ub
-        iter_list[[i]][[j]] <- iter
-      }
+      } 
+    } else {
+      # If `f` is `chorussell`, use the bisection method in `chorussell`
+      farg$tol <- tol
+      farg$alpha <- alpha[i]
+      farg$ci <- TRUE
+      chorussell.return <- do.call(chorussell, farg)
+      lb <- chorussell.return$ci.df[, 3]
+      ub <- chorussell.return$ci.df[, 4]
+      iter <- chorussell.return$iter
+      
+      # Consolidate the results
+      lb_list[[i]] <- lb
+      ub_list[[i]] <- ub
+      iter_list[[i]] <- iter
+      para.vals <- data.frame(chorussell.return$ci.df$kappa)
+      para.name <- "kappa"
     }
   }
 
@@ -257,9 +259,9 @@ invertci <- function(f, farg = list(), alpha = .05, lb0 = NULL, lb1 = NULL,
     output$df_ub <- df_ub_list
     output$df_lb <- df_lb_list
     output$termination <- termination_list
-    output$para.name <- para.name
-    output$para.vals <- para.vals
   }
+  output$para.name <- para.name
+  output$para.vals <- para.vals
   attr(output, "class") <- "invertci"
 
   # Return output
