@@ -59,7 +59,10 @@ gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL,
   # Step 3: Result of the linear or quadratic program, and return result
   # ---------------- #
   params <- list(...)
-  params$OutputFlag <- 0
+  # Append parameters
+  params <- append(params,
+                   list(OutputFlag = 0,
+                        PSDTol = Inf))
   if (length(params) == 0) {
     result <- gurobi::gurobi(model)
   } else {
