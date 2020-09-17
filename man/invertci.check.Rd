@@ -8,10 +8,8 @@ invertci.check(
   f,
   farg,
   alpha,
-  lb0,
-  lb1,
-  ub0,
-  ub1,
+  init.lb,
+  init.ub,
   tol,
   max.iter,
   df_ci,
@@ -26,17 +24,9 @@ procedure.}
 
 \item{alpha}{Significance level of the test.}
 
-\item{lb0}{Logical lower bound for the confidence interval. This is not
-required if the function \code{chorussell} is used.}
+\item{init.lb}{Initial brackets to search for the lower bound.}
 
-\item{lb1}{Maximum possible lower bound for the confidence interval. This is
-not required if the function \code{chorussell} is used.}
-
-\item{ub0}{Logical upper bound for the confidence interval. This is not
-required if the function \code{chorussell} is used.}
-
-\item{ub1}{Minimum possible upper bound for the confidence interval. This
-is not required if the function \code{chorussell} is used.}
+\item{init.ub}{Initial brackets to search for the upper bound.}
 
 \item{tol}{Tolerance level in the bisection method.}
 

@@ -7,8 +7,8 @@
 #' @param farg List of arguments to be passed to the function of testing
 #'    procedure.
 #' @param alpha Significance level of the test.
-#' @param lb0 Logical lower bound for the confidence interval. This is not
-#'    required if the function \code{chorussell} is used.
+#' @param init.lb Initial brackets to search for the lower bound.
+#' @param init.ub Initial brackets to search for the upper bound.
 #' @param lb1 Maximum possible lower bound for the confidence interval. This is
 #'    not required if the function \code{chorussell} is used.
 #' @param ub0 Logical upper bound for the confidence interval. This is not
@@ -48,8 +48,8 @@
 #'
 #' @export
 #'
-invertci <- function(f, farg = list(), alpha = .05, lb0 = NULL, lb1 = NULL,
-                     ub0 = NULL, ub1 = NULL, tol = .0001, max.iter = 20,
+invertci <- function(f, farg = list(), alpha = .05, init.lb = NULL,
+                     init.ub = NULL, tol = .0001, max.iter = 20,
                      df_ci = NULL, dp = 5, progress = TRUE) {
   # ---------------- #
   # Step 1: Update call, check and update the arguments
@@ -61,7 +61,7 @@ invertci <- function(f, farg = list(), alpha = .05, lb0 = NULL, lb1 = NULL,
   call <- match.call()
 
   # Check and update
-  invertci.return <- invertci.check(f, farg, alpha, lb0, lb1, ub0, ub1, tol,
+  invertci.return <- invertci.check(f, farg, alpha, init.lb, init.ub, tol,
                                     max.iter, df_ci, progress)
 
   # Updates the input
@@ -867,7 +867,7 @@ summary.bisection.print <- function(df_bis, i) {
 #'
 #' @export
 #'
-invertci.check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max.iter,
+invertci.check <- function(f, farg, alpha, init.lb, init.ub, tol, max.iter,
                            df_ci, progress) {
   # ---------------- #
   # Step 1: Conduct the checks
@@ -888,54 +888,40 @@ invertci.check <- function(f, farg, alpha, lb0, lb1, ub0, ub1, tol, max.iter,
     check.numrange(alpha[i], "alpha", "closed", 0, "closed", 1)
   }
 
-  # lb and ub are not required if f is chorussell
+  # Part 4. Check init.lb and init.ub
+  # Note: lb and ub are not required if f is chorussell
   if (!identical(f, chorussell)) {
-    # Part 4: Check lb0 and ub0
-    farg$beta.tgt <- 0
-    freturn <- do.call(f, farg)
-    ## Lower bound
+    ## Check init.lb and init.ub
+    init.lb.return <- check.initb(init.lb, "init.lb", "lb")
+    lb0 <- init.lb.return$lb
+    lb1 <- init.lb.return$ub
+    
+    ## Check init.ub
+    init.ub.return <- check.initb(init.ub, "init.ub", "ub")
+    ub1 <- init.ub.return$lb
+    ub0 <- init.ub.return$ub
+    
+    ## Retrieve the logical bounds if either init.lb or init.ub is empty
+    if (is.null(init.ub) | is.null(init.lb)) {
+      farg$beta.tgt <- 0
+      freturn <- do.call(f, farg)
+    }
+    
+    ## Assign the bounds if necessary
     if (is.null(lb0)) {
       lb0 <- freturn$logical.lb
-    } else {
-      if (!(is.numeric(lb0) == TRUE & length(lb0) == 1)) {
-        stop("The argument 'lb0' must be a scalar.", call. = FALSE)
-      }
     }
-    ## Upper bound
+    
     if (is.null(ub0)) {
       ub0 <- freturn$logical.ub
-    } else {
-      if (!(is.numeric(ub0) == TRUE & length(ub0) == 1)) {
-        stop("The argument 'ub0' must be a scalar.", call. = FALSE)
-      }
     }
-
-    # Part 5: Check lb1 and ub1
-    # Part A: Check lb1
+    
     if (is.null(lb1)) {
-      # If lb1 is null, assign lb1 as ub0
-      lb1 = ub0
-    } else {
-      # If lb1 is nonnull, check whether its numeric
-      check.numeric(lb1, "lb1")
+      lb1 <- ub0
     }
-    # Part B: Check ub1
+    
     if (is.null(ub1)) {
-      # If ub1 is null, assign ub1 as lb0
-      ub1 = lb0
-    } else {
-      # If ub1 is nonnull, check whether its numeric
-      check.numeric(lb0, "lb0")
-    }
-
-    # Part 6: Check the difference between lb0 vs lb1, and ub0 vs ub1
-    if (lb0 > lb1) {
-      stop("The logical lower bound 'lb0' cannot be larger than the maximum
-         possible lower bound 'lb1'.")
-    }
-    if (ub0 < ub1) {
-      stop("The logical upper bound 'ub0' cannot be smaller than the minimum
-         possible upper bound 'ub1'.")
+      ub1 <- lb0
     }
   } else {
     lb0 <- NULL

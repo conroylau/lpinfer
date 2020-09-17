@@ -44,10 +44,8 @@ set.seed(1)
 invertci1 <- invertci(f = subsample,
                       farg = farg,
                       alpha = 0.05,
-                      lb0 = 0,
-                      lb1 = .4,
-                      ub0 = 1,
-                      ub1 = .6,
+                      init.lb = c(0, .4),
+                      init.ub = c(.6, 1),
                       tol = 0.001,
                       max.iter = 50,
                       df_ci = NULL,
@@ -60,10 +58,8 @@ set.seed(1)
 invertci2 <- invertci(f = subsample,
                       farg = farg,
                       alpha = c(0.05, 0.1, 0.2),
-                      lb0 = 0,
-                      lb1 = .4,
-                      ub0 = 1,
-                      ub1 = .6,
+                      init.lb = c(0, .4),
+                      init.ub = c(.6, 1),
                       tol = 0.001,
                       max.iter = 5,
                       df_ci = NULL,
@@ -73,3 +69,32 @@ summary(invertci2)
 
 # Example 3: Print only the list of selected output
 summary(invertci2, alphas = .05)
+
+# Example 4: Construction of one confidence interval by specifying the 
+# logical lower and upper bounds
+set.seed(1)
+invertci4 <- invertci(f = subsample,
+                      farg = farg,
+                      alpha = 0.05,
+                      init.lb = 0,
+                      init.ub = 1,
+                      tol = 0.001,
+                      max.iter = 50,
+                      df_ci = NULL,
+                      progress = FALSE)
+print(invertci4)
+summary(invertci4)
+
+# Example 5: Construction of one confidence interval without specifying the 
+# logical lower and upper bounds - they are computed automatically inside
+# the intertci function
+set.seed(1)
+invertci5 <- invertci(f = subsample,
+                      farg = farg,
+                      alpha = 0.05,
+                      tol = 0.001,
+                      max.iter = 50,
+                      df_ci = NULL,
+                      progress = FALSE)
+print(invertci5)
+summary(invertci5)

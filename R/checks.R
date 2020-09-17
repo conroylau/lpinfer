@@ -1228,3 +1228,57 @@ check.samplesize <- function(x, name.var) {
     stop(samplesize.msg)
   }
 }
+
+#' Check function: check brackets
+#' 
+#' @description This function checks the initial brackets provided by the 
+#'   user for the \code{invertci} function.
+#'   
+#' @param init.b Initial bracket.
+#' @param name.var Name of the initial bracket.
+#' @param bd String that indicates whether the initial bracket for the lower
+#'   bound (\code{lb}) or the upper bound (\code{ub}) is being evaluated.
+#' 
+#' @return Returns the following intervals.
+#'   \item{lb}{Lower bound of the initial bracket.}
+#'   \item{ub}{Upper bound of the initial bracket.}
+#' 
+#' @export
+#' 
+check.initb <- function(init.b, name.var, bd) {
+  # Check whether the length is 0, 1, 2 and whether it is numeric
+  if (is.null(init.b)) {
+    lb <- NULL
+    ub <- NULL
+  } else {
+    if ((length(init.b) %in% c(1, 2)) & is.numeric(init.b)) {
+      # Assign the lower or upper bound if init.b has length one
+      if (length(init.b) == 1) {
+        if (bd == "lb") {
+          lb <- init.b
+          ub <- NULL
+        } else {
+          lb <- NULL
+          ub <- init.b
+        }
+      } else if (length(init.b) == 2) {
+        lb <- init.b[1]
+        ub <- init.b[2]
+        # Return an error if the upper bound is not larger than the lower bound
+        if (lb >= ub) {
+          stop(sprintf(paste0("When the initial bracket '%s' is a numeric of ",
+                              "length 2, the first element has to be smaller ",
+                              "then than second element."),
+                       name.var))
+        }
+      }
+    } else {
+      stop(sprintf(paste0("The initial bracket '%s' can either be ",
+                          "NULL or a numeric of length 1 or 2."),
+                   name.var))
+    }
+  }
+
+  return(list(lb = lb,
+              ub = ub))
+}

@@ -8,10 +8,8 @@ invertci(
   f,
   farg = list(),
   alpha = 0.05,
-  lb0 = NULL,
-  lb1 = NULL,
-  ub0 = NULL,
-  ub1 = NULL,
+  init.lb = NULL,
+  init.ub = NULL,
   tol = 1e-04,
   max.iter = 20,
   df_ci = NULL,
@@ -27,17 +25,9 @@ procedure.}
 
 \item{alpha}{Significance level of the test.}
 
-\item{lb0}{Logical lower bound for the confidence interval. This is not
-required if the function \code{chorussell} is used.}
+\item{init.lb}{Initial brackets to search for the lower bound.}
 
-\item{lb1}{Maximum possible lower bound for the confidence interval. This is
-not required if the function \code{chorussell} is used.}
-
-\item{ub0}{Logical upper bound for the confidence interval. This is not
-required if the function \code{chorussell} is used.}
-
-\item{ub1}{Minimum possible upper bound for the confidence interval. This
-is not required if the function \code{chorussell} is used.}
+\item{init.ub}{Initial brackets to search for the upper bound.}
 
 \item{tol}{Tolerance level in the bisection method.}
 
@@ -52,6 +42,15 @@ is not required if the function \code{chorussell} is used.}
 be displayed in the procedure of constructing confidence interval. If
 it is set as \code{TRUE}, the messages are displayed throughout the
 procedure. Otherwise, the messages will not be displayed.}
+
+\item{lb1}{Maximum possible lower bound for the confidence interval. This is
+not required if the function \code{chorussell} is used.}
+
+\item{ub0}{Logical upper bound for the confidence interval. This is not
+required if the function \code{chorussell} is used.}
+
+\item{ub1}{Minimum possible upper bound for the confidence interval. This
+is not required if the function \code{chorussell} is used.}
 }
 \value{
 Returns the confidence interval and a data frame that contains the
