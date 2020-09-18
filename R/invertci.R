@@ -197,7 +197,7 @@ invertci <- function(f, farg = list(), alpha = .05, init.lb = NULL,
         lb_list[[i]][[j]] <- lb
         ub_list[[i]][[j]] <- ub
         iter_list[[i]][[j]] <- iter
-      } 
+      }
     } else {
       # If `f` is `chorussell`, use the bisection method in `chorussell`
       farg$tol <- tol
@@ -207,7 +207,7 @@ invertci <- function(f, farg = list(), alpha = .05, init.lb = NULL,
       lb <- chorussell.return$ci.df[, 3]
       ub <- chorussell.return$ci.df[, 4]
       iter <- chorussell.return$iter
-      
+
       # Consolidate the results
       lb_list[[i]] <- lb
       ub_list[[i]] <- ub
@@ -895,31 +895,48 @@ invertci.check <- function(f, farg, alpha, init.lb, init.ub, tol, max.iter,
     init.lb.return <- check.initb(init.lb, "init.lb", "lb")
     lb0 <- init.lb.return$lb
     lb1 <- init.lb.return$ub
-    
+
     ## Check init.ub
     init.ub.return <- check.initb(init.ub, "init.ub", "ub")
     ub1 <- init.ub.return$lb
     ub0 <- init.ub.return$ub
-    
+
     ## Retrieve the logical bounds if either init.lb or init.ub is empty
     if (is.null(init.ub) | is.null(init.lb)) {
       farg$beta.tgt <- 0
       freturn <- do.call(f, farg)
+      logical.lb <- freturn$logical.lb
+      logical.ub <- freturn$logical.ub
+
+      ## Return an error if the logical bounds are infinite
+      bd.infinite.msg <- paste0("The logical %s bound%s %s infinite. Please ",
+                                "provide the corresponding initial bracket%s.")
+      if (is.infinite(logical.lb) & is.infinite(logical.ub)) {
+        stop(sprintf(bd.infinite.msg, "upper and lower", "s", "are", "s"))
+      } else if (!is.infinite(logical.lb) & is.infinite(logical.ub)) {
+        if (is.null(init.ub)) {
+          stop(sprintf(bd.infinite.msg, "upper", "", "is", ""))
+        }
+      } else if (is.infinite(logical.lb) & !is.infinite(logical.ub)) {
+        if (is.null(init.lb)) {
+          stop(sprintf(bd.infinite.msg, "lower", "", "is", ""))
+        }
+      }
     }
-    
+
     ## Assign the bounds if necessary
     if (is.null(lb0)) {
-      lb0 <- freturn$logical.lb
+      lb0 <- logical.lb
     }
-    
+
     if (is.null(ub0)) {
-      ub0 <- freturn$logical.ub
+      ub0 <- logical.ub
     }
-    
+
     if (is.null(lb1)) {
       lb1 <- ub0
     }
-    
+
     if (is.null(ub1)) {
       ub1 <- lb0
     }
