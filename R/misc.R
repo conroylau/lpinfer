@@ -23,7 +23,7 @@
 #' @export
 #'
 bs.assign <- function(R, R.eval, R.succ, maxR, any.list, lpmodel, data = NULL,
-                      m, replace = TRUE) {
+                      m = NULL, replace = TRUE) {
   # Evaluate the indices
   i0 <- min(R.eval + 1, maxR)
   i1 <- min(R - R.succ + R.eval, maxR)
@@ -33,6 +33,11 @@ bs.assign <- function(R, R.eval, R.succ, maxR, any.list, lpmodel, data = NULL,
     bs.list <- any.list$consol[i0:i1]
   } else {
     bs.list <- as.list(i0:i1)
+  }
+  
+  # Assign the subsample size
+  if (is.null(m)) {
+    m <- nrow(data)
   }
   
   # Temporary solution to the missing globals problem
@@ -45,7 +50,12 @@ bs.assign <- function(R, R.eval, R.succ, maxR, any.list, lpmodel, data = NULL,
         }
         data.bs <- as.data.frame(data[sample(1:nrow(data), m, replace),])
         if (i == "beta.obs") {
-          bs.list[[j]][[i]] <- lpmodel.beta.eval(data.bs, lpmodel[[i]], 1)
+          bs.temp <- lpmodel.beta.eval(data.bs, lpmodel[[i]], 1)
+          if (is.null(bs.temp$omega)) {
+            bs.list[[j]][[i]] <- bs.temp$beta.obs
+          } else {
+            bs.list[[j]][[i]] <- bs.temp
+          }
         } else {
           bs.list[[j]][[i]] <- lpmodel.eval(data.bs, lpmodel[[i]], 1)
         }
