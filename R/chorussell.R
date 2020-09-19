@@ -80,8 +80,9 @@ chorussell <- function(data = NULL, lpmodel, beta.tgt, n = NULL, R = 100,
   alpha <- sort(alpha)
 
   ### Case 1: test.logical == 1. Proceed with the calculation because
-  ### beta.tgt is inside the logical bounds
-  if (test.logical == 1) {
+  ### beta.tgt is inside the logical bounds. test.logical also does not matter
+  ### if the user would like to construct a confidence interval.
+  if ((test.logical == 1) | (isTRUE(ci))) {
     # ---------------- #
     # Step 2: Obtain estimated bounds
     # ---------------- #
