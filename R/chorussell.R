@@ -418,7 +418,8 @@ chorussell.bs <- function(data, lpmodel, beta.tgt, R, maxR, kappa, norm,
   # ---------------- #
   while ((R.succ < R) & (R.eval != maxR)) {
     # Evaluate the list of indices to be passed to 'future_lapply'
-    bs.temp <- bs.assign(R, R.eval, R.succ, maxR, any.list, lpmodel, data)
+    bs.temp <- bs.assign(R, R.eval, R.succ, maxR, any.list, lpmodel, data,
+                         n)
     i0 <- bs.temp$i0
     i1 <- bs.temp$i1
     bs.list <- bs.temp$bs.list
@@ -627,23 +628,18 @@ chorussell.eval <- function(beta.tgt, lb.can1, lb.can2, ub.can1, ub.can2, n, R,
     # ---------------- #
     # Case 1: ci == FALSE, i.e. computes the p-value via bisection method
     # ---------------- #
-    # Try the end points first
+    # Predefine the two end-points and check b = 1 first
     a <- 0
-    a.lp <- chorussell.lp(lb.can1, lb.can2, ub.can1, ub.can2, n, R, a, ub, lb,
-                          remove.const, ci, kappa, 1, progress)
-    a.inout <- chorussell.pt(a.lp, beta.tgt)
-    if (isFALSE(a.inout)) {
-      return(list(pval = a))
-    }
     b <- 1
     b.lp <- chorussell.lp(lb.can1, lb.can2, ub.can1, ub.can2, n, R, b, ub, lb,
-                          remove.const, ci, kappa, 2, progress)
+                          remove.const, ci, kappa, 1, progress)
     b.inout <- chorussell.pt(b.lp, beta.tgt)
     if (isTRUE(b.inout)) {
       return(list(pval = b))
     }
+
     # Initialization
-    k <- 3
+    k <- 2
     while (abs(b - a) > tol) {
       c <- (a + b)/2
       c.lp <- chorussell.lp(lb.can1, lb.can2, ub.can1, ub.can2, n, R, c, ub,
@@ -735,6 +731,14 @@ chorussell.lp <- function(lb.can1, lb.can2, ub.can1, ub.can2, n, R, alpha,
   } else {
     lb.can <- c(lb.can1, lb.can2)
     ub.can <- c(ub.can1, ub.can2)
+  }
+
+  if (is.null(lb.can)) {
+    lb.can <- -Inf
+  }
+
+  if (is.null(ub.can)) {
+    ub.can <- Inf
   }
 
   # ---------------- #
