@@ -1079,7 +1079,7 @@ chorussell.check <- function(data, lpmodel, beta.tgt, R, Rmulti, kappa,
 print.chorussell <- function(x, ...) {
   # Prints confidence interval if ci is TRUE. Otherwise, prints p-value
   digits <- 5
-  if (x$test.logical == 1) {
+  if ((x$test.logical == 1) | isTRUE(x$ci)) {
     # Case 1: 'beta.tgt' is within the logical bound
     # Prints confidence interval if ci is TRUE. Otherwise, prints p-value
     digits <- 5
@@ -1140,7 +1140,7 @@ print.chorussell <- function(x, ...) {
 #' @export
 #'
 summary.chorussell <- function(x, ...) {
-  if (x$test.logical == 1) {
+  if ((x$test.logical == 1) | isTRUE(x$ci)) {
     # Case 1: 'beta.tgt' is within the logical bound
     # Print the p-value or the corresponding confidence interval
     print(x)
