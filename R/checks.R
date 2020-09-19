@@ -900,7 +900,7 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R) {
 
     # Display an overall error message
     err.msg.comb <- NULL
-    if (err.ind == length(mat.cat)) {
+    if (length(err.ind) == length(mat.cat)) {
       # Pick the messages to display
       for (i in 1:length(mat.cat)) {
         if (i != 1) {
