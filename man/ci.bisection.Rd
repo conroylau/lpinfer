@@ -12,7 +12,7 @@ ci.bisection(
   b1,
   tol,
   max.iter,
-  df_ci,
+  pvals,
   progress,
   type,
   dp,
@@ -36,7 +36,7 @@ procedure.}
 
 \item{max.iter}{The maximum number of iterations in the bisection method.}
 
-\item{df_ci}{The data frame that consists the points and the corresponding
+\item{pvals}{The data frame that consists the points and the corresponding
 \eqn{p}-values that have been tested in the previous iterations.}
 
 \item{progress}{The boolean variable for whether the result messages should
@@ -61,7 +61,7 @@ Return the solution of the bisection method and the updated
    data frame.
    \item{pt}{The last test point.}
    \item{iter}{The number of iterations.}
-   \item{df_ci}{The data frame that consists of the points and the
+   \item{pvals}{The data frame that consists of the points and the
       corresponding \eqn{p}-values that have been tested in constructing the
       confidence intervals.}
    \item{df_bis}{The data frame storing the information for the bisection

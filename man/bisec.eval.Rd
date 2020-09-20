@@ -4,7 +4,7 @@
 \alias{bisec.eval}
 \title{Evaluation of test statistic and check if the point has been evaluated}
 \usage{
-bisec.eval(f, farg, pt, df_ci, rngstate, para.match)
+bisec.eval(f, farg, pt, pvals, rngstate, para.match)
 }
 \arguments{
 \item{f}{The function that represents a testing procedure.}
@@ -14,7 +14,7 @@ procedure.}
 
 \item{pt}{The point to be evaluated in the bisection method.}
 
-\item{df_ci}{The data frame that consists the points and the corresponding
+\item{pvals}{The data frame that consists the points and the corresponding
 \eqn{p}-values that have been tested in the previous iterations.}
 
 \item{rngstate}{The current RNG state obtained from \code{.Random.seed}.}
@@ -25,7 +25,7 @@ procedure.}
 Returns the \eqn{p}-value of the point considered and an updated
    data frame that contains the points and the \eqn{p}-values.
    \item{pval}{The \eqn{p}-value that corresponds to the test point.}
-   \item{df_ci}{The updated data frame that contains the \eqn{p}-values that
+   \item{pvals}{The updated data frame that contains the \eqn{p}-values that
      correspond to each set of tuning parameters and each test point.}
 }
 \description{

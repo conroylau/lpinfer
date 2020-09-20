@@ -12,7 +12,7 @@ invertci.check(
   init.ub,
   tol,
   max.iter,
-  df_ci,
+  pvals,
   progress
 )
 }
@@ -34,7 +34,7 @@ not required if the \code{\link[lpinfer]{chorussell}} is used.}
 
 \item{max.iter}{The maximum number of iterations in the bisection method.}
 
-\item{df_ci}{The data frame that consists the points and the corresponding
+\item{pvals}{The data frame that consists the points and the corresponding
 \eqn{p}-values that have been tested in the previous iterations.}
 
 \item{progress}{The boolean variable for whether the result messages should
@@ -46,7 +46,7 @@ procedure. Otherwise, the messages will not be displayed.}
 Returns the updated parameters back to the function
 \code{subsample}. The following information are updated:
    \itemize{
-      \item{\code{df_ci}}
+      \item{\code{pvals}}
       \item{\code{lb0}}
       \item{\code{lb1}}
       \item{\code{ub0}}

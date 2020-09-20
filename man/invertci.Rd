@@ -12,7 +12,7 @@ invertci(
   init.ub = NULL,
   tol = 1e-04,
   max.iter = 20,
-  df_ci = NULL,
+  pvals = NULL,
   dp = 5,
   progress = TRUE
 )
@@ -35,7 +35,7 @@ not required if the \code{\link[lpinfer]{chorussell}} is used.}
 
 \item{max.iter}{The maximum number of iterations in the bisection method.}
 
-\item{df_ci}{The data frame that consists the points and the corresponding
+\item{pvals}{The data frame that consists the points and the corresponding
 \eqn{p}-values that have been tested in the previous iterations.}
 
 \item{dp}{The number of decimal places in the output.}

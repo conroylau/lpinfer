@@ -13,7 +13,7 @@
 #'   not required if the \code{\link[lpinfer]{chorussell}} is used.
 #' @param tol The tolerance level in the bisection method.
 #' @param max.iter The maximum number of iterations in the bisection method.
-#' @param df_ci The data frame that consists the points and the corresponding
+#' @param pvals The data frame that consists the points and the corresponding
 #'    \eqn{p}-values that have been tested in the previous iterations.
 #' @param dp The number of decimal places in the output.
 #' @param progress The boolean variable for whether the result messages should
@@ -50,7 +50,7 @@
 #'
 invertci <- function(f, farg = list(), alpha = .05, init.lb = NULL,
                      init.ub = NULL, tol = .0001, max.iter = 20,
-                     df_ci = NULL, dp = 5, progress = TRUE) {
+                     pvals = NULL, dp = 5, progress = TRUE) {
   # ---------------- #
   # Step 1: Update call, check and update the arguments
   # ---------------- #
@@ -62,7 +62,7 @@ invertci <- function(f, farg = list(), alpha = .05, init.lb = NULL,
 
   # Check and update
   invertci.return <- invertci.check(f, farg, alpha, init.lb, init.ub, tol,
-                                    max.iter, df_ci, progress)
+                                    max.iter, pvals, progress)
 
   # Updates the input
   lb0 <- invertci.return$lb0
@@ -70,8 +70,8 @@ invertci <- function(f, farg = list(), alpha = .05, init.lb = NULL,
   ub0 <- invertci.return$ub0
   ub1 <- invertci.return$ub1
 
-  # Return df_ci
-  df_ci <- invertci.return$df_ci
+  # Return pvals
+  pvals <- invertci.return$pvals
 
   # Initialize lists
   df_ub_list <- NULL
@@ -106,24 +106,24 @@ invertci <- function(f, farg = list(), alpha = .05, init.lb = NULL,
     colnames(para.vals) <- para.name
   }
 
-  if (is.null(df_ci)) {
-    ## Construct df_ci if it is null
-    df_ci <- data.frame(matrix(vector(),
+  if (is.null(pvals)) {
+    ## Construct pvals if it is null
+    pvals <- data.frame(matrix(vector(),
                                nrow = 0,
                                ncol = length(para.name) + 2))
-    colnames(df_ci) <- c(para.name, "point", "p-value")
+    colnames(pvals) <- c(para.name, "point", "p-value")
   } else {
-    # Check df_ci if it already exists
+    # Check pvals if it already exists
     ## Check whether the number of columns match
-    if (ncol(df_ci) != length(para.name) + 2) {
-      stop(paste0("The number of columns in 'df_ci' needs to equal to ",
+    if (ncol(pvals) != length(para.name) + 2) {
+      stop(paste0("The number of columns in 'pvals' needs to equal to ",
                   "the number of tuning parameters that can be ",
                   "multivalued plus 2."))
     }
 
     ## Check whether the column names match
-    if (!setequal(c(para.name, "point", "p-value"), colnames(df_ci))) {
-      stop(paste0("The column names in 'df_ci' need to contain the names ",
+    if (!setequal(c(para.name, "point", "p-value"), colnames(pvals))) {
+      stop(paste0("The column names in 'pvals' need to contain the names ",
                   "of the tuning parameters that can be multivalued and ",
                   "the two strings 'point' and 'p-value'."))
     }
@@ -166,9 +166,9 @@ invertci <- function(f, farg = list(), alpha = .05, init.lb = NULL,
         }
 
         # Append the result that has already been evaluated in step 2
-        df_ci[nrow(df_ci) + 1, "point"] <- ub1
-        df_ci[nrow(df_ci), "p-value"] <- pval[j, 2]
-        df_ci[nrow(df_ci), 1:(ncol(df_ci) - 2)] <- para.vals[j, ]
+        pvals[nrow(pvals) + 1, "point"] <- ub1
+        pvals[nrow(pvals), "p-value"] <- pval[j, 2]
+        pvals[nrow(pvals), 1:(ncol(pvals) - 2)] <- para.vals[j, ]
 
         para.match <- para.vals[j, ]
         if (is.null(nrow(para.match))) {
@@ -191,9 +191,9 @@ invertci <- function(f, farg = list(), alpha = .05, init.lb = NULL,
           cat(sprintf(comp.bound, "upper"))
         }
         ub_return <- ci.bisection(f, farg, alpha[i], ub1, ub0, tol, max.iter,
-                                  df_ci, progress, 1, dp, rngstate, para.match)
+                                  pvals, progress, 1, dp, rngstate, para.match)
         # Update data frame
-        df_ci <- ub_return$df_ci
+        pvals <- ub_return$pvals
         # Data frame storing all messages in each iteration
         df_ub <- ub_return$df_bis
         # Obtain termination message
@@ -206,9 +206,9 @@ invertci <- function(f, farg = list(), alpha = .05, init.lb = NULL,
           cat(sprintf(comp.bound, "lower"))
         }
         lb_return <- ci.bisection(f, farg, alpha[i], lb0, lb1, tol, max.iter,
-                                  df_ci, progress, -1, dp, rngstate, para.match)
+                                  pvals, progress, -1, dp, rngstate, para.match)
         # Update data frame
-        df_ci <- lb_return$df_ci
+        pvals <- lb_return$pvals
         # Data frame storing all messages in each iteration
         df_lb <- lb_return$df_bis
         # Obtain termination message
@@ -277,7 +277,7 @@ invertci <- function(f, farg = list(), alpha = .05, init.lb = NULL,
   # ---------------- #
   # Step 6: Assign the return list and return output
   # ---------------- #
-  output <- list(pvals = df_ci,
+  output <- list(pvals = pvals,
                  tol = tol,
                  alpha = alpha,
                  iter = iter_list,
@@ -320,7 +320,7 @@ invertci <- function(f, farg = list(), alpha = .05, init.lb = NULL,
 #'    data frame.
 #'    \item{pt}{The last test point.}
 #'    \item{iter}{The number of iterations.}
-#'    \item{df_ci}{The data frame that consists of the points and the
+#'    \item{pvals}{The data frame that consists of the points and the
 #'       corresponding \eqn{p}-values that have been tested in constructing the
 #'       confidence intervals.}
 #'    \item{df_bis}{The data frame storing the information for the bisection
@@ -330,7 +330,7 @@ invertci <- function(f, farg = list(), alpha = .05, init.lb = NULL,
 #'
 #' @export
 #'
-ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, df_ci,
+ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, pvals,
                          progress, type, dp, rngstate, para.match) {
 
   # ---------------- #
@@ -351,8 +351,8 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, df_ci,
 
   ### Left end-point a
   a <- b0
-  fb0_return <- bisec.eval(f, farg, a, df_ci, rngstate, para.match)
-  df_ci <- fb0_return$df_ci
+  fb0_return <- bisec.eval(f, farg, a, pvals, rngstate, para.match)
+  pvals <- fb0_return$pvals
   # Print information
   if (isTRUE(progress)) {
     cat(paste0(" Iteration\t Lower bound \t Upper bound \t Test point \t ",
@@ -363,8 +363,8 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, df_ci,
 
   ### Right end-point b
   b <- b1
-  fb1_return <- bisec.eval(f, farg, b, df_ci, rngstate, para.match)
-  df_ci <- fb1_return$df_ci
+  fb1_return <- bisec.eval(f, farg, b, pvals, rngstate, para.match)
+  pvals <- fb1_return$pvals
   # Print information
   df_bis <- bisec.print("right end", alpha_2sided, fb1_return, "NA", b,
                         progress, dp, df_bis)$df_bis
@@ -372,9 +372,9 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, df_ci,
   # If fb1 and fb0 are of the same sign, ask user to choose another interval
   # Compute mid-point and evaluate the corresponding p-value
   c <- (b + a)/2
-  fc_return <- bisec.eval(f, farg, c, df_ci, rngstate, para.match)
+  fc_return <- bisec.eval(f, farg, c, pvals, rngstate, para.match)
   fc <- fc_return$pval
-  df_ci <- fc_return$df_ci
+  pvals <- fc_return$pvals
 
   # ---------------- #
   # Step 2: Bisection method
@@ -409,9 +409,9 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, df_ci,
     c <- (a + b)/2
 
     # Update data frame and p-value
-    fc_return <- bisec.eval(f, farg, c, df_ci, rngstate, para.match)
+    fc_return <- bisec.eval(f, farg, c, pvals, rngstate, para.match)
     fc <- fc_return$pval
-    df_ci <- fc_return$df_ci
+    pvals <- fc_return$pvals
   }
 
   # Only called when the maximum number of iterations is reached
@@ -429,7 +429,7 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, df_ci,
   # ---------------- #
   invisible(list(pt = c,
                  iter = i,
-                 df_ci = df_ci,
+                 pvals = pvals,
                  df_bis = df_bis,
                  last_iter_msg = last_iter_msg))
 }
@@ -451,22 +451,22 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, df_ci,
 #' @return Returns the \eqn{p}-value of the point considered and an updated
 #'    data frame that contains the points and the \eqn{p}-values.
 #'    \item{pval}{The \eqn{p}-value that corresponds to the test point.}
-#'    \item{df_ci}{The updated data frame that contains the \eqn{p}-values that
+#'    \item{pvals}{The updated data frame that contains the \eqn{p}-values that
 #'      correspond to each set of tuning parameters and each test point.}
 #'
 #' @export
 #'
-bisec.eval <- function(f, farg, pt, df_ci, rngstate, para.match) {
+bisec.eval <- function(f, farg, pt, pvals, rngstate, para.match) {
   # ---------------- #
   # Step 1: Check if the data point has appeared in previous iterations.
   # ---------------- #
   para.match.temp <- para.match
   para.match.temp$point <- pt
-  suppressMessages(df_match <- plyr::match_df(df_ci, para.match.temp))
-  df_n <- nrow(df_ci)
+  suppressMessages(df_match <- plyr::match_df(pvals, para.match.temp))
+  df_n <- nrow(pvals)
 
   # ---------------- #
-  # Step 2: If the points have been evaluated in df_ci, it will be taken
+  # Step 2: If the points have been evaluated in pvals, it will be taken
   # directly. Otherwise, it will be computed.
   # ---------------- #
   if ((is.null(df_match) == TRUE) | (dim(df_match)[1] == 0)) {
@@ -478,9 +478,9 @@ bisec.eval <- function(f, farg, pt, df_ci, rngstate, para.match) {
     } else {
       pval <- test_return$pval
     }
-    df_ci[df_n + 1, 1:(ncol(df_ci) - 2)] <- para.match[1, ]
-    df_ci[df_n + 1, "point"] <- pt
-    df_ci[df_n + 1, "p-value"] <- pval
+    pvals[df_n + 1, 1:(ncol(pvals) - 2)] <- para.match[1, ]
+    pvals[df_n + 1, "point"] <- pt
+    pvals[df_n + 1, "p-value"] <- pval
   } else {
     pval <- unique(df_match$`p-value`)
   }
@@ -489,7 +489,7 @@ bisec.eval <- function(f, farg, pt, df_ci, rngstate, para.match) {
   # Step 3: Return results
   # ---------------- #
   return(list(pval = pval,
-              df_ci = df_ci))
+              pvals = pvals))
 }
 
 #' Determine whether a point is inside the confidence interval or not
@@ -895,7 +895,7 @@ summary.bisection.print <- function(df_bis, i) {
 #' @return Returns the updated parameters back to the function
 #' \code{subsample}. The following information are updated:
 #'    \itemize{
-#'       \item{\code{df_ci}}
+#'       \item{\code{pvals}}
 #'       \item{\code{lb0}}
 #'       \item{\code{lb1}}
 #'       \item{\code{ub0}}
@@ -905,7 +905,7 @@ summary.bisection.print <- function(df_bis, i) {
 #' @export
 #'
 invertci.check <- function(f, farg, alpha, init.lb, init.ub, tol, max.iter,
-                           df_ci, progress) {
+                           pvals, progress) {
   # ---------------- #
   # Step 1: Conduct the checks
   # ---------------- #
@@ -990,32 +990,32 @@ invertci.check <- function(f, farg, alpha, init.lb, init.ub, tol, max.iter,
   # Part 8: Check max.iter
   check.positiveinteger(max.iter, "max.iter")
 
-  # Part 9: Check df_ci
-  if (is.null(df_ci) == TRUE) {
-    # Part A: If df_ci is null
-    df_ci <- NULL
+  # Part 9: Check pvals
+  if (is.null(pvals) == TRUE) {
+    # Part A: If pvals is null
+    pvals <- NULL
   } else {
-    # Part B: If df_ci is non-null
-    if (class(df_ci) %in% c("data.frame", "matrix") == TRUE) {
-      # Set df_ci as a data frame
-      df_ci = as.data.frame(df_ci)
+    # Part B: If pvals is non-null
+    if (class(pvals) %in% c("data.frame", "matrix") == TRUE) {
+      # Set pvals as a data frame
+      pvals = as.data.frame(pvals)
       # Check the column names
-      if (("point" %in% colnames(df_ci)) & ("p-value" %in% colnames(df_ci))) {
-        stop("The column names of the data frame 'df_ci' need to contain 'point'
+      if (("point" %in% colnames(pvals)) & ("p-value" %in% colnames(pvals))) {
+        stop("The column names of the data frame 'pvals' need to contain 'point'
              and 'p-value'.", call. = FALSE)
       }
       # Check if the values are numeric
-      if (is.numeric(unlist(df_ci)) == FALSE) {
-        stop("The data frame 'df_ci' has to be numeric.")
+      if (is.numeric(unlist(pvals)) == FALSE) {
+        stop("The data frame 'pvals' has to be numeric.")
       }
       # Check if the p-values are bounded between [0, 1]
-      if ((sum(df_ci$`p-value` <= 1) != nrow(df_ci)) |
-          (sum(df_ci$`p-value` >= 0) != nrow(df_ci))) {
+      if ((sum(pvals$`p-value` <= 1) != nrow(pvals)) |
+          (sum(pvals$`p-value` >= 0) != nrow(pvals))) {
         stop("The p-values have to be in the interval [0,1].")
       }
     } else {
       stop(gsub("\\s+", " ",
-                "The data provided 'df_ci' must either be a data.frame,
+                "The data provided 'pvals' must either be a data.frame,
                 a data.table, or a matrix."), call. = FALSE)
     }
   }
@@ -1024,7 +1024,7 @@ invertci.check <- function(f, farg, alpha, init.lb, init.ub, tol, max.iter,
   check.boolean(progress, "progress")
 
   # Step 11: Return the updated information
-  return(list(df_ci = df_ci,
+  return(list(pvals = pvals,
               lb0 = lb0,
               lb1 = lb1,
               ub0 = ub0,
