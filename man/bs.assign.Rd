@@ -12,7 +12,7 @@ bs.assign(
   any.list,
   lpmodel,
   data = NULL,
-  m,
+  m = NULL,
   replace = TRUE
 )
 }

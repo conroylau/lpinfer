@@ -4,7 +4,7 @@
 \alias{bisec.eval}
 \title{Evaluation of test statistic and check if the point has been evaluated}
 \usage{
-bisec.eval(f, farg, pt, df_ci, rngstate)
+bisec.eval(f, farg, pt, df_ci, rngstate, para.match)
 }
 \arguments{
 \item{f}{Function that represents a testing procedure.}
@@ -18,6 +18,8 @@ procedure.}
 \eqn{p}-values that have been tested in the previous iterations.}
 
 \item{rngstate}{The current RNG state obtained from \code{.Random.seed}.}
+
+\item{para.match}{The list of parameters to match.}
 }
 \value{
 Returns the \eqn{p}-value of the point considered and an updated

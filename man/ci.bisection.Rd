@@ -16,7 +16,8 @@ ci.bisection(
   progress,
   type,
   dp,
-  rngstate
+  rngstate,
+  para.match
 )
 }
 \arguments{
@@ -53,6 +54,8 @@ and confidence intervals in the messages if \code{progress} is set
 as \code{TRUE}.}
 
 \item{rngstate}{The current RNG state obtained from \code{.Random.seed}.}
+
+\item{para.match}{The list of parameters to match.}
 }
 \value{
 Return the solution of the bisection method and the updated

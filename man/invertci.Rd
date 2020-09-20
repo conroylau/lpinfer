@@ -150,14 +150,13 @@ summary(invertci2)
 # Example 3: Print only the list of selected output
 summary(invertci2, alphas = .05)
 
-# Example 4: Construction of one confidence interval by specifying the 
-# logical lower and upper bounds
+# Example 4: Construction of one confidence interval by specifying one initial
+# bracket only
 set.seed(1)
 invertci4 <- invertci(f = subsample,
                       farg = farg,
                       alpha = 0.05,
-                      init.lb = 0,
-                      init.ub = 1,
+                      init.lb = c(.1, .9),
                       tol = 0.001,
                       max.iter = 50,
                       df_ci = NULL,
@@ -166,8 +165,7 @@ print(invertci4)
 summary(invertci4)
 
 # Example 5: Construction of one confidence interval without specifying the 
-# logical lower and upper bounds - they are computed automatically inside
-# the intertci function
+# initial brackets - the logical bounds will be used
 set.seed(1)
 invertci5 <- invertci(f = subsample,
                       farg = farg,

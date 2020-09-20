@@ -18,7 +18,8 @@ Imports:
     scales (>= 1.1.1),
     future (>= 1.18.0),
     future.apply (>= 1.6.0),
-    progressr (>= 0.6.0)
+    progressr (>= 0.6.0),
+    plyr (>= 1.8.6)
 Suggests:
     knitr (>= 1.28),
     rmarkdown (>= 2.0),
