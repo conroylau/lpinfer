@@ -62,7 +62,7 @@
 #' @export
 #'
 chorussell <- function(data = NULL, lpmodel, beta.tgt, n = NULL, R = 100,
-                       Rmulti = 1.25, kappa = 1e-5, norm = 2, estimate = TRUE,
+                       Rmulti = 1.25, kappa = 0, norm = 2, estimate = TRUE,
                        solver = NULL, ci = FALSE, alpha = 0.05, tol = 1e-4,
                        progress = TRUE, remove.const = TRUE) {
   # ---------------- #

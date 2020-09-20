@@ -11,7 +11,7 @@ chorussell(
   n = NULL,
   R = 100,
   Rmulti = 1.25,
-  kappa = 1e-05,
+  kappa = 0,
   norm = 2,
   estimate = TRUE,
   solver = NULL,
