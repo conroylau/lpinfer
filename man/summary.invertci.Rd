@@ -2,21 +2,21 @@
 % Please edit documentation in R/invertci.R
 \name{summary.invertci}
 \alias{summary.invertci}
-\title{Summary of results from \code{invertci}}
+\title{Summary of results from \code{\link[lpinfer]{invertci}}}
 \usage{
 \method{summary}{invertci}(x, alphas = NULL, ...)
 }
 \arguments{
-\item{x}{Object returned from \code{invertci}.}
+\item{x}{The output object returned from \code{\link[lpinfer]{invertci}}.}
 
-\item{alphas}{List of alphas that the user would like to print.}
+\item{alphas}{A list of alphas that the user would like to print.}
 
 \item{...}{Additional arguments.}
 }
 \value{
-Print the summary of the basic set of results from \code{invertci}.
+Nothing is returned.
 }
 \description{
-This function uses the print method on the return list of the
-   function \code{invertci}.
+This function summarizes the results for
+  \code{\link[lpinfer]{invertci}}.
 }

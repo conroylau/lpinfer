@@ -7,11 +7,11 @@
 lpmodel.eval(data, obj, i)
 }
 \arguments{
-\item{data}{Data frame.}
+\item{data}{A data frame.}
 
-\item{obj}{Object in lpmodel.}
+\item{obj}{An object in lpmodel.}
 
-\item{i}{Index.}
+\item{i}{An index.}
 }
 \value{
 Returns an object at iteration \code{i}.
@@ -25,7 +25,7 @@ This function returns the matrix or vector depending on the
      \item{\code{function} --- If the object is a function, then the
         object that is evaluated by the function with the data will be
         returned.}
-     \item{\code{list} --- If the object is a list, then the \eqn{i}th
+     \item{\code{list} --- If the object is a list, then the \eqn{i}-th
         element will be returned.}
      \item{\code{matrix} or \code{numeric} --- If the object is a matrix
         or in a vector, then it will be directly returned.}

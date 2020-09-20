@@ -18,36 +18,29 @@ fsst.beta.bs(
 )
 }
 \arguments{
-\item{n}{Sample size (only required if \code{data} is omitted in the input).}
+\item{n}{The sample size. This is only required if \code{data} is omitted
+in the input.}
 
-\item{data}{Data used in the tests.}
+\item{data}{An \code{data frame} or a \code{matrix}.}
 
-\item{beta.obs.hat}{Estimator of
+\item{beta.obs.hat}{The sample estimator
 \eqn{\widehat{\bm{\beta}}_{\mathrm{obs}, n}} based on the given
-information in \code{lpmodel}.}
+information in \code{lpmodel} (and \code{data} if applicable).}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test. The following
-components are required in the \code{lpmodel} for the FSST test:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{A.shp}}
-   \item{\code{beta.obs}}
-   \item{\code{beta.shp}}
- }}
+\item{lpmodel}{The \code{lpmodel} object.}
 
-\item{R}{Number of bootstrap replications.}
+\item{R}{The number of bootstrap replications.}
 
 \item{progress}{The boolean variable for whether the progress bars should
 be displayed. If it is set as \code{TRUE}, the progress bars will be
 displayed while the code is running.}
 
-\item{df.error}{Table showing the id of the bootstrap replication(s)
+\item{df.error}{A table showing the id of the bootstrap replication(s)
 with error(s) and the corresponding error message(s).}
 
 \item{iseq}{The list of indices or betas to iterate over.}
 
-\item{eval.count}{Count for the number of times the \code{future_lapply}
+\item{eval.count}{The count for the number of times the \code{future_lapply}
 function has been called. If this object is zero, it means that the
 \code{future_lapply} function is being called for the first time in this
 subprocedure. Otherwise, it means that the \code{future_lapply} function
@@ -57,13 +50,15 @@ replications.}
 }
 \value{
 Returns the bootstrap estimators.
-  \item{beta.obs.bs}{List of bootstrap betas.}
-  \item{df.error}{Updated table showing the id of the bootstrap
-      replication(s) with error(s) and the corresponding error message(s).}
-  \item{R.eval}{Number of bootstrap replications that has been conducted.}
-  \item{R.succ}{Number of successful bootstrap replications.}
+  \item{beta.obs.bs}{A list of bootstrap estimators
+  \eqn{\{\hat{\beta}_{{\rm obs}, n, b}\}^B_{b=1}}.}
+  \item{df.error}{An updated table showing the id of the bootstrap
+    replication(s) with error(s) and the corresponding error message(s).}
+  \item{R.eval}{The number of bootstrap replications that has been
+    conducted.}
+  \item{R.succ}{The number of successful bootstrap replications.}
 }
 \description{
 This function computes the bootstrap estimates of
-  \code{beta.obs}.
+  \eqn{\hat{\beta}_{{\rm obs}, n}}.
 }

@@ -7,30 +7,31 @@
 bisec.eval(f, farg, pt, df_ci, rngstate, para.match)
 }
 \arguments{
-\item{f}{Function that represents a testing procedure.}
+\item{f}{The function that represents a testing procedure.}
 
-\item{farg}{List of arguments to be passed to the function of testing
+\item{farg}{The list of arguments to be passed to the function of testing
 procedure.}
 
-\item{pt}{Point to be evaluated in the bisection method.}
+\item{pt}{The point to be evaluated in the bisection method.}
 
-\item{df_ci}{Data frame that consists the points and the corresponding
+\item{df_ci}{The data frame that consists the points and the corresponding
 \eqn{p}-values that have been tested in the previous iterations.}
 
 \item{rngstate}{The current RNG state obtained from \code{.Random.seed}.}
 
-\item{para.match}{The list of parameters to match.}
+\item{para.match}{The list of parameters to be matched.}
 }
 \value{
 Returns the \eqn{p}-value of the point considered and an updated
    data frame that contains the points and the \eqn{p}-values.
-   \item{pval}{\eqn{p}-value of the point.}
-   \item{df_ci}{Updated data frame that consists of the points that have
-      been tested in constructing the confidence intervals.}
+   \item{pval}{The \eqn{p}-value that corresponds to the test point.}
+   \item{df_ci}{The updated data frame that contains the \eqn{p}-values that
+     correspond to each set of tuning parameters and each test point.}
 }
 \description{
-This function checks if the \eqn{p}-value for the point
-   considered has already been evaluated in previous iterations or provided
-   by the user. The function will compute the \eqn{p}-value if it has been
-   evaluated. Otherwise, it will use the previous data.
+This function is used in the \code{\link[lpinfer]{invertci}}
+procedure. It checks if the \eqn{p}-value for the point considered has
+already been evaluated in previous iterations or provided by the user. The
+function will compute the \eqn{p}-value if it is not provided. Otherwise,
+it will use the previous data.
 }

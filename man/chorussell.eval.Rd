@@ -2,7 +2,8 @@
 % Please edit documentation in R/chorussell.R
 \name{chorussell.eval}
 \alias{chorussell.eval}
-\title{Computes the required object in the Cho-Russell procedure}
+\title{Computes the required object in the \code{\link[lpinfer]{chorussell}}
+procedure}
 \usage{
 chorussell.eval(
   beta.tgt,
@@ -23,7 +24,7 @@ chorussell.eval(
 )
 }
 \arguments{
-\item{beta.tgt}{Value of beta to be tested.}
+\item{beta.tgt}{The value to be tested.}
 
 \item{lb.can1}{The vector of values that corresponds to
 \eqn{\sqrt{n}\left(\hat{\theta}^b_{\rm lb} - \hat{\theta}_{\rm lb}\right)}.}
@@ -39,20 +40,28 @@ chorussell.eval(
 \eqn{\sqrt{n}\left(\hat{\theta}^b_{\rm ub} - \hat{\theta}_{\rm ub} +
 \Delta \right)}.}
 
-\item{n}{Sample size (only required if \code{data} is omitted in the input).}
+\item{n}{The sample size. This is only required if \code{data} is omitted
+in the input.}
 
-\item{R}{Number of bootstrap replications.}
+\item{R}{The number of bootstrap replications.}
 
-\item{ci}{Boolean variable that indicates whether a \eqn{p}-value or a
+\item{ci}{A boolean variable that indicates whether a \eqn{p}-value or a
 \eqn{(1-\alpha)}-confidence interval is returned. If \code{ci} is
 \code{TRUE}, then a confidence interval is returned. Otherwise, a
 \eqn{p}-value is returned.}
 
-\item{alpha}{Significance level. This can be a vector.}
+\item{alpha}{The significance level. This can be a vector.}
 
-\item{remove.const}{Determine whether the constraints are to be removed.}
+\item{tol}{The tolerance level in the bisection procedure.}
 
-\item{kappa}{Tuning parameter used in the second step of the two-step
+\item{ub}{The sample upper bound.}
+
+\item{lb}{The sample lower bound.}
+
+\item{remove.const}{A boolean variable. This determine whether the
+constraints are to be removed.}
+
+\item{kappa}{The tuning parameter used in the second step of the two-step
 procedure for obtaining the bounds subject to the shape constraints.
 It can be any nonnegative number or a vector of nonnegative numbers.}
 
@@ -65,8 +74,8 @@ Depending on \code{ci}, this function either returns the
   \eqn{p}-value or the \eqn{(1-\alpha)}-confidence interval.
 }
 \description{
-This function computes the required object in the Cho-Russell
-  procedure. If \code{ci} is \code{TRUE}, this function returns the
-  \eqn{(1-\alpha)}-confidence interval. Otherwise, it returns the
-  \eqn{p}-value.
+This function computes the required object in the
+  \code{\link[lpinfer]{chorussell}} procedure. If \code{ci} is \code{TRUE},
+  this function returns the \eqn{(1-\alpha)}-confidence interval. Otherwise,
+  it returns the \eqn{p}-value.
 }

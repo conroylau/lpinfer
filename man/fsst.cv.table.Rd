@@ -2,7 +2,8 @@
 % Please edit documentation in R/cvtable.R
 \name{fsst.cv.table}
 \alias{fsst.cv.table}
-\title{Wrapper for the \code{cv.table} function for the FSST procedure}
+\title{Wrapper for the \code{\link[lpinfer]{cv.table}} function for the
+\code{\link[lpinfer]{fsst}} procedure}
 \usage{
 fsst.cv.table(
   param,
@@ -16,9 +17,9 @@ fsst.cv.table(
 )
 }
 \arguments{
-\item{param}{Tuning parameter of the testing procedure.}
+\item{param}{The tuning parameter of the testing procedure.}
 
-\item{param.name}{Name of the tuning parameter.}
+\item{param.name}{The name of the tuning parameter.}
 
 \item{cone.n.list}{A list of sample cone test statistics.}
 
@@ -28,16 +29,17 @@ fsst.cv.table(
 
 \item{range.bs.list}{A vector or a list of bootstrap range test statistics.}
 
-\item{levels}{Confidence levels.}
+\item{levels}{The confidence levels.}
 
-\item{digits}{Number of digits in the test statistics.}
+\item{digits}{The number of digits in the test statistics.}
 }
 \value{
 Returns a table of critical values.
-  \item{cv.table}{Table of critical values.}
+  \item{cv.table}{A table of critical values.}
 }
 \description{
-This is a wrapper of the \code{cv.table} function in order to
-  produce a table that consists of the critical values for the test
-  statistics, cone component and the range component for the FSST procedure.
+This is a wrapper of the \code{\link[lpinfer]{cv.table}}
+  function in order to produce a table that consists of the critical values
+  for the test statistics, cone component and the range component for the
+  \code{\link[lpinfer]{fsst}} procedure.
 }

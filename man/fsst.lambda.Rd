@@ -2,7 +2,8 @@
 % Please edit documentation in R/fsst.R
 \name{fsst.lambda}
 \alias{fsst.lambda}
-\title{Data-driven choice of \code{lambda} in the FSST procedure}
+\title{Data-driven choice of \code{lambda} in the \code{\link[lpinfer]{fsst}}
+procedure}
 \usage{
 fsst.lambda(
   n,
@@ -21,34 +22,29 @@ fsst.lambda(
 )
 }
 \arguments{
-\item{n}{Sample size (only required if \code{data} is omitted in the input).}
+\item{n}{The sample size. This is only required if \code{data} is omitted
+in the input.}
 
 \item{omega.i}{The matrix \eqn{\widehat{\bm{\Omega}}^i_n}, i.e. the
 regularized matrix for
 \eqn{\widehat{\bm{\Sigma}}^{\beta^\star}_{n,\bar{\rho}}}.}
 
-\item{beta.n}{Sample \eqn{\widehat{\bm{\beta}}_n} vector that is defined as
-\eqn{\widehat{\bm{\beta}}_n \equiv (\widehat{\bm{\beta}}_{{\rm obs},n},
+\item{beta.n}{The sample \eqn{\widehat{\bm{\beta}}_n} vector that is defined
+as \eqn{\widehat{\bm{\beta}}_n \equiv (\widehat{\bm{\beta}}_{{\rm obs},n},
 \bm{\beta}_{{\rm shp},n}, \bm{\beta}_{{\rm tgt}})'}.}
 
-\item{beta.star}{This corresponds to the starred version of the
-\code{beta.n} vector, i.e. \eqn{\widehat{\bm{\beta}}^\star_n}.}
+\item{beta.star}{The starred version of the \code{beta.n} vector, i.e.
+\eqn{\widehat{\bm{\beta}}^\star_n}.}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test. The following
-components are required in the \code{lpmodel} for the FSST test:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{A.shp}}
-   \item{\code{beta.obs}}
-   \item{\code{beta.shp}}
- }}
+\item{lpmodel}{The \code{lpmodel} object.}
+
+\item{R.succ}{The number of successful bootstrap replications.}
 
 \item{beta.star.list}{This corresponds to the bootstrap estimates of
 \code{beta.star}.}
 
-\item{solver}{Name of the linear and quadratic programming solver that
-are used to obtain the solution to linear and quadratic programs.
+\item{solver}{The name of the linear and quadratic programming solver that
+is used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
 
@@ -56,14 +52,14 @@ The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 be displayed. If it is set as \code{TRUE}, the progress bars will be
 displayed while the code is running.}
 
-\item{df.error}{Table showing the id of the bootstrap replication(s)
+\item{df.error}{A table showing the id of the bootstrap replication(s)
 with error(s) and the corresponding error message(s).}
 
-\item{p}{Length of the beta vector.}
+\item{p}{The length of the vector \eqn{\bm{\beta}}.}
 
-\item{d}{Number of columns of the \code{A} matrix.}
+\item{d}{The number of columns of the \eqn{\bm{A}} matrix.}
 
-\item{eval.count}{Count for the number of times the \code{future_lapply}
+\item{eval.count}{The count for the number of times the \code{future_lapply}
 function has been called. If this object is zero, it means that the
 \code{future_lapply} function is being called for the first time in this
 subprocedure. Otherwise, it means that the \code{future_lapply} function
@@ -73,16 +69,17 @@ replications.}
 }
 \value{
 Returns the data-driven \code{lambda} and the error messages.
-  \item{lambda}{Data-driven \code{lambda}}
-  \item{df.error}{Table showing the id of the bootstrap replication(s)
+  \item{lambda}{The data-driven \code{lambda}}
+  \item{df.error}{A table showing the id of the bootstrap replication(s)
     with error(s) and the corresponding error message(s).}
-  \item{new.error}{Number of new errors.}
-  \item{error.id}{Indices of the bootstrap replications that give errors.}
-  \item{R.succ}{Number of successful bootstrap replications.}
+  \item{new.error}{The number of new errors.}
+  \item{error.id}{The indices of the bootstrap replications that give
+    errors.}
+  \item{R.succ}{The number of successful bootstrap replications.}
 }
 \description{
 This function provides a data-driven choice of \code{lambda}
-  in the FSST procedure.
+  in the \code{\link[lpinfer]{fsst}} procedure.
 }
 \details{
 \eqn{\alpha_n} is set as \eqn{1} if the number of observations in

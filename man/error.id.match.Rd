@@ -7,13 +7,13 @@
 error.id.match(error.list, df.error)
 }
 \arguments{
-\item{error.list}{List of error messages.}
+\item{error.list}{The list of error messages.}
 
-\item{df.error}{Consolidated data frame of error messages.}
+\item{df.error}{The consolidated data frame of error messages.}
 }
 \value{
 Returns an updated list of error messages.
-  \item{df.error}{Updated data frame of error messages.}
+  \item{df.error}{An updated data frame of error messages.}
 }
 \description{
 This function is used after the bootstrap replications. This

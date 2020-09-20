@@ -7,25 +7,24 @@
 check.betatgt(data, lpmodel, beta.tgt, solver)
 }
 \arguments{
-\item{data}{Data used in the tests.}
+\item{data}{An \code{data frame} or a \code{matrix}.}
 
 \item{lpmodel}{An \code{lpmodel} object.}
 
-\item{beta.tgt}{Value of beta to be tested.}
+\item{beta.tgt}{The value to be tested.}
 
 \item{solver}{A linear or quadratic programming solver. The exact solver
 that is supported depends on the test chosen.}
 }
 \value{
-Returns an indicator to show whether the \code{beta.tgt} is within
-  the logical bound or not and the logical bounds.
-  \item{inout}{Equals 1 if it is within the logical bound.
-  Equals 0 otherwise.}
-  \item{lb}{Logical lower bound.}
-  \item{ub}{Logical upper bound.}
+Returns the following objects:
+  \item{inout}{The variable that equals 1 if it is within the logical bound.
+  This equals 0 otherwise.}
+  \item{lb}{The logical lower bound.}
+  \item{ub}{The logical upper bound.}
 }
 \description{
 This function checks whether the parameter \code{beta.tgt}
-  specified is within the logical bounds. If it is not within the logical
-  bound, then reject immediately.
+  is within the logical bounds. If it is not within the logical bound,
+  then reject immediately.
 }

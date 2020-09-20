@@ -15,36 +15,42 @@ beta.star.qp(
 )
 }
 \arguments{
-\item{data}{Data used in the tests.}
+\item{data}{An \code{data frame} or a \code{matrix}.}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test. The following
-components are required in the \code{lpmodel} for the FSST test:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{A.shp}}
-   \item{\code{beta.obs}}
-   \item{\code{beta.shp}}
- }}
+\item{lpmodel}{The \code{lpmodel} object.}
 
-\item{beta.tgt}{Value of beta to be tested.}
+\item{beta.tgt}{The value to be tested.}
 
-\item{weight.mat}{Weighting matrix.}
+\item{weight.mat}{The weighting matrix for the \code{\link[lpinfer]{fsst}}
+procedure.}
 
-\item{solver}{Name of the linear and quadratic programming solver that
-are used to obtain the solution to linear and quadratic programs.
+\item{solver}{The name of the linear and quadratic programming solver that
+is used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
 }
 \value{
-Returns the vector \eqn{\widehat{\bm{\beta}}_n^\star}.
+Returns the following objects:
   \item{beta.star}{The vector \eqn{\widehat{\bm{\beta}}_n^\star}.}
+  \item{x}{The optimal point.}
+  \item{status}{The status of the optimization problem.}
 }
 \description{
 This function computes the vector
   \eqn{\widehat{\bm{\beta}}_n^\star} for the case where \eqn{d<p} in the
-  FSST test.
+  \code{\link[lpinfer]{fsst}} procedure.
 }
 \details{
-This corresponding to solving problem (3) of Torgovitsky (2020).
+This corresponding to solving the following quadratic program
+\deqn{
+  \min_{x \in \mathbf{R}^d} \,\,
+  \left(\hat{\beta}_{{\rm obs}, n} - A_{\rm obs} x\right)' \hat{\Xi}
+  \left(\hat{\beta}_{{\rm obs}, n} - A_{\rm obs} x\right)
+  \quad \mathrm{s.t.
+  } \quad
+  A_{\rm shp} x = \beta_{\rm shp}
+  \quad \mathrm{ and } \quad
+  A_{\rm tgt} x = \beta_{\rm tgt}
+}
+in the \code{\link[lpinfer]{fsst}} procedure.
 }

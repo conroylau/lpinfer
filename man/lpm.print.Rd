@@ -12,7 +12,7 @@ lpm.print(x, lpm.string, data = NULL, ...)
 \item{lpm.string}{The string that contains the name of the variables
 available in the \code{lpmodel} object.}
 
-\item{data}{Data used in the tests.}
+\item{data}{An \code{data frame} or a \code{matrix}.}
 }
 \value{
 Nothing is returned.

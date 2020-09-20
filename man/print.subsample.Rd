@@ -2,12 +2,12 @@
 % Please edit documentation in R/subsample.R
 \name{print.subsample}
 \alias{print.subsample}
-\title{Print results from \code{subsample}}
+\title{Print results from the \code{\link[lpinfer]{subsample}} procedure}
 \usage{
 \method{print}{subsample}(x, ...)
 }
 \arguments{
-\item{x}{Object returned from \code{subsample}.}
+\item{x}{An output object returned from \code{\link[lpinfer]{subsample}}.}
 
 \item{...}{Additional arguments.}
 }
@@ -15,5 +15,6 @@
 Nothing is returned.
 }
 \description{
-This function prints the \eqn{p}-values from \code{subsample}.
+This function prints the \eqn{p}-values from
+the \code{\link[lpinfer]{subsample}} procedure.
 }

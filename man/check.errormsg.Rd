@@ -7,12 +7,12 @@
 check.errormsg(name.var, needs.to.be)
 }
 \arguments{
-\item{name.var}{Name of the object.}
+\item{name.var}{The name of the object.}
 
 \item{needs.to.be}{What the object is supposed to be.}
 }
 \value{
-Nothing is returned. An error message is printed.
+Nothing is returned.
 }
 \description{
 This is a general function to produce the error messages in

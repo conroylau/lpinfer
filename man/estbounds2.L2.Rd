@@ -7,37 +7,29 @@
 estbounds2.L2(data, firststepsoln, lpmodel, modelsense, kappa, solver)
 }
 \arguments{
-\item{data}{Data used in the tests.}
+\item{data}{An \code{data frame} or a \code{matrix}.}
 
-\item{firststepsoln}{List of solutions to the first step problem.}
+\item{firststepsoln}{The list of solutions to the first step problem.}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test that consists of
-the following objects:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{A.shp}}
-   \item{\code{beta.obs}}
-   \item{\code{beta.shp}}
- }}
+\item{lpmodel}{The \code{lpmodel} object.}
 
 \item{modelsense}{The indicator of whether the model is to max or min an
 objective function.}
 
-\item{kappa}{Tuning parameter used in the second step of the two-step
+\item{kappa}{The tuning parameter used in the second step of the two-step
 procedure for obtaining the bounds subject to the shape constraints.
 It can be any nonnegative number.}
 
-\item{solver}{Name of the linear and quadratic programming solver that
-are used to obtain the solution to linear and quadratic programs.
+\item{solver}{The name of the linear and quadratic programming solver that
+is used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
 }
 \value{
 Returns the solution to the second step of the two-step procedure.
- \item{objval}{Optimal objective value.}
- \item{x}{Optimal point.}
- \item{status}{Status of the optimization problem.}
+ \item{objval}{The optimal value.}
+ \item{x}{The optimal point.}
+ \item{status}{The status of the optimization problem.}
 }
 \description{
 This function evaluates the solution to stage 2 of the

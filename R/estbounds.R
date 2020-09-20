@@ -1,25 +1,17 @@
 #' Estimate bounds with shape restrictions
 #'
-#' @description This function computes the bound of the estimation problem
-#'    subject to shape constraints. This function offers an option to estimate
-#'    the shape constraints using a two-step procedure with the 1-norm or
-#'    2-norm.
+#' @description This function estimates the bounds subject to the shape
+#'   constraints. The estimation is done via a two-step procedure with either
+#'   the 1-norm or the 2-norm.
 #'
-#' @param lpmodel The \code{lpmodel} object used in the test that consists of
-#'   the following objects:
-#'    \itemize{
-#'      \item{\code{A.tgt}}
-#'      \item{\code{A.obs}}
-#'      \item{\code{A.shp}}
-#'      \item{\code{beta.obs}}
-#'      \item{\code{beta.shp}}
-#'    }
-#' @param norm Norm used in the optimization problem. It can be either a 1-norm
-#'   or a 2-norm.
-#' @param kappa Tuning parameter used in the second step of the two-step
+#' @param lpmodel The \code{lpmodel} object.
+#' @param norm The norm used in the optimization problem. It can be either a
+#'   1-norm or a 2-norm. See the details section of
+#'   \code{\link[lpinfer]{estbounds}} for a list of accepted strings.
+#' @param kappa The tuning parameter used in the second step of the two-step
 #'    procedure for obtaining the bounds subject to the shape constraints.
 #'    It can be any nonnegative number.
-#' @param estimate Boolean variable to indicate whether the bounds should be
+#' @param estimate A boolean variable to indicate whether the bounds should be
 #'    estimated or not.
 #' @inheritParams dkqs
 #' @inheritParams invertci
@@ -46,17 +38,19 @@
 #'   }
 #'
 #' @return Returns the bounds subject to the shape constraints.
-#'   \item{ub}{Upper bound.}
-#'   \item{lb}{Lower bound.}
-#'   \item{mincriterion}{Objective value of the first-stage problem (i.e.
-#'      \code{mincriterion}).}
-#'   \item{est}{Indicator of whether estimation is involved in the
-#'   estimation}
+#'   \item{ub}{The upper bound.}
+#'   \item{lb}{The lower bound.}
+#'   \item{mincriterion}{The objective value of the first-stage problem (i.e.
+#'     \code{\link[lpinfer]{mincriterion}}).}
+#'   \item{est}{The indicator of whether estimation is involved in the
+#'     estimation.}
 #'   \item{call}{The function that has been called.}
-#'   \item{norm}{Norm used in the optimization problem.}
-#'   \item{ub.status}{Status of the optimization problem for the upper bound.}
-#'   \item{lb.status}{Status of the optimization problem for the lower bound.}
-#'   \item{solver}{Name of the solver used.}
+#'   \item{norm}{The norm used.}
+#'   \item{ub.status}{The status of the optimization problem for the upper
+#'     bound.}
+#'   \item{lb.status}{The status of the optimization problem for the lower
+#'     bound.}
+#'   \item{solver}{The name of the solver used.}
 #'
 #' @example ./inst/example/estbounds_example.R
 #'
@@ -171,18 +165,18 @@ estbounds <- function(data = NULL, lpmodel, kappa = 0, norm = 2,
   return(output)
 }
 
-#' Computes the true bounds with shape constraints
+#' Computes the true bounds subjected to shape constraints
 #'
-#' @description This function computes the true bounds subject to the shape
+#' @description This function computes the true bounds subjected to the shape
 #'    constraints without approximation.
 #'
-#' @param original.sense Sense of the constraints for the true bounds.
+#' @param original.sense The sense of the constraints for the true bounds.
 #' @inheritParams invertci
 #' @inheritParams estbounds
 #'
 #' @return Returns the solution to the linear program.
-#'  \item{objval}{Optimal objective value.}
-#'  \item{status}{Status of the linear program.}
+#'  \item{objval}{The optimal value.}
+#'  \item{status}{The status of the linear program.}
 #'
 #' @export
 #'
@@ -301,15 +295,15 @@ estbounds.original <- function(data, lpmodel, original.sense, solver) {
 #' @description This function evaluates the solution to stage 2 of the
 #'    two-step procedure to obtain the estimated bound with the 1-norm.
 #'
-#' @param firststepsoln List of solutions to the first step problem.
+#' @param firststepsoln The list of solutions to the first step problem.
 #' @inheritParams gurobi.optim
 #' @inheritParams estbounds
 #' @inheritParams dkqs
 #'
 #' @return Returns the solution to the second step of the two-step procedure.
-#'  \item{objval}{Optimal objective value.}
-#'  \item{x}{Optimal point.}
-#'  \item{status}{Status of the optimization problem.}
+#'  \item{objval}{The optimal value.}
+#'  \item{x}{The optimal point.}
+#'  \item{status}{The status of the optimization problem.}
 #'
 #' @export
 #'
@@ -389,15 +383,15 @@ estbounds2.L1 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
 #' @description This function evaluates the solution to stage 2 of the
 #'    two-step procedure to obtain the estimated bound with the 2-norm.
 #'
-#' @param firststepsoln List of solutions to the first step problem.
+#' @param firststepsoln The list of solutions to the first step problem.
 #' @inheritParams gurobi.optim
 #' @inheritParams estbounds
 #' @inheritParams dkqs
 #'
 #' @return Returns the solution to the second step of the two-step procedure.
-#'  \item{objval}{Optimal objective value.}
-#'  \item{x}{Optimal point.}
-#'  \item{status}{Status of the optimization problem.}
+#'  \item{objval}{The optimal value.}
+#'  \item{x}{The optimal point.}
+#'  \item{status}{The status of the optimization problem.}
 #'
 #' @export
 #'
@@ -464,10 +458,9 @@ estbounds2.L2 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
 
 #' Checks and updates the input in \code{estbounds}
 #'
-#' @description This function checks and updates the input from the user for
-#'    the function \code{estbounds}. If there is any invalid input, this
-#'    function will terminate the procedure and generate appropriate error
-#'    messages.
+#' @description This function checks and updates the input from the user in the
+#'    \code{\link[lpinfer]{estbounds}} function. If there is any invalid input,
+#'    the function will be terminated and error messages will be printed.
 #'
 #' @inheritParams estbounds
 #' @inheritParams invertci
@@ -538,16 +531,15 @@ estbounds.check <- function(data, lpmodel, kappa, norm, solver, estimate) {
               kappa = kappa))
 }
 
-#' Print results from \code{estbounds}
+#' Print results from \code{\link[lpinfer]{estbounds}}
 #'
 #' @description This function uses the print method on the return list of the
-#'    function \code{estbounds}.
+#'    function \code{\link[lpinfer]{estbounds}}.
 #'
-#' @param x Object returned from \code{estbounds}.
+#' @param x The output objects returned from \code{\link[lpinfer]{estbounds}}.
 #' @param ... Additional arguments.
 #'
-#' @return Nothing is returned. This function prints results from
-#'    \code{estbounds}.
+#' @return Nothing is returned.
 #'
 #' @export
 #'
@@ -567,13 +559,12 @@ print.estbounds <- function(x, ...) {
   }
 }
 
-#' Summary of results from \code{estbounds}
+#' Summary of results from \code{\link[lpinfer]{estbounds}}
 #'
 #' @description This function prints a summary of the results obtained from
-#'   \code{estbounds}.
+#'   \code{\link[lpinfer]{estbounds}}.
 #'
-#' @param x Objects returned from \code{estbounds}.
-#' @param ... Additional arguments.
+#' @inheritParams print.estbounds
 #'
 #' @return Nothing is returned.
 #'
@@ -593,10 +584,11 @@ summary.estbounds <- function(x, ...) {
   cat(sprintf("Solver: %s \n", x$solver))
 }
 
-#' First-stage estimation procedure for \code{estbounds}
+#' First-stage estimation procedure for \code{\link[lpinfer]{estbounds}}
 #'
 #' @description This function evaluates the solution to stage 1 of the
-#'    two-step procedure to obtain the estimated bounds. This function can
+#'    two-step procedure to obtain the estimated bounds in the
+#'    \code{\link[lpinfer]{estbounds}} procedure. This function can
 #'    be used to evaluate both the estimation problem with the 1-norm or
 #'    the 2-norm.
 #'
@@ -605,10 +597,10 @@ summary.estbounds <- function(x, ...) {
 #'
 #' @return Returns the solution to the first step of the two-step procedure
 #'    and argument for the linear program.
-#'  \item{objval}{Optimal objective value.}
-#'  \item{x}{Optimal point.}
-#'  \item{larg}{Arguments for the estimation program.}
-#'  \item{norm}{Norm used in the estimation problem.}
+#'  \item{objval}{The optimal value.}
+#'  \item{x}{The optimal point.}
+#'  \item{larg}{The arguments for the estimation program.}
+#'  \item{norm}{The norm used in the estimation problem.}
 #'  \item{solver}{The solver used in the estimation problem}
 #'  \item{call}{The details of the function that has been called.}
 #'
@@ -747,10 +739,9 @@ mincriterion <- function(data = NULL, lpmodel, norm = 2, solver = NULL) {
 
 #' Checks and updates the input in \code{mincriterion}
 #'
-#' @description This function checks and updates the input from the user for
-#'    the function \code{mincriterion}. If there is any invalid input, this
-#'    function will terminate the procedure and generate appropriate error
-#'    messages.
+#' @description This function checks and updates the input from the user in the
+#'    \code{\link[lpinfer]{mincriterion}} function. If there is any invalid
+#'    input, the function will be terminated and error messages will be printed.
 #'
 #' @inheritParams estbounds
 #' @inheritParams dkqs
@@ -810,12 +801,13 @@ mincriterion.check <- function(data, lpmodel, norm, solver) {
               norm = norm))
 }
 
-#' Print results from \code{mincriterion}
+#' Print results from \code{\link[lpinfer]{mincriterion}}
 #'
 #' @description This function prints a summary of the results obtained from
-#'   \code{mincriterion}.
+#'   \code{\link[lpinfer]{mincriterion}}.
 #'
-#' @param x Object returned from \code{mincriterion}.
+#' @param x The output objects returned from
+#'   \code{\link[lpinfer]{mincriterion}}.
 #' @param ... Additional arguments.
 #'
 #' @return Nothing is returned.
@@ -827,13 +819,12 @@ print.mincriterion <- function(x, ...) {
   cat(sprintf("Minimum value: %s \n", round(x$objval)))
 }
 
-#' Summary of results from \code{mincriterion}
+#' Summary of results from \code{\link[lpinfer]{mincriterion}}
 #'
 #' @description This function uses the summary method on the return list of the
-#'    function \code{mincriterion}.
+#'    function \code{\link[lpinfer]{mincriterion}}.
 #'
-#' @param x Objects returned from \code{mincriterion}.
-#' @param ... Additional arguments.
+#' @inheritParams print.mincriterion
 #'
 #' @return Nothing is returned.
 #'

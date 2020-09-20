@@ -9,17 +9,16 @@ check.datafunction(data, f, lpmodel.comp)
 \arguments{
 \item{data}{The data object in the class \code{data.frame}.}
 
-\item{f}{User-defined function in \code{lpmodel}.}
+\item{f}{A user-defined function in \code{lpmodel}.}
 
-\item{lpmodel.comp}{Name of the \code{lpmodel} object.}
+\item{lpmodel.comp}{The name of the \code{lpmodel} object.}
 }
 \value{
 Nothing is returned.
 }
 \description{
 This function checks whether there will be any error if an
-  object of class \code{data.frame} is being passed to a
-  user-defined function.
+  object of class \code{data.frame} is passed to the user-defined function.
 }
 \details{
 An error message will be displayed.

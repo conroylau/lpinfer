@@ -17,31 +17,26 @@ dkqs(
 )
 }
 \arguments{
-\item{data}{Data used in the tests.}
+\item{data}{An \code{data frame} or a \code{matrix}.}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test. The following
-components are required in the \code{lpmodel} for the DKQS test:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{beta.obs}}
- }}
+\item{lpmodel}{An \code{lpmodel} object.}
 
-\item{beta.tgt}{Value of beta to be tested.}
+\item{beta.tgt}{The value to be tested.}
 
-\item{R}{Number of bootstrap replications.}
+\item{R}{The number of bootstrap replications.}
 
-\item{Rmulti}{Multiplier for the number of bootstrap replications. The
+\item{Rmulti}{The multiplier for the number of bootstrap replications. The
 product of \code{Rmulti} and \code{R} refers to the maximum
 number of bootstrap replications to be conducted if there are errors.}
 
-\item{tau}{Value of the tuning parameter \eqn{\tau} in the DKQS
-procedure.}
+\item{tau}{The value of the tuning parameter \eqn{\tau} in the DKQS
+procedure. This can be a vector.}
 
-\item{n}{Sample size (only required if \code{data} is omitted in the input).}
+\item{n}{The sample size. This is only required if \code{data} is omitted
+in the input.}
 
-\item{solver}{Name of the linear and quadratic programming solver that
-are used to obtain the solution to linear and quadratic programs.
+\item{solver}{The name of the linear and quadratic programming solver that
+is used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
 
@@ -54,33 +49,42 @@ Returns the following list of outputs:
   \item{pval}{A table of \eqn{p}-values for each \eqn{\tau}.}
   \item{tau.feasible}{The list of \eqn{\tau} that are feasible.}
   \item{tau.infeasible}{The list of \eqn{\tau} that are infeasible.}
-  \item{tau.max}{Maximum value of the feasible \eqn{\tau} for the problem.}
-  \item{T.n}{Test statistic \eqn{T_n}.}
+  \item{tau.max}{The maximum value of the feasible \eqn{\tau} for the
+     problem.}
+  \item{T.n}{The test statistic \eqn{T_n}.}
   \item{T.bs}{The list of bootstrap test statistics
      \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}} for each \eqn{\tau}.}
-  \item{beta.bs.bar}{The list of \eqn{\tau}-tightened re-centered bootstrap
-     estimators \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}.}
-  \item{solver}{Solver used.}
-  \item{cv.table}{Table of critical values.}
+  \item{solver}{The solver used.}
+  \item{cv.table}{A table of critical values.}
   \item{call}{The function that has been called.}
-  \item{test.logical}{Indicator variable for whether the computation has
+  \item{test.logical}{An indicator variable for whether the computation has
     been conducted. If \code{test.logical} is 1, it refers to the case
     where \code{beta.tgt} is inside the logical bounds. If
     \code{test.logical} is 0, it refers to the case where
     \code{beta.tgt} is outside the logical bounds.}
-  \item{logical.lb}{Logical lower bound.}
-  \item{logical.ub}{Logical upper bound.}
-  \item{df.error}{Table showing the id of the bootstrap replication(s)
+  \item{logical.lb}{The logical lower bound.}
+  \item{logical.ub}{The logical upper bound.}
+  \item{df.error}{A table showing the id of the bootstrap replication(s)
     with error(s) and the corresponding error message(s).}
-  \item{R.succ}{Number of successful bootstrap replications.}
+  \item{R.succ}{The number of successful bootstrap replications.}
 }
 \description{
 This module conducts inference using the cone-tightening
   procedure proposed by Deb, Kitamura, Quah and Stoye (2018).
 }
 \details{
-If the value of the test statistic \eqn{T_n} is zero, the
-   bootstrap procedure will be skipped and the \eqn{p}-value is zero.
+\itemize{
+ \item{If the value of the test statistic \eqn{T_n} is zero, the bootstrap
+   procedure will be skipped and the \eqn{p}-value is zero.}
+ \item{ The following components are required in the \code{lpmodel} for the
+   DKQS procedure:
+   \itemize{
+     \item{\code{A.tgt}}
+     \item{\code{A.obs}}
+     \item{\code{beta.obs}}
+   }
+ }
+}
 }
 \examples{
 ## ========================================================================= ##

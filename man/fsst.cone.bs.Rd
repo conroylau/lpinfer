@@ -24,47 +24,42 @@ fsst.cone.bs(
 )
 }
 \arguments{
-\item{n}{Sample size (only required if \code{data} is omitted in the input).}
+\item{n}{The sample size. This is only required if \code{data} is omitted
+in the input.}
 
 \item{omega.i}{The matrix \eqn{\widehat{\bm{\Omega}}^i_n}, i.e. the
 regularized matrix for
 \eqn{\widehat{\bm{\Sigma}}^{\beta^\star}_{n,\bar{\rho}}}.}
 
-\item{beta.n}{Sample \eqn{\widehat{\bm{\beta}}_n} vector that is defined as
-\eqn{\widehat{\bm{\beta}}_n \equiv (\widehat{\bm{\beta}}_{{\rm obs},n},
+\item{beta.n}{The sample \eqn{\widehat{\bm{\beta}}_n} vector that is defined
+as \eqn{\widehat{\bm{\beta}}_n \equiv (\widehat{\bm{\beta}}_{{\rm obs},n},
 \bm{\beta}_{{\rm shp},n}, \bm{\beta}_{{\rm tgt}})'}.}
 
-\item{beta.star}{This corresponds to the starred version of the
-\code{beta.n} vector, i.e. \eqn{\widehat{\bm{\beta}}^\star_n}.}
+\item{beta.star}{The starred version of the \code{beta.n} vector, i.e.
+\eqn{\widehat{\bm{\beta}}^\star_n}.}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test. The following
-components are required in the \code{lpmodel} for the FSST test:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{A.shp}}
-   \item{\code{beta.obs}}
-   \item{\code{beta.shp}}
- }}
+\item{lpmodel}{The \code{lpmodel} object.}
+
+\item{R.succ}{The number of successful bootstrap replications.}
 
 \item{lambda}{Parameter used to obtain the restricted estimator
 \eqn{\widehat{\bm{\beta}}^r_n}. A data-driven parameter \code{lambda} can
 be included if \code{NA} is included as part of the vector for
 \code{lambda}. For instance, if \code{lambda} is set as \code{c(0.1, NA)},
 then both 0.1 and the data-driven \code{lambda} will be applied in the
-FSST procedure. The default is to use the data-driven approach for
-\code{lambda}.}
+\code{\link[lpinfer]{fsst}} procedure. The default is to use the
+data-driven \code{lambda}.}
 
 \item{indicator}{A binary variable that equals to 1 for \eqn{d \geq p} and
 equals to 0 for \eqn{d < p}.}
 
-\item{beta.r}{This corresponds to the restricted estimator.}
+\item{beta.r}{The restricted estimator.}
 
 \item{beta.star.list}{This corresponds to the bootstrap estimates of
 \code{beta.star}.}
 
-\item{solver}{Name of the linear and quadratic programming solver that
-are used to obtain the solution to linear and quadratic programs.
+\item{solver}{The name of the linear and quadratic programming solver that
+is used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
 
@@ -72,10 +67,10 @@ The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 be displayed. If it is set as \code{TRUE}, the progress bars will be
 displayed while the code is running.}
 
-\item{df.error}{Table showing the id of the bootstrap replication(s)
+\item{df.error}{A table showing the id of the bootstrap replication(s)
 with error(s) and the corresponding error message(s).}
 
-\item{eval.count}{Count for the number of times the \code{future_lapply}
+\item{eval.count}{The count for the number of times the \code{future_lapply}
 function has been called. If this object is zero, it means that the
 \code{future_lapply} function is being called for the first time in this
 subprocedure. Otherwise, it means that the \code{future_lapply} function
@@ -83,16 +78,17 @@ has been called for more than once. This situation typically refers to the
 situations where there are some errors in the first time of the
 replications.}
 
-\item{data.driven}{}
+\item{data.driven}{A boolean variable. This indicates whether the
+data-driven problem is being considered.}
 }
 \value{
 Return the following list of objects:
-  \item{cone.n.list}{List of bootstrap cone components.}
+  \item{cone.n.list}{The list of bootstrap cone components.}
+  \item{new.error}{The number of new errors.}
   \item{df.error}{Table showing the id of the bootstrap replication(s)
     with error(s) and the corresponding error message(s).}
-  \item{new.error}{Number of new errors.}
-  \item{error.id}{Indices of the bootstrap replications that give errors.}
-  \item{R.succ}{Number of successful bootstrap replications.}
+  \item{error.id}{An indices of the bootstrap replications that give errors.}
+  \item{R.succ}{A number of successful bootstrap replications.}
 }
 \description{
 This function computes the bootstrap estimates of the cone

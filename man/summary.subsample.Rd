@@ -2,12 +2,12 @@
 % Please edit documentation in R/subsample.R
 \name{summary.subsample}
 \alias{summary.subsample}
-\title{Summary of results from \code{subsample}}
+\title{Summary of results from the \code{\link[lpinfer]{subsample}} procedure}
 \usage{
 \method{summary}{subsample}(x, ...)
 }
 \arguments{
-\item{x}{Object returned from \code{subsample}.}
+\item{x}{An output object returned from \code{\link[lpinfer]{subsample}}.}
 
 \item{...}{Additional arguments.}
 }
@@ -16,5 +16,5 @@ Nothing is returned.
 }
 \description{
 This function prints a summary of the results obtained from
-  \code{subsample}.
+  the \code{\link[lpinfer]{subsample}} procedure.
 }

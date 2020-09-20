@@ -7,22 +7,22 @@
 standard.form(A, b, sense, lb = NULL, obj = NULL)
 }
 \arguments{
-\item{A}{Matrix that represents the constraints.}
+\item{A}{The matrix that represents the constraints.}
 
-\item{b}{RHS vector that represents the constraints.}
+\item{b}{The rhs vector that represents the constraints.}
 
-\item{sense}{Sense of the constraints.}
+\item{sense}{The sense of the constraints.}
 
-\item{lb}{Lower bound of the variables.}
+\item{lb}{The lower bound of the variables.}
 
-\item{obj}{Objective function.}
+\item{obj}{The objective function.}
 }
 \value{
 Returns the following four objects:
-  \item{A}{Matrix representing the constraints in standard form.}
-  \item{b}{RHS vector representing the constraints in standard form.}
-  \item{lb}{Lower bound of the variables.}
-  \item{obj}{Objective function.}
+  \item{A}{The matrix representing the constraints in standard form.}
+  \item{b}{The rhs vector representing the constraints in standard form.}
+  \item{lb}{The lower bound of the variables.}
+  \item{obj}{The objective function.}
 }
 \description{
 This function is mainly a wrapper of the \code{simplex}

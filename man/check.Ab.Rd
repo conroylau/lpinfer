@@ -7,19 +7,19 @@
 check.Ab(A, b, Aname, bname)
 }
 \arguments{
-\item{A}{Constraint matrix.}
+\item{A}{The constraint matrix.}
 
-\item{b}{Corresponding rhs vector.}
+\item{b}{The corresponding rhs vector.}
 
-\item{Aname}{Name of the constraint matrix.}
+\item{Aname}{The name of the constraint matrix.}
 
-\item{bname}{Name of the corresponding rhs vector.}
+\item{bname}{The name of the corresponding rhs vector.}
 }
 \value{
-Returns the updated matrix and rhs vector or print a
+Returns the updated matrix and rhs vector or prints a
    stop message.
-   \item{A}{Updated constraint matrix.}
-   \item{b}{Updated rhs vector.}
+   \item{A}{The updated constraint matrix.}
+   \item{b}{The updated rhs vector.}
 }
 \description{
 This function checks the constraint matrix \eqn{\bm{A}} and

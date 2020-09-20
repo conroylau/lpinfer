@@ -9,9 +9,9 @@ check.matrix(mat, mat.name, mat.cat, inside.list)
 \arguments{
 \item{mat}{The matrix object in \code{lpmodel}.}
 
-\item{mat.name}{Name of the matrix object in \code{lpmodel}.}
+\item{mat.name}{The name of the matrix object in \code{lpmodel}.}
 
-\item{inside.list}{Indicator variables of whether the object that is
+\item{inside.list}{An indicator variables of whether the object that is
 being checked is inside a list or not.}
 }
 \value{

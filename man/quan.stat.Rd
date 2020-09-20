@@ -7,14 +7,14 @@
 quan.stat(stat, quan = c(0.99, 0.95, 0.9))
 }
 \arguments{
-\item{stat}{Test statistics.}
+\item{stat}{The test statistics.}
 
-\item{quan}{Quantiles.}
+\item{quan}{The quantiles.}
 }
 \value{
 Return the quantile of the test statistics in the order of the
   \code{quan} vector.
-  \item{stat.quan}{Quantile of the test statistics in the order of the
+  \item{stat.quan}{The quantile of the test statistics in the order of the
   \code{quan} vector.}
 }
 \description{

@@ -2,21 +2,22 @@
 % Please edit documentation in R/invertci.R
 \name{summary.invertci_single}
 \alias{summary.invertci_single}
-\title{Summary of results from \code{invertci} for a single alpha}
+\title{Summary of results from \code{\link[lpinfer]{invertci}} for a single
+significance level}
 \usage{
 \method{summary}{invertci_single}(x, alphas, msg.bound, ...)
 }
 \arguments{
-\item{x}{Object returned from \code{invertci}.}
+\item{x}{The output object returned from \code{\link[lpinfer]{invertci}}.}
 
-\item{msg.bound}{String containing the general message to be printed.}
+\item{alphas}{A list of alphas that the user would like to print.}
 
 \item{...}{Additional arguments.}
 }
 \value{
-Print the summary of the basic set of results from \code{invertci}.
+Nothing is returned.
 }
 \description{
-This function uses the print method on the return list of the
-   function \code{invertci}.
+This function summarizes the results for
+  \code{\link[lpinfer]{invertci}}.
 }

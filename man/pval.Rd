@@ -7,13 +7,13 @@
 pval(T.bs, T.n)
 }
 \arguments{
-\item{T.n}{Sample test statistics.}
+\item{T.n}{The sample test statistics.}
 
-\item{T_bs}{Bootstrap estimates of the test statistic.}
+\item{T_bs}{The list of bootstrap estimates of the test statistic.}
 }
 \value{
 Returns the \eqn{p}-value:
-  \item{p}{\eqn{p}-value.}
+  \item{p}{The \eqn{p}-value.}
 }
 \description{
 This function computes the \eqn{p}-value of the test based on

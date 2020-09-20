@@ -9,11 +9,11 @@ lpmodel.extractlist(obj, len)
 \arguments{
 \item{obj}{A component in the \code{lpmodel} object.}
 
-\item{len}{Length of the list.}
+\item{len}{The length of the list.}
 }
 \value{
 Returns one object.
-  \item{result}{Either a \code{list} or \code{NULL}.}
+  \item{result}{This is either a \code{list} or \code{NULL}.}
 }
 \description{
 This function extracts the bootstrap replications in the

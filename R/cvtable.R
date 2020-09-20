@@ -3,19 +3,19 @@
 #' @import scales
 #'
 #' @description This function generates a table of critical values for the
-#'   testing methods. By default, the table includes the sample test statistic,
-#'   and critical values at the 90\%, 95\% and 99\% level. The table can be
-#'   retrieved from \code{cv.table} in the output of the functions.
+#'   testing procedures By default, the table includes the sample test
+#'   statistic, and critical values at the 90\%, 95\% and 99\% level. The table
+#'   can be retrieved from \code{cv.table} in the output of the functions.
 #'
-#' @param param Tuning parameter of the testing procedure.
-#' @param param.name Name of the tuning parameter.
+#' @param param The tuning parameter of the testing procedure.
+#' @param param.name The name of the tuning parameter.
 #' @param ts.sample.list A vector or sample test statistics.
 #' @param ts.bs.list A vector or a list of bootstrap test statistics.
-#' @param levels Confidence levels.
-#' @param digits Number of digits in the test statistics.
+#' @param levels The confidence levels.
+#' @param digits The number of digits in the test statistics.
 #'
 #' @return Returns a table of critical values.
-#'   \item{cv.table}{Table of critical values.}
+#'   \item{cv.table}{A table of critical values.}
 #'
 #' @export
 #'
@@ -59,11 +59,13 @@ construct.cv.table <- function(param, param.name, ts.sample.list,
   return(cv.table)
 }
 
-#' Wrapper for the \code{cv.table} function for the FSST procedure
+#' Wrapper for the \code{\link[lpinfer]{cv.table}} function for the
+#' \code{\link[lpinfer]{fsst}} procedure
 #'
-#' @description This is a wrapper of the \code{cv.table} function in order to
-#'   produce a table that consists of the critical values for the test
-#'   statistics, cone component and the range component for the FSST procedure.
+#' @description This is a wrapper of the \code{\link[lpinfer]{cv.table}}
+#'   function in order to produce a table that consists of the critical values
+#'   for the test statistics, cone component and the range component for the
+#'   \code{\link[lpinfer]{fsst}} procedure.
 #'
 #' @param cone.n.list A list of sample cone test statistics.
 #' @param range.n.list A list of sample range test statistics.
@@ -72,7 +74,7 @@ construct.cv.table <- function(param, param.name, ts.sample.list,
 #' @inheritParams construct.cv.table
 #'
 #' @return Returns a table of critical values.
-#'   \item{cv.table}{Table of critical values.}
+#'   \item{cv.table}{A table of critical values.}
 #'
 #' @export
 #'
@@ -140,12 +142,12 @@ fsst.cv.table <- function(param, param.name, cone.n.list, range.n.list,
 #'
 #' @importFrom pracma ceil
 #'
-#' @param stat Test statistics.
-#' @param quan Quantiles.
+#' @param stat The test statistics.
+#' @param quan The quantiles.
 #'
 #' @return Return the quantile of the test statistics in the order of the
 #'   \code{quan} vector.
-#'   \item{stat.quan}{Quantile of the test statistics in the order of the
+#'   \item{stat.quan}{The quantile of the test statistics in the order of the
 #'   \code{quan} vector.}
 #'
 #' @export

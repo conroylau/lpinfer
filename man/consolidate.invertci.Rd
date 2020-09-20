@@ -2,14 +2,21 @@
 % Please edit documentation in R/invertci.R
 \name{consolidate.invertci}
 \alias{consolidate.invertci}
-\title{Function to consolidate the print the summary table for the interactions}
+\title{Consolidates and prints the \code{summary} table in
+\code{\link[lpinfer]{invertci}}}
 \usage{
 consolidate.invertci(df, msg)
 }
+\arguments{
+\item{df}{Data frame of the details for the bisection method.}
+
+\item{msg}{Message that indicates the reason for the bisection method to
+terminate.}
+}
 \value{
-Returns the consolidate table.
+Nothing is returned.
 }
 \description{
-This function is used to consolidate the summary table for
-  display via the \code{summary} command.
+This function is used to print and consolidate the summary
+  table for display via the \code{summary} command.
 }

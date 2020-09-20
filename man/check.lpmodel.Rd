@@ -18,42 +18,42 @@ check.lpmodel(
 )
 }
 \arguments{
-\item{data}{Data used in the tests.}
+\item{data}{An \code{data frame} or a \code{matrix}.}
 
 \item{lpmodel}{An \code{lpmodel} object.}
 
-\item{name.var}{Name of the \code{lpmodel} object.}
+\item{name.var}{The name of the \code{lpmodel} object.}
 
-\item{A.tgt.cat}{Category of the \code{A.tgt} object.}
+\item{A.tgt.cat}{The category of the \code{A.tgt} object.}
 
-\item{A.obs.cat}{Category of the \code{A.obs} object.}
+\item{A.obs.cat}{The category of the \code{A.obs} object.}
 
-\item{A.shp.cat}{Category of the \code{A.shp} object.}
+\item{A.shp.cat}{The category of the \code{A.shp} object.}
 
-\item{beta.obs.cat}{Category of the \code{beta.obs} object.}
+\item{beta.obs.cat}{The category of the \code{beta.obs} object.}
 
-\item{beta.shp.cat}{Category of the \code{beta.shp} object.}
+\item{beta.shp.cat}{The category of the \code{beta.shp} object.}
 
-\item{R}{Number of bootstrap replications.}
+\item{R}{The number of bootstrap replications.}
 
-\item{is.estbounds}{Boolean variable that indicates whether the test
-function being called is \code{estbounds}. If this function is being
-called, then it means that when \code{data} is \code{NULL}, then each
-component of the \code{lpmodel} object is not required to be a
-\code{list}. Otherwise, the \code{lpmodel} object needs to contain the
-bootstrap estimates if \code{data} is \code{NULL}.}
+\item{is.estbounds}{A boolean variable that indicates whether the test
+function being called is \code{\link[lpinfer]{estbounds}}. If this
+function is being called, then it means that when \code{data} is
+\code{NULL}, then each component of the \code{lpmodel} object is not
+required to be a \code{list}. Otherwise, the \code{lpmodel} object needs
+to contain the bootstrap estimates if \code{data} is \code{NULL}.}
 }
 \value{
 Returns the updated \code{lpmodel} object.
-   \item{lpmodel}{Updated \code{lpmodel} object.}
+   \item{lpmodel}{An updated \code{lpmodel} object.}
 }
 \description{
 This function checks if the object \code{lpmodel} is in the
    correct format.
 }
 \details{
-In each of the testing procedures, there are five possible
-categories for the each of the object:
+In each of the testing procedures, there are six possible
+categories for the each of the objects:
 \itemize{
   \item{\code{not_used}: This refers to the case where the object is not
    used in the function.}
@@ -67,6 +67,10 @@ categories for the each of the object:
    and a vector. This is typically the case for \code{beta.obs} when
    the testing procedure requires both the observed value of
    \code{beta.obs} and the estimator of the asymptotic variance.}
+ \item{\code{function_obs_var_bs}: This is essentially the same as the
+   \code{function_obs_var} category. However, when the variance matrix is
+   not provided, it will be estimated by standard nonparametric bootstrap
+   so there is no problem in case the variance matrix is not provided.}
 }
  Each object can belong to one of more categories.
 }

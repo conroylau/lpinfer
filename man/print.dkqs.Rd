@@ -2,12 +2,12 @@
 % Please edit documentation in R/dkqs.R
 \name{print.dkqs}
 \alias{print.dkqs}
-\title{Print results from \code{dkqs}}
+\title{Print results from \code{\link[lpinfer]{dkqs}}}
 \usage{
 \method{print}{dkqs}(x, ...)
 }
 \arguments{
-\item{x}{Object returned from \code{dkqs}.}
+\item{x}{An output object returned from \code{\link[lpinfer]{dkqs}}.}
 
 \item{...}{Additional arguments.}
 }
@@ -15,5 +15,6 @@
 Nothing is returned.
 }
 \description{
-This function prints the \eqn{p}-values from \code{dkqs}.
+This function prints the \eqn{p}-values from
+  \code{\link[lpinfer]{dkqs}}.
 }

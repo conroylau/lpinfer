@@ -22,35 +22,30 @@ fsst.range.bs.fn(
 \item{beta.x.star}{A list that combines the bootstrap estimates of
 \code{beta.star} and \code{x.star}.}
 
-\item{n}{Sample size (only required if \code{data} is omitted in the input).}
+\item{n}{The sample size. This is only required if \code{data} is omitted
+in the input.}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test. The following
-components are required in the \code{lpmodel} for the FSST test:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{A.shp}}
-   \item{\code{beta.obs}}
-   \item{\code{beta.shp}}
- }}
+\item{lpmodel}{The \code{lpmodel} object.}
 
-\item{beta.obs.hat}{Estimator of
+\item{beta.obs.hat}{The sample estimator
 \eqn{\widehat{\bm{\beta}}_{\mathrm{obs}, n}} based on the given
-information in \code{lpmodel}.}
+information in \code{lpmodel} (and \code{data} if applicable).}
 
-\item{x.star}{Optimal value from \code{beta.star.qp}.}
+\item{x.star}{The optimal value from \code{beta.star.qp}.}
 
-\item{weight.mat}{Weighting matrix.}
+\item{weight.mat}{The weighting matrix for the \code{\link[lpinfer]{fsst}}
+procedure.}
 
-\item{pbar}{Progress bar object.}
+\item{pbar}{The progress bar object.}
 
 \item{progress}{The boolean variable for whether the progress bars should
 be displayed. If it is set as \code{TRUE}, the progress bars will be
 displayed while the code is running.}
 
-\item{n.bs}{Total number of replications to be conducted in this procedure.}
+\item{n.bs}{The total number of replications to be conducted in this
+procedure.}
 
-\item{eval.count}{Count for the number of times the \code{future_lapply}
+\item{eval.count}{The count for the number of times the \code{future_lapply}
 function has been called. If this object is zero, it means that the
 \code{future_lapply} function is being called for the first time in this
 subprocedure. Otherwise, it means that the \code{future_lapply} function
@@ -60,8 +55,8 @@ replications.}
 }
 \value{
 Return the following list of objects:
-  \item{Ts}{Range test statistic.}
-  \item{msg}{Error message (if applicable).}
+  \item{Ts}{The bootstrap range test statistic.}
+  \item{msg}{An error message (if applicable).}
 }
 \description{
 This function computes the one bootstrap estimate for the

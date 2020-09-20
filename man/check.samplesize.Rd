@@ -7,9 +7,9 @@
 check.samplesize(x, name.var)
 }
 \arguments{
-\item{x}{Variable to be checked.}
+\item{x}{The variable to be checked.}
 
-\item{name.var}{Name of the variable.}
+\item{name.var}{The name of the variable.}
 }
 \value{
 Nothing is returned.

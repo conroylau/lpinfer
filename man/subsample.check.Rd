@@ -2,7 +2,7 @@
 % Please edit documentation in R/subsample.R
 \name{subsample.check}
 \alias{subsample.check}
-\title{Checks and updates the input in \code{subsample}}
+\title{Checks and updates the input in \code{\link[lpinfer]{subsample}}}
 \usage{
 subsample.check(
   data,
@@ -19,38 +19,34 @@ subsample.check(
 )
 }
 \arguments{
-\item{data}{Data used in the tests.}
+\item{data}{An \code{data frame} or a \code{matrix}.}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test. The following
-components are required in the \code{lpmodel} for the DKQS test:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{beta.obs}}
- }}
+\item{lpmodel}{An \code{lpmodel} object.}
 
-\item{beta.tgt}{Value of beta to be tested.}
+\item{beta.tgt}{The value to be tested.}
 
-\item{R}{Number of bootstrap replications.}
+\item{R}{The number of bootstrap replications.}
 
-\item{Rmulti}{Multiplier for the number of bootstrap replications. The
+\item{Rmulti}{The multiplier for the number of bootstrap replications. The
 product of \code{Rmulti} and \code{R} refers to the maximum
 number of bootstrap replications to be conducted if there are errors.}
 
-\item{solver}{Name of the linear and quadratic programming solver that
-are used to obtain the solution to linear and quadratic programs.
+\item{solver}{The name of the linear and quadratic programming solver that
+is used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
 
-\item{norm}{Norm used in the optimization problem. It can be either a 1-norm
-or a 2-norm.}
+\item{norm}{The norm used in the optimization problem. It can be either a
+1-norm or a 2-norm. See the details section of
+\code{\link[lpinfer]{estbounds}} for a list of accepted strings.}
 
-\item{phi}{Tuning parameter for the subsampling test. The size of each
+\item{phi}{The tuning parameter for the subsampling test. The size of each
 subsample is \eqn{n^\phi} where \eqn{\phi \in [0,1]}.}
 
-\item{n}{Sample size (only required if \code{data} is omitted in the input).}
+\item{n}{The sample size. This is only required if \code{data} is omitted
+in the input.}
 
-\item{replace}{Boolean variable to indicate whether the function samples
+\item{replace}{A boolean variable to indicate whether the function samples
 the data with or without replacement.}
 
 \item{progress}{The boolean variable for whether the progress bars should
@@ -72,9 +68,7 @@ Returns the updated parameters and objects back to the function
    }
 }
 \description{
-This function checks and updates the input of the user. If
-   there is any invalid input, this function will be terminated and
-   generates appropriate error messages. This function is mainly a wrapper
-   of the selected functions from the \code{checks} files to conduct the
-   checks and updates.
+This function checks and updates the input from the user in the
+   \code{\link[lpinfer]{subsample}} function. If there is any invalid input,
+   the function will be terminated and error messages will be printed.
 }

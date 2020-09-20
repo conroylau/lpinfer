@@ -25,40 +25,34 @@ chorussell.bs.fn(
 replications, or the list of bootstrap components of the \code{lpmodel}
 object passed from the user.}
 
-\item{data}{Data used in the tests.}
+\item{data}{An \code{data frame} or a \code{matrix}.}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test that consists of
-the following objects:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{A.shp}}
-   \item{\code{beta.obs}}
-   \item{\code{beta.shp}}
- }}
+\item{lpmodel}{The \code{lpmodel} object.}
 
-\item{beta.tgt}{Value of beta to be tested.}
+\item{beta.tgt}{The value to be tested.}
 
-\item{kappa}{Tuning parameter used in the second step of the two-step
+\item{kappa}{The tuning parameter used in the second step of the two-step
 procedure for obtaining the bounds subject to the shape constraints.
 It can be any nonnegative number or a vector of nonnegative numbers.}
 
-\item{norm}{Norm used in the optimization problem. It can be either a 1-norm
-or a 2-norm.}
+\item{norm}{The norm used in the optimization problem. It can be either a
+1-norm or a 2-norm. See the details section of
+\code{\link[lpinfer]{estbounds}} for a list of accepted strings.}
 
-\item{n}{Sample size (only required if \code{data} is omitted in the input).}
+\item{n}{The sample size. This is only required if \code{data} is omitted
+in the input.}
 
-\item{estimate}{Boolean variable to indicate whether the bounds should be
+\item{estimate}{A boolean variable to indicate whether the bounds should be
 estimated or not.}
 
-\item{solver}{Name of the linear and quadratic programming solver that
-are used to obtain the solution to linear and quadratic programs.
+\item{solver}{The name of the linear and quadratic programming solver that
+is used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
 
-\item{pbar}{Progress bar object.}
+\item{pbar}{The progress bar object.}
 
-\item{eval.count}{Count for the number of times the \code{future_lapply}
+\item{eval.count}{The count for the number of times the \code{future_lapply}
 function has been called. If this object is zero, it means that the
 \code{future_lapply} function is being called for the first time in this
 subprocedure. Otherwise, it means that the \code{future_lapply} function
@@ -66,7 +60,8 @@ has been called for more than once. This situation typically refers to the
 situations where there are some errors in the first time of the
 replications.}
 
-\item{n.bs}{Total number of replications to be conducted in this procedure.}
+\item{n.bs}{The total number of replications to be conducted in this
+procedure.}
 
 \item{progress}{The boolean variable for whether the progress bars should
 be displayed. If it is set as \code{TRUE}, the progress bars will be
@@ -75,12 +70,15 @@ displayed while the code is running.}
 \value{
 Returns a list of output that are obtained from the Cho-Russell
   procedure:
-  \item{ub}{Bootstrap estimate of the upper bound.}
-  \item{ub}{Bootstrap estimate of the lower bound.}
-  \item{msg}{Error message (if applicable).}
+  \item{ub}{The bootstrap estimate of the upper bound.}
+  \item{ub}{The bootstrap estimate of the lower bound.}
+  \item{kappa.error}{The \code{kappa} parameter that leads to an error (if
+    applicable).}
+  \item{msg}{An error message (if applicable).}
 }
 \description{
-This function carries out the one bootstrap replication of the
-  Cho-Russell procedure. This function is used in the \code{chorussell.bs}
-  function via the \code{future_lapply} command.
+This function carries out one bootstrap replication of the
+  Cho-Russell procedure. This function is used in the
+  \code{\link[lpinfer]{chorussell.bs}} function via the \code{future_lapply}
+  command.
 }

@@ -2,12 +2,12 @@
 % Please edit documentation in R/chorussell.R
 \name{print.chorussell}
 \alias{print.chorussell}
-\title{Print results from \code{chorussell}}
+\title{Print results from \code{\link[lpinfer]{chorussell}}}
 \usage{
 \method{print}{chorussell}(x, ...)
 }
 \arguments{
-\item{x}{Object returned from \code{chorussell}.}
+\item{x}{The output objects returned from \code{\link[lpinfer]{chorussell}}.}
 
 \item{...}{Additional arguments.}
 }
@@ -16,5 +16,6 @@ Nothing is returned.
 }
 \description{
 This function either prints the \eqn{p}-values or a
-  \eqn{(1-\alpha)} confidence interval from \code{chorussell}.
+  \eqn{(1-\alpha)} confidence interval from
+  \code{\link[lpinfer]{chorussell}}.
 }

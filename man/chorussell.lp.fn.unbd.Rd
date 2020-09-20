@@ -3,8 +3,8 @@
 \name{chorussell.lp.fn.unbd}
 \alias{chorussell.lp.fn.unbd}
 \title{Computes whether the candidate bounds satisfy the constraints in the
-Cho-Russell procedure when one of the sample estimates of the bounds is
-infinite}
+\code{\link[lpinfer]{chorussell}} procedure when one of the sample
+estimates of the bounds is infinite}
 \usage{
 chorussell.lp.fn.unbd(
   x,
@@ -24,7 +24,7 @@ chorussell.lp.fn.unbd(
 )
 }
 \arguments{
-\item{x}{A candidate lower bound.}
+\item{x}{One candidate of the upper or lower bound.}
 
 \item{lb.can1}{The vector of values that corresponds to
 \eqn{\sqrt{n}\left(\hat{\theta}^b_{\rm lb} - \hat{\theta}_{\rm lb}\right)}.}
@@ -42,14 +42,16 @@ chorussell.lp.fn.unbd(
 
 \item{ub.can}{All candidates of the upper bounds.}
 
-\item{alpha}{Significance level. This can be a vector.}
+\item{alpha}{The significance level. This can be a vector.}
 
-\item{pbar}{Progress bar object.}
+\item{pbar}{The progress bar object.}
 
-\item{ci}{Boolean variable that indicates whether a \eqn{p}-value or a
+\item{ci}{A boolean variable that indicates whether a \eqn{p}-value or a
 \eqn{(1-\alpha)}-confidence interval is returned. If \code{ci} is
 \code{TRUE}, then a confidence interval is returned. Otherwise, a
 \eqn{p}-value is returned.}
+
+\item{k}{Iteration number.}
 
 \item{progress}{The boolean variable for whether the progress bars should
 be displayed. If it is set as \code{TRUE}, the progress bars will be
@@ -61,10 +63,12 @@ Returns a data frame.
     and upper bounds, as well as their sum.}
 }
 \description{
-This function computes whether the candidate bounds satisfy
-  the constraints in the Cho-Russell procedure when one of the sample
-  estimates of the bounds is infinite. If the upper bound is infinite,
-  then the third column of the data frame will store the negative of the
-  lower bound so the largest candidate for the lower bound will be chosen
-  in order to minimize the interval length.
+This function finds the candidate bounds that satisfy
+  the constraints in the \code{\link[lpinfer]{chorussell}} procedure when
+  one of the sample estimates of the bounds is infinite. If the upper bound
+  is infinite, then the third column of the data frame will store the
+  negative of the lower bound so the largest candidate for the lower bound
+  will be chosen in order to minimize the interval length. Similarly, if the
+  lower bound is infinite, then the third column of the data frame will
+  store the upper bound.
 }

@@ -54,7 +54,7 @@ cr2 <- chorussell(data = data,
                   solver = "gurobi")
 
 # Example 3: Find the 95% confidence interval with full-information approach
-# The default is to set the signficance level as 0.05
+# The default is to set the significance level as 0.05
 set.seed(1)
 cr3 <- chorussell(data = data,
                   lpmodel = lpmodel.full,

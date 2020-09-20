@@ -7,15 +7,15 @@
 \method{print}{lpmodel.natural}(x, data = NULL, ...)
 }
 \arguments{
-\item{x}{The \code{lpmodel.natural} object.}
+\item{x}{An \code{lpmodel.natural} object.}
 
-\item{data}{Data used in the tests.}
+\item{data}{An \code{data frame} or a \code{matrix}.}
 }
 \value{
 Nothing is returned.
 }
 \description{
-This function is a wrapper of the \code{lpm.print} function
-   and prints the details of the components in the \code{lpmodel.natural}
-   object.
+This function is a wrapper of the
+  \code{\link[lpinfer]{lpm.print}} function and prints the details of the
+  components in the \code{lpmodel.natural} object.
 }

@@ -2,45 +2,41 @@
 % Please edit documentation in R/dkqs.R
 \name{dkqs.qlp}
 \alias{dkqs.qlp}
-\title{Formulates and solves the linear and quadratic programs in the \code{dkqs}
-procedure}
+\title{Formulates and solves the linear and quadratic programs in the
+\code{\link[lpinfer]{dkqs}} procedure}
 \usage{
 dkqs.qlp(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n, solver)
 }
 \arguments{
-\item{lpmodel}{The \code{lpmodel} object used in the test. The following
-components are required in the \code{lpmodel} for the DKQS test:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{beta.obs}}
- }}
+\item{lpmodel}{An \code{lpmodel} object.}
 
-\item{beta.tgt}{Value of beta to be tested.}
+\item{beta.tgt}{The value to be tested.}
 
 \item{beta.obs.hat}{The value of sample \eqn{\hat{\bm{\beta}}_{\mathrm{obs}}}
 from the \code{lpmodel} object.}
 
-\item{tau}{The value of the tuning parameter tau to be used in the
-\code{dkqs} procedure.}
+\item{tau}{The value of the tuning parameter \eqn{\tau} in the DKQS
+procedure. This can be a vector.}
 
 \item{problem}{The problem that the function will be solved.}
 
 \item{n}{Number of observations for the data.}
 
-\item{solver}{Name of the linear and quadratic programming solver that
-are used to obtain the solution to linear and quadratic programs.
+\item{solver}{The name of the linear and quadratic programming solver that
+is used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
 }
 \value{
 Returns the optimal point and optimal value.
- \item{objval}{Optimal objective value.}
- \item{x}{Optimal point.}
+ \item{objval}{The optimal value.}
+ \item{x}{The optimal point.}
+ \item{lb0}{The logical lower bound.}
+ \item{ub0}{The logical upper bound.}
 }
 \description{
 This function formulates the matrices and vectors used in
-   the \code{dkqs} test and solves the quadratic programs (4) or linear
+   the DKQS test and solves the quadratic programs (4) or linear
    programs (5) and (6) in Torgovitsky (2019).
 }
 \details{

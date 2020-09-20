@@ -24,53 +24,46 @@ fsst.beta.star.bs(
 )
 }
 \arguments{
-\item{data}{Data used in the tests.}
+\item{data}{An \code{data frame} or a \code{matrix}.}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test. The following
-components are required in the \code{lpmodel} for the FSST test:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{A.shp}}
-   \item{\code{beta.obs}}
-   \item{\code{beta.shp}}
- }}
+\item{lpmodel}{The \code{lpmodel} object.}
 
-\item{beta.n}{Sample \eqn{\widehat{\bm{\beta}}_n} vector that is defined as
-\eqn{\widehat{\bm{\beta}}_n \equiv (\widehat{\bm{\beta}}_{{\rm obs},n},
+\item{beta.n}{The sample \eqn{\widehat{\bm{\beta}}_n} vector that is defined
+as \eqn{\widehat{\bm{\beta}}_n \equiv (\widehat{\bm{\beta}}_{{\rm obs},n},
 \bm{\beta}_{{\rm shp},n}, \bm{\beta}_{{\rm tgt}})'}.}
 
 \item{beta.n.bs}{The bootstrap estimates of \code{beta.n}.}
 
-\item{beta.tgt}{Value of beta to be tested.}
+\item{beta.tgt}{The value to be tested.}
 
-\item{weight.mat}{Weighting matrix.}
+\item{weight.mat}{The weighting matrix for the \code{\link[lpinfer]{fsst}}
+procedure.}
 
-\item{beta.obs.hat}{Estimator of
+\item{beta.obs.hat}{The sample estimator
 \eqn{\widehat{\bm{\beta}}_{\mathrm{obs}, n}} based on the given
-information in \code{lpmodel}.}
+information in \code{lpmodel} (and \code{data} if applicable).}
 
-\item{beta.obs.bs}{Bootstrap estimates of \code{beta.obs}.}
+\item{beta.obs.bs}{The bootstrap estimates of \code{beta.obs}.}
 
-\item{R}{Number of bootstrap replications.}
+\item{R}{The number of bootstrap replications.}
 
-\item{solver}{Name of the linear and quadratic programming solver that
-are used to obtain the solution to linear and quadratic programs.
+\item{solver}{The name of the linear and quadratic programming solver that
+is used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
 
-\item{df.error}{Table showing the id of the bootstrap replication(s)
+\item{df.error}{A table showing the id of the bootstrap replication(s)
 with error(s) and the corresponding error message(s).}
 
-\item{p}{Length of the beta vector.}
+\item{p}{The length of the beta vector.}
 
-\item{d}{Number of columns of the \code{A} matrix.}
+\item{d}{The number of columns of the \code{A} matrix.}
 
 \item{progress}{The boolean variable for whether the progress bars should
 be displayed. If it is set as \code{TRUE}, the progress bars will be
 displayed while the code is running.}
 
-\item{eval.count}{Count for the number of times the \code{future_lapply}
+\item{eval.count}{The count for the number of times the \code{future_lapply}
 function has been called. If this object is zero, it means that the
 \code{future_lapply} function is being called for the first time in this
 subprocedure. Otherwise, it means that the \code{future_lapply} function
@@ -84,13 +77,14 @@ Return the following list of objects:
   \item{beta.star.bs}{This corresponds to the bootstrap estimates of
     \eqn{\widehat{\bm{\beta}}^\star}.}
   \item{x.star}{This corresponds to \eqn{\bm{x}^\star}, which is the
-    solution to the quadratic program \code{beta.star.qp}.}
+    solution to the quadratic program \code{\link[lpinfer]{beta.star.qp}}.}
   \item{x.star.bs}{This corresponds to the bootstrap estimates of
     \eqn{\bm{x}^\star}.}
-  \item{df.error}{Table showing the id of the bootstrap replication(s)
+  \item{df.error}{A table showing the id of the bootstrap replication(s)
     with error(s) and the corresponding error message(s).}
-  \item{new.error}{Number of new errors.}
-  \item{error.id}{Indices of the bootstrap replications that give errors.}
+  \item{new.error}{The number of new errors.}
+  \item{error.id}{The indices of the bootstrap replications that give
+    errors.}
 }
 \description{
 This function computes the bootstrap estimates of

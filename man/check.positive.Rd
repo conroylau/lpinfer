@@ -7,9 +7,9 @@
 check.positive(x, name.var)
 }
 \arguments{
-\item{x}{Variable to be checked.}
+\item{x}{The variable to be checked.}
 
-\item{name.var}{Name of the variable.}
+\item{name.var}{The name of the variable.}
 }
 \value{
 Nothing is returned.
@@ -22,4 +22,5 @@ This function checks whether variable satisfies the following
     \item{The length of the variable is 1.}
     \item{The variable is strictly positive.}
   }
+  If not, an error message is displayed.
 }

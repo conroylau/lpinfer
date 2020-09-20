@@ -11,7 +11,7 @@ check.cores(x)
 }
 \value{
 Returns the updated number of cores.
-  \item{x}{Updated number of cores}
+  \item{x}{The updated number of cores}
 }
 \description{
 This function checks if the number of cores specified is a

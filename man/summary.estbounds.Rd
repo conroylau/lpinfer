@@ -2,12 +2,12 @@
 % Please edit documentation in R/estbounds.R
 \name{summary.estbounds}
 \alias{summary.estbounds}
-\title{Summary of results from \code{estbounds}}
+\title{Summary of results from \code{\link[lpinfer]{estbounds}}}
 \usage{
 \method{summary}{estbounds}(x, ...)
 }
 \arguments{
-\item{x}{Objects returned from \code{estbounds}.}
+\item{x}{The output objects returned from \code{\link[lpinfer]{estbounds}}.}
 
 \item{...}{Additional arguments.}
 }
@@ -16,5 +16,5 @@ Nothing is returned.
 }
 \description{
 This function prints a summary of the results obtained from
-  \code{estbounds}.
+  \code{\link[lpinfer]{estbounds}}.
 }

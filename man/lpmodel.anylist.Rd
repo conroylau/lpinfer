@@ -11,17 +11,17 @@ lpmodel.anylist(lpmodel)
 }
 \value{
 Returns the following objects:
-  \item{list}{Boolean variable that indicates whether there is any object
+  \item{list}{A boolean variable that indicates whether there is any object
      with the class \code{list} in the \code{lpmodel} object.}
-  \item{name}{Names of the components with class \code{list} in the
+  \item{name}{The names of the components with class \code{list} in the
     \code{lpmodel} object.}
-  \item{consol}{Consolidated and updated \code{lpmodel} object that lists
+  \item{consol}{A consolidated and updated \code{lpmodel} object that lists
     the \code{lpmodel} by observation instead of by component (if
     applicable).}
-  \item{len}{Length of the component in the \code{lpmodel} object that
+  \item{len}{The length of the component in the \code{lpmodel} object that
     is a list (if applicable).}
 }
 \description{
-This is a function to check if there is any components in the
+This function checks if there is any components in the
   \code{lpmodel} object with class \code{list}.
 }

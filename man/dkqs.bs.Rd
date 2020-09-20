@@ -2,7 +2,7 @@
 % Please edit documentation in R/dkqs.R
 \name{dkqs.bs}
 \alias{dkqs.bs}
-\title{Bootstrap procedure for the DKQS test}
+\title{Bootstrap procedure for the DKQS procedure}
 \usage{
 dkqs.bs(
   data,
@@ -18,21 +18,15 @@ dkqs.bs(
 )
 }
 \arguments{
-\item{data}{Data used in the tests.}
+\item{data}{An \code{data frame} or a \code{matrix}.}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test. The following
-components are required in the \code{lpmodel} for the DKQS test:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{beta.obs}}
- }}
+\item{lpmodel}{An \code{lpmodel} object.}
 
-\item{beta.tgt}{Value of beta to be tested.}
+\item{beta.tgt}{The value to be tested.}
 
-\item{R}{Number of bootstrap replications.}
+\item{R}{The number of bootstrap replications.}
 
-\item{maxR}{Maximum number of bootstrap replications to be considered in
+\item{maxR}{The maximum number of bootstrap replications to be considered in
 case there are some errors.}
 
 \item{s.star.list}{The list of values of
@@ -41,8 +35,8 @@ in the cone-tightening procedure for each \eqn{\tau}.}
 
 \item{tau.list}{The list of feasible parameters \eqn{\tau}.}
 
-\item{solver}{Name of the linear and quadratic programming solver that
-are used to obtain the solution to linear and quadratic programs.
+\item{solver}{The name of the linear and quadratic programming solver that
+is used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
 
@@ -50,7 +44,8 @@ The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 be displayed. If it is set as \code{TRUE}, the progress bars will be
 displayed while the code is running.}
 
-\item{n}{Sample size (only required if \code{data} is omitted in the input).}
+\item{n}{The sample size. This is only required if \code{data} is omitted
+in the input.}
 }
 \value{
 Returns the list of estimates from bootstrap:
@@ -58,12 +53,12 @@ Returns the list of estimates from bootstrap:
      \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}.}
  \item{beta.bs.bar.list}{A list of \eqn{\tau_n}-tightened recentered
     bootstrap estimates \eqn{\bar{\bm{\beta}}^\star_{\mathrm{obs},n,b}}.}
-  \item{df.error}{Table showing the id of the bootstrap replication(s)
+  \item{df.error}{A table showing the id of the bootstrap replication(s)
     with error(s) and the corresponding error message(s).}
-  \item{R.succ}{Number of successful bootstrap replications.}
+  \item{R.succ}{The number of successful bootstrap replications.}
 }
 \description{
 This function carries out the bootstrap procedure of the
-  DKQS test. This function supports parallel programming via the
-  \code{future.apply} package.
+  \code{\link[lpinfer]{dkqs}} procedure This function supports parallel
+  programming via the \code{future.apply} package.
 }

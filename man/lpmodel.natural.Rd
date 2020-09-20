@@ -26,15 +26,14 @@ lpmodel.natural(
 
 \item{beta.shp}{A vector, list or function.}
 
-\item{sense.shp}{Sense vector for the shape constraints.}
+\item{sense.shp}{The sense vector for the shape constraints.}
 
-\item{x.lb}{Lower bound for the \eqn{\bm{x}} variable.}
+\item{x.lb}{The lower bound for the \eqn{\bm{x}} variable.}
 
-\item{x.ub}{Upper bound for the \eqn{\bm{x}} variable.}
+\item{x.ub}{The upper bound for the \eqn{\bm{x}} variable.}
 }
 \value{
-Returns a list of \code{lpmodel} objects in the
-  \code{lpmodel} class.
+Returns a list of \code{lpmodel} objects in the \code{lpmodel} class.
 }
 \description{
 This function defines the objects required in the

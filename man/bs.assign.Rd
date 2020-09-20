@@ -17,43 +17,37 @@ bs.assign(
 )
 }
 \arguments{
-\item{R}{Number of bootstrap replications.}
+\item{R}{The number of bootstrap replications.}
 
-\item{R.eval}{Number of bootstrap replications that has been evaluated/}
+\item{R.eval}{The number of bootstrap replications that has been evaluated.}
 
-\item{R.succ}{Number of successful bootstrap replications.}
+\item{R.succ}{The number of successful bootstrap replications.}
 
-\item{maxR}{Maximum number of bootstrap replications.}
+\item{maxR}{The maximum number of bootstrap replications.}
 
-\item{any.list}{An object returned from the \code{lpmodel.anylist}
-function, which indicates whether at least one of the components in
-\code{lpmodel} is a \code{list}.}
+\item{any.list}{An object returned from the
+\code{\link[lpinfer]{lpmodel.anylist}} function, which indicates
+whether at least one of the components in \code{lpmodel} is a \code{list}.}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test. The following
-components are required in the \code{lpmodel} for the DKQS test:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{beta.obs}}
- }}
+\item{lpmodel}{An \code{lpmodel} object.}
 
-\item{data}{Data used in the tests.}
+\item{data}{An \code{data frame} or a \code{matrix}.}
 
-\item{m}{Size of each subsample.}
+\item{m}{The size of each subsample.}
 
-\item{replace}{Boolean variable to indicate whether the function samples
+\item{replace}{A boolean variable to indicate whether the function samples
 the data with or without replacement.}
 }
 \value{
 Returns the following three objects.
-  \item{i0}{Starting index to be evaluated.}
-  \item{i1}{Last index to be evaluated.}
-  \item{bs.list}{List of bootstrap replications in the \code{lpmodel}
+  \item{i0}{The starting index to be evaluated.}
+  \item{i1}{The last index to be evaluated.}
+  \item{bs.list}{The list of bootstrap replications in the \code{lpmodel}
     object passed from the user.}
 }
 \description{
 This function is used in the bootstrap replications of the
-  tests. It returns the indices to be considered in the
+  procedures. It returns the indices to be considered in the
   bootstrap replications and the list to be passed to the
-  \code{lpmodel.anylist} function.
+  \code{\link[lpinfer]{lpmodel.anylist}} function.
 }

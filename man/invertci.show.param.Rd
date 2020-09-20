@@ -7,16 +7,17 @@
 invertci.show.param(para.name, para.vals, j)
 }
 \arguments{
-\item{para.name}{Name(s) of the parameter(s).}
+\item{para.name}{The name(s) of the parameter(s).}
 
-\item{para.vals}{Value(s) of the parameter(s).}
+\item{para.vals}{The value(s) of the parameter(s).}
 
-\item{j}{Row number for the parameters being used.}
+\item{j}{The row number for the parameters being used.}
 }
 \value{
 Nothing is returned.
 }
 \description{
 This function is used to print the tuning parameters that are
-  relevant to the current set of iterations in the \code{invertci} function.
+  relevant to the current set of iterations in the
+  \code{\link[lpinfer]{invertci}} function.
 }

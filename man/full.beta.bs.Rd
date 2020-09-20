@@ -2,30 +2,22 @@
 % Please edit documentation in R/fsst.R
 \name{full.beta.bs}
 \alias{full.beta.bs}
-\title{Construct the full beta vector in the FSST procedure.}
+\title{Construct the full beta vector in the \code{\link[lpinfer]{fsst}} procedure}
 \usage{
 full.beta.bs(lpmodel, beta.tgt, beta.obs.bs, R)
 }
 \arguments{
-\item{lpmodel}{The \code{lpmodel} object used in the test. The following
-components are required in the \code{lpmodel} for the FSST test:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{A.shp}}
-   \item{\code{beta.obs}}
-   \item{\code{beta.shp}}
- }}
+\item{lpmodel}{The \code{lpmodel} object.}
 
-\item{beta.tgt}{Value of beta to be tested.}
+\item{beta.tgt}{The value to be tested.}
 
-\item{beta.obs.bs}{Bootstrap estimates of \code{beta.obs}.}
+\item{beta.obs.bs}{The bootstrap estimates of \code{beta.obs}.}
 
-\item{R}{Number of bootstrap replications.}
+\item{R}{The number of bootstrap replications.}
 }
 \value{
 List of full beta vectors
-  \item{beta.bs}{List of full beta vector
+  \item{beta.bs}{The list of full beta vector
   \eqn{\{\widehat{\bm{\beta}}_{n,b}\}^B_{b=1}}.}
 }
 \description{

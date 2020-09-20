@@ -7,17 +7,19 @@
 chorussell.pt(cr.lp.return, beta.tgt)
 }
 \arguments{
-\item{cr.lp.return}{List of objects returned from \code{chorussell}.}
+\item{cr.lp.return}{List of objects returned from
+\code{\link[lpinfer]{chorussell}}.}
 
-\item{beta.tgt}{Value of beta to be tested.}
+\item{beta.tgt}{The value to be tested.}
 }
 \value{
 Returns the decision.
-  \item{decision}{Boolean variable that equals to \code{TRUE} if
+  \item{decision}{A boolean variable that equals to \code{TRUE} if
     \code{beta.tgt} is inside the \eqn{(1-\alpha)}-confidence interval, and
     equals to \code{FALSE} otherwise.}
 }
 \description{
 This function checks whether \code{beta.tgt} is inside the
-  \eqn{(1-\alpha)}-confidence interval from the Cho-Russell procedure.
+  \eqn{(1-\alpha)}-confidence interval from the
+  \code{\link[lpinfer]{chorussell}} procedure.
 }

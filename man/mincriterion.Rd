@@ -2,44 +2,38 @@
 % Please edit documentation in R/estbounds.R
 \name{mincriterion}
 \alias{mincriterion}
-\title{First-stage estimation procedure for \code{estbounds}}
+\title{First-stage estimation procedure for \code{\link[lpinfer]{estbounds}}}
 \usage{
 mincriterion(data = NULL, lpmodel, norm = 2, solver = NULL)
 }
 \arguments{
-\item{data}{Data used in the tests.}
+\item{data}{An \code{data frame} or a \code{matrix}.}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test that consists of
-the following objects:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{A.shp}}
-   \item{\code{beta.obs}}
-   \item{\code{beta.shp}}
- }}
+\item{lpmodel}{The \code{lpmodel} object.}
 
-\item{norm}{Norm used in the optimization problem. It can be either a 1-norm
-or a 2-norm.}
+\item{norm}{The norm used in the optimization problem. It can be either a
+1-norm or a 2-norm. See the details section of
+\code{\link[lpinfer]{estbounds}} for a list of accepted strings.}
 
-\item{solver}{Name of the linear and quadratic programming solver that
-are used to obtain the solution to linear and quadratic programs.
+\item{solver}{The name of the linear and quadratic programming solver that
+is used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
 }
 \value{
 Returns the solution to the first step of the two-step procedure
    and argument for the linear program.
- \item{objval}{Optimal objective value.}
- \item{x}{Optimal point.}
- \item{larg}{Arguments for the estimation program.}
- \item{norm}{Norm used in the estimation problem.}
+ \item{objval}{The optimal value.}
+ \item{x}{The optimal point.}
+ \item{larg}{The arguments for the estimation program.}
+ \item{norm}{The norm used in the estimation problem.}
  \item{solver}{The solver used in the estimation problem}
  \item{call}{The details of the function that has been called.}
 }
 \description{
 This function evaluates the solution to stage 1 of the
-   two-step procedure to obtain the estimated bounds. This function can
+   two-step procedure to obtain the estimated bounds in the
+   \code{\link[lpinfer]{estbounds}} procedure. This function can
    be used to evaluate both the estimation problem with the 1-norm or
    the 2-norm.
 }

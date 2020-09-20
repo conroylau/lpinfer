@@ -2,7 +2,7 @@
 % Please edit documentation in R/fsst.R
 \name{fsst.pval}
 \alias{fsst.pval}
-\title{Calculates the \eqn{p}-value for the FSST procedure}
+\title{Calculates the \eqn{p}-value for the \code{\link[lpinfer]{fsst}} procedure}
 \usage{
 fsst.pval(range.n, cone.n, range.n.list, cone.n.list, R, alpha = 0.05)
 }
@@ -17,16 +17,16 @@ test statistics.}
 \item{cone.n.list}{The bootstrap estimates of the cone component in the
 test statistics.}
 
-\item{R}{Number of bootstrap replications.}
+\item{R}{The number of bootstrap replications.}
 
-\item{alpha}{Significance level.}
+\item{alpha}{The significance level.}
 }
 \value{
 Returns the \eqn{p}-value and the decision.
-  \item{pval}{\eqn{p}-value.}
-  \item{decision}{Decision to reject or not.}
+  \item{pval}{The \eqn{p}-value.}
+  \item{decision}{The decision to reject or not.}
 }
 \description{
 This function computes the \eqn{p}-value of the test based on
-   the bootstrap estimates for the FSST procedure.
+   the bootstrap estimates for the \code{\link[lpinfer]{fsst}} procedure.
 }

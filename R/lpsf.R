@@ -6,17 +6,17 @@
 #'
 #' @import boot
 #'
-#' @param A Matrix that represents the constraints.
-#' @param b RHS vector that represents the constraints.
-#' @param sense Sense of the constraints.
-#' @param lb Lower bound of the variables.
-#' @param obj Objective function.
+#' @param A The matrix that represents the constraints.
+#' @param b The rhs vector that represents the constraints.
+#' @param sense The sense of the constraints.
+#' @param lb The lower bound of the variables.
+#' @param obj The objective function.
 #'
 #' @return Returns the following four objects:
-#'   \item{A}{Matrix representing the constraints in standard form.}
-#'   \item{b}{RHS vector representing the constraints in standard form.}
-#'   \item{lb}{Lower bound of the variables.}
-#'   \item{obj}{Objective function.}
+#'   \item{A}{The matrix representing the constraints in standard form.}
+#'   \item{b}{The rhs vector representing the constraints in standard form.}
+#'   \item{lb}{The lower bound of the variables.}
+#'   \item{obj}{The objective function.}
 #'
 #' @export
 #'

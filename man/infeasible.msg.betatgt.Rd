@@ -8,8 +8,8 @@ infeasible.msg.betatgt()
 }
 \value{
 Returns a string of the message.
-  \item{msg.explain}{Message to explain why the \eqn{p}-value is zero.}
-  \item{msg.pval}{Message indicating that the \eqn{p}-value is zero.}
+  \item{msg.explain}{The message to explain why the \eqn{p}-value is zero.}
+  \item{msg.pval}{The message indicating that the \eqn{p}-value is zero.}
 }
 \description{
 This function prints the message to inform the user that

@@ -2,8 +2,8 @@
 % Please edit documentation in R/chorussell.R
 \name{chorussell.lp}
 \alias{chorussell.lp}
-\title{Computes the \eqn{(1-\alpha)}-confidence interval in the Cho-Russell
-procedure}
+\title{Computes the \eqn{(1-\alpha)}-confidence interval in the
+\code{\link[lpinfer]{chorussell}} procedure}
 \usage{
 chorussell.lp(
   lb.can1,
@@ -37,22 +37,30 @@ chorussell.lp(
 \eqn{\sqrt{n}\left(\hat{\theta}^b_{\rm ub} - \hat{\theta}_{\rm ub} +
 \Delta \right)}.}
 
-\item{n}{Sample size (only required if \code{data} is omitted in the input).}
+\item{n}{The sample size. This is only required if \code{data} is omitted
+in the input.}
 
-\item{R}{Number of bootstrap replications.}
+\item{R}{The number of bootstrap replications.}
 
-\item{alpha}{Significance level. This can be a vector.}
+\item{alpha}{The significance level. This can be a vector.}
 
-\item{remove.const}{Determine whether the constraints are to be removed.}
+\item{ub}{The sample upper bound.}
 
-\item{ci}{Boolean variable that indicates whether a \eqn{p}-value or a
+\item{lb}{The sample lower bound.}
+
+\item{remove.const}{A boolean variable. This determine whether the
+constraints are to be removed.}
+
+\item{ci}{A boolean variable that indicates whether a \eqn{p}-value or a
 \eqn{(1-\alpha)}-confidence interval is returned. If \code{ci} is
 \code{TRUE}, then a confidence interval is returned. Otherwise, a
 \eqn{p}-value is returned.}
 
-\item{kappa}{Tuning parameter used in the second step of the two-step
+\item{kappa}{The tuning parameter used in the second step of the two-step
 procedure for obtaining the bounds subject to the shape constraints.
 It can be any nonnegative number or a vector of nonnegative numbers.}
+
+\item{k}{Iteration number.}
 
 \item{progress}{The boolean variable for whether the progress bars should
 be displayed. If it is set as \code{TRUE}, the progress bars will be
@@ -62,9 +70,10 @@ displayed while the code is running.}
 Returns the following list of objects:
   \item{bd}{A vector that represents the \eqn{(1-\alpha)}-confidence
     interval.}
-  \item{unique}{Indicator variable of whether the solution is unique.}
+  \item{unique}{An indicator variable of whether the solution is unique.}
 }
 \description{
 This function computes the \eqn{(1-\alpha)}-confidence
-interval in the Cho-Russell procedure by solving the optimization problem.
+interval in the \code{\link[lpinfer]{chorussell}} procedure by solving the
+optimization problem.
 }

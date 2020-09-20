@@ -19,23 +19,15 @@ fsst(
 )
 }
 \arguments{
-\item{data}{Data used in the tests.}
+\item{data}{An \code{data frame} or a \code{matrix}.}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test. The following
-components are required in the \code{lpmodel} for the FSST test:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{A.shp}}
-   \item{\code{beta.obs}}
-   \item{\code{beta.shp}}
- }}
+\item{lpmodel}{The \code{lpmodel} object.}
 
-\item{beta.tgt}{Value of beta to be tested.}
+\item{beta.tgt}{The value to be tested.}
 
-\item{R}{Number of bootstrap replications.}
+\item{R}{The number of bootstrap replications.}
 
-\item{Rmulti}{Multiplier for the number of bootstrap replications. The
+\item{Rmulti}{The multiplier for the number of bootstrap replications. The
 product of \code{Rmulti} and \code{R} refers to the maximum
 number of bootstrap replications to be conducted if there are errors.}
 
@@ -44,12 +36,13 @@ number of bootstrap replications to be conducted if there are errors.}
 be included if \code{NA} is included as part of the vector for
 \code{lambda}. For instance, if \code{lambda} is set as \code{c(0.1, NA)},
 then both 0.1 and the data-driven \code{lambda} will be applied in the
-FSST procedure. The default is to use the data-driven approach for
-\code{lambda}.}
+\code{\link[lpinfer]{fsst}} procedure. The default is to use the
+data-driven \code{lambda}.}
 
 \item{rho}{Parameter used in the studentization of matrices.}
 
-\item{n}{Sample size (only required if \code{data} is omitted in the input).}
+\item{n}{The sample size. This is only required if \code{data} is omitted
+in the input.}
 
 \item{weight.matrix}{The option used in the weighting matrix. There are
 three options available:
@@ -60,8 +53,8 @@ three options available:
   \item{\code{avar} --- inverse of the variance matrix}
 }}
 
-\item{solver}{Name of the linear and quadratic programming solver that
-are used to obtain the solution to linear and quadratic programs.
+\item{solver}{The name of the linear and quadratic programming solver that
+is used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
 
@@ -71,36 +64,48 @@ displayed while the code is running.}
 }
 \value{
 Returns the following information:
-  \item{pval}{\eqn{p}-value.}
-  \item{cv.table}{Table of sample and bootstrap Cone and Range test
+  \item{pval}{A table of \eqn{p}-values.}
+  \item{cv.table}{A table of sample and bootstrap Cone and Range test
     statistics.}
-  \item{call}{Information used to call the function.}
+  \item{call}{The matched call.}
   \item{range}{The sample range test statistic.}
   \item{cone}{The sample cone test statistic.}
-  \item{test}{Sample test statistic.}
-  \item{cone.n.list}{List of bootstrap cone test statistics.}
-  \item{range.n.list}{List of bootstrap range test statistics.}
+  \item{test}{The sample test statistic.}
+  \item{cone.n.list}{The list of bootstrap cone test statistics.}
+  \item{range.n.list}{The list of bootstrap range test statistics.}
   \item{solver.name}{Name of the solver used.}
-  \item{rho}{Input value of rho.}
-  \item{rhobar.i}{Regularization parameter used for the Cone
+  \item{rho}{The value of \code{rho} provided by the uer..}
+  \item{rhobar.i}{The regularization parameter used for the Cone
     studentization matrix.}
-  \item{lambda.data}{Data driven \code{lambda}.}
-  \item{var.method}{Method used in obtaining the asymptotic variance
+  \item{lambda.data}{The value of the data-driven \code{lambda} (if
+    applicable).}
+  \item{var.method}{The method used in obtaining the asymptotic variance
     of \code{beta.obs}.}
-  \item{test.logical}{Indicator variable for whether the computation has
+  \item{test.logical}{An indicator variable for whether the computation has
     been conducted. If \code{test.logical} is 1, it refers to the case
     where \code{beta.tgt} is inside the logical bound. If
     \code{test.logical} is 0, it refers to the case where
     \code{beta.tgt} is outside the logical bound.}
   \item{logical.lb}{Logical lower bound.}
   \item{logical.ub}{Logical upper bound.}
-  \item{df.error}{Table showing the id of the bootstrap replication(s)
+  \item{df.error}{A table showing the id of the bootstrap replication(s)
     with error(s) and the corresponding error message(s).}
-  \item{R.succ}{Number of successful bootstrap replications.}
+  \item{R.succ}{The number of successful bootstrap replications.}
 }
 \description{
 This module conducts inference in linear programs using the
-  \code{fsst} procedure by Fang, Santos, Shaikh and Torgovitsky (2020).
+  procedure by Fang, Santos, Shaikh and Torgovitsky (2020).
+}
+\details{
+The following components are required in the \code{lpmodel} for the
+   \code{\link[lpinfer]{fsst}} procedure:
+   \itemize{
+     \item{\code{A.tgt}}
+     \item{\code{A.obs}}
+     \item{\code{A.shp}}
+     \item{\code{beta.obs}}
+     \item{\code{beta.shp}}
+   }
 }
 \examples{
 ## ========================================================================= ##

@@ -9,12 +9,12 @@
 \arguments{
 \item{n}{Sample size.}
 
-\item{beta.bs.list}{List of bootstrap estimators
+\item{beta.bs.list}{A list of bootstrap estimators
 \eqn{\{\widehat{\bm{\beta}}_b\}^B_{b=1}}.}
 }
 \value{
 Returns the estimator of the asymptotic variance.
-    \item{sigma.mat}{Estimator of the asymptotic variance.}
+    \item{sigma.mat}{The estimator of the asymptotic variance.}
 }
 \description{
 Based on the bootstrap estimates
@@ -22,6 +22,7 @@ Based on the bootstrap estimates
   asymptotic variance estimator of the bootstrap estimator, i.e.
   \deqn{\frac{n}{B} \sum^B_{i=1} \left(\widehat{\bm{\beta}}_b -
   \widehat{\bm{\beta}}\right)  \left(\widehat{\bm{\beta}}_b -
-  \widehat{\bm{\beta}}\right)'}. This function supports parallel
- programming via the \code{future.apply} package.
+  \widehat{\bm{\beta}}\right)'.}
+ This function supports parallel programming via the \code{future.apply}
+ package.
 }

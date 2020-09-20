@@ -9,16 +9,16 @@ fsst.label.lambda(lambdas, lambda.data)
 \arguments{
 \item{lambdas}{The vector of \code{lambda}.}
 
-\item{lambda.data}{Data-driven lambda.}
+\item{lambda.data}{The data-driven lambda.}
 }
 \value{
 Returns the updated vector of \code{lambda} where the data-driven
   \code{lambda} is labelled with a star and the corresponding message
-  \item{lambdas}{Updated \code{lambda}.}
-  \item{msg}{Indicative message.}
+  \item{lambdas}{The updated \code{lambda}.}
+  \item{msg}{An indicative message.}
 }
 \description{
 This function labels the data-driven \code{lambda} in the
   \code{print} or \code{summary} output and returns an indicative message.
-  This only affects the output messages, but not the objects returned.
+  This only affects the output messages, not the objects returned.
 }

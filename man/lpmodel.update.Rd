@@ -8,7 +8,7 @@
 lpmodel.update(lpm.de, lpm.st)
 }
 \arguments{
-\item{lpm.de}{Deterministic components of the \code{lpmodel} object.}
+\item{lpm.de}{The deterministic components of the \code{lpmodel} object.}
 
 \item{lpm.st}{An \code{lpmodel} object that only contains one bootstrap
 replication of the stochastic component(s). The deterministic component
@@ -17,7 +17,7 @@ is set as \code{NULL}.}
 \value{
 Returns an \code{lpmodel} object that combines the deterministic
   and stochastic component.
-  \item{lpm.st}{Updated \code{lpmodel} object.}
+  \item{lpm.de}{An updated \code{lpmodel} object.}
 }
 \description{
 This function is used in the bootstrap replications to combine

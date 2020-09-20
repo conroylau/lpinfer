@@ -19,40 +19,33 @@ subsample(
 )
 }
 \arguments{
-\item{data}{Data used in the tests.}
+\item{data}{An \code{data frame} or a \code{matrix}.}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test. The following
-components are required in the \code{lpmodel} for the subsampling test:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{A.shp}}
-   \item{\code{beta.obs}}
-   \item{\code{beta.shp}}
- }
-matrix of the estimator \eqn{\hat{\bm{\beta}}_{\mathrm{obs}}}.}
+\item{lpmodel}{The \code{lpmodel} object used in the test.}
 
-\item{beta.tgt}{Value of beta to be tested.}
+\item{beta.tgt}{The value to be tested.}
 
-\item{R}{Number of bootstrap replications.}
+\item{R}{The number of bootstrap replications.}
 
-\item{Rmulti}{Multiplier for the number of bootstrap replications. The
+\item{Rmulti}{The multiplier for the number of bootstrap replications. The
 product of \code{Rmulti} and \code{R} refers to the maximum
 number of bootstrap replications to be conducted if there are errors.}
 
-\item{norm}{Norm used in the optimization problem. It can be either a 1-norm
-or a 2-norm.}
+\item{norm}{The norm used in the optimization problem. It can be either a
+1-norm or a 2-norm. See the details section of
+\code{\link[lpinfer]{estbounds}} for a list of accepted strings.}
 
-\item{phi}{Tuning parameter for the subsampling test. The size of each
+\item{phi}{The tuning parameter for the subsampling test. The size of each
 subsample is \eqn{n^\phi} where \eqn{\phi \in [0,1]}.}
 
-\item{n}{Sample size (only required if \code{data} is omitted in the input).}
+\item{n}{The sample size. This is only required if \code{data} is omitted
+in the input.}
 
-\item{replace}{Boolean variable to indicate whether the function samples
+\item{replace}{A boolean variable to indicate whether the function samples
 the data with or without replacement.}
 
-\item{solver}{Name of the linear and quadratic programming solver that
-are used to obtain the solution to linear and quadratic programs.
+\item{solver}{The name of the linear and quadratic programming solver that
+is used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
 
@@ -62,26 +55,26 @@ displayed while the code is running.}
 }
 \value{
 Returns a list of output calculated from the function:
-  \item{pval}{\eqn{p}-value.}
-  \item{T.n}{Test statistic \eqn{T_n}.}
-  \item{T.bs}{List of bootstrap estimates of the test statistics
+  \item{pval}{The \eqn{p}-value.}
+  \item{T.n}{The test statistic \eqn{T_n}.}
+  \item{T.bs}{The list of bootstrap estimates of the test statistics
     from the subsampling procedure.}
-  \item{solver}{Solver used.}
-  \item{cv.table}{Table of critical values.}
-  \item{call}{The function that has been called.}
+  \item{solver}{The solver used.}
+  \item{cv.table}{A table of critical values.}
+  \item{call}{The matched call.}
   \item{phi}{The \eqn{\phi} parameter used.}
-  \item{norm}{Norm used.}
-  \item{subsample.size}{Size of subsample}
-  \item{test.logical}{Indicator variable for whether the computation has
+  \item{norm}{The norm used.}
+  \item{subsample.size}{The size of subsample}
+  \item{test.logical}{An indicator variable for whether the computation has
     been conducted. If \code{test.logical} is 1, it refers to the case
     where \code{beta.tgt} is inside the logical bound. If
     \code{test.logical} is 0, it refers to the case where
     \code{beta.tgt} is outside the logical bound.}
-  \item{logical.lb}{Logical lower bound.}
-  \item{logical.ub}{Logical upper bound.}
-  \item{df.error}{Table showing the id of the bootstrap replication(s)
+  \item{logical.lb}{The logical lower bound.}
+  \item{logical.ub}{The logical upper bound.}
+  \item{df.error}{A table showing the id of the bootstrap replication(s)
     with error(s) and the corresponding error message(s).}
-  \item{R.succ}{Number of successful bootstrap replications.}
+  \item{R.succ}{The number of successful bootstrap replications.}
 }
 \description{
 This function conducts inference and returns the
@@ -100,6 +93,15 @@ There are three possible combinations for the parameters
     interval \eqn{(0, 1)}, then it refers to the \eqn{m} out of \eqn{n}
     bootstrap procedure, where \eqn{m} is the size of the subsample and
     \eqn{n} is the total number of observations.}
+}
+The following components are required in the \code{lpmodel} for the
+subsampling procedure:
+\itemize{
+   \item{\code{A.tgt}}
+   \item{\code{A.obs}}
+   \item{\code{A.shp}}
+   \item{\code{beta.obs}}
+   \item{\code{beta.shp}}
 }
 }
 \examples{

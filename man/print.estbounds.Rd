@@ -2,20 +2,19 @@
 % Please edit documentation in R/estbounds.R
 \name{print.estbounds}
 \alias{print.estbounds}
-\title{Print results from \code{estbounds}}
+\title{Print results from \code{\link[lpinfer]{estbounds}}}
 \usage{
 \method{print}{estbounds}(x, ...)
 }
 \arguments{
-\item{x}{Object returned from \code{estbounds}.}
+\item{x}{The output objects returned from \code{\link[lpinfer]{estbounds}}.}
 
 \item{...}{Additional arguments.}
 }
 \value{
-Nothing is returned. This function prints results from
-   \code{estbounds}.
+Nothing is returned.
 }
 \description{
 This function uses the print method on the return list of the
-   function \code{estbounds}.
+   function \code{\link[lpinfer]{estbounds}}.
 }

@@ -2,12 +2,13 @@
 % Please edit documentation in R/estbounds.R
 \name{print.mincriterion}
 \alias{print.mincriterion}
-\title{Print results from \code{mincriterion}}
+\title{Print results from \code{\link[lpinfer]{mincriterion}}}
 \usage{
 \method{print}{mincriterion}(x, ...)
 }
 \arguments{
-\item{x}{Object returned from \code{mincriterion}.}
+\item{x}{The output objects returned from
+\code{\link[lpinfer]{mincriterion}}.}
 
 \item{...}{Additional arguments.}
 }
@@ -16,5 +17,5 @@ Nothing is returned.
 }
 \description{
 This function prints a summary of the results obtained from
-  \code{mincriterion}.
+  \code{\link[lpinfer]{mincriterion}}.
 }

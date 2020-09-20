@@ -24,16 +24,17 @@ objective function.}
 
 \item{lb}{The lower bound vector.}
 
-\item{weight}{Weighting matrix.}
+\item{weight}{The weighting matrix.}
 
 \item{...}{List of options to be passed to the Gurobi solver. This part is
 optional.}
 }
 \value{
-Returns the optimal point and optimal value.
- \item{objval}{Optimal objective value.}
- \item{x}{Optimal point.}
- \item{status}{Status of the optimization problem.}
+Returns the optimal point, the optimal value and the status of the
+ solution.
+ \item{objval}{The optimal value.}
+ \item{x}{The optimal point.}
+ \item{status}{The status of the optimization problem.}
 }
 \description{
 This function computes the solution to linear and quadratic

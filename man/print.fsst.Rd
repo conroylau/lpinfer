@@ -2,12 +2,12 @@
 % Please edit documentation in R/fsst.R
 \name{print.fsst}
 \alias{print.fsst}
-\title{Print results from \code{fsst}}
+\title{Print results from \code{\link[lpinfer]{fsst}}}
 \usage{
 \method{print}{fsst}(x, ...)
 }
 \arguments{
-\item{x}{Object returned from \code{fsst}.}
+\item{x}{The output objects returned from \code{\link[lpinfer]{fsst}}.}
 
 \item{...}{Additional arguments.}
 }
@@ -15,5 +15,6 @@
 Nothing is returned.
 }
 \description{
-This function prints the \eqn{p}-values from \code{fsst}.
+This function prints the \eqn{p}-values from
+  \code{\link[lpinfer]{fsst}}.
 }

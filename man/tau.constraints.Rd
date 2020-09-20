@@ -3,7 +3,7 @@
 \name{tau.constraints}
 \alias{tau.constraints}
 \title{Creates the constraints for the linear program of \code{tau} in the
-DKQS procedure}
+\code{\link[lpinfer]{dkqs}} procedure}
 \usage{
 tau.constraints(
   length.tau,
@@ -35,19 +35,19 @@ constraint.}
 
 \item{lp.rhs.tau}{The rhs vector of the linear constraints to be updated.}
 
-\item{lp.sense.tau}{The sense vector fo the linear constraints to be
+\item{lp.sense.tau}{The sense vector of the linear constraints to be
 updated.}
 }
 \value{
 Returns the list of matrices that corresponds to the updated
   constraints:
-  \item{lp.lhs.tau}{Updated constraint matrix.}
-  \item{lp.rhs.tau}{Updated rhs vector.}
-  \item{lp.sense.tau}{Update sense for the constraints.}
+  \item{lp.lhs.tau}{An updated constraint matrix.}
+  \item{lp.rhs.tau}{An updated rhs vector.}
+  \item{lp.sense.tau}{An update sense for the constraints.}
 }
 \description{
 This function generates the constraints in the linear program
   for computing the value of tau based on the procedure suggested by Kamat
-  (2018) for the DKQS procedure, i.e. linear program (6) of
-  Torgovitsky (2019).
+  (2018) for the \code{\link[lpinfer]{dkqs}} procedure, i.e. linear
+  program (6) of Torgovitsky (2019).
 }

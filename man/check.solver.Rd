@@ -7,22 +7,23 @@
 check.solver(x, name.var, norm = 2, qc = FALSE)
 }
 \arguments{
-\item{x}{Variable to be checked.}
+\item{x}{The variable to be checked.}
 
-\item{name.var}{Name of the variable.}
+\item{name.var}{The name of the variable.}
 
-\item{norm}{Norm used in the problem (if applicable).}
+\item{norm}{The norm used (if applicable).}
 
-\item{qc}{Indicator of whether the problem consists of a quadratic
+\item{qc}{An indicator of whether the problem consists of a quadratic
 constraint.}
 }
 \value{
 Returns the function name that corresponds to the solver for the
   problem.
-   \item{solver}{Function for the solver used.}
-   \item{solver.name}{Name of the solver used in lower case.}
+   \item{solver}{The function for the solver used.}
+   \item{solver.name}{The name of the solver used in lower case.}
 }
 \description{
 This function checks the solver used is supported and is
-  appropriate for the testing function.
+  appropriate for the testing function. If not, an error message is
+  displayed.
 }

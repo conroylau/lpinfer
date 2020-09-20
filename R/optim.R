@@ -1,6 +1,6 @@
 #' LP and QP solver by \code{Gurobi}
 #'
-#' @description This function computes the solution to the quadratic or linear
+#' @description This function computes the solution to the linear or quadratic
 #'    program using the \code{Gurobi} package. This function can have linear
 #'    and/or quadratic constraints.
 #'
@@ -10,20 +10,20 @@
 #' @param A The constraint matrix.
 #' @param rhs The rhs vector for the linear constraints.
 #' @param modelsense The indicator of whether the model is to max or min an
-#'    objective function.
+#'   objective function.
 #' @param sense The sense of the linear constraints.
 #' @param lb The lower bound vector.
-#' @param qc List of quadratic constraint(s). There can be multiple quadratic
-#'    constraints. Each constraint has to be a list.
-#' @param weight Weighting matrix.
+#' @param qc The list of quadratic constraint(s). There can be multiple
+#'   quadratic constraints. Each constraint has to be a list.
+#' @param weight The weighting matrix.
 #' @param ... List of options to be passed to the Gurobi solver. This part is
 #'    optional.
 #'
-#' @return Returns the optimal point, optimal value and the status of the
+#' @return Returns the optimal point, the optimal value and the status of the
 #'  solution.
-#'  \item{objval}{Optimal objective value.}
-#'  \item{x}{Optimal point.}
-#'  \item{status}{Status of the optimization problem.}
+#'  \item{objval}{The optimal value.}
+#'  \item{x}{The optimal point.}
+#'  \item{status}{The status of the optimization problem.}
 #'
 #' @export
 #'
@@ -106,13 +106,13 @@ gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL,
 #' @description This function computes the solution to the quadratic and linear
 #'    programs using the \code{cplexAPI} package.
 #'
-#' @inheritParams dkqs
-#' @inheritParams dkqs.qlp
+#' @inheritParams gurobi.optim
 #'
-#' @return Returns the optimal point and optimal value.
-#'  \item{objval}{Optimal objective value.}
-#'  \item{x}{Optimal point.}
-#'  \item{status}{Status of the optimization problem.}
+#' @return Returns the optimal point, the optimal value and the status of the
+#'  solution.
+#'  \item{objval}{The optimal value.}
+#'  \item{x}{The optimal point.}
+#'  \item{status}{The status of the optimization problem.}
 #'
 #' @export
 #'
@@ -204,10 +204,11 @@ cplexapi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
 #' @inheritParams dkqs
 #' @inheritParams dkqs.qlp
 #'
-#' @return Returns the optimal point and optimal value.
-#'  \item{objval}{Optimal objective value.}
-#'  \item{x}{Optimal point.}
-#'  \item{status}{Status of the optimization problem.}
+#' @return Returns the optimal point, the optimal value and the status of the
+#'  solution.
+#'  \item{objval}{The optimal value.}
+#'  \item{x}{The optimal point.}
+#'  \item{status}{The status of the optimization problem.}
 #'
 #' @export
 #'
@@ -277,10 +278,11 @@ rcplex.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
 #' @inheritParams dkqs
 #' @inheritParams dkqs.qlp
 #'
-#' @return Returns the optimal point and optimal value.
-#'  \item{objval}{Optimal objective value.}
-#'  \item{x}{Optimal point.}
-#'  \item{status}{Status of the optimization problem.}
+#' @return Returns the optimal point, the optimal value and the status of the
+#'  solution.
+#'  \item{objval}{The optimal value.}
+#'  \item{x}{The optimal point.}
+#'  \item{status}{The status of the optimization problem.}
 #'
 #' @export
 #'
@@ -368,9 +370,9 @@ limsolve.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
   # Status of the optimization problem
   status <- solution$IsError
   if (status == TRUE) {
-    status.msg <- "No error has occured."
+    status.msg <- "No error has occurred."
   } else {
-    status.msg <- paste0("An error has occured in solving the optimization ",
+    status.msg <- paste0("An error has occurred in solving the optimization ",
                          "problem by limSolve")
   }
 
@@ -380,8 +382,7 @@ limsolve.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
 }
 
 
-#' Auxiliary function to return the coefficient terms of the objective
-#' functions
+#' Computes the coefficient terms of the objective functions
 #'
 #' @description This function computes the matrices in the objective functions
 #'    for linear programs. This function takes matrix \eqn{\bm{A}} and
@@ -404,7 +405,7 @@ limsolve.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
 #'      = n\bm{x}'\bm{A}'\bm{W}\bm{A}\bm{x} - 2n\bm{\beta}'\bm{W}\bm{A}\bm{x} +
 #'      n\bm{\beta}'\bm{W}\bm{\beta}.}
 #'      If the \eqn{\bm{W}} matrix is not specified, then it will be taken as
-#'      an identity matrix of order \eqn{m},}
+#'      an identity matrix of order \eqn{m}.}
 #'   \item{\strong{Linear programs} ---
 #'      For all linear problems that are considered in this code, one of
 #'      \eqn{\bm{A}} and \eqn{\bm{b}} is \code{NULL} or is a zero vector. The
@@ -416,12 +417,12 @@ limsolve.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
 #'   coefficient of the quadratic term, \code{obj1} is the coefficient of the
 #'   linear term and \code{obj0} is the constant term. More explicitly, their
 #'   form are given as follows:
-#'   \item{obj2}{This is the coefficient for the second-order term. It is
+#'   \item{obj2}{The coefficient for the second-order term. It is
 #'     returned as \code{NULL} for linear programs and
 #'     \eqn{n\bm{A}'\bm{W}\bm{A}} for quadratic programs.}
-#'   \item{obj1}{This is the coefficient term of the linear term. For quadratic
+#'   \item{obj1}{The coefficient term of the linear term. For quadratic
 #'     programs, it is returned as \eqn{-2n\bm{\beta}'\bm{W}\bm{A}}.}
-#'   \item{obj0}{This is the constant term of the linear program. For quadratic
+#'   \item{obj0}{The constant term of the linear program. For quadratic
 #'     programs, it is returned as \eqn{n\bm{\beta}'\bm{W}\bm{\beta}}.}
 #'
 #' @export
@@ -470,11 +471,11 @@ objective.function <- function(A, b, n, weight = NULL) {
 #' @inheritParams dkqs
 #' @inheritParams dkqs.qlp
 #'
-#' @returns Returns the optimal objective value and the corresponding argument
-#'   to the linear program.
-#'  \item{objval}{Optimal objective value.}
-#'  \item{x}{Optimal point.}
-#'  \item{status}{Status of the optimization problem.}
+#' @return Returns the optimal point, the optimal value and the status of the
+#'  solution.
+#'  \item{objval}{The optimal value.}
+#'  \item{x}{The optimal point.}
+#'  \item{status}{The status of the optimization problem.}
 #'
 #' @details The package \code{lpSolveAPI} cannot be used to solve quadratic
 #'   programs.

@@ -8,15 +8,15 @@
 #'      \item{\code{function} --- If the object is a function, then the
 #'         object that is evaluated by the function with the data will be
 #'         returned.}
-#'      \item{\code{list} --- If the object is a list, then the \eqn{i}th
+#'      \item{\code{list} --- If the object is a list, then the \eqn{i}-th
 #'         element will be returned.}
 #'      \item{\code{matrix} or \code{numeric} --- If the object is a matrix
 #'         or in a vector, then it will be directly returned.}
 #'   }
 #'
-#' @param data Data frame.
-#' @param obj Object in lpmodel.
-#' @param i Index.
+#' @param data A data frame.
+#' @param obj An object in lpmodel.
+#' @param i An index.
 #'
 #' @return Returns an object at iteration \code{i}.
 #'
@@ -48,20 +48,21 @@ lpmodel.eval <- function(data, obj, i) {
 #'      \item{\code{function} --- If the object is a function, then the
 #'         object that is evaluated by the function with the data will be
 #'         returned.}
-#'      \item{\code{list} --- If the object is a list, then the \eqn{i}th
+#'      \item{\code{list} --- If the object is a list, then the \eqn{i}-th
 #'         element will be returned.}
 #'      \item{\code{matrix} or \code{numeric} --- If the object is a matrix
 #'         or a vector, then it will be directly returned.}
 #'   }
 #'
-#' @param data Data frame.
-#' @param obj Object in lpmodel.
-#' @param i Index.
+#' @param data A data frame.
+#' @param obj An object in lpmodel.
+#' @param i An index.
 #'
 #' @return Returns the point estimate and the asymptotic variance of the
 #'    \code{beta.obs} object.
-#'    \item{beta.obs}{Point estimate of \eqn{\widehat{\bm{\beta}}_{\rm obs}}.}
-#'    \item{omega}{Estimator of the asymptotic variance for
+#'    \item{beta.obs}{The point estimate of
+#'      \eqn{\widehat{\bm{\beta}}_{\rm obs}}.}
+#'    \item{omega}{The estimator of the asymptotic variance for
 #'    \eqn{\widehat{\bm{\beta}}_{\rm obs}}.}
 #'
 #' @export
@@ -186,13 +187,12 @@ lpmodel <- function(A.obs = NULL, A.shp = NULL, A.tgt = NULL, beta.obs = NULL,
 #'    \code{lpinfer} package in the \code{lpmodel.natural} class that allows
 #'    both equality and inequality constraints.
 #'
-#' @param sense.shp Sense vector for the shape constraints.
-#' @param x.lb Lower bound for the \eqn{\bm{x}} variable.
-#' @param x.ub Upper bound for the \eqn{\bm{x}} variable.
+#' @param sense.shp The sense vector for the shape constraints.
+#' @param x.lb The lower bound for the \eqn{\bm{x}} variable.
+#' @param x.ub The upper bound for the \eqn{\bm{x}} variable.
 #' @inheritParams lpmodel
 #'
-#' @return Returns a list of \code{lpmodel} objects in the
-#'   \code{lpmodel} class.
+#' @return Returns a list of \code{lpmodel} objects in the \code{lpmodel} class.
 #'
 #' @export
 #'
@@ -305,10 +305,11 @@ lpm.print <- function(x, lpm.string, data = NULL, ...) {
 
 #' Print the \code{lpmodel} object
 #'
-#' @description This function is a wrapper of the \code{lpm.print} function
-#'    and prints the details of the components in the \code{lpmodel} object.
+#' @description This function is a wrapper of the
+#'   \code{\link[lpinfer]{lpm.print}} function and prints the details of the
+#'   components in the \code{lpmodel} object.
 #'
-#' @param x The \code{lpmodel} object.
+#' @param x An \code{lpmodel} object.
 #' @inheritParams dkqs
 #'
 #' @return Nothing is returned.
@@ -339,11 +340,11 @@ summary.lpmodel <- function(x, ...) {
 
 #' Print the \code{lpmodel.natural} object
 #'
-#' @description This function is a wrapper of the \code{lpm.print} function
-#'    and prints the details of the components in the \code{lpmodel.natural}
-#'    object.
+#' @description This function is a wrapper of the
+#'   \code{\link[lpinfer]{lpm.print}} function and prints the details of the
+#'   components in the \code{lpmodel.natural} object.
 #'
-#' @param x The \code{lpmodel.natural} object.
+#' @param x An \code{lpmodel.natural} object.
 #' @inheritParams dkqs
 #'
 #' @return Nothing is returned.
@@ -376,20 +377,20 @@ summary.lpmodel.natural <- function(x, ...) {
 
 #' Check if there is any list in the \code{lpmodel} object
 #'
-#' @description This is a function to check if there is any components in the
+#' @description This function checks if there is any components in the
 #'   \code{lpmodel} object with class \code{list}.
 #'
 #' @param lpmodel A \code{lpmodel} object.
 #'
 #' @return Returns the following objects:
-#'   \item{list}{Boolean variable that indicates whether there is any object
+#'   \item{list}{A boolean variable that indicates whether there is any object
 #'      with the class \code{list} in the \code{lpmodel} object.}
-#'   \item{name}{Names of the components with class \code{list} in the
+#'   \item{name}{The names of the components with class \code{list} in the
 #'     \code{lpmodel} object.}
-#'   \item{consol}{Consolidated and updated \code{lpmodel} object that lists
+#'   \item{consol}{A consolidated and updated \code{lpmodel} object that lists
 #'     the \code{lpmodel} by observation instead of by component (if
 #'     applicable).}
-#'   \item{len}{Length of the component in the \code{lpmodel} object that
+#'   \item{len}{The length of the component in the \code{lpmodel} object that
 #'     is a list (if applicable).}
 #'
 #' @export
@@ -441,10 +442,10 @@ lpmodel.anylist <- function(lpmodel) {
 #'   function returns \code{NULL}.
 #'
 #' @param obj A component in the \code{lpmodel} object.
-#' @param len Length of the list.
+#' @param len The length of the list.
 #'
 #' @return Returns one object.
-#'   \item{result}{Either a \code{list} or \code{NULL}.}
+#'   \item{result}{This is either a \code{list} or \code{NULL}.}
 #'
 #' @export
 #'
@@ -464,14 +465,14 @@ lpmodel.extractlist <- function(obj, len) {
 #' @description This function is used in the bootstrap replications to combine
 #'   the deterministic components in \code{lpmodel} to the stochastic component.
 #'
-#' @param lpm.de Deterministic components of the \code{lpmodel} object.
+#' @param lpm.de The deterministic components of the \code{lpmodel} object.
 #' @param lpm.st An \code{lpmodel} object that only contains one bootstrap
 #'   replication of the stochastic component(s). The deterministic component
 #'   is set as \code{NULL}.
 #'
 #' @return Returns an \code{lpmodel} object that combines the deterministic
 #'   and stochastic component.
-#'   \item{lpm.st}{Updated \code{lpmodel} object.}
+#'   \item{lpm.de}{An updated \code{lpmodel} object.}
 #'
 #' @export
 #'

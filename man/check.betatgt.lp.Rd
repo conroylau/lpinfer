@@ -2,18 +2,19 @@
 % Please edit documentation in R/checks.R
 \name{check.betatgt.lp}
 \alias{check.betatgt.lp}
-\title{Construct the linear program for the function \code{check.betatgt}}
+\title{Construct the linear program for the function
+  \code{\link[lpinfer]{check.betatgt}}}
 \usage{
 check.betatgt.lp(data, lpmodel, beta.tgt, modelsense, solver)
 }
 \arguments{
-\item{data}{Data used in the tests.}
+\item{data}{An \code{data frame} or a \code{matrix}.}
 
 \item{lpmodel}{An \code{lpmodel} object.}
 
-\item{beta.tgt}{Value of beta to be tested.}
+\item{beta.tgt}{The value to be tested.}
 
-\item{modelsense}{String that indicates whether the program is a
+\item{modelsense}{A string that indicates whether the program is a
 maximization or minimization problem. If it is "max", then it is referring
 to a maximization problem. Otherwise, it is referring to a minimization
 problem.}
@@ -23,10 +24,23 @@ that is supported depends on the test chosen.}
 }
 \value{
 Returns the solution to the linear program.
-  \item{objval}{Objective value of the linear program. It is either the
+  \item{objval}{The optimal value of the linear program. It is either the
   logical upper bound or the logical lower bound.}
 }
 \description{
 This function solves the linear program that is used to find
-  the logical bounds in \code{check.betatgt} function.
+  the logical bounds in the \code{\link[lpinfer]{check.betatgt}} function.
+}
+\details{
+The linear program used to find the logical lower bound is
+\deqn{
+  \min_{x \in \mathbf{R}^d} \,\,
+  A_{\rm tgt} x
+  \quad \mathrm{s.t.} \quad
+  A_{\rm shp} x = \beta_{\rm shp}
+  \quad \mathrm{ and } \quad
+  x \geq 0.
+}
+The linear program used to find the logical upper bound replaces the min
+operator by the max operator.
 }

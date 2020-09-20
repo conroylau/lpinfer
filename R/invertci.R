@@ -3,23 +3,19 @@
 #' @description This function constructs the confidence interval using the
 #'    bisection method.
 #'
-#' @param f Function that represents a testing procedure.
-#' @param farg List of arguments to be passed to the function of testing
+#' @param f The function that represents a testing procedure.
+#' @param farg The list of arguments to be passed to the function of testing
 #'    procedure.
-#' @param alpha Significance level of the test.
-#' @param init.lb Initial brackets to search for the lower bound.
-#' @param init.ub Initial brackets to search for the upper bound.
-#' @param lb1 Maximum possible lower bound for the confidence interval. This is
-#'    not required if the function \code{chorussell} is used.
-#' @param ub0 Logical upper bound for the confidence interval. This is not
-#'    required if the function \code{chorussell} is used.
-#' @param ub1 Minimum possible upper bound for the confidence interval. This
-#'    is not required if the function \code{chorussell} is used.
-#' @param tol Tolerance level in the bisection method.
-#' @param max.iter Maximum number of iterations in the bisection method.
-#' @param df_ci Data frame that consists the points and the corresponding
+#' @param alpha The significance level(s). This can be a vector.
+#' @param init.lb The initial brackets to search for the lower bound. This is
+#'   not required if the \code{\link[lpinfer]{chorussell}} is used.
+#' @param init.ub The initial brackets to search for the upper bound. This is
+#'   not required if the \code{\link[lpinfer]{chorussell}} is used.
+#' @param tol The tolerance level in the bisection method.
+#' @param max.iter The maximum number of iterations in the bisection method.
+#' @param df_ci The data frame that consists the points and the corresponding
 #'    \eqn{p}-values that have been tested in the previous iterations.
-#' @param dp Number of decimal places in the output.
+#' @param dp The number of decimal places in the output.
 #' @param progress The boolean variable for whether the result messages should
 #'    be displayed in the procedure of constructing confidence interval. If
 #'    it is set as \code{TRUE}, the messages are displayed throughout the
@@ -27,18 +23,22 @@
 #'
 #' @returns Returns the confidence interval and a data frame that contains the
 #'    points being tested in the procedure.
-#'    \item{pvals}{Data frame that consists of the points and the corresponding
-#'       \eqn{p}-values that have been tested in constructing the confidence
-#'       intervals.}
-#'    \item{df_ub}{Data frame storing the information for the bisection
+#'    \item{pvals}{The data frame that consists of the points and the
+#'       corresponding \eqn{p}-values that have been tested in constructing
+#'       the confidence intervals.}
+#'    \item{df_ub}{The data frame storing the information for the bisection
 #'       method in each iteration when evaluating the upper bound of the
 #'       confidence interval.}
-#'    \item{df_lb}{Data frame storing the information for the bisection
+#'    \item{df_lb}{The data frame storing the information for the bisection
 #'       method in each iteration when evaluating the lower bound of the
 #'       confidence interval.}
-#'    \item{tol}{Tolerance level in the bisection method.}
-#'    \item{iter}{Total number of iterations taken.}
-#'    \item{call}{The function that has been called.}
+#'    \item{alpha}{The significance levels.}
+#'    \item{tol}{The tolerance level in the bisection method.}
+#'    \item{iter}{The total number of iterations taken.}
+#'    \item{call}{The matched call.}
+#'    \item{para.name}{The name of the tuning parameters involved.}
+#'    \item{para.vals}{The values of the tuning parameters involved.}
+#'    \item{ci}{The confidence intervals constructed.}
 #'
 #' @details The number of decimal places displayed in the messages (if
 #'    \code{progress} is set as \code{TRUE}) is equal to the number of decimal
@@ -304,27 +304,29 @@ invertci <- function(f, farg = list(), alpha = .05, init.lb = NULL,
 #' @description This function constructs the two-sided confidence interval
 #'    of a given testing procedure using the bisection method.
 #'
-#' @param type Type of the confidence interval. Set \code{type} as 1 for the
+#' @param type The type of the confidence interval. Set \code{type} as 1 for the
 #'    upper bound of the confidence interval and set \code{type} as -1 for the
 #'    lower bound of the confidence interval.
-#' @param b0 Logical lower or upper bound for the confidence interval.
-#' @param b1 Maximum possible lower bound or minimum possible upper bound for
-#'    the confidence interval.
-#' @param dp Number of decimal places to be displayed for the \eqn{p}-values
+#' @param b0 The lower bound of the initial bracket.
+#' @param b1 The upper bound of the initial bracket.
+#' @param dp The number of decimal places to be displayed for the \eqn{p}-values
 #'    and confidence intervals in the messages if \code{progress} is set
 #'    as \code{TRUE}.
 #' @param rngstate The current RNG state obtained from \code{.Random.seed}.
-#' @param para.match The list of parameters to match.
+#' @param para.match The list of parameters to be matched.
 #' @inheritParams invertci
 #'
 #' @return Return the solution of the bisection method and the updated
 #'    data frame.
-#'    \item{soln}{Solution to the bisection method.}
-#'    \item{df_ci}{Data frame that consists of the points and the
+#'    \item{pt}{The last test point.}
+#'    \item{iter}{The number of iterations.}
+#'    \item{df_ci}{The data frame that consists of the points and the
 #'       corresponding \eqn{p}-values that have been tested in constructing the
 #'       confidence intervals.}
-#'    \item{df_bis}{Data frame storing the information for the bisection
+#'    \item{df_bis}{The data frame storing the information for the bisection
 #'       method in each iteration.}
+#'    \item{last_iter_msg}{The message for the last iteration. This refers to
+#'       whether why the bisection method stops.}
 #'
 #' @export
 #'
@@ -436,20 +438,21 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, df_ci,
 #'
 #' @import plyr
 #'
-#' @description This function checks if the \eqn{p}-value for the point
-#'    considered has already been evaluated in previous iterations or provided
-#'    by the user. The function will compute the \eqn{p}-value if it has been
-#'    evaluated. Otherwise, it will use the previous data.
+#' @description This function is used in the \code{\link[lpinfer]{invertci}}
+#' procedure. It checks if the \eqn{p}-value for the point considered has
+#' already been evaluated in previous iterations or provided by the user. The
+#' function will compute the \eqn{p}-value if it is not provided. Otherwise,
+#' it will use the previous data.
 #'
 #' @inheritParams invertci
 #' @inheritParams ci.bisection
-#' @param pt Point to be evaluated in the bisection method.
+#' @param pt The point to be evaluated in the bisection method.
 #'
 #' @return Returns the \eqn{p}-value of the point considered and an updated
 #'    data frame that contains the points and the \eqn{p}-values.
-#'    \item{pval}{\eqn{p}-value of the point.}
-#'    \item{df_ci}{Updated data frame that consists of the points that have
-#'       been tested in constructing the confidence intervals.}
+#'    \item{pval}{The \eqn{p}-value that corresponds to the test point.}
+#'    \item{df_ci}{The updated data frame that contains the \eqn{p}-values that
+#'      correspond to each set of tuning parameters and each test point.}
 #'
 #' @export
 #'
@@ -493,16 +496,16 @@ bisec.eval <- function(f, farg, pt, df_ci, rngstate, para.match) {
 #'
 #' @description This function determines whether the bisection method is going
 #'    to be updated by choosing the left segment or the right segment of the
-#'    interval as the updated interval for the next iteration in the bisection
-#'    method.
+#'    interval as the updated interval for the next iteration.
 #'
-#' @param pval \eqn{p}-value of the test statistic.
+#' @param pval The \eqn{p}-value of the test statistic.
 #' @inheritParams invertci
 #' @inheritParams ci.bisection
 #'
 #' @return Returns whether the part of the interval to be selected in the
 #'    next iteration of the bisection method.
-#'    \item{part}{Left or right segment of the interval.}
+#'    \item{part}{A string indicating whether the left or right segment of the
+#'    interval is chosen.}
 #'
 #' @export
 #'
@@ -528,26 +531,28 @@ ci.inout <- function(pval, alpha, type) {
 
 #' Print messages in bisection procedure and store results
 #'
-#' @description This function prints the information in \code{ci\_bisection}
-#'    and store the result for each iteration.
+#' @description This function prints the information in
+#'   \code{\link[lpinfer]{ci.bisection}} and store the result for each
+#'   iteration.
 #'
-#' @param procedure Variable indicating whether the function is evaluating
+#' @param procedure The variable indicating whether the function is evaluating
 #'    the end-points or first mid-point, or is iterating through the bisection
 #'    procedure.
 #' @param alphahalf Half of significance value that is used to evaluate the
 #'    confidence interval.
-#' @param returnlist List of information obtained from running
-#'    \code{bisec.eval}.
-#' @param a Lower bound of the current interval. This is \code{NULL} if the
-#'    initial end-points are being evaluated.
-#' @param b Upper bound of the current interval. This is \code{NULL} if the
-#'    initial end-points are being evaluated.
-#' @param df_bis Data frame storing the information from the bisection method.
+#' @param returnlist The list of information obtained from running
+#'    \code{\link[lpinfer]{bisec.eval}}.
+#' @param a The lower bound of the current interval. This is \code{NULL} if
+#'   the initial end-points are being evaluated.
+#' @param b The upper bound of the current interval. This is \code{NULL} if
+#'   the initial end-points are being evaluated.
+#' @param df_bis A data frame storing the information from the bisection
+#'   method.
 #' @inheritParams invertci
 #'
 #' @return Return the updated data frame that stores the information for the
 #'    the iteration.
-#'    \item{df_bis}{Data frame storing the information for the bisection
+#'    \item{df_bis}{The data frame storing the information for the bisection
 #'       method in each iteration.}
 #'
 #' @export
@@ -609,15 +614,15 @@ bisec.print <- function(procedure, alphahalf, returnlist, a, b, progress, dp,
   invisible(list(df_bis = df_bis))
 }
 
-#' Print results from \code{invertci}
+#' Print results from \code{\link[lpinfer]{invertci}}
 #'
-#' @description This function uses the print method on the return list of the
-#'    function \code{invertci}.
+#' @description This function prints the results from
+#'   \code{\link[lpinfer]{invertci}}.
 #'
-#' @param x Object returned from \code{invertci}.
+#' @param x The output object returned from \code{\link[lpinfer]{invertci}}.
 #' @param ... Additional arguments.
 #'
-#' @return Print the basic set of results from \code{invertci}.
+#' @return Nothing is returned
 #'
 #' @export
 #'
@@ -629,15 +634,15 @@ print.invertci <- function(x, ...) {
   }
 }
 
-#' Print results from \code{invertci} with a single alpha
+#' Print results from \code{\link[lpinfer]{invertci}} with a single
+#' significance level
 #'
-#' @description This function uses the print method on the return list of the
-#'    function \code{invertci}.
+#' @description This function prints the results from
+#'   \code{\link[lpinfer]{invertci}}.
 #'
-#' @param x Object returned from \code{invertci}.
-#' @param ... Additional arguments.
+#' @inheritParams print.invertci
 #'
-#' @return Print the basic set of results from \code{invertci}.
+#' @return Nothing is returned
 #'
 #' @export
 #'
@@ -647,15 +652,15 @@ print.invertci_single <- function(x, ...) {
               round(x$ci[1, 4], digits = 5)))
 }
 
-#' Print results from \code{invertci} with vector-valued alpha
+#' Print results from \code{\link[lpinfer]{invertci}} with multiple
+#' significance levels
 #'
 #' @description This function uses the print method on the return list of the
-#'    function \code{invertci}.
+#'    function \code{\link[lpinfer]{invertci}}.
 #'
-#' @param x Object returned from \code{invertci}.
-#' @param ... Additional arguments.
+#' @inheritParams print.invertci
 #'
-#' @return Print the basic set of results from \code{invertci}.
+#' @return Nothing is returned
 #'
 #' @export
 #'
@@ -681,16 +686,16 @@ print.invertci_multiple <- function(x, alphas = NULL, ...) {
   }
 }
 
-#' Summary of results from \code{invertci}
+#' Summary of results from \code{\link[lpinfer]{invertci}}
 #'
-#' @description This function uses the print method on the return list of the
-#'    function \code{invertci}.
+#' @description This function summarizes the results for
+#'   \code{\link[lpinfer]{invertci}}.
 #'
-#' @param x Object returned from \code{invertci}.
-#' @param alphas List of alphas that the user would like to print.
-#' @param ... Additional arguments.
+#' @param x The output object returned from \code{\link[lpinfer]{invertci}}.
+#' @param alphas A list of alphas that the user would like to print.
+#' @inheritParams print.invertci
 #'
-#' @return Print the summary of the basic set of results from \code{invertci}.
+#' @return Nothing is returned.
 #'
 #' @export
 #'
@@ -705,17 +710,15 @@ summary.invertci <- function(x, alphas = NULL, ...) {
   }
 }
 
-#' Summary of results from \code{invertci} for a single alpha
+#' Summary of results from \code{\link[lpinfer]{invertci}} for a single
+#' significance level
 #'
-#' @description This function uses the print method on the return list of the
-#'    function \code{invertci}.
+#' @description This function summarizes the results for
+#'   \code{\link[lpinfer]{invertci}}.
 #'
-#' @param x Object returned from \code{invertci}.
-#' @param msg.bound String containing the general message to be printed.
-#' @param ... Additional arguments.
-#' @inheritParams invertci
+#' @inheritParams summary.invertci
 #'
-#' @return Print the summary of the basic set of results from \code{invertci}.
+#' @return Nothing is returned.
 #'
 #' @export
 #'
@@ -750,17 +753,15 @@ summary.invertci_single <- function(x, alphas, msg.bound, ...) {
   }
 }
 
-#' Summary of results from \code{invertci} with multiple alphas
+#' Summary of results from \code{\link[lpinfer]{invertci}} for multiple
+#' significance levels
 #'
-#' @description This function uses the print method on the return list of the
-#'    function \code{invertci}.
+#' @description This function summarizes the results for
+#'   \code{\link[lpinfer]{invertci}}.
 #'
-#' @param x Object returned from \code{invertci}.
-#' @param ... Additional arguments.
-#' @inheritParams summary.invertci
 #' @inheritParams summary.invertci_single
 #'
-#' @return Print the summary of the basic set of results from \code{invertci}.
+#' @return Nothing is returned.
 #'
 #' @export
 #'
@@ -829,12 +830,12 @@ summary.invertci_multiple <- function(x, alphas, msg.bound, ...) {
 #' Print results in constructing bounds in bisection method
 #'
 #' @description This function is used to display the message when constructing
-#'    the bounds and used in \code{summary.invertci} to print the results in
-#'    each step of the bisection method.
+#'    the bounds and used in \code{\link[lpinfer]{summary.invertci}} to print
+#'    the results in each step of the bisection method.
 #'
 #' @inheritParams bisec.print
 #'
-#' @return Nothing is returned in this function.
+#' @return Nothing is returned.
 #'
 #' @export
 #'
@@ -883,12 +884,11 @@ summary.bisection.print <- function(df_bis, i) {
             print.iter6, "\n"))
 }
 
-#' Checks and updates the input of the function \code{invertci}
+#' Checks and updates the input of the function \code{\link[lpinfer]{invertci}}
 #'
-#' @description This function checks and updates the input from the user for
-#'    the function \code{invertci}. If there is any invalid input, this
-#'    function ill terminate the procedure and generate appropriate error
-#'    messages.
+#' @description This function checks and updates the input from the user in the
+#'    \code{\link[lpinfer]{invertci}} function. If there is any invalid input,
+#'    the function will be terminated and error messages will be printed.
 #'
 #' @inheritParams invertci
 #'
@@ -1023,7 +1023,7 @@ invertci.check <- function(f, farg, alpha, init.lb, init.ub, tol, max.iter,
   # Part 10: Check progress
   check.boolean(progress, "progress")
 
-  # Step 11: Return the upated information
+  # Step 11: Return the updated information
   return(list(df_ci = df_ci,
               lb0 = lb0,
               lb1 = lb1,
@@ -1031,14 +1031,17 @@ invertci.check <- function(f, farg, alpha, init.lb, init.ub, tol, max.iter,
               ub1 = ub1))
 }
 
-#' Function to consolidate the print the summary table for the interactions
+#' Consolidates and prints the \code{summary} table in
+#' \code{\link[lpinfer]{invertci}}
 #'
-#' @description This function is used to consolidate the summary table for
-#'   display via the \code{summary} command.
+#' @description This function is used to print and consolidate the summary
+#'   table for display via the \code{summary} command.
 #'
-#' @inheritParams bisec.print
+#' @param df Data frame of the details for the bisection method.
+#' @param msg Message that indicates the reason for the bisection method to
+#'   terminate.
 #'
-#' @return Returns the consolidate table.
+#' @return Nothing is returned.
 #'
 #' @export
 #'
@@ -1063,11 +1066,12 @@ consolidate.invertci <- function(df, msg) {
 #' Print the parameters used in the bisection method
 #'
 #' @description This function is used to print the tuning parameters that are
-#'   relevant to the current set of iterations in the \code{invertci} function.
+#'   relevant to the current set of iterations in the
+#'   \code{\link[lpinfer]{invertci}} function.
 #'
-#' @param para.name Name(s) of the parameter(s).
-#' @param para.vals Value(s) of the parameter(s).
-#' @param j Row number for the parameters being used.
+#' @param para.name The name(s) of the parameter(s).
+#' @param para.vals The value(s) of the parameter(s).
+#' @param j The row number for the parameters being used.
 #'
 #' @return Nothing is returned.
 #'

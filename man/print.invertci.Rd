@@ -2,19 +2,19 @@
 % Please edit documentation in R/invertci.R
 \name{print.invertci}
 \alias{print.invertci}
-\title{Print results from \code{invertci}}
+\title{Print results from \code{\link[lpinfer]{invertci}}}
 \usage{
 \method{print}{invertci}(x, ...)
 }
 \arguments{
-\item{x}{Object returned from \code{invertci}.}
+\item{x}{The output object returned from \code{\link[lpinfer]{invertci}}.}
 
 \item{...}{Additional arguments.}
 }
 \value{
-Print the basic set of results from \code{invertci}.
+Nothing is returned
 }
 \description{
-This function uses the print method on the return list of the
-   function \code{invertci}.
+This function prints the results from
+  \code{\link[lpinfer]{invertci}}.
 }

@@ -1,27 +1,19 @@
 #' Conducts inference using the FSST procedure
 #'
 #' @description This module conducts inference in linear programs using the
-#'   \code{fsst} procedure by Fang, Santos, Shaikh and Torgovitsky (2020).
+#'   procedure by Fang, Santos, Shaikh and Torgovitsky (2020).
 #'
 #' @import expm
 #'
 #' @inheritParams dkqs
-#' @param lpmodel The \code{lpmodel} object used in the test. The following
-#'   components are required in the \code{lpmodel} for the FSST test:
-#'    \itemize{
-#'      \item{\code{A.tgt}}
-#'      \item{\code{A.obs}}
-#'      \item{\code{A.shp}}
-#'      \item{\code{beta.obs}}
-#'      \item{\code{beta.shp}}
-#'    }
+#' @param lpmodel The \code{lpmodel} object.
 #' @param lambda Parameter used to obtain the restricted estimator
 #'    \eqn{\widehat{\bm{\beta}}^r_n}. A data-driven parameter \code{lambda} can
 #'    be included if \code{NA} is included as part of the vector for
 #'    \code{lambda}. For instance, if \code{lambda} is set as \code{c(0.1, NA)},
 #'    then both 0.1 and the data-driven \code{lambda} will be applied in the
-#'    FSST procedure. The default is to use the data-driven approach for
-#'    \code{lambda}.
+#'    \code{\link[lpinfer]{fsst}} procedure. The default is to use the
+#'    data-driven \code{lambda}.
 #' @param rho Parameter used in the studentization of matrices.
 #' @param weight.matrix The option used in the weighting matrix. There are
 #'   three options available:
@@ -33,32 +25,43 @@
 #'   }
 #'
 #' @return Returns the following information:
-#'   \item{pval}{\eqn{p}-value.}
-#'   \item{cv.table}{Table of sample and bootstrap Cone and Range test
+#'   \item{pval}{A table of \eqn{p}-values.}
+#'   \item{cv.table}{A table of sample and bootstrap Cone and Range test
 #'     statistics.}
-#'   \item{call}{Information used to call the function.}
+#'   \item{call}{The matched call.}
 #'   \item{range}{The sample range test statistic.}
 #'   \item{cone}{The sample cone test statistic.}
-#'   \item{test}{Sample test statistic.}
-#'   \item{cone.n.list}{List of bootstrap cone test statistics.}
-#'   \item{range.n.list}{List of bootstrap range test statistics.}
+#'   \item{test}{The sample test statistic.}
+#'   \item{cone.n.list}{The list of bootstrap cone test statistics.}
+#'   \item{range.n.list}{The list of bootstrap range test statistics.}
 #'   \item{solver.name}{Name of the solver used.}
-#'   \item{rho}{Input value of rho.}
-#'   \item{rhobar.i}{Regularization parameter used for the Cone
+#'   \item{rho}{The value of \code{rho} provided by the uer..}
+#'   \item{rhobar.i}{The regularization parameter used for the Cone
 #'     studentization matrix.}
-#'   \item{lambda.data}{Data driven \code{lambda}.}
-#'   \item{var.method}{Method used in obtaining the asymptotic variance
+#'   \item{lambda.data}{The value of the data-driven \code{lambda} (if
+#'     applicable).}
+#'   \item{var.method}{The method used in obtaining the asymptotic variance
 #'     of \code{beta.obs}.}
-#'   \item{test.logical}{Indicator variable for whether the computation has
+#'   \item{test.logical}{An indicator variable for whether the computation has
 #'     been conducted. If \code{test.logical} is 1, it refers to the case
 #'     where \code{beta.tgt} is inside the logical bound. If
 #'     \code{test.logical} is 0, it refers to the case where
 #'     \code{beta.tgt} is outside the logical bound.}
 #'   \item{logical.lb}{Logical lower bound.}
 #'   \item{logical.ub}{Logical upper bound.}
-#'   \item{df.error}{Table showing the id of the bootstrap replication(s)
+#'   \item{df.error}{A table showing the id of the bootstrap replication(s)
 #'     with error(s) and the corresponding error message(s).}
-#'   \item{R.succ}{Number of successful bootstrap replications.}
+#'   \item{R.succ}{The number of successful bootstrap replications.}
+#'
+#' @details The following components are required in the \code{lpmodel} for the
+#'    \code{\link[lpinfer]{fsst}} procedure:
+#'    \itemize{
+#'      \item{\code{A.tgt}}
+#'      \item{\code{A.obs}}
+#'      \item{\code{A.shp}}
+#'      \item{\code{beta.obs}}
+#'      \item{\code{beta.shp}}
+#'    }
 #'
 #' @example ./inst/example/fsst_example.R
 #'
@@ -468,7 +471,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                          test.logical = test.logical,
                          logical.lb = logical.lb,
                          logical.ub = logical.ub))
-   
+
    # Assign class
    attr(output, "class") <- "fsst"
 
@@ -476,7 +479,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
    return(output)
 }
 
-#' Construct the full beta vector in the FSST procedure.
+#' Construct the full beta vector in the \code{\link[lpinfer]{fsst}} procedure
 #'
 #' @description This function concatenate the \code{beta.obs}, \code{beta.shp}
 #'   and \code{beta.tgt} components to form the full \code{beta} vector. In
@@ -486,10 +489,10 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
 #'   \bm{\beta}_{{\rm shp},n}, \bm{\beta}_{{\rm tgt}})'}.
 #'
 #' @inheritParams fsst
-#' @param beta.obs.bs Bootstrap estimates of \code{beta.obs}.
+#' @param beta.obs.bs The bootstrap estimates of \code{beta.obs}.
 #'
 #' @return List of full beta vectors
-#'   \item{beta.bs}{List of full beta vector
+#'   \item{beta.bs}{The list of full beta vector
 #'   \eqn{\{\widehat{\bm{\beta}}_{n,b}\}^B_{b=1}}.}
 #'
 #' @export
@@ -506,25 +509,27 @@ full.beta.bs <- function(lpmodel, beta.tgt, beta.obs.bs, R) {
 #' Computing the bootstrap estimates of \code{beta.obs}
 #'
 #' @description This function computes the bootstrap estimates of
-#'   \code{beta.obs}.
+#'   \eqn{\hat{\beta}_{{\rm obs}, n}}.
 #'
 #' @import future.apply progressr
 #'
 #' @inheritParams fsst
 #' @inheritParams dkqs.bs.fn
 #' @param iseq The list of indices or betas to iterate over.
-#' @param beta.obs.hat Estimator of
+#' @param beta.obs.hat The sample estimator
 #'   \eqn{\widehat{\bm{\beta}}_{\mathrm{obs}, n}} based on the given
-#'   information in \code{lpmodel}.
-#' @param df.error Table showing the id of the bootstrap replication(s)
+#'   information in \code{lpmodel} (and \code{data} if applicable).
+#' @param df.error A table showing the id of the bootstrap replication(s)
 #'   with error(s) and the corresponding error message(s).
 #'
 #' @return Returns the bootstrap estimators.
-#'   \item{beta.obs.bs}{List of bootstrap betas.}
-#'   \item{df.error}{Updated table showing the id of the bootstrap
-#'       replication(s) with error(s) and the corresponding error message(s).}
-#'   \item{R.eval}{Number of bootstrap replications that has been conducted.}
-#'   \item{R.succ}{Number of successful bootstrap replications.}
+#'   \item{beta.obs.bs}{A list of bootstrap estimators
+#'   \eqn{\{\hat{\beta}_{{\rm obs}, n, b}\}^B_{b=1}}.}
+#'   \item{df.error}{An updated table showing the id of the bootstrap
+#'     replication(s) with error(s) and the corresponding error message(s).}
+#'   \item{R.eval}{The number of bootstrap replications that has been
+#'     conducted.}
+#'   \item{R.succ}{The number of successful bootstrap replications.}
 #'
 #' @export
 #'
@@ -560,10 +565,10 @@ fsst.beta.bs <- function(n, data, beta.obs.hat, lpmodel, R, maxR, progress,
          i0 <- bs.list[1]
          i1 <- tail(bs.list, n = 1)
       }
-      
+
       # Set the default for progress bar
       progressr::handlers("progress")
-      
+
       # Obtain results from the bootstrap replications
       progressr::with_progress({
          if (isTRUE(progress)) {
@@ -616,9 +621,10 @@ fsst.beta.bs <- function(n, data, beta.obs.hat, lpmodel, R, maxR, progress,
 
 #' Computes one bootstrap estimates for \code{beta.obs}.
 #'
-#' @description This function carries out the one bootstrap replication for
-#'   getting \code{beta.obs} in the FSST test. This function is used in the
-#'   \code{fsst.beta.bs} function via the \code{future_lapply} command.
+#' @description This function carries out one bootstrap replication for
+#'   getting \code{beta.obs} in the \code{\link[lpinfer]{fsst}} procedure.
+#'   This function is used in the \code{\link[lpinfer]{fsst.beta.bs}} function
+#'   via the \code{future_lapply} command.
 #'
 #' @inheritParams fsst
 #' @inheritParams fsst.beta.bs
@@ -629,8 +635,8 @@ fsst.beta.bs <- function(n, data, beta.obs.hat, lpmodel, R, maxR, progress,
 #'
 #' @return Returns a list of output that are obtained from the subsampling
 #'   procedure:
-#'   \item{beta}{Bootstrap estimator.}
-#'   \item{msg}{Error message (if applicable).}
+#'   \item{beta}{A bootstrap estimator of \eqn{\hat{\beta}_{n,b}}.}
+#'   \item{msg}{An error message (if applicable).}
 #'
 #' @export
 #'
@@ -689,24 +695,17 @@ fsst.beta.bs.fn <- function(x, data, lpmodel, pbar, progress, eval.count,
                msg = msg))
 }
 
-#' Computes the weighting matrix in the FSST procedure
+#' Computes the weighting matrix in the \code{\link[lpinfer]{fsst}} procedure
 #'
-#' @description This function returns the weighting matrix in the FSST
-#'   procedure. There are three options available:
-#'   \itemize{
-#'     \item{\code{identity} --- identity matrix}
-#'     \item{\code{diag} --- the diagonal matrix that takes the diagonal
-#'        elements of the inverse of the variance matrix}
-#'     \item{\code{avar} --- inverse of the variance matrix}
-#'   }
+#' @description This function returns the weighting matrix in the
+#'   \code{\link[lpinfer]{fsst}} procedure.
 #'
 #' @inheritParams fsst
 #' @inheritParams fsst.beta.bs
-#' @param beta.sigma Estimator of the asymptotic variance for
-#'   \eqn{\bm{\beta}_{\rm obs}}.
+#' @param beta.sigma The variance estimator of \eqn{\bm{\beta}_{\rm obs}}.
 #'
 #' @return The weighting matrix is returned.
-#'    \item{weight.max}{Weighting matrix.}
+#'    \item{weight.max}{The weighting matrix.}
 #'
 #' @export
 #'
@@ -741,17 +740,18 @@ fsst.weight.matrix <- function(weight.matrix, beta.obs.hat, beta.sigma) {
 #'   asymptotic variance estimator of the bootstrap estimator, i.e.
 #'   \deqn{\frac{n}{B} \sum^B_{i=1} \left(\widehat{\bm{\beta}}_b -
 #'   \widehat{\bm{\beta}}\right)  \left(\widehat{\bm{\beta}}_b -
-#'   \widehat{\bm{\beta}}\right)'}. This function supports parallel
-#'  programming via the \code{future.apply} package.
+#'   \widehat{\bm{\beta}}\right)'.}
+#'  This function supports parallel programming via the \code{future.apply}
+#'  package.
 #'
 #' @import future.apply progressr
 #'
 #' @param n Sample size.
-#' @param beta.bs.list List of bootstrap estimators
+#' @param beta.bs.list A list of bootstrap estimators
 #'    \eqn{\{\widehat{\bm{\beta}}_b\}^B_{b=1}}.
 #'
 #' @return Returns the estimator of the asymptotic variance.
-#'     \item{sigma.mat}{Estimator of the asymptotic variance.}
+#'     \item{sigma.mat}{The estimator of the asymptotic variance.}
 #'
 #' @export
 #'
@@ -782,8 +782,8 @@ sigma.summation <- function(n, beta.bs.list, progress, eval.count) {
 #' Computes vector products
 #'
 #' @description This function computes the product of the two vectors. This is
-#'   used in the \code{sigma.summation} function that computes the
-#'   asymptotic variance estimator.
+#'   used in the \code{\link[lpinfer]{sigma.summation}} function that computes
+#'   the asymptotic variance estimator.
 #'
 #' @details Denote \eqn{\bm{\beta}} and \eqn{\hat{\bm{\beta}}_{\rm obs}} as
 #'   the \eqn{n \times 1} vectors \code{beta} and \code{beta.obs.hat}
@@ -793,7 +793,7 @@ sigma.summation <- function(n, beta.bs.list, progress, eval.count) {
 #'   \eqn{\widetilde{\bm{\beta}} \equiv \bm{\beta} -
 #'   \widehat{\bm{\beta}}_{\rm obs}}.
 #'
-#' @param beta Bootstrap \code{beta.obs} estimator.
+#' @param beta A bootstrap estimator \code{beta.obs}.
 #' @inheritParams fsst.beta.bs
 #' @inheritParams dkqs.bs.fn
 #'
@@ -830,16 +830,30 @@ beta.product <- function(beta, beta.obs.hat, pbar, progress, eval.count) {
 #'
 #' @description This function computes the vector
 #'   \eqn{\widehat{\bm{\beta}}_n^\star} for the case where \eqn{d<p} in the
-#'   FSST test.
+#'   \code{\link[lpinfer]{fsst}} procedure.
 #'
 #' @inheritParams fsst
 #' @inheritParams sigma.summation
-#' @param weight.mat Weighting matrix.
+#' @param weight.mat The weighting matrix for the \code{\link[lpinfer]{fsst}}
+#'   procedure.
 #'
-#' @details This corresponding to solving problem (3) of Torgovitsky (2020).
+#' @details This corresponding to solving the following quadratic program
+#' \deqn{
+#'   \min_{x \in \mathbf{R}^d} \,\,
+#'   \left(\hat{\beta}_{{\rm obs}, n} - A_{\rm obs} x\right)' \hat{\Xi}
+#'   \left(\hat{\beta}_{{\rm obs}, n} - A_{\rm obs} x\right)
+#'   \quad \mathrm{s.t.
+#'   } \quad
+#'   A_{\rm shp} x = \beta_{\rm shp}
+#'   \quad \mathrm{ and } \quad
+#'   A_{\rm tgt} x = \beta_{\rm tgt}
+#' }
+#' in the \code{\link[lpinfer]{fsst}} procedure.
 #'
-#' @return Returns the vector \eqn{\widehat{\bm{\beta}}_n^\star}.
+#' @return Returns the following objects:
 #'   \item{beta.star}{The vector \eqn{\widehat{\bm{\beta}}_n^\star}.}
+#'   \item{x}{The optimal point.}
+#'   \item{status}{The status of the optimization problem.}
 #'
 #' @export
 #'
@@ -911,8 +925,8 @@ beta.star.qp <- function(data, lpmodel, beta.tgt, weight.mat, beta.obs.hat,
 #'   equals to 0 for \eqn{d < p}.
 #'
 #' @return Returns the optimal point and optimal value.
-#'  \item{objval}{Optimal objective value.}
-#'  \item{x}{Optimal point.}
+#'  \item{objval}{The optimal value.}
+#'  \item{x}{The optimal point.}
 #'
 #' @export
 #'
@@ -1011,25 +1025,26 @@ fsst.cone.lp <- function(n, omega.i, beta.n, beta.star, lpmodel, indicator,
 #' @inheritParams beta.star.qp
 #' @inheritParams full.beta.bs
 #' @inheritParams fsst.weight.matrix
-#' @param beta.n Sample \eqn{\widehat{\bm{\beta}}_n} vector that is defined as
-#'   \eqn{\widehat{\bm{\beta}}_n \equiv (\widehat{\bm{\beta}}_{{\rm obs},n},
+#' @param beta.n The sample \eqn{\widehat{\bm{\beta}}_n} vector that is defined
+#'   as \eqn{\widehat{\bm{\beta}}_n \equiv (\widehat{\bm{\beta}}_{{\rm obs},n},
 #'   \bm{\beta}_{{\rm shp},n}, \bm{\beta}_{{\rm tgt}})'}.
 #' @param beta.n.bs The bootstrap estimates of \code{beta.n}.
-#' @param p Length of the beta vector.
-#' @param d Number of columns of the \code{A} matrix.
+#' @param p The length of the beta vector.
+#' @param d The number of columns of the \code{A} matrix.
 #'
 #' @return Return the following list of objects:
 #'   \item{beta.star}{This corresponds to \eqn{\widehat{\bm{\beta}}^\star}.}
 #'   \item{beta.star.bs}{This corresponds to the bootstrap estimates of
 #'     \eqn{\widehat{\bm{\beta}}^\star}.}
 #'   \item{x.star}{This corresponds to \eqn{\bm{x}^\star}, which is the
-#'     solution to the quadratic program \code{beta.star.qp}.}
+#'     solution to the quadratic program \code{\link[lpinfer]{beta.star.qp}}.}
 #'   \item{x.star.bs}{This corresponds to the bootstrap estimates of
 #'     \eqn{\bm{x}^\star}.}
-#'   \item{df.error}{Table showing the id of the bootstrap replication(s)
+#'   \item{df.error}{A table showing the id of the bootstrap replication(s)
 #'     with error(s) and the corresponding error message(s).}
-#'   \item{new.error}{Number of new errors.}
-#'   \item{error.id}{Indices of the bootstrap replications that give errors.}
+#'   \item{new.error}{The number of new errors.}
+#'   \item{error.id}{The indices of the bootstrap replications that give
+#'     errors.}
 #'
 #' @export
 #'
@@ -1152,21 +1167,21 @@ fsst.beta.star.bs <- function(data, lpmodel, beta.n, beta.n.bs, beta.tgt,
 #'
 #' @description This function computes one bootstrap estimate for
 #'   \code{beta.star} and \code{x.star}. This function is used
-#'   in the \code{fsst.beta.star.bs} function via the \code{future_lapply}
-#'   command.
+#'   in the \code{\link[lpinfer]{fsst.beta.star.bs}} function via the
+#'   \code{future_lapply} command.
 #'
 #' @inheritParams fsst
 #' @inheritParams fsst.beta.star.bs
 #' @inheritParams full.beta.bs
 #' @inheritParams dkqs.bs.fn
-#' @param sigma.beta.obs Estimator of the asymptotic variance for
+#' @param sigma.beta.obs An estimator of the asymptotic variance for
 #'   \code{beta.obs}.
 #'
 #' @return Returns a list of output that are obtained from the subsampling
 #'   procedure:
-#'   \item{beta.star}{Bootstrap estimates of \code{beta.star}.}
-#'   \item{x.star}{Bootstrap estimates of \code{x.star}.}
-#'   \item{msg}{Error message (if applicable).}
+#'   \item{beta.star}{The bootstrap estimates of \code{beta.star}.}
+#'   \item{x.star}{The bootstrap estimates of \code{x.star}.}
+#'   \item{msg}{An error message (if applicable).}
 #'
 #' @export
 #'
@@ -1219,17 +1234,19 @@ fsst.beta.star.bs.fn <- function(beta.obs.bs, data, lpmodel, beta.tgt,
                msg = msg))
 }
 
-#' Computes the restricted estimator in the FSST procedure
+#' Computes the restricted estimator in the \code{\link[lpinfer]{fsst}}
+#' procedure
 #'
 #' @description This function computes the restricted estimator
-#'   \eqn{\widehat{\bm{\beta}}^r_n} in the FSST procedure.
+#'   \eqn{\widehat{\bm{\beta}}^r_n} in the \code{\link[lpinfer]{fsst}}
+#'   procedure.
 #'
 #' @inheritParams fsst
 #' @inheritParams fsst.cone.lp
 #'
 #' @return Returns the optimal point and optimal value.
-#'  \item{objval}{Optimal objective value.}
-#'  \item{x}{Optimal point.}
+#'  \item{objval}{The optimal value.}
+#'  \item{x}{The optimal point.}
 #'
 #' @export
 #'
@@ -1316,16 +1333,16 @@ beta.r.compute <- function(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
 #' Computes the range component of the test statistics
 #'
 #' @description This function computes the range component of the test
-#'   statistics in the FSST procedure.
+#'   statistics in the \code{\link[lpinfer]{fsst}} procedure.
 #'
 #' @inheritParams fsst
 #' @inheritParams beta.star.qp
 #' @inheritParams fsst.beta.bs
 #' @inheritParams sigma.summation
-#' @param x.star Optimal value from \code{beta.star.qp}.
+#' @param x.star The optimal value from \code{beta.star.qp}.
 #'
-#' @return Returns the optimal point and optimal value.
-#'  \item{range}{Range component of the test statistic.}
+#' @return Returns the range test statistic.
+#'  \item{range}{The sample range test statistic.}
 #'
 #' @export
 #'
@@ -1358,16 +1375,15 @@ fsst.range <- function(n, beta.obs.hat, x.star, lpmodel, weight.mat) {
 #' @inheritParams fsst.range
 #' @inheritParams fsst.weight.matrix
 #' @inheritParams full.beta.bs
-#' @param x.star.bs Bootstrap estimates of \code{x.star}.
-#' @param p Length of the vector \eqn{\bm{\beta}}.
-#' @param d Number of columns of the \eqn{\bm{A}} matrix.
+#' @param x.star.bs The bootstrap estimates of \code{x.star}.
 #'
 #' @return Return the following list of objects:
-#'   \item{range.n.list}{List of bootstrap range components.}
-#'   \item{df.error}{Table showing the id of the bootstrap replication(s)
+#'   \item{range.n.list}{The list of bootstrap range components.}
+#'   \item{df.error}{A table showing the id of the bootstrap replication(s)
 #'     with error(s) and the corresponding error message(s).}
-#'   \item{new.error}{Number of new errors.}
-#'   \item{error.id}{Indices of the bootstrap replications that give errors.}
+#'   \item{new.error}{The number of new errors.}
+#'   \item{error.id}{The indices of the bootstrap replications that give
+#'     errors.}
 #'
 #' @export
 #'
@@ -1463,8 +1479,8 @@ fsst.range.bs <- function(n, lpmodel, beta.obs.hat, beta.obs.bs, x.star,
 #'   \code{beta.star} and \code{x.star}.
 #'
 #' @return Return the following list of objects:
-#'   \item{Ts}{Range test statistic.}
-#'   \item{msg}{Error message (if applicable).}
+#'   \item{Ts}{The bootstrap range test statistic.}
+#'   \item{msg}{An error message (if applicable).}
 #'
 #' @export
 #'
@@ -1524,20 +1540,22 @@ fsst.range.bs.fn <- function(beta.x.star, n, lpmodel, beta.obs.hat, x.star,
 #' @inheritParams fsst
 #' @inheritParams fsst.cone.lp
 #' @inheritParams fsst.beta.star.bs
-#' @param beta.star This corresponds to the starred version of the
-#'   \code{beta.n} vector, i.e. \eqn{\widehat{\bm{\beta}}^\star_n}.
+#' @param beta.star The starred version of the \code{beta.n} vector, i.e.
+#'   \eqn{\widehat{\bm{\beta}}^\star_n}.
 #' @param beta.star.list This corresponds to the bootstrap estimates of
 #'   \code{beta.star}.
-#' @param beta.r This corresponds to the restricted estimator.
-#' @param data.driven
+#' @param R.succ The number of successful bootstrap replications.
+#' @param beta.r The restricted estimator.
+#' @param data.driven A boolean variable. This indicates whether the
+#'   data-driven problem is being considered.
 #'
 #' @return Return the following list of objects:
-#'   \item{cone.n.list}{List of bootstrap cone components.}
+#'   \item{cone.n.list}{The list of bootstrap cone components.}
+#'   \item{new.error}{The number of new errors.}
 #'   \item{df.error}{Table showing the id of the bootstrap replication(s)
 #'     with error(s) and the corresponding error message(s).}
-#'   \item{new.error}{Number of new errors.}
-#'   \item{error.id}{Indices of the bootstrap replications that give errors.}
-#'   \item{R.succ}{Number of successful bootstrap replications.}
+#'   \item{error.id}{An indices of the bootstrap replications that give errors.}
+#'   \item{R.succ}{A number of successful bootstrap replications.}
 #'
 #' @export
 #'
@@ -1629,8 +1647,8 @@ fsst.cone.bs <- function(n, omega.i, beta.n, beta.star, lpmodel, R.succ,
 #' @param beta.star.bs One bootstrap estimate of the \code{beta.star} object.
 #'
 #' @return Return the following list of objects:
-#'   \item{Ts}{Cone test statistic.}
-#'   \item{msg}{Error message (if applicable).}
+#'   \item{Ts}{The bootstrap cone test statistic.}
+#'   \item{msg}{An error message (if applicable).}
 #'
 #' @export
 #'
@@ -1687,10 +1705,10 @@ fsst.cone.bs.fn <- function(beta.star.bs, n, omega.i, beta.n, beta.star,
                msg = msg))
 }
 
-#' Calculates the \eqn{p}-value for the FSST procedure
+#' Calculates the \eqn{p}-value for the \code{\link[lpinfer]{fsst}} procedure
 #'
 #' @description This function computes the \eqn{p}-value of the test based on
-#'    the bootstrap estimates for the FSST procedure.
+#'    the bootstrap estimates for the \code{\link[lpinfer]{fsst}} procedure.
 #'
 #' @param range.n The range component of the sample test statistic.
 #' @param cone.n The cone component of the sample test statistic.
@@ -1698,12 +1716,12 @@ fsst.cone.bs.fn <- function(beta.star.bs, n, omega.i, beta.n, beta.star,
 #'   test statistics.
 #' @param cone.n.list The bootstrap estimates of the cone component in the
 #'   test statistics.
-#' @param alpha Significance level.
+#' @param alpha The significance level.
 #' @inheritParams fsst
 #'
 #' @return Returns the \eqn{p}-value and the decision.
-#'   \item{pval}{\eqn{p}-value.}
-#'   \item{decision}{Decision to reject or not.}
+#'   \item{pval}{The \eqn{p}-value.}
+#'   \item{decision}{The decision to reject or not.}
 #'
 #' @export
 #'
@@ -1736,9 +1754,9 @@ fsst.pval <- function(range.n, cone.n, range.n.list, cone.n.list, R,
 
 #' Checks and updates the input in \code{fsst}
 #'
-#' @description This function checks and updates the input of the user. If
-#'    there is any invalid input, this function will be terminated and
-#'    generates appropriate error messages.
+#' @description This function checks and updates the input from the user in the
+#'    \code{\link[lpinfer]{fsst}} function. If there is any invalid input,
+#'    the function will be terminated and error messages will be printed.
 #'
 #' @inheritParams fsst
 #' @inheritParams dkqs
@@ -1841,11 +1859,12 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
                logical.ub = logical.ub))
 }
 
-#' Print results from \code{fsst}
+#' Print results from \code{\link[lpinfer]{fsst}}
 #'
-#' @description This function prints the \eqn{p}-values from \code{fsst}.
+#' @description This function prints the \eqn{p}-values from
+#'   \code{\link[lpinfer]{fsst}}.
 #'
-#' @param x Object returned from \code{fsst}.
+#' @param x The output objects returned from \code{\link[lpinfer]{fsst}}.
 #' @param ... Additional arguments.
 #'
 #' @return Nothing is returned.
@@ -1882,13 +1901,12 @@ print.fsst <- function(x, ...) {
    }
 }
 
-#' Summary of results from \code{fsst}
+#' Summary of results from \code{\link[lpinfer]{fsst}}
 #'
 #' @description This function prints a summary of the results obtained from
-#'   \code{fsst}.
+#'   \code{\link[lpinfer]{fsst}}.
 #'
-#' @param x Objects returned from \code{fsst}.
-#' @param ... Additional arguments.
+#' @inheritParams print.fsst
 #'
 #' @return Nothing is returned.
 #'
@@ -1974,25 +1992,29 @@ summary.fsst <- function(x, ...) {
    }
 }
 
-#' Data-driven choice of \code{lambda} in the FSST procedure
+#' Data-driven choice of \code{lambda} in the \code{\link[lpinfer]{fsst}}
+#' procedure
 #'
 #' @description This function provides a data-driven choice of \code{lambda}
-#'   in the FSST procedure.
+#'   in the \code{\link[lpinfer]{fsst}} procedure.
 #'
 #'
 #' @inheritParams fsst.cone.bs
 #' @inheritParams fsst.beta.star.bs
+#' @param p The length of the vector \eqn{\bm{\beta}}.
+#' @param d The number of columns of the \eqn{\bm{A}} matrix.
 #'
 #' @details \eqn{\alpha_n} is set as \eqn{1} if the number of observations in
 #'   the data set is less than 16.
 #'
 #' @return Returns the data-driven \code{lambda} and the error messages.
-#'   \item{lambda}{Data-driven \code{lambda}}
-#'   \item{df.error}{Table showing the id of the bootstrap replication(s)
+#'   \item{lambda}{The data-driven \code{lambda}}
+#'   \item{df.error}{A table showing the id of the bootstrap replication(s)
 #'     with error(s) and the corresponding error message(s).}
-#'   \item{new.error}{Number of new errors.}
-#'   \item{error.id}{Indices of the bootstrap replications that give errors.}
-#'   \item{R.succ}{Number of successful bootstrap replications.}
+#'   \item{new.error}{The number of new errors.}
+#'   \item{error.id}{The indices of the bootstrap replications that give
+#'     errors.}
+#'   \item{R.succ}{The number of successful bootstrap replications.}
 #'
 #' @export
 #'
@@ -2050,15 +2072,15 @@ fsst.lambda <- function(n, omega.i, beta.n, beta.star, lpmodel, R.succ,
 #'
 #' @description This function labels the data-driven \code{lambda} in the
 #'   \code{print} or \code{summary} output and returns an indicative message.
-#'   This only affects the output messages, but not the objects returned.
+#'   This only affects the output messages, not the objects returned.
 #'
 #' @param lambdas The vector of \code{lambda}.
-#' @param lambda.data Data-driven lambda.
+#' @param lambda.data The data-driven lambda.
 #'
 #' @return Returns the updated vector of \code{lambda} where the data-driven
 #'   \code{lambda} is labelled with a star and the corresponding message
-#'   \item{lambdas}{Updated \code{lambda}.}
-#'   \item{msg}{Indicative message.}
+#'   \item{lambdas}{The updated \code{lambda}.}
+#'   \item{msg}{An indicative message.}
 #'
 #' @export
 #'

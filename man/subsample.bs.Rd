@@ -2,7 +2,7 @@
 % Please edit documentation in R/subsample.R
 \name{subsample.bs}
 \alias{subsample.bs}
-\title{Bootstrap procedure for the subsampling test}
+\title{Bootstrap procedure for the \code{\link[lpinfer]{subsample}} procedure}
 \usage{
 subsample.bs(
   data,
@@ -23,55 +23,53 @@ subsample.bs(
 )
 }
 \arguments{
-\item{data}{Data used in the tests.}
+\item{data}{An \code{data frame} or a \code{matrix}.}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test. The following
-components are required in the \code{lpmodel} for the DKQS test:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{beta.obs}}
- }}
+\item{lpmodel}{An \code{lpmodel} object.}
 
-\item{beta.tgt}{Value of beta to be tested.}
+\item{beta.tgt}{The value to be tested.}
 
-\item{norm}{Norm used in the optimization problem. It can be either a 1-norm
-or a 2-norm.}
+\item{norm}{The norm used in the optimization problem. It can be either a
+1-norm or a 2-norm. See the details section of
+\code{\link[lpinfer]{estbounds}} for a list of accepted strings.}
 
-\item{solver}{Name of the linear and quadratic programming solver that
-are used to obtain the solution to linear and quadratic programs.
+\item{solver}{The name of the linear and quadratic programming solver that
+is used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
 
-\item{replace}{Boolean variable to indicate whether the function samples
+\item{replace}{A boolean variable to indicate whether the function samples
 the data with or without replacement.}
 
 \item{progress}{The boolean variable for whether the progress bars should
 be displayed. If it is set as \code{TRUE}, the progress bars will be
 displayed while the code is running.}
 
-\item{m}{Size of each subsample.}
+\item{m}{The size of each subsample.}
 
-\item{n}{Sample size (only required if \code{data} is omitted in the input).}
+\item{n}{The sample size. This is only required if \code{data} is omitted
+in the input.}
 
-\item{omega.hat}{Estimator of the asymptotic variance.}
+\item{omega.hat}{The estimator of the asymptotic variance.}
 
-\item{error.id}{List of ID that corresponds to problematic bootstrap draws.}
+\item{error.id}{The list of ID that corresponds to problematic bootstrap
+draws.}
 
-\item{seed.list}{List of RNG states and the corresponding iterations.}
+\item{seed.list}{The list of RNG states and the corresponding iterations.}
 }
 \value{
 Returns a list of output that are obtained from the subsampling
   procedure:
-  \item{T.sub}{Bootstrap test statistics from the subsampling procedure.}
-  \item{beta.sub}{Bootstrap estimators for the \code{beta} component.}
-  \item{df.error}{Table showing the id of the bootstrap replication(s)
+  \item{T.sub}{The bootstrap test statistics from the subsampling procedure.}
+  \item{beta.sub}{The bootstrap estimators for the \code{beta} component.}
+  \item{df.error}{A table showing the id of the bootstrap replication(s)
     with error(s) and the corresponding error message(s).}
-  \item{R.eval}{Number of bootstrap replications that have been conducted.}
-  \item{R.succ}{Number of successful bootstrap replications.}
+  \item{R.eval}{The number of bootstrap replications that have been
+    conducted.}
+  \item{R.succ}{The number of successful bootstrap replications.}
 }
 \description{
 This function carries out the bootstrap procedure of the
-  subsampling test. This function supports parallel programming via the
-  \code{future.apply} package.
+  \code{\link[lpinfer]{subsample}} procedure This function supports
+  parallel programming via the \code{future.apply} package.
 }

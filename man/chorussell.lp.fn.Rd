@@ -3,7 +3,8 @@
 \name{chorussell.lp.fn}
 \alias{chorussell.lp.fn}
 \title{Computes whether the candidate bounds satisfy the constraints in the
-Cho-Russell procedure when the sample estimates are non-infinite}
+\code{\link[lpinfer]{chorussell}} procedure when the sample estimates are
+non-infinite}
 \usage{
 chorussell.lp.fn(
   x,
@@ -39,18 +40,20 @@ chorussell.lp.fn(
 
 \item{ub.can}{All candidates of the upper bounds.}
 
-\item{alpha}{Significance level. This can be a vector.}
+\item{alpha}{The significance level. This can be a vector.}
 
-\item{pbar}{Progress bar object.}
+\item{pbar}{The progress bar object.}
 
-\item{ci}{Boolean variable that indicates whether a \eqn{p}-value or a
+\item{ci}{A boolean variable that indicates whether a \eqn{p}-value or a
 \eqn{(1-\alpha)}-confidence interval is returned. If \code{ci} is
 \code{TRUE}, then a confidence interval is returned. Otherwise, a
 \eqn{p}-value is returned.}
 
-\item{kappa}{Tuning parameter used in the second step of the two-step
+\item{kappa}{The tuning parameter used in the second step of the two-step
 procedure for obtaining the bounds subject to the shape constraints.
 It can be any nonnegative number or a vector of nonnegative numbers.}
+
+\item{k}{Iteration number.}
 
 \item{progress}{The boolean variable for whether the progress bars should
 be displayed. If it is set as \code{TRUE}, the progress bars will be
@@ -62,9 +65,10 @@ Returns a data frame.
     and upper bounds, as well as their sum.}
 }
 \description{
-This function carries out the one set of computation in the
-  Cho-Russell procedure to check whether the sets of values satisfy the
-  constraints in the Cho-Russell procedure. In particular, given one
-  candidate of the lower bound, it checks all possible pairs with the upper
-  bounds and determine whether they satisfy the constraints.
+This function carries out one set of computation in the
+  \code{\link[lpinfer]{chorussell}} procedure to check whether the set of
+  values satisfy the constraints in the \code{\link[lpinfer]{chorussell}}
+  procedure. In particular, given one candidate of the lower bound, it
+  checks all possible pairs with the upper bounds and determine whether they
+  satisfy the constraints.
 }

@@ -7,17 +7,19 @@
 check.numrange(x, name.var, left.type, left, right.type, right)
 }
 \arguments{
-\item{x}{Variable to be checked.}
+\item{x}{The variable to be checked.}
 
-\item{name.var}{Name of the variable.}
+\item{name.var}{The name of the variable.}
 
-\item{left.type}{Type of the left interval (\code{open} or \code{closed})}
+\item{left.type}{The type of the left interval (\code{open} or
+\code{closed}).}
 
-\item{left}{Value of lower bound}
+\item{left}{The value of lower bound.}
 
-\item{right.type}{Type of the right interval (\code{open} or \code{closed})}
+\item{right.type}{The type of the right interval (\code{open} or
+\code{closed}).}
 
-\item{right}{Value of the upper bound}
+\item{right}{the value of the upper bound.}
 }
 \value{
 Nothing is returned.

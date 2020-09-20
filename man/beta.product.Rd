@@ -7,19 +7,19 @@
 beta.product(beta, beta.obs.hat, pbar, progress, eval.count)
 }
 \arguments{
-\item{beta}{Bootstrap \code{beta.obs} estimator.}
+\item{beta}{A bootstrap estimator \code{beta.obs}.}
 
-\item{beta.obs.hat}{Estimator of
+\item{beta.obs.hat}{The sample estimator
 \eqn{\widehat{\bm{\beta}}_{\mathrm{obs}, n}} based on the given
-information in \code{lpmodel}.}
+information in \code{lpmodel} (and \code{data} if applicable).}
 
-\item{pbar}{Progress bar object.}
+\item{pbar}{The progress bar object.}
 
 \item{progress}{The boolean variable for whether the progress bars should
 be displayed. If it is set as \code{TRUE}, the progress bars will be
 displayed while the code is running.}
 
-\item{eval.count}{Count for the number of times the \code{future_lapply}
+\item{eval.count}{The count for the number of times the \code{future_lapply}
 function has been called. If this object is zero, it means that the
 \code{future_lapply} function is being called for the first time in this
 subprocedure. Otherwise, it means that the \code{future_lapply} function
@@ -33,8 +33,8 @@ Returns an \eqn{n \times n} matrix.
 }
 \description{
 This function computes the product of the two vectors. This is
-  used in the \code{sigma.summation} function that computes the
-  asymptotic variance estimator.
+  used in the \code{\link[lpinfer]{sigma.summation}} function that computes
+  the asymptotic variance estimator.
 }
 \details{
 Denote \eqn{\bm{\beta}} and \eqn{\hat{\bm{\beta}}_{\rm obs}} as

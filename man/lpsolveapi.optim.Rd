@@ -34,14 +34,14 @@ objective function.}
 
 \item{lb}{The lower bound vector.}
 
-\item{weight}{Weighting matrix.}
+\item{weight}{The weighting matrix.}
 }
 \value{
-Returns the optimal objective value and the corresponding argument
-  to the linear program.
- \item{objval}{Optimal objective value.}
- \item{x}{Optimal point.}
- \item{status}{Status of the optimization problem.}
+Returns the optimal point, the optimal value and the status of the
+ solution.
+ \item{objval}{The optimal value.}
+ \item{x}{The optimal point.}
+ \item{status}{The status of the optimization problem.}
 }
 \description{
 This function computes the solution to the linear program

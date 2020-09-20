@@ -2,36 +2,28 @@
 % Please edit documentation in R/estbounds.R
 \name{estbounds.original}
 \alias{estbounds.original}
-\title{Computes the true bounds with shape constraints}
+\title{Computes the true bounds subjected to shape constraints}
 \usage{
 estbounds.original(data, lpmodel, original.sense, solver)
 }
 \arguments{
-\item{data}{Data used in the tests.}
+\item{data}{An \code{data frame} or a \code{matrix}.}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test that consists of
-the following objects:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{A.shp}}
-   \item{\code{beta.obs}}
-   \item{\code{beta.shp}}
- }}
+\item{lpmodel}{The \code{lpmodel} object.}
 
-\item{original.sense}{Sense of the constraints for the true bounds.}
+\item{original.sense}{The sense of the constraints for the true bounds.}
 
-\item{solver}{Name of the linear and quadratic programming solver that
-are used to obtain the solution to linear and quadratic programs.
+\item{solver}{The name of the linear and quadratic programming solver that
+is used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
 }
 \value{
 Returns the solution to the linear program.
- \item{objval}{Optimal objective value.}
- \item{status}{Status of the linear program.}
+ \item{objval}{The optimal value.}
+ \item{status}{The status of the linear program.}
 }
 \description{
-This function computes the true bounds subject to the shape
+This function computes the true bounds subjected to the shape
    constraints without approximation.
 }

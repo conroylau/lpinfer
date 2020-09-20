@@ -36,23 +36,23 @@ objective function.}
 
 \item{lb}{The lower bound vector.}
 
-\item{qc}{List of quadratic constraint(s). There can be multiple quadratic
-constraints. Each constraint has to be a list.}
+\item{qc}{The list of quadratic constraint(s). There can be multiple
+quadratic constraints. Each constraint has to be a list.}
 
-\item{weight}{Weighting matrix.}
+\item{weight}{The weighting matrix.}
 
 \item{...}{List of options to be passed to the Gurobi solver. This part is
 optional.}
 }
 \value{
-Returns the optimal point, optimal value and the status of the
+Returns the optimal point, the optimal value and the status of the
  solution.
- \item{objval}{Optimal objective value.}
- \item{x}{Optimal point.}
- \item{status}{Status of the optimization problem.}
+ \item{objval}{The optimal value.}
+ \item{x}{The optimal point.}
+ \item{status}{The status of the optimization problem.}
 }
 \description{
-This function computes the solution to the quadratic or linear
+This function computes the solution to the linear or quadratic
    program using the \code{Gurobi} package. This function can have linear
    and/or quadratic constraints.
 }

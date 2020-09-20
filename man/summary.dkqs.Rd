@@ -2,12 +2,12 @@
 % Please edit documentation in R/dkqs.R
 \name{summary.dkqs}
 \alias{summary.dkqs}
-\title{Summary of results from \code{dkqs}}
+\title{Summary of results from \code{\link[lpinfer]{dkqs}}}
 \usage{
 \method{summary}{dkqs}(x, ...)
 }
 \arguments{
-\item{x}{Objects returned from \code{dkqs}.}
+\item{x}{An output object returned from \code{\link[lpinfer]{dkqs}}.}
 
 \item{...}{Additional arguments.}
 }
@@ -16,5 +16,5 @@ Nothing is returned.
 }
 \description{
 This function prints a summary of the results obtained from
-  \code{dkqs}.
+  \code{\link[lpinfer]{dkqs}}.
 }

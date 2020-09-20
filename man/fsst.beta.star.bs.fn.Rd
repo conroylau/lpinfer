@@ -19,41 +19,35 @@ fsst.beta.star.bs.fn(
 )
 }
 \arguments{
-\item{beta.obs.bs}{Bootstrap estimates of \code{beta.obs}.}
+\item{beta.obs.bs}{The bootstrap estimates of \code{beta.obs}.}
 
-\item{data}{Data used in the tests.}
+\item{data}{An \code{data frame} or a \code{matrix}.}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test. The following
-components are required in the \code{lpmodel} for the FSST test:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{A.shp}}
-   \item{\code{beta.obs}}
-   \item{\code{beta.shp}}
- }}
+\item{lpmodel}{The \code{lpmodel} object.}
 
-\item{beta.tgt}{Value of beta to be tested.}
+\item{beta.tgt}{The value to be tested.}
 
-\item{weight.mat}{Weighting matrix.}
+\item{weight.mat}{The weighting matrix for the \code{\link[lpinfer]{fsst}}
+procedure.}
 
-\item{sigma.beta.obs}{Estimator of the asymptotic variance for
+\item{sigma.beta.obs}{An estimator of the asymptotic variance for
 \code{beta.obs}.}
 
-\item{solver}{Name of the linear and quadratic programming solver that
-are used to obtain the solution to linear and quadratic programs.
+\item{solver}{The name of the linear and quadratic programming solver that
+is used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
 
-\item{pbar}{Progress bar object.}
+\item{pbar}{The progress bar object.}
 
 \item{progress}{The boolean variable for whether the progress bars should
 be displayed. If it is set as \code{TRUE}, the progress bars will be
 displayed while the code is running.}
 
-\item{n.bs}{Total number of replications to be conducted in this procedure.}
+\item{n.bs}{The total number of replications to be conducted in this
+procedure.}
 
-\item{eval.count}{Count for the number of times the \code{future_lapply}
+\item{eval.count}{The count for the number of times the \code{future_lapply}
 function has been called. If this object is zero, it means that the
 \code{future_lapply} function is being called for the first time in this
 subprocedure. Otherwise, it means that the \code{future_lapply} function
@@ -64,13 +58,13 @@ replications.}
 \value{
 Returns a list of output that are obtained from the subsampling
   procedure:
-  \item{beta.star}{Bootstrap estimates of \code{beta.star}.}
-  \item{x.star}{Bootstrap estimates of \code{x.star}.}
-  \item{msg}{Error message (if applicable).}
+  \item{beta.star}{The bootstrap estimates of \code{beta.star}.}
+  \item{x.star}{The bootstrap estimates of \code{x.star}.}
+  \item{msg}{An error message (if applicable).}
 }
 \description{
 This function computes one bootstrap estimate for
   \code{beta.star} and \code{x.star}. This function is used
-  in the \code{fsst.beta.star.bs} function via the \code{future_lapply}
-  command.
+  in the \code{\link[lpinfer]{fsst.beta.star.bs}} function via the
+  \code{future_lapply} command.
 }

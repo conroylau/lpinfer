@@ -7,18 +7,18 @@
 check.func(f, A, data, name.var, name.A, mat.type)
 }
 \arguments{
-\item{f}{Function to be tested}
+\item{f}{The function to be tested.}
 
-\item{A}{Matrix that contains the information about the dimension for the
+\item{A}{A matrix that contains the information about the dimension for the
 output of f.}
 
 \item{data}{A data frame.}
 
-\item{name.var}{Name of the variable.}
+\item{name.var}{The name of the variable.}
 
-\item{name.A}{Name of the matrix \code{A}.}
+\item{name.A}{The name of the matrix \code{A}.}
 
-\item{mat.type}{Type of the matrix to be checked.}
+\item{mat.type}{The type of the matrix to be checked.}
 }
 \value{
 Returns the output of the function in the format of \code{numeric}

@@ -7,15 +7,15 @@
 check.lpobjects(data, mat, mat.name, mat.cat, R)
 }
 \arguments{
-\item{data}{Data used in the tests.}
+\item{data}{An \code{data frame} or a \code{matrix}.}
 
 \item{mat}{The matrix object in \code{lpmodel}.}
 
-\item{mat.name}{Name of the matrix object in \code{lpmodel}.}
+\item{mat.name}{The name of the matrix object in \code{lpmodel}.}
 
-\item{mat.cat}{Category of the matrix object.}
+\item{mat.cat}{The category of the matrix object.}
 
-\item{R}{Number of bootstrap replications.}
+\item{R}{The number of bootstrap replications.}
 }
 \value{
 Returns two objects:
@@ -27,6 +27,6 @@ This function checks if the matrix objects in \code{lpmodel}
    are in the correct format.
 }
 \details{
-See the details section for the function \code{check.lpmodel}
-  for more details on the strings for each category.
+See the details section for the function
+  \code{\link[lpinfer]{check.lpmodel}} for more details of each category.
 }

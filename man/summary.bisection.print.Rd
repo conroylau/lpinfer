@@ -7,13 +7,14 @@
 \method{summary}{bisection.print}(df_bis, i)
 }
 \arguments{
-\item{df_bis}{Data frame storing the information from the bisection method.}
+\item{df_bis}{A data frame storing the information from the bisection
+method.}
 }
 \value{
-Nothing is returned in this function.
+Nothing is returned.
 }
 \description{
 This function is used to display the message when constructing
-   the bounds and used in \code{summary.invertci} to print the results in
-   each step of the bisection method.
+   the bounds and used in \code{\link[lpinfer]{summary.invertci}} to print
+   the results in each step of the bisection method.
 }

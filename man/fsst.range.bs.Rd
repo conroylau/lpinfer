@@ -19,58 +19,49 @@ fsst.range.bs(
 )
 }
 \arguments{
-\item{n}{Sample size (only required if \code{data} is omitted in the input).}
+\item{n}{The sample size. This is only required if \code{data} is omitted
+in the input.}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test. The following
-components are required in the \code{lpmodel} for the FSST test:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{A.shp}}
-   \item{\code{beta.obs}}
-   \item{\code{beta.shp}}
- }}
+\item{lpmodel}{The \code{lpmodel} object.}
 
-\item{beta.obs.hat}{Estimator of
+\item{beta.obs.hat}{The sample estimator
 \eqn{\widehat{\bm{\beta}}_{\mathrm{obs}, n}} based on the given
-information in \code{lpmodel}.}
+information in \code{lpmodel} (and \code{data} if applicable).}
 
-\item{beta.obs.bs}{Bootstrap estimates of \code{beta.obs}.}
+\item{beta.obs.bs}{The bootstrap estimates of \code{beta.obs}.}
 
-\item{x.star}{Optimal value from \code{beta.star.qp}.}
+\item{x.star}{The optimal value from \code{beta.star.qp}.}
 
-\item{x.star.bs}{Bootstrap estimates of \code{x.star}.}
+\item{x.star.bs}{The bootstrap estimates of \code{x.star}.}
 
-\item{weight.mat}{Weighting matrix.}
+\item{weight.mat}{The weighting matrix for the \code{\link[lpinfer]{fsst}}
+procedure.}
 
-\item{R}{Number of bootstrap replications.}
+\item{R}{The number of bootstrap replications.}
 
 \item{progress}{The boolean variable for whether the progress bars should
 be displayed. If it is set as \code{TRUE}, the progress bars will be
 displayed while the code is running.}
 
-\item{df.error}{Table showing the id of the bootstrap replication(s)
+\item{df.error}{A table showing the id of the bootstrap replication(s)
 with error(s) and the corresponding error message(s).}
 
-\item{eval.count}{Count for the number of times the \code{future_lapply}
+\item{eval.count}{The count for the number of times the \code{future_lapply}
 function has been called. If this object is zero, it means that the
 \code{future_lapply} function is being called for the first time in this
 subprocedure. Otherwise, it means that the \code{future_lapply} function
 has been called for more than once. This situation typically refers to the
 situations where there are some errors in the first time of the
 replications.}
-
-\item{p}{Length of the vector \eqn{\bm{\beta}}.}
-
-\item{d}{Number of columns of the \eqn{\bm{A}} matrix.}
 }
 \value{
 Return the following list of objects:
-  \item{range.n.list}{List of bootstrap range components.}
-  \item{df.error}{Table showing the id of the bootstrap replication(s)
+  \item{range.n.list}{The list of bootstrap range components.}
+  \item{df.error}{A table showing the id of the bootstrap replication(s)
     with error(s) and the corresponding error message(s).}
-  \item{new.error}{Number of new errors.}
-  \item{error.id}{Indices of the bootstrap replications that give errors.}
+  \item{new.error}{The number of new errors.}
+  \item{error.id}{The indices of the bootstrap replications that give
+    errors.}
 }
 \description{
 This function computes the bootstrap estimates of the range

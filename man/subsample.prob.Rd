@@ -2,7 +2,7 @@
 % Please edit documentation in R/subsample.R
 \name{subsample.prob}
 \alias{subsample.prob}
-\title{Formulates and solves the subsampling problem}
+\title{Formulates and solves the \code{\link[lpinfer]{subsample}} problem}
 \usage{
 subsample.prob(
   data,
@@ -16,42 +16,35 @@ subsample.prob(
 )
 }
 \arguments{
-\item{data}{Data used in the tests.}
+\item{data}{An \code{data frame} or a \code{matrix}.}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test. The following
-components are required in the \code{lpmodel} for the subsampling test:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{A.shp}}
-   \item{\code{beta.obs}}
-   \item{\code{beta.shp}}
- }
-matrix of the estimator \eqn{\hat{\bm{\beta}}_{\mathrm{obs}}}.}
+\item{lpmodel}{The \code{lpmodel} object used in the test.}
 
-\item{beta.tgt}{Value of beta to be tested.}
+\item{beta.tgt}{The value to be tested.}
 
-\item{norm}{Norm used in the optimization problem. It can be either a 1-norm
-or a 2-norm.}
+\item{norm}{The norm used in the optimization problem. It can be either a
+1-norm or a 2-norm. See the details section of
+\code{\link[lpinfer]{estbounds}} for a list of accepted strings.}
 
-\item{solver}{Name of the linear and quadratic programming solver that
-are used to obtain the solution to linear and quadratic programs.
+\item{solver}{The name of the linear and quadratic programming solver that
+is used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
 
-\item{n}{Sample size (only required if \code{data} is omitted in the input).}
+\item{n}{The sample size. This is only required if \code{data} is omitted
+in the input.}
 
 \item{beta.obs.hat}{The value of sample \eqn{\hat{\bm{\beta}}_{\mathrm{obs}}}
 from the \code{lpmodel} object.}
 
-\item{omega.hat}{Estimator of the asymptotic variance.}
+\item{omega.hat}{The estimator of the asymptotic variance.}
 }
 \value{
 Returns the following list of outputs:
-  \item{status}{Status of the optimization problem.}
-  \item{x}{Optimal point.}
-  \item{objval}{Optimal objective value.}
-  \item{larg}{List of arguments passed to the optimizer.}
+  \item{status}{The status of the optimization problem.}
+  \item{x}{The optimal point.}
+  \item{objval}{The optimal value.}
+  \item{larg}{The list of arguments passed to the optimizer.}
   \item{beta}{The beta vector \eqn{\widehat{\bm{\beta}}_{\mathrm{obs}}}
     used in the optimization problem that is obtained from the
     \code{beta.obs} component of the \code{lpmodel} object.}
@@ -61,7 +54,7 @@ Returns the following list of outputs:
 }
 \description{
 This function formulates and solves the linear or quadratic
-  program in the subsampling procedure. If the user chooses a 1-norm, this
-  function solves a linear program. If the user chooses a 2-norm, this
-  function solves a quadratic program.
+  program in the \code{\link[lpinfer]{subsample}} procedure. If the user
+  chooses a 1-norm, this function solves a linear program. If the user
+  chooses a 2-norm, this function solves a quadratic program.
 }

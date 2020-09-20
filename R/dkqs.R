@@ -3,55 +3,61 @@
 #' @description This module conducts inference using the cone-tightening
 #'   procedure proposed by Deb, Kitamura, Quah and Stoye (2018).
 #'
-#' @param data Data used in the tests.
-#' @param lpmodel The \code{lpmodel} object used in the test. The following
-#'   components are required in the \code{lpmodel} for the DKQS test:
-#'    \itemize{
-#'      \item{\code{A.tgt}}
-#'      \item{\code{A.obs}}
-#'      \item{\code{beta.obs}}
-#'    }
-#' @param beta.tgt Value of beta to be tested.
-#' @param R Number of bootstrap replications.
-#' @param Rmulti Multiplier for the number of bootstrap replications. The
+#' @param data An \code{data frame} or a \code{matrix}.
+#' @param lpmodel An \code{lpmodel} object.
+#' @param beta.tgt The value to be tested.
+#' @param R The number of bootstrap replications.
+#' @param Rmulti The multiplier for the number of bootstrap replications. The
 #'   product of \code{Rmulti} and \code{R} refers to the maximum
 #'   number of bootstrap replications to be conducted if there are errors.
-#' @param tau Value of the tuning parameter \eqn{\tau} in the DKQS
-#'   procedure.
-#' @param solver Name of the linear and quadratic programming solver that
-#'    are used to obtain the solution to linear and quadratic programs.
+#' @param tau The value of the tuning parameter \eqn{\tau} in the DKQS
+#'   procedure. This can be a vector.
+#' @param solver The name of the linear and quadratic programming solver that
+#'    is used to obtain the solution to linear and quadratic programs.
 #'    The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 #'    \code{limSolve} and \code{Rcplex}.
 #' @param progress The boolean variable for whether the progress bars should
 #'    be displayed. If it is set as \code{TRUE}, the progress bars will be
 #'    displayed while the code is running.
-#' @param n Sample size (only required if \code{data} is omitted in the input).
+#' @param n The sample size. This is only required if \code{data} is omitted
+#'    in the input.
+#'
 #' @return Returns the following list of outputs:
 #'   \item{pval}{A table of \eqn{p}-values for each \eqn{\tau}.}
 #'   \item{tau.feasible}{The list of \eqn{\tau} that are feasible.}
 #'   \item{tau.infeasible}{The list of \eqn{\tau} that are infeasible.}
-#'   \item{tau.max}{Maximum value of the feasible \eqn{\tau} for the problem.}
-#'   \item{T.n}{Test statistic \eqn{T_n}.}
+#'   \item{tau.max}{The maximum value of the feasible \eqn{\tau} for the
+#'      problem.}
+#'   \item{T.n}{The test statistic \eqn{T_n}.}
 #'   \item{T.bs}{The list of bootstrap test statistics
 #'      \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}} for each \eqn{\tau}.}
-#'   \item{beta.bs.bar}{The list of \eqn{\tau}-tightened re-centered bootstrap
-#'      estimators \eqn{\bar{\beta}^\ast_{\mathrm{obs},n,b}}.}
-#'   \item{solver}{Solver used.}
-#'   \item{cv.table}{Table of critical values.}
+#'   \item{solver}{The solver used.}
+#'   \item{cv.table}{A table of critical values.}
 #'   \item{call}{The function that has been called.}
-#'   \item{test.logical}{Indicator variable for whether the computation has
+#'   \item{test.logical}{An indicator variable for whether the computation has
 #'     been conducted. If \code{test.logical} is 1, it refers to the case
 #'     where \code{beta.tgt} is inside the logical bounds. If
 #'     \code{test.logical} is 0, it refers to the case where
 #'     \code{beta.tgt} is outside the logical bounds.}
-#'   \item{logical.lb}{Logical lower bound.}
-#'   \item{logical.ub}{Logical upper bound.}
-#'   \item{df.error}{Table showing the id of the bootstrap replication(s)
+#'   \item{logical.lb}{The logical lower bound.}
+#'   \item{logical.ub}{The logical upper bound.}
+#'   \item{df.error}{A table showing the id of the bootstrap replication(s)
 #'     with error(s) and the corresponding error message(s).}
-#'   \item{R.succ}{Number of successful bootstrap replications.}
+#'   \item{R.succ}{The number of successful bootstrap replications.}
 #'
-#' @details If the value of the test statistic \eqn{T_n} is zero, the
-#'    bootstrap procedure will be skipped and the \eqn{p}-value is zero.
+#' @details
+#' \itemize{
+#'  \item{If the value of the test statistic \eqn{T_n} is zero, the bootstrap
+#'    procedure will be skipped and the \eqn{p}-value is zero.}
+#'  \item{ The following components are required in the \code{lpmodel} for the
+#'    DKQS procedure:
+#'    \itemize{
+#'      \item{\code{A.tgt}}
+#'      \item{\code{A.obs}}
+#'      \item{\code{beta.obs}}
+#'    }
+#'  }
+#' }
 #'
 #' @example ./inst/example/dkqs_example.R
 #'
@@ -243,15 +249,13 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
   return(output)
 }
 
-#' Formulates and solves the linear and quadratic programs in the \code{dkqs}
-#' procedure
+#' Formulates and solves the linear and quadratic programs in the
+#' \code{\link[lpinfer]{dkqs}} procedure
 #'
 #' @description This function formulates the matrices and vectors used in
-#'    the \code{dkqs} test and solves the quadratic programs (4) or linear
+#'    the DKQS test and solves the quadratic programs (4) or linear
 #'    programs (5) and (6) in Torgovitsky (2019).
 #'
-#' @param tau The value of the tuning parameter tau to be used in the
-#'    \code{dkqs} procedure.
 #' @param problem The problem that the function will be solved.
 #' @param beta.obs.hat The value of sample \eqn{\hat{\bm{\beta}}_{\mathrm{obs}}}
 #'    from the \code{lpmodel} object.
@@ -259,8 +263,10 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
 #' @inheritParams dkqs
 #'
 #' @return Returns the optimal point and optimal value.
-#'  \item{objval}{Optimal objective value.}
-#'  \item{x}{Optimal point.}
+#'  \item{objval}{The optimal value.}
+#'  \item{x}{The optimal point.}
+#'  \item{lb0}{The logical lower bound.}
+#'  \item{ub0}{The logical upper bound.}
 #'
 #' @details The argument \code{problem} must be one of the followings:
 #' \itemize{
@@ -422,11 +428,11 @@ dkqs.qlp <- function(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
   return(ans)
 }
 
-#' Bootstrap procedure for the DKQS test
+#' Bootstrap procedure for the DKQS procedure
 #'
 #' @description This function carries out the bootstrap procedure of the
-#'   DKQS test. This function supports parallel programming via the
-#'   \code{future.apply} package.
+#'   \code{\link[lpinfer]{dkqs}} procedure This function supports parallel
+#'   programming via the \code{future.apply} package.
 #'
 #' @import future.apply progressr
 #'
@@ -434,7 +440,7 @@ dkqs.qlp <- function(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
 #'    \eqn{\hat{\bm{s}}^\star \equiv \bm{A}_{\mathrm{obs}}\hat{\bm{x}}_n^\star}
 #'    in the cone-tightening procedure for each \eqn{\tau}.
 #' @param tau.list The list of feasible parameters \eqn{\tau}.
-#' @param maxR Maximum number of bootstrap replications to be considered in
+#' @param maxR The maximum number of bootstrap replications to be considered in
 #'    case there are some errors.
 #' @inheritParams dkqs
 #' @inheritParams dkqs.qlp
@@ -444,9 +450,9 @@ dkqs.qlp <- function(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
 #'      \eqn{\{\overline{T}_{n,b}(\tau_n)\}^B_{b=1}}.}
 #'  \item{beta.bs.bar.list}{A list of \eqn{\tau_n}-tightened recentered
 #'     bootstrap estimates \eqn{\bar{\bm{\beta}}^\star_{\mathrm{obs},n,b}}.}
-#'   \item{df.error}{Table showing the id of the bootstrap replication(s)
+#'   \item{df.error}{A table showing the id of the bootstrap replication(s)
 #'     with error(s) and the corresponding error message(s).}
-#'   \item{R.succ}{Number of successful bootstrap replications.}
+#'   \item{R.succ}{The number of successful bootstrap replications.}
 #'
 #' @export
 #'
@@ -474,7 +480,7 @@ dkqs.bs <- function(data, lpmodel, beta.tgt, R, maxR, s.star.list, tau.list,
   beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
 
   # ---------------- #
-  # Step 2: Bootstrap replicatoins
+  # Step 2: Bootstrap replications
   # ---------------- #
   eval.count <- 0
   while ((R.succ < R) & (R.eval != maxR)) {
@@ -485,10 +491,10 @@ dkqs.bs <- function(data, lpmodel, beta.tgt, R, maxR, s.star.list, tau.list,
     i0 <- bs.temp$i0
     i1 <- bs.temp$i1
     bs.list <- bs.temp$bs.list
-    
+
     # Set the default for progress bar
     progressr::handlers("progress")
-    
+
     # Obtain results from the bootstrap replications
     progressr::with_progress({
       if (isTRUE(progress)) {
@@ -560,11 +566,12 @@ dkqs.bs <- function(data, lpmodel, beta.tgt, R, maxR, s.star.list, tau.list,
               R.succ = R.succ))
 }
 
-#' Carries out one bootstrap replication for the DKQS procedure
+#' Carries out one bootstrap replication for the \code{\link[lpinfer]{dkqs}}
+#' procedure
 #'
 #' @description This function carries out the one bootstrap replication of the
-#'   DKQS procedure This function is used in the \code{dkqs.bs} function via
-#'   the \code{future_lapply} command.
+#'   DKQS procedure This function is used in the \code{\link[lpinfer]{dkqs.bs}}
+#'   function via the \code{future_lapply} command.
 #'
 #' @inheritParams dkqs
 #' @inheritParams dkqs.bs
@@ -572,22 +579,23 @@ dkqs.bs <- function(data, lpmodel, beta.tgt, R, maxR, s.star.list, tau.list,
 #' @param x This is either the list of indices that represent the bootstrap
 #'   replications, or the list of bootstrap components of the \code{lpmodel}
 #'   object passed from the user.
-#' @param pbar Progress bar object.
-#' @param eval.count Count for the number of times the \code{future_lapply}
+#' @param pbar The progress bar object.
+#' @param eval.count The count for the number of times the \code{future_lapply}
 #'   function has been called. If this object is zero, it means that the
 #'   \code{future_lapply} function is being called for the first time in this
 #'   subprocedure. Otherwise, it means that the \code{future_lapply} function
 #'   has been called for more than once. This situation typically refers to the
 #'   situations where there are some errors in the first time of the
 #'   replications.
-#' @param n.bs Total number of replications to be conducted in this procedure.
+#' @param n.bs The total number of replications to be conducted in this
+#'   procedure.
 #'
 #' @return Returns a list of output that are obtained from the DKQS
 #'   procedure:
-#'   \item{Ts}{Bootstrap test statistic.}
-#'   \item{beta}{Bootstrap estimator.}
-#'   \item{param}{List of problematic parameters in the DKQS test.}
-#'   \item{msg}{Error message (if applicable).}
+#'   \item{Ts}{A bootstrap test statistic.}
+#'   \item{beta}{A bootstrap estimator.}
+#'   \item{param}{A list of problematic parameters in the DKQS test.}
+#'   \item{msg}{An error message (if applicable).}
 #'
 #' @export
 #'
@@ -696,11 +704,11 @@ dkqs.bs.fn <- function(x, data, lpmodel, beta.obs.hat, beta.tgt, s.star.list,
 #' @description This function computes the \eqn{p}-value of the test based on
 #'    the bootstrap estimates.
 #'
-#' @param T_bs Bootstrap estimates of the test statistic.
-#' @param T.n Sample test statistics.
+#' @param T_bs The list of bootstrap estimates of the test statistic.
+#' @param T.n The sample test statistics.
 #'
 #' @return Returns the \eqn{p}-value:
-#'   \item{p}{\eqn{p}-value.}
+#'   \item{p}{The \eqn{p}-value.}
 #'
 #' @export
 #'
@@ -712,12 +720,12 @@ pval <- function(T.bs, T.n) {
 }
 
 #' Creates the constraints for the linear program of \code{tau} in the
-#' DKQS procedure
+#' \code{\link[lpinfer]{dkqs}} procedure
 #'
 #' @description This function generates the constraints in the linear program
 #'   for computing the value of tau based on the procedure suggested by Kamat
-#'   (2018) for the DKQS procedure, i.e. linear program (6) of
-#'   Torgovitsky (2019).
+#'   (2018) for the \code{\link[lpinfer]{dkqs}} procedure, i.e. linear
+#'   program (6) of Torgovitsky (2019).
 #'
 #' @param length.tau The number of variables in the constraint.
 #' @param coeff.tau The coefficient in front of tau in the constraint.
@@ -728,14 +736,14 @@ pval <- function(T.bs, T.n) {
 #'    constraint.
 #' @param lp.lhs.tau The constraint matrix to be updated.
 #' @param lp.rhs.tau The rhs vector of the linear constraints to be updated.
-#' @param lp.sense.tau The sense vector fo the linear constraints to be
+#' @param lp.sense.tau The sense vector of the linear constraints to be
 #'    updated.
 #'
 #' @return Returns the list of matrices that corresponds to the updated
 #'   constraints:
-#'   \item{lp.lhs.tau}{Updated constraint matrix.}
-#'   \item{lp.rhs.tau}{Updated rhs vector.}
-#'   \item{lp.sense.tau}{Update sense for the constraints.}
+#'   \item{lp.lhs.tau}{An updated constraint matrix.}
+#'   \item{lp.rhs.tau}{An updated rhs vector.}
+#'   \item{lp.sense.tau}{An update sense for the constraints.}
 #'
 #' @export
 #'
@@ -761,20 +769,20 @@ tau.constraints <- function(length.tau, coeff.tau, coeff.x, ind.x, rhs, sense,
               lp.sense.tau = lp.sense.tau))
 }
 
-#' Checks and updates the input in \code{dkqs}
+#' Checks and updates the input in \code{\link[lpinfer]{dkqs}}
 #'
-#' @description This function checks and updates the input of the user. If
-#'    there is any invalid input, this function will be terminated and
-#'    generates appropriate error messages.
+#' @description This function checks and updates the input from the user in the
+#'    \code{\link[lpinfer]{dkqs}} function. If there is any invalid input,
+#'    the function will be terminated and error messages will be printed.
 #'
 #' @inheritParams dkqs
 #'
-#' @return Returns the updated parameters back to the function
-#' \code{dkqs}. The following information are updated:
+#' @return Returns the updated parameters back to the
+#' \code{\link[lpinfer]{dkqs}} function. The following information are updated:
 #'    \itemize{
 #'       \item{\code{data}}
 #'       \item{\code{lpmodel}}
-#'       \item{\code{solver}}``
+#'       \item{\code{solver}}
 #'       \item{\code{solver.name}}
 #'       \item{\code{test.logical}}
 #'       \item{\code{lb}}
@@ -838,7 +846,7 @@ dkqs.check <- function(data, lpmodel, beta.tgt, R, Rmulti, tau, n, solver,
   test.logical <- test.return$inout
   logical.lb <- test.return$lb
   logical.ub <- test.return$ub
-  
+
   # ---------------- #
   # Step 2: Return results
   # ---------------- #
@@ -851,11 +859,12 @@ dkqs.check <- function(data, lpmodel, beta.tgt, R, Rmulti, tau, n, solver,
               logical.ub = logical.ub))
 }
 
-#' Print results from \code{dkqs}
+#' Print results from \code{\link[lpinfer]{dkqs}}
 #'
-#' @description This function prints the \eqn{p}-values from \code{dkqs}.
+#' @description This function prints the \eqn{p}-values from
+#'   \code{\link[lpinfer]{dkqs}}.
 #'
-#' @param x Object returned from \code{dkqs}.
+#' @param x An output object returned from \code{\link[lpinfer]{dkqs}}.
 #' @param ... Additional arguments.
 #'
 #' @return Nothing is returned.
@@ -888,13 +897,12 @@ print.dkqs <- function(x, ...) {
   }
 }
 
-#' Summary of results from \code{dkqs}
+#' Summary of results from \code{\link[lpinfer]{dkqs}}
 #'
 #' @description This function prints a summary of the results obtained from
-#'   \code{dkqs}.
+#'   \code{\link[lpinfer]{dkqs}}.
 #'
-#' @param x Objects returned from \code{dkqs}.
-#' @param ... Additional arguments.
+#' @inheritParams print.dkqs
 #'
 #' @return Nothing is returned.
 #'

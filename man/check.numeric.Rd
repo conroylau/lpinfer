@@ -7,14 +7,14 @@
 check.numeric(x, name.var)
 }
 \arguments{
-\item{x}{Variable to be checked.}
+\item{x}{The variable to be checked.}
 
-\item{name.var}{Name of the variable.}
+\item{name.var}{The name of the variable.}
 }
 \value{
 Nothing is returned.
 }
 \description{
 This function checks whether the class of the variable
-  is \code{numeric} and has length 1.
+  is \code{numeric} and has length 1. If not, an error message is displayed.
 }

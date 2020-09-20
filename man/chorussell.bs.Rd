@@ -2,7 +2,7 @@
 % Please edit documentation in R/chorussell.R
 \name{chorussell.bs}
 \alias{chorussell.bs}
-\title{Bootstrap procedure for the Cho-Russell procedure}
+\title{Bootstrap procedure for the \code{\link[lpinfer]{chorussell}} procedure}
 \usage{
 chorussell.bs(
   data,
@@ -19,39 +19,33 @@ chorussell.bs(
 )
 }
 \arguments{
-\item{data}{Data used in the tests.}
+\item{data}{An \code{data frame} or a \code{matrix}.}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test that consists of
-the following objects:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{A.shp}}
-   \item{\code{beta.obs}}
-   \item{\code{beta.shp}}
- }}
+\item{lpmodel}{The \code{lpmodel} object.}
 
-\item{beta.tgt}{Value of beta to be tested.}
+\item{beta.tgt}{The value to be tested.}
 
-\item{R}{Number of bootstrap replications.}
+\item{R}{The number of bootstrap replications.}
 
-\item{maxR}{Maximum number of bootstrap replications to be considered in
+\item{maxR}{The maximum number of bootstrap replications to be considered in
 case there are some errors.}
 
-\item{kappa}{Tuning parameter used in the second step of the two-step
+\item{kappa}{The tuning parameter used in the second step of the two-step
 procedure for obtaining the bounds subject to the shape constraints.
 It can be any nonnegative number or a vector of nonnegative numbers.}
 
-\item{norm}{Norm used in the optimization problem. It can be either a 1-norm
-or a 2-norm.}
+\item{norm}{The norm used in the optimization problem. It can be either a
+1-norm or a 2-norm. See the details section of
+\code{\link[lpinfer]{estbounds}} for a list of accepted strings.}
 
-\item{n}{Sample size (only required if \code{data} is omitted in the input).}
+\item{n}{The sample size. This is only required if \code{data} is omitted
+in the input.}
 
-\item{estimate}{Boolean variable to indicate whether the bounds should be
+\item{estimate}{A boolean variable to indicate whether the bounds should be
 estimated or not.}
 
-\item{solver}{Name of the linear and quadratic programming solver that
-are used to obtain the solution to linear and quadratic programs.
+\item{solver}{The name of the linear and quadratic programming solver that
+is used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
 
@@ -62,15 +56,17 @@ displayed while the code is running.}
 \value{
 Returns a list of output that are obtained from the Cho-Russell
   procedure:
-  \item{ub.bs}{List of upper bounds from bootstrap data.}
-  \item{lb.bs}{List of lower bounds from bootstrap data.}
-  \item{df.error}{Table showing the id of the bootstrap replication(s)
+  \item{ub.bs}{The list of upper bounds from bootstrap data.}
+  \item{lb.bs}{The list of lower bounds from bootstrap data.}
+  \item{df.error}{A table showing the id of the bootstrap replication(s)
     with error(s) and the corresponding error message(s).}
-  \item{R.eval}{Number of bootstrap replications that have been conducted.}
-  \item{R.succ}{Number of successful bootstrap replications.}
+  \item{error.list}{A list of error messages.}
+  \item{R.eval}{The number of bootstrap replications that have been
+    conducted.}
+  \item{R.succ}{The number of successful bootstrap replications.}
 }
 \description{
 This function carries out the bootstrap procedure of the
-  Cho-Russell procedure. This function supports parallel programming via the
-  \code{future.apply} package.
+  \code{\link[lpinfer]{chorussell}} procedure. This function supports
+  parallel programming via the \code{future.apply} package.
 }

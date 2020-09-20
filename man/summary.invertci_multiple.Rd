@@ -2,23 +2,22 @@
 % Please edit documentation in R/invertci.R
 \name{summary.invertci_multiple}
 \alias{summary.invertci_multiple}
-\title{Summary of results from \code{invertci} with multiple alphas}
+\title{Summary of results from \code{\link[lpinfer]{invertci}} for multiple
+significance levels}
 \usage{
 \method{summary}{invertci_multiple}(x, alphas, msg.bound, ...)
 }
 \arguments{
-\item{x}{Object returned from \code{invertci}.}
+\item{x}{The output object returned from \code{\link[lpinfer]{invertci}}.}
 
-\item{alphas}{List of alphas that the user would like to print.}
-
-\item{msg.bound}{String containing the general message to be printed.}
+\item{alphas}{A list of alphas that the user would like to print.}
 
 \item{...}{Additional arguments.}
 }
 \value{
-Print the summary of the basic set of results from \code{invertci}.
+Nothing is returned.
 }
 \description{
-This function uses the print method on the return list of the
-   function \code{invertci}.
+This function summarizes the results for
+  \code{\link[lpinfer]{invertci}}.
 }

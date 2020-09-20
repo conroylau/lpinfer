@@ -7,20 +7,21 @@
 check.initb(init.b, name.var, bd)
 }
 \arguments{
-\item{init.b}{Initial bracket.}
+\item{init.b}{An initial bracket.}
 
-\item{name.var}{Name of the initial bracket.}
+\item{name.var}{The name of the initial bracket.}
 
-\item{bd}{String that indicates whether the initial bracket for the lower
+\item{bd}{A string that indicates whether the initial bracket for the lower
 bound (\code{lb}) or the upper bound (\code{ub}) is being evaluated.}
 }
 \value{
 Returns the following intervals.
-  \item{lb}{Lower bound of the initial bracket.}
-  \item{ub}{Upper bound of the initial bracket.}
+  \item{lb}{The lower bound of the initial bracket.}
+  \item{ub}{The upper bound of the initial bracket.}
 }
 \description{
 This function checks the initial brackets provided by the
-  user for the \code{invertci} function. It can either be \code{NULL} or a
-  \code{numeric} of length 2. The initial brackets have to be finite.
+  user for the \code{\link[lpinfer]{invertci}} function. It can either
+  be \code{NULL} or a \code{numeric} of length 2. The initial brackets have
+  to be finite.
 }

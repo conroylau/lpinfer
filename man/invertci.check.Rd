@@ -2,7 +2,7 @@
 % Please edit documentation in R/invertci.R
 \name{invertci.check}
 \alias{invertci.check}
-\title{Checks and updates the input of the function \code{invertci}}
+\title{Checks and updates the input of the function \code{\link[lpinfer]{invertci}}}
 \usage{
 invertci.check(
   f,
@@ -17,22 +17,24 @@ invertci.check(
 )
 }
 \arguments{
-\item{f}{Function that represents a testing procedure.}
+\item{f}{The function that represents a testing procedure.}
 
-\item{farg}{List of arguments to be passed to the function of testing
+\item{farg}{The list of arguments to be passed to the function of testing
 procedure.}
 
-\item{alpha}{Significance level of the test.}
+\item{alpha}{The significance level(s). This can be a vector.}
 
-\item{init.lb}{Initial brackets to search for the lower bound.}
+\item{init.lb}{The initial brackets to search for the lower bound. This is
+not required if the \code{\link[lpinfer]{chorussell}} is used.}
 
-\item{init.ub}{Initial brackets to search for the upper bound.}
+\item{init.ub}{The initial brackets to search for the upper bound. This is
+not required if the \code{\link[lpinfer]{chorussell}} is used.}
 
-\item{tol}{Tolerance level in the bisection method.}
+\item{tol}{The tolerance level in the bisection method.}
 
-\item{max.iter}{Maximum number of iterations in the bisection method.}
+\item{max.iter}{The maximum number of iterations in the bisection method.}
 
-\item{df_ci}{Data frame that consists the points and the corresponding
+\item{df_ci}{The data frame that consists the points and the corresponding
 \eqn{p}-values that have been tested in the previous iterations.}
 
 \item{progress}{The boolean variable for whether the result messages should
@@ -52,8 +54,7 @@ Returns the updated parameters back to the function
    }
 }
 \description{
-This function checks and updates the input from the user for
-   the function \code{invertci}. If there is any invalid input, this
-   function ill terminate the procedure and generate appropriate error
-   messages.
+This function checks and updates the input from the user in the
+   \code{\link[lpinfer]{invertci}} function. If there is any invalid input,
+   the function will be terminated and error messages will be printed.
 }

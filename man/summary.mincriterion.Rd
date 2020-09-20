@@ -2,12 +2,13 @@
 % Please edit documentation in R/estbounds.R
 \name{summary.mincriterion}
 \alias{summary.mincriterion}
-\title{Summary of results from \code{mincriterion}}
+\title{Summary of results from \code{\link[lpinfer]{mincriterion}}}
 \usage{
 \method{summary}{mincriterion}(x, ...)
 }
 \arguments{
-\item{x}{Objects returned from \code{mincriterion}.}
+\item{x}{The output objects returned from
+\code{\link[lpinfer]{mincriterion}}.}
 
 \item{...}{Additional arguments.}
 }
@@ -16,5 +17,5 @@ Nothing is returned.
 }
 \description{
 This function uses the summary method on the return list of the
-   function \code{mincriterion}.
+   function \code{\link[lpinfer]{mincriterion}}.
 }

@@ -2,7 +2,8 @@
 % Please edit documentation in R/fsst.R
 \name{beta.r.compute}
 \alias{beta.r.compute}
-\title{Computes the restricted estimator in the FSST procedure}
+\title{Computes the restricted estimator in the \code{\link[lpinfer]{fsst}}
+procedure}
 \usage{
 beta.r.compute(
   n,
@@ -17,26 +18,19 @@ beta.r.compute(
 )
 }
 \arguments{
-\item{n}{Sample size (only required if \code{data} is omitted in the input).}
+\item{n}{The sample size. This is only required if \code{data} is omitted
+in the input.}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test. The following
-components are required in the \code{lpmodel} for the FSST test:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{A.shp}}
-   \item{\code{beta.obs}}
-   \item{\code{beta.shp}}
- }}
+\item{lpmodel}{The \code{lpmodel} object.}
 
-\item{beta.tgt}{Value of beta to be tested.}
+\item{beta.tgt}{The value to be tested.}
 
-\item{beta.n}{Sample \eqn{\widehat{\bm{\beta}}_n} vector that is defined as
-\eqn{\widehat{\bm{\beta}}_n \equiv (\widehat{\bm{\beta}}_{{\rm obs},n},
+\item{beta.n}{The sample \eqn{\widehat{\bm{\beta}}_n} vector that is defined
+as \eqn{\widehat{\bm{\beta}}_n \equiv (\widehat{\bm{\beta}}_{{\rm obs},n},
 \bm{\beta}_{{\rm shp},n}, \bm{\beta}_{{\rm tgt}})'}.}
 
-\item{beta.star}{This corresponds to the starred version of the
-\code{beta.n} vector, i.e. \eqn{\widehat{\bm{\beta}}^\star_n}.}
+\item{beta.star}{The starred version of the \code{beta.n} vector, i.e.
+\eqn{\widehat{\bm{\beta}}^\star_n}.}
 
 \item{omega.i}{The matrix \eqn{\widehat{\bm{\Omega}}^i_n}, i.e. the
 regularized matrix for
@@ -45,17 +39,18 @@ regularized matrix for
 \item{indicator}{A binary variable that equals to 1 for \eqn{d \geq p} and
 equals to 0 for \eqn{d < p}.}
 
-\item{solver}{Name of the linear and quadratic programming solver that
-are used to obtain the solution to linear and quadratic programs.
+\item{solver}{The name of the linear and quadratic programming solver that
+is used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
 }
 \value{
 Returns the optimal point and optimal value.
- \item{objval}{Optimal objective value.}
- \item{x}{Optimal point.}
+ \item{objval}{The optimal value.}
+ \item{x}{The optimal point.}
 }
 \description{
 This function computes the restricted estimator
-  \eqn{\widehat{\bm{\beta}}^r_n} in the FSST procedure.
+  \eqn{\widehat{\bm{\beta}}^r_n} in the \code{\link[lpinfer]{fsst}}
+  procedure.
 }

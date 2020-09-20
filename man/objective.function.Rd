@@ -2,8 +2,7 @@
 % Please edit documentation in R/optim.R
 \name{objective.function}
 \alias{objective.function}
-\title{Auxiliary function to return the coefficient terms of the objective
-functions}
+\title{Computes the coefficient terms of the objective functions}
 \usage{
 objective.function(A, b, n, weight = NULL)
 }
@@ -12,7 +11,7 @@ objective.function(A, b, n, weight = NULL)
 
 \item{n}{The sample size \eqn{n}.}
 
-\item{weight}{Weighting matrix.}
+\item{weight}{The weighting matrix.}
 
 \item{beta}{The column vector \eqn{\bm{\beta}}.}
 }
@@ -21,12 +20,12 @@ Returns the following three quantities: \code{obj2} is the
   coefficient of the quadratic term, \code{obj1} is the coefficient of the
   linear term and \code{obj0} is the constant term. More explicitly, their
   form are given as follows:
-  \item{obj2}{This is the coefficient for the second-order term. It is
+  \item{obj2}{The coefficient for the second-order term. It is
     returned as \code{NULL} for linear programs and
     \eqn{n\bm{A}'\bm{W}\bm{A}} for quadratic programs.}
-  \item{obj1}{This is the coefficient term of the linear term. For quadratic
+  \item{obj1}{The coefficient term of the linear term. For quadratic
     programs, it is returned as \eqn{-2n\bm{\beta}'\bm{W}\bm{A}}.}
-  \item{obj0}{This is the constant term of the linear program. For quadratic
+  \item{obj0}{The constant term of the linear program. For quadratic
     programs, it is returned as \eqn{n\bm{\beta}'\bm{W}\bm{\beta}}.}
 }
 \description{
@@ -46,7 +45,7 @@ This function computes the matrices in the objective functions
      = n\bm{x}'\bm{A}'\bm{W}\bm{A}\bm{x} - 2n\bm{\beta}'\bm{W}\bm{A}\bm{x} +
      n\bm{\beta}'\bm{W}\bm{\beta}.}
      If the \eqn{\bm{W}} matrix is not specified, then it will be taken as
-     an identity matrix of order \eqn{m},}
+     an identity matrix of order \eqn{m}.}
   \item{\strong{Linear programs} ---
      For all linear problems that are considered in this code, one of
      \eqn{\bm{A}} and \eqn{\bm{b}} is \code{NULL} or is a zero vector. The

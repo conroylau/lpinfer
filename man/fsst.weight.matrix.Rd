@@ -2,7 +2,7 @@
 % Please edit documentation in R/fsst.R
 \name{fsst.weight.matrix}
 \alias{fsst.weight.matrix}
-\title{Computes the weighting matrix in the FSST procedure}
+\title{Computes the weighting matrix in the \code{\link[lpinfer]{fsst}} procedure}
 \usage{
 fsst.weight.matrix(weight.matrix, beta.obs.hat, beta.sigma)
 }
@@ -16,24 +16,17 @@ three options available:
   \item{\code{avar} --- inverse of the variance matrix}
 }}
 
-\item{beta.obs.hat}{Estimator of
+\item{beta.obs.hat}{The sample estimator
 \eqn{\widehat{\bm{\beta}}_{\mathrm{obs}, n}} based on the given
-information in \code{lpmodel}.}
+information in \code{lpmodel} (and \code{data} if applicable).}
 
-\item{beta.sigma}{Estimator of the asymptotic variance for
-\eqn{\bm{\beta}_{\rm obs}}.}
+\item{beta.sigma}{The variance estimator of \eqn{\bm{\beta}_{\rm obs}}.}
 }
 \value{
 The weighting matrix is returned.
-   \item{weight.max}{Weighting matrix.}
+   \item{weight.max}{The weighting matrix.}
 }
 \description{
-This function returns the weighting matrix in the FSST
-  procedure. There are three options available:
-  \itemize{
-    \item{\code{identity} --- identity matrix}
-    \item{\code{diag} --- the diagonal matrix that takes the diagonal
-       elements of the inverse of the variance matrix}
-    \item{\code{avar} --- inverse of the variance matrix}
-  }
+This function returns the weighting matrix in the
+  \code{\link[lpinfer]{fsst}} procedure.
 }

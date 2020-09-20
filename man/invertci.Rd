@@ -18,55 +18,52 @@ invertci(
 )
 }
 \arguments{
-\item{f}{Function that represents a testing procedure.}
+\item{f}{The function that represents a testing procedure.}
 
-\item{farg}{List of arguments to be passed to the function of testing
+\item{farg}{The list of arguments to be passed to the function of testing
 procedure.}
 
-\item{alpha}{Significance level of the test.}
+\item{alpha}{The significance level(s). This can be a vector.}
 
-\item{init.lb}{Initial brackets to search for the lower bound.}
+\item{init.lb}{The initial brackets to search for the lower bound. This is
+not required if the \code{\link[lpinfer]{chorussell}} is used.}
 
-\item{init.ub}{Initial brackets to search for the upper bound.}
+\item{init.ub}{The initial brackets to search for the upper bound. This is
+not required if the \code{\link[lpinfer]{chorussell}} is used.}
 
-\item{tol}{Tolerance level in the bisection method.}
+\item{tol}{The tolerance level in the bisection method.}
 
-\item{max.iter}{Maximum number of iterations in the bisection method.}
+\item{max.iter}{The maximum number of iterations in the bisection method.}
 
-\item{df_ci}{Data frame that consists the points and the corresponding
+\item{df_ci}{The data frame that consists the points and the corresponding
 \eqn{p}-values that have been tested in the previous iterations.}
 
-\item{dp}{Number of decimal places in the output.}
+\item{dp}{The number of decimal places in the output.}
 
 \item{progress}{The boolean variable for whether the result messages should
 be displayed in the procedure of constructing confidence interval. If
 it is set as \code{TRUE}, the messages are displayed throughout the
 procedure. Otherwise, the messages will not be displayed.}
-
-\item{lb1}{Maximum possible lower bound for the confidence interval. This is
-not required if the function \code{chorussell} is used.}
-
-\item{ub0}{Logical upper bound for the confidence interval. This is not
-required if the function \code{chorussell} is used.}
-
-\item{ub1}{Minimum possible upper bound for the confidence interval. This
-is not required if the function \code{chorussell} is used.}
 }
 \value{
 Returns the confidence interval and a data frame that contains the
    points being tested in the procedure.
-   \item{pvals}{Data frame that consists of the points and the corresponding
-      \eqn{p}-values that have been tested in constructing the confidence
-      intervals.}
-   \item{df_ub}{Data frame storing the information for the bisection
+   \item{pvals}{The data frame that consists of the points and the
+      corresponding \eqn{p}-values that have been tested in constructing
+      the confidence intervals.}
+   \item{df_ub}{The data frame storing the information for the bisection
       method in each iteration when evaluating the upper bound of the
       confidence interval.}
-   \item{df_lb}{Data frame storing the information for the bisection
+   \item{df_lb}{The data frame storing the information for the bisection
       method in each iteration when evaluating the lower bound of the
       confidence interval.}
-   \item{tol}{Tolerance level in the bisection method.}
-   \item{iter}{Total number of iterations taken.}
-   \item{call}{The function that has been called.}
+   \item{alpha}{The significance levels.}
+   \item{tol}{The tolerance level in the bisection method.}
+   \item{iter}{The total number of iterations taken.}
+   \item{call}{The matched call.}
+   \item{para.name}{The name of the tuning parameters involved.}
+   \item{para.vals}{The values of the tuning parameters involved.}
+   \item{ci}{The confidence intervals constructed.}
 }
 \description{
 This function constructs the confidence interval using the

@@ -19,23 +19,15 @@ fsst.check(
 )
 }
 \arguments{
-\item{data}{Data used in the tests.}
+\item{data}{An \code{data frame} or a \code{matrix}.}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test. The following
-components are required in the \code{lpmodel} for the FSST test:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{A.shp}}
-   \item{\code{beta.obs}}
-   \item{\code{beta.shp}}
- }}
+\item{lpmodel}{The \code{lpmodel} object.}
 
-\item{beta.tgt}{Value of beta to be tested.}
+\item{beta.tgt}{The value to be tested.}
 
-\item{R}{Number of bootstrap replications.}
+\item{R}{The number of bootstrap replications.}
 
-\item{Rmulti}{Multiplier for the number of bootstrap replications. The
+\item{Rmulti}{The multiplier for the number of bootstrap replications. The
 product of \code{Rmulti} and \code{R} refers to the maximum
 number of bootstrap replications to be conducted if there are errors.}
 
@@ -44,12 +36,13 @@ number of bootstrap replications to be conducted if there are errors.}
 be included if \code{NA} is included as part of the vector for
 \code{lambda}. For instance, if \code{lambda} is set as \code{c(0.1, NA)},
 then both 0.1 and the data-driven \code{lambda} will be applied in the
-FSST procedure. The default is to use the data-driven approach for
-\code{lambda}.}
+\code{\link[lpinfer]{fsst}} procedure. The default is to use the
+data-driven \code{lambda}.}
 
 \item{rho}{Parameter used in the studentization of matrices.}
 
-\item{n}{Sample size (only required if \code{data} is omitted in the input).}
+\item{n}{The sample size. This is only required if \code{data} is omitted
+in the input.}
 
 \item{weight.matrix}{The option used in the weighting matrix. There are
 three options available:
@@ -60,8 +53,8 @@ three options available:
   \item{\code{avar} --- inverse of the variance matrix}
 }}
 
-\item{solver}{Name of the linear and quadratic programming solver that
-are used to obtain the solution to linear and quadratic programs.
+\item{solver}{The name of the linear and quadratic programming solver that
+is used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
 
@@ -82,7 +75,7 @@ Returns the updated parameters back to the function \code{fsst}.
    }
 }
 \description{
-This function checks and updates the input of the user. If
-   there is any invalid input, this function will be terminated and
-   generates appropriate error messages.
+This function checks and updates the input from the user in the
+   \code{\link[lpinfer]{fsst}} function. If there is any invalid input,
+   the function will be terminated and error messages will be printed.
 }

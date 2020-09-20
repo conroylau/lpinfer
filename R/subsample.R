@@ -3,19 +3,10 @@
 #' @description This function conducts inference and returns the
 #'   \eqn{p}-value using the subsampling procedure.
 #'
-#' @param lpmodel The \code{lpmodel} object used in the test. The following
-#'   components are required in the \code{lpmodel} for the subsampling test:
-#'    \itemize{
-#'      \item{\code{A.tgt}}
-#'      \item{\code{A.obs}}
-#'      \item{\code{A.shp}}
-#'      \item{\code{beta.obs}}
-#'      \item{\code{beta.shp}}
-#'    }
-#'   matrix of the estimator \eqn{\hat{\bm{\beta}}_{\mathrm{obs}}}.
-#' @param phi Tuning parameter for the subsampling test. The size of each
+#' @param lpmodel The \code{lpmodel} object used in the test.
+#' @param phi The tuning parameter for the subsampling test. The size of each
 #'   subsample is \eqn{n^\phi} where \eqn{\phi \in [0,1]}.
-#' @param replace Boolean variable to indicate whether the function samples
+#' @param replace A boolean variable to indicate whether the function samples
 #'   the data with or without replacement.
 #' @inheritParams dkqs
 #' @inheritParams estbounds
@@ -33,28 +24,37 @@
 #'     bootstrap procedure, where \eqn{m} is the size of the subsample and
 #'     \eqn{n} is the total number of observations.}
 #' }
+#' The following components are required in the \code{lpmodel} for the
+#' subsampling procedure:
+#' \itemize{
+#'    \item{\code{A.tgt}}
+#'    \item{\code{A.obs}}
+#'    \item{\code{A.shp}}
+#'    \item{\code{beta.obs}}
+#'    \item{\code{beta.shp}}
+#' }
 #'
 #' @return Returns a list of output calculated from the function:
-#'   \item{pval}{\eqn{p}-value.}
-#'   \item{T.n}{Test statistic \eqn{T_n}.}
-#'   \item{T.bs}{List of bootstrap estimates of the test statistics
+#'   \item{pval}{The \eqn{p}-value.}
+#'   \item{T.n}{The test statistic \eqn{T_n}.}
+#'   \item{T.bs}{The list of bootstrap estimates of the test statistics
 #'     from the subsampling procedure.}
-#'   \item{solver}{Solver used.}
-#'   \item{cv.table}{Table of critical values.}
-#'   \item{call}{The function that has been called.}
+#'   \item{solver}{The solver used.}
+#'   \item{cv.table}{A table of critical values.}
+#'   \item{call}{The matched call.}
 #'   \item{phi}{The \eqn{\phi} parameter used.}
-#'   \item{norm}{Norm used.}
-#'   \item{subsample.size}{Size of subsample}
-#'   \item{test.logical}{Indicator variable for whether the computation has
+#'   \item{norm}{The norm used.}
+#'   \item{subsample.size}{The size of subsample}
+#'   \item{test.logical}{An indicator variable for whether the computation has
 #'     been conducted. If \code{test.logical} is 1, it refers to the case
 #'     where \code{beta.tgt} is inside the logical bound. If
 #'     \code{test.logical} is 0, it refers to the case where
 #'     \code{beta.tgt} is outside the logical bound.}
-#'   \item{logical.lb}{Logical lower bound.}
-#'   \item{logical.ub}{Logical upper bound.}
-#'   \item{df.error}{Table showing the id of the bootstrap replication(s)
+#'   \item{logical.lb}{The logical lower bound.}
+#'   \item{logical.ub}{The logical upper bound.}
+#'   \item{df.error}{A table showing the id of the bootstrap replication(s)
 #'     with error(s) and the corresponding error message(s).}
-#'   \item{R.succ}{Number of successful bootstrap replications.}
+#'   \item{R.succ}{The number of successful bootstrap replications.}
 #'
 #' @example ./inst/example/subsample_example.R
 #'
@@ -268,22 +268,22 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
   return(output)
 }
 
-#' Formulates and solves the subsampling problem
+#' Formulates and solves the \code{\link[lpinfer]{subsample}} problem
 #'
 #' @description This function formulates and solves the linear or quadratic
-#'   program in the subsampling procedure. If the user chooses a 1-norm, this
-#'   function solves a linear program. If the user chooses a 2-norm, this
-#'   function solves a quadratic program.
+#'   program in the \code{\link[lpinfer]{subsample}} procedure. If the user
+#'   chooses a 1-norm, this function solves a linear program. If the user
+#'   chooses a 2-norm, this function solves a quadratic program.
 #'
 #' @inheritParams subsample
 #' @inheritParams dkqs.qlp
-#' @param omega.hat Estimator of the asymptotic variance.
+#' @param omega.hat The estimator of the asymptotic variance.
 #'
 #' @return Returns the following list of outputs:
-#'   \item{status}{Status of the optimization problem.}
-#'   \item{x}{Optimal point.}
-#'   \item{objval}{Optimal objective value.}
-#'   \item{larg}{List of arguments passed to the optimizer.}
+#'   \item{status}{The status of the optimization problem.}
+#'   \item{x}{The optimal point.}
+#'   \item{objval}{The optimal value.}
+#'   \item{larg}{The list of arguments passed to the optimizer.}
 #'   \item{beta}{The beta vector \eqn{\widehat{\bm{\beta}}_{\mathrm{obs}}}
 #'     used in the optimization problem that is obtained from the
 #'     \code{beta.obs} component of the \code{lpmodel} object.}
@@ -396,11 +396,11 @@ subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver, n,
                  omega = omega.hat))
 }
 
-#' Bootstrap procedure for the subsampling test
+#' Bootstrap procedure for the \code{\link[lpinfer]{subsample}} procedure
 #'
 #' @description This function carries out the bootstrap procedure of the
-#'   subsampling test. This function supports parallel programming via the
-#'   \code{future.apply} package.
+#'   \code{\link[lpinfer]{subsample}} procedure This function supports
+#'   parallel programming via the \code{future.apply} package.
 #'
 #' @import future.apply progressr
 #'
@@ -409,18 +409,20 @@ subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver, n,
 #' @inheritParams subsample
 #' @inheritParams subsample.prob
 #' @inheritParams dkqs.bs
-#' @param m Size of each subsample.
-#' @param error.id List of ID that corresponds to problematic bootstrap draws.
-#' @param seed.list List of RNG states and the corresponding iterations.
+#' @param m The size of each subsample.
+#' @param error.id The list of ID that corresponds to problematic bootstrap
+#'   draws.
+#' @param seed.list The list of RNG states and the corresponding iterations.
 #'
 #' @return Returns a list of output that are obtained from the subsampling
 #'   procedure:
-#'   \item{T.sub}{Bootstrap test statistics from the subsampling procedure.}
-#'   \item{beta.sub}{Bootstrap estimators for the \code{beta} component.}
-#'   \item{df.error}{Table showing the id of the bootstrap replication(s)
+#'   \item{T.sub}{The bootstrap test statistics from the subsampling procedure.}
+#'   \item{beta.sub}{The bootstrap estimators for the \code{beta} component.}
+#'   \item{df.error}{A table showing the id of the bootstrap replication(s)
 #'     with error(s) and the corresponding error message(s).}
-#'   \item{R.eval}{Number of bootstrap replications that have been conducted.}
-#'   \item{R.succ}{Number of successful bootstrap replications.}
+#'   \item{R.eval}{The number of bootstrap replications that have been
+#'     conducted.}
+#'   \item{R.succ}{The number of successful bootstrap replications.}
 #'
 #' @export
 #'
@@ -490,7 +492,7 @@ subsample.bs <- function(data, i1, lpmodel, beta.tgt, norm, solver,
                                                       omega.hat = omega.hat)
     })
 
-    # Extract the test satistics and list of errors
+    # Extract the test statistics and list of errors
     T.sub <- c(T.sub, sapply(subsample.return, "[", "Ts"))
     error.list <- c(error.list, sapply(subsample.return, "[", "msg"))
   }
@@ -547,8 +549,9 @@ subsample.bs <- function(data, i1, lpmodel, beta.tgt, norm, solver,
 #' Carries out one bootstrap replication for the subsampling test
 #'
 #' @description This function carries out the one bootstrap replication of the
-#'   subsampling test. This function is used in the \code{subsample.bs}
-#'   function via the \code{future_lapply} command.
+#'   subsampling test. This function is used in the
+#'   \code{\link[lpinfer]{subsample.bs}} function via the
+#'   \code{future_lapply} command.
 #'
 #' @inheritParams dkqs
 #' @inheritParams estbounds
@@ -563,9 +566,9 @@ subsample.bs <- function(data, i1, lpmodel, beta.tgt, norm, solver,
 #'
 #' @return Returns a list of output that are obtained from the subsampling
 #'   procedure:
-#'   \item{Ts}{Bootstrap test statistic.}
-#'   \item{beta}{Bootstrap estimate of \code{beta.obs}.}
-#'   \item{msg}{Error message (if applicable).}
+#'   \item{Ts}{The bootstrap test statistic.}
+#'   \item{beta}{The bootstrap estimate of \code{beta.obs}.}
+#'   \item{msg}{An error message (if applicable).}
 #'
 #' @export
 #'
@@ -643,11 +646,12 @@ subsample.bs.fn <- function(x, data, lpmodel, beta.tgt, norm, m, solver,
               msg = msg))
 }
 
-#' Print results from \code{subsample}
+#' Print results from the \code{\link[lpinfer]{subsample}} procedure
 #'
-#' @description This function prints the \eqn{p}-values from \code{subsample}.
+#' @description This function prints the \eqn{p}-values from
+#' the \code{\link[lpinfer]{subsample}} procedure.
 #'
-#' @param x Object returned from \code{subsample}.
+#' @param x An output object returned from \code{\link[lpinfer]{subsample}}.
 #' @param ... Additional arguments.
 #'
 #' @return Nothing is returned.
@@ -664,13 +668,12 @@ print.subsample <- function(x, ...) {
   }
 }
 
-#' Summary of results from \code{subsample}
+#' Summary of results from the \code{\link[lpinfer]{subsample}} procedure
 #'
 #' @description This function prints a summary of the results obtained from
-#'   \code{subsample}.
+#'   the \code{\link[lpinfer]{subsample}} procedure.
 #'
-#' @param x Object returned from \code{subsample}.
-#' @param ... Additional arguments.
+#' @inheritParams print.subsample
 #'
 #' @return Nothing is returned.
 #'
@@ -708,13 +711,11 @@ summary.subsample <- function(x, ...) {
   }
 }
 
-#' Checks and updates the input in \code{subsample}
+#' Checks and updates the input in \code{\link[lpinfer]{subsample}}
 #'
-#' @description This function checks and updates the input of the user. If
-#'    there is any invalid input, this function will be terminated and
-#'    generates appropriate error messages. This function is mainly a wrapper
-#'    of the selected functions from the \code{checks} files to conduct the
-#'    checks and updates.
+#' @description This function checks and updates the input from the user in the
+#'    \code{\link[lpinfer]{subsample}} function. If there is any invalid input,
+#'    the function will be terminated and error messages will be printed.
 #'
 #' @inheritParams dkqs
 #' @inheritParams estbounds
@@ -808,17 +809,17 @@ subsample.check <- function(data, lpmodel, beta.tgt, R, Rmulti, solver, norm,
 #' @description This function computes the bootstrap estimates of
 #'   \eqn{\beta_{\rm obs}}.
 #'
-#' @inheritParams dkqs
 #' @inheritParams subsample
 #' @inheritParams subsample.bs
 #'
 #' @return Returns the following objects:
-#'   \item{beta.obs.bs}{Bootstrap estimates of \eqn{\beta_{\rm obs}}.}
-#'   \item{df.error}{Table showing the id of the bootstrap replication(s)
+#'   \item{beta.obs.bs}{The bootstrap estimates of \eqn{\beta_{\rm obs}}.}
+#'   \item{df.error}{A table showing the id of the bootstrap replication(s)
 #'     with error(s) and the corresponding error message(s).}
-#'   \item{error.id}{List of problematic IDs.}
-#'   \item{R.eval}{Number of bootstrap replications that have been conducted.}
-#'   \item{R.succ}{Number of successful bootstrap replications.}
+#'   \item{error.id}{The list of problematic IDs.}
+#'   \item{R.eval}{The number of bootstrap replications that have been
+#'     conducted.}
+#'   \item{R.succ}{The number of successful bootstrap replications.}
 #'
 #' @export
 #'

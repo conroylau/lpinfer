@@ -1,23 +1,23 @@
 #' Auxiliary function in the bootstrap replications
 #'
 #' @description This function is used in the bootstrap replications of the
-#'   tests. It returns the indices to be considered in the
+#'   procedures. It returns the indices to be considered in the
 #'   bootstrap replications and the list to be passed to the
-#'   \code{lpmodel.anylist} function.
+#'   \code{\link[lpinfer]{lpmodel.anylist}} function.
 #'
 #' @inheritParams dkqs
 #' @inheritParams subsample.bs
-#' @param R.eval Number of bootstrap replications that has been evaluated/
-#' @param R.succ Number of successful bootstrap replications.
-#' @param maxR Maximum number of bootstrap replications.
-#' @param any.list An object returned from the \code{lpmodel.anylist}
-#'   function, which indicates whether at least one of the components in
-#'   \code{lpmodel} is a \code{list}.
+#' @param R.eval The number of bootstrap replications that has been evaluated.
+#' @param R.succ The number of successful bootstrap replications.
+#' @param maxR The maximum number of bootstrap replications.
+#' @param any.list An object returned from the
+#'   \code{\link[lpinfer]{lpmodel.anylist}} function, which indicates
+#'   whether at least one of the components in \code{lpmodel} is a \code{list}.
 #'
 #' @return Returns the following three objects.
-#'   \item{i0}{Starting index to be evaluated.}
-#'   \item{i1}{Last index to be evaluated.}
-#'   \item{bs.list}{List of bootstrap replications in the \code{lpmodel}
+#'   \item{i0}{The starting index to be evaluated.}
+#'   \item{i1}{The last index to be evaluated.}
+#'   \item{bs.list}{The list of bootstrap replications in the \code{lpmodel}
 #'     object passed from the user.}
 #'
 #' @export
@@ -34,12 +34,12 @@ bs.assign <- function(R, R.eval, R.succ, maxR, any.list, lpmodel, data = NULL,
   } else {
     bs.list <- as.list(i0:i1)
   }
-  
+
   # Assign the subsample size
   if (is.null(m)) {
     m <- nrow(data)
   }
-  
+
   # Temporary solution to the missing globals problem
   names <- c("A.obs", "A.shp", "A.tgt", "beta.obs", "beta.shp")
   for (i in names) {
@@ -74,30 +74,30 @@ bs.assign <- function(R, R.eval, R.succ, maxR, any.list, lpmodel, data = NULL,
 #'   extract the relevant and updated information.
 #'
 #' @inheritParams dkqs
-#' @param test.return List of information returned from the test function.
-#' @param i0 Starting index to be evaluated.
-#' @param i1 Last index to be evaluated.
-#' @param R.eval Number of bootstrap replications that has been evaluated.
-#' @param T.list List of bootstrap test statistics.
-#' @param beta.list List of the bootstrap replications of the \code{beta.obs}
-#'     component.
-#' @param error.list List of error messages.
-#' @param param.list List of parameters (if applicable).
-#' @param error.param List of parameters that lead to errors (if applicable).
-#' @param ub.list List of upper bounds (if applicable).
-#' @param lb.list List of lower bounds (if applicable).
+#' @param test.return The list of information returned from the test function.
+#' @param i0 The starting index to be evaluated.
+#' @param i1 The last index to be evaluated.
+#' @param R.eval The number of bootstrap replications that has been evaluated.
+#' @param T.list The list of bootstrap test statistics.
+#' @param beta.list The list of the bootstrap replications of the
+#'   \code{beta.obs} component.
+#' @param error.list The list of error messages.
+#' @param param.list The list of parameters (if applicable).
+#' @param error.param The list of parameters that lead to errors (if applicable).
+#' @param ub.list The list of upper bounds (if applicable).
+#' @param lb.list The list of lower bounds (if applicable).
 #'
 #' @return Returns the following three objects.
-#'   \item{R.succ}{Number of successful bootstrap replications.}
-#'   \item{R.eval}{Number of bootstrap replications that has been evaluated.}
-#'   \item{T.list}{List of test statistics.}
-#'   \item{beta.list}{List of the bootstrap replications of the
+#'   \item{R.succ}{The number of successful bootstrap replications.}
+#'   \item{R.eval}{The number of bootstrap replications that has been evaluated.}
+#'   \item{T.list}{The list of test statistics.}
+#'   \item{beta.list}{The list of the bootstrap replications of the
 #'     \code{beta.obs} component.}
-#'   \item{error.list}{List of error messages (if applicable).}
-#'   \item{error.param}{List of parameters that lead to errors (if
+#'   \item{error.list}{The list of error messages (if applicable).}
+#'   \item{error.param}{The list of parameters that lead to errors (if
 #'     applicable).}
-#'   \item{ub.list}{List of upper messages (if applicable).}
-#'   \item{lb.list}{List of lower messages (if applicable).}
+#'   \item{ub.list}{The list of upper messages (if applicable).}
+#'   \item{lb.list}{The list of lower messages (if applicable).}
 #'
 #' @export
 #'
@@ -145,11 +145,11 @@ post.bs <- function(test.return, i0, i1, R.eval, T.list = NULL,
 #'   function is used to match the id of the error messages, given the list
 #'   of error messages returned from the \code{future_lapply} function.
 #'
-#' @param error.list List of error messages.
-#' @param df.error Consolidated data frame of error messages.
+#' @param error.list The list of error messages.
+#' @param df.error The consolidated data frame of error messages.
 #'
 #' @return Returns an updated list of error messages.
-#'   \item{df.error}{Updated data frame of error messages.}
+#'   \item{df.error}{An updated data frame of error messages.}
 #'
 #' @export
 #'

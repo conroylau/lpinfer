@@ -5,42 +5,57 @@
 #'
 #' @inheritParams estbounds
 #' @inheritParams dkqs
-#' @param ci Boolean variable that indicates whether a \eqn{p}-value or a
+#' @param ci A boolean variable that indicates whether a \eqn{p}-value or a
 #'   \eqn{(1-\alpha)}-confidence interval is returned. If \code{ci} is
 #'   \code{TRUE}, then a confidence interval is returned. Otherwise, a
 #'   \eqn{p}-value is returned.
-#' @param alpha Significance level. This can be a vector.
-#' @param kappa Tuning parameter used in the second step of the two-step
+#' @param alpha The significance level. This can be a vector.
+#' @param tol The tolerance level in the bisection procedure.
+#' @param kappa The tuning parameter used in the second step of the two-step
 #'    procedure for obtaining the bounds subject to the shape constraints.
 #'    It can be any nonnegative number or a vector of nonnegative numbers.
-#' @param remove.const Determine whether the constraints are to be removed.
+#' @param remove.const A boolean variable. This determine whether the
+#'    constraints are to be removed.
 #'
 #' @return Returns the following list of output:
-#'   \item{ub}{Upper bound from original data.}
-#'   \item{lb}{Lower bound from original data.}
-#'   \item{ub.bs}{List of upper bounds from bootstrap data.}
-#'   \item{lb.bs}{List of lower bounds from bootstrap data.}
-#'   \item{test.logical}{Indicator variable for whether the computation has
+#'   \item{ub}{The upper bound from original data.}
+#'   \item{lb}{The lower bound from original data.}
+#'   \item{ub.bs}{The list of upper bounds from bootstrap data.}
+#'   \item{lb.bs}{The list of lower bounds from bootstrap data.}
+#'   \item{test.logical}{An indicator variable for whether the computation has
 #'     been conducted. If \code{test.logical} is 1, it refers to the case
 #'     where \code{beta.tgt} is inside the logical bound. If
 #'     \code{test.logical} is 0, it refers to the case where
 #'     \code{beta.tgt} is outside the logical bound.}
-#'   \item{logical.lb}{Logical lower bound.}
-#'   \item{logical.ub}{Logical upper bound.}
-#'   \item{df.error}{Table showing the id of the bootstrap replication(s)
+#'   \item{logical.lb}{The logical lower bound.}
+#'   \item{logical.ub}{The logical upper bound.}
+#'   \item{df.error}{A table showing the id of the bootstrap replication(s)
 #'     with error(s) and the corresponding error message(s).}
-#'   \item{R.succ}{Number of successful bootstrap replications.}
-#'   \item{ci}{Boolean variable that indicates whether a \eqn{p}-value or a
+#'   \item{R.succ}{The number of successful bootstrap replications.}
+#'   \item{ci}{A boolean variable that indicates whether a \eqn{p}-value or a
 #'     \eqn{(1-\alpha)}-confidence interval is returned.}
 #'   \item{pval}{\eqn{p}-value (if \code{ci} is set as \code{FALSE}).}
-#'   \item{c.ub}{Upper bound of the \eqn{(1-\alpha)}-confidence interval.}
-#'   \item{c.lb}{Lower bound of the \eqn{(1-\alpha)}-confidence interval.}
-#'   \item{alpha}{Significance level.}
-#'   \item{iter}{Total number of iterations (if \code{ci} is \code{FALSE}.)}
-#'   \item{unique}{Whether the solution is unique.}
+#'   \item{c.ub}{The upper bound of the \eqn{(1-\alpha)}-confidence interval.}
+#'   \item{c.lb}{The lower bound of the \eqn{(1-\alpha)}-confidence interval.}
+#'   \item{alpha}{The significance level.}
+#'   \item{iter}{The total number of iterations (if \code{ci} is \code{FALSE}.)}
+#'   \item{unique}{A boolean variable showing whether the solution is unique.}
 #'
-#' @details See the details section of \code{\link[lpinfer]{estbounds}} for a
-#'   list of strings acceptable for the option \code{norm}.
+#' @details
+#' \itemize{
+#'   \item{See the details section of the \code{\link[lpinfer]{estbounds}}
+#'     function for a list of strings acceptable for the option \code{norm}.}
+#'  \item{The following components are required in the \code{lpmodel} for the
+#'    Cho-Russell procedure:
+#'    \itemize{
+#'      \item{\code{A.tgt}}
+#'      \item{\code{A.obs}}
+#'      \item{\code{A.shp}}
+#'      \item{\code{beta.obs}}
+#'      \item{\code{beta.shp}}
+#'    }
+#'  }
+#' }
 #'
 #' @example ./inst/example/chorussell_example.R
 #'
@@ -237,13 +252,14 @@ chorussell <- function(data = NULL, lpmodel, beta.tgt, n = NULL, R = 100,
   return(output)
 }
 
-#' Simplifies the candidates to be considered in \code{chorussell}
+#' Simplifies the candidates to be considered in
+#' \code{\link[lpinfer]{chorussell}}
 #'
 #' @import future.apply progressr
 #'
 #' @description This function simplifies the list of candidates to be
-#'   considered in the optimization problem in \code{chorussell}. In
-#'   particular, because
+#'   considered in the optimization problem in the
+#'   \code{\link[lpinfer]{chorussell}} function. In particular, because
 #'   \deqn{\mathbf{1}\left[\sqrt{n}\left(\hat{\theta}_{\rm lb}^b -
 #'   \hat{\theta}_{\rm lb}\right) \leq c_{\rm lb}\right]
 #'   \geq
@@ -277,8 +293,8 @@ chorussell <- function(data = NULL, lpmodel, beta.tgt, n = NULL, R = 100,
 #'
 #' @return Returns the list of updated candidates of lower bounds and upper
 #'   bounds.
-#'   \item{lb}{Updated list of candidates of lower bounds.}
-#'   \item{ub}{Updated list of candidates of upper bounds.}
+#'   \item{lb}{The updated list of candidates of lower bounds.}
+#'   \item{ub}{The updated list of candidates of upper bounds.}
 #'
 #' @export
 #'
@@ -334,16 +350,16 @@ chorussell.simp <- function(lb.can1, lb.can2, ub.can1, ub.can2, alpha,
               ub = unlist(ub.return, use.names = FALSE)))
 }
 
-#' Checks one candidate in \code{chorussell}
+#' Checks one candidate in \code{\link[lpinfer]{chorussell}}
 #'
-#' @description This function checks one candidate for the \eqn{(1-\alpha)}-
-#'   confidence interval to see whether it should be dropped from the list of
-#'   considerations. For details, please see the description of the
-#'   \code{chorussell.simp} function.
+#' @description This function checks one candidate for the
+#'   \eqn{(1-\alpha)}-confidence interval to see whether it should be dropped
+#'   from the list of considerations. For details, please see the description
+#'   of the \code{\link[lpinfer]{chorussell.simp}} function.
 #'
 #' @param x One candidate of the upper or lower bound.
 #' @param can1 This refers to either \code{lb.can1} or \code{ub.can1}.
-#' @param bd String indicating which set of candidates that the function is
+#' @param bd A string indicating which set of candidates that the function is
 #'   trying to simplify.
 #' @inheritParams chorussell
 #' @inheritParams dkqs.bs.fn
@@ -371,11 +387,11 @@ chorussell.simp.fn <- function(x, can1, alpha, pbar, bd, progress) {
   }
 }
 
-#' Bootstrap procedure for the Cho-Russell procedure
+#' Bootstrap procedure for the \code{\link[lpinfer]{chorussell}} procedure
 #'
 #' @description This function carries out the bootstrap procedure of the
-#'   Cho-Russell procedure. This function supports parallel programming via the
-#'   \code{future.apply} package.
+#'   \code{\link[lpinfer]{chorussell}} procedure. This function supports
+#'   parallel programming via the \code{future.apply} package.
 #'
 #' @import future.apply progressr
 #'
@@ -384,12 +400,14 @@ chorussell.simp.fn <- function(x, can1, alpha, pbar, bd, progress) {
 #'
 #' @return Returns a list of output that are obtained from the Cho-Russell
 #'   procedure:
-#'   \item{ub.bs}{List of upper bounds from bootstrap data.}
-#'   \item{lb.bs}{List of lower bounds from bootstrap data.}
-#'   \item{df.error}{Table showing the id of the bootstrap replication(s)
+#'   \item{ub.bs}{The list of upper bounds from bootstrap data.}
+#'   \item{lb.bs}{The list of lower bounds from bootstrap data.}
+#'   \item{df.error}{A table showing the id of the bootstrap replication(s)
 #'     with error(s) and the corresponding error message(s).}
-#'   \item{R.eval}{Number of bootstrap replications that have been conducted.}
-#'   \item{R.succ}{Number of successful bootstrap replications.}
+#'   \item{error.list}{A list of error messages.}
+#'   \item{R.eval}{The number of bootstrap replications that have been
+#'     conducted.}
+#'   \item{R.succ}{The number of successful bootstrap replications.}
 #'
 #' @export
 #'
@@ -512,9 +530,10 @@ chorussell.bs <- function(data, lpmodel, beta.tgt, R, maxR, kappa, norm,
 
 #' Carries out one bootstrap replication for the Cho-Russell procedure
 #'
-#' @description This function carries out the one bootstrap replication of the
-#'   Cho-Russell procedure. This function is used in the \code{chorussell.bs}
-#'   function via the \code{future_lapply} command.
+#' @description This function carries out one bootstrap replication of the
+#'   Cho-Russell procedure. This function is used in the
+#'   \code{\link[lpinfer]{chorussell.bs}} function via the \code{future_lapply}
+#'   command.
 #'
 #' @inheritParams chorussell
 #' @inheritParams chorussell.bs
@@ -526,9 +545,11 @@ chorussell.bs <- function(data, lpmodel, beta.tgt, R, maxR, kappa, norm,
 #'
 #' @return Returns a list of output that are obtained from the Cho-Russell
 #'   procedure:
-#'   \item{ub}{Bootstrap estimate of the upper bound.}
-#'   \item{ub}{Bootstrap estimate of the lower bound.}
-#'   \item{msg}{Error message (if applicable).}
+#'   \item{ub}{The bootstrap estimate of the upper bound.}
+#'   \item{ub}{The bootstrap estimate of the lower bound.}
+#'   \item{kappa.error}{The \code{kappa} parameter that leads to an error (if
+#'     applicable).}
+#'   \item{msg}{An error message (if applicable).}
 #'
 #' @export
 #'
@@ -607,15 +628,18 @@ chorussell.bs.fn <- function(x, data, lpmodel, beta.tgt, kappa, norm, n,
               msg = msg))
 }
 
-#' Computes the required object in the Cho-Russell procedure
+#' Computes the required object in the \code{\link[lpinfer]{chorussell}}
+#' procedure
 #'
-#' @description This function computes the required object in the Cho-Russell
-#'   procedure. If \code{ci} is \code{TRUE}, this function returns the
-#'   \eqn{(1-\alpha)}-confidence interval. Otherwise, it returns the
-#'   \eqn{p}-value.
+#' @description This function computes the required object in the
+#'   \code{\link[lpinfer]{chorussell}} procedure. If \code{ci} is \code{TRUE},
+#'   this function returns the \eqn{(1-\alpha)}-confidence interval. Otherwise,
+#'   it returns the \eqn{p}-value.
 #'
 #' @inheritParams chorussell
 #' @inheritParams chorussell.simp
+#' @param ub The sample upper bound.
+#' @param lb The sample lower bound.
 #'
 #' @return Depending on \code{ci}, this function either returns the
 #'   \eqn{p}-value or the \eqn{(1-\alpha)}-confidence interval.
@@ -673,13 +697,15 @@ chorussell.eval <- function(beta.tgt, lb.can1, lb.can2, ub.can1, ub.can2, n, R,
 #' Checks if \code{beta.tgt} is inside the \eqn{(1-\alpha)}-confidence interval
 #'
 #' @description This function checks whether \code{beta.tgt} is inside the
-#'   \eqn{(1-\alpha)}-confidence interval from the Cho-Russell procedure.
+#'   \eqn{(1-\alpha)}-confidence interval from the
+#'   \code{\link[lpinfer]{chorussell}} procedure.
 #'
-#' @param cr.lp.return List of objects returned from \code{chorussell}.
+#' @param cr.lp.return List of objects returned from
+#'   \code{\link[lpinfer]{chorussell}}.
 #' @inheritParams chorussell
 #'
 #' @return Returns the decision.
-#'   \item{decision}{Boolean variable that equals to \code{TRUE} if
+#'   \item{decision}{A boolean variable that equals to \code{TRUE} if
 #'     \code{beta.tgt} is inside the \eqn{(1-\alpha)}-confidence interval, and
 #'     equals to \code{FALSE} otherwise.}
 #'
@@ -701,21 +727,24 @@ chorussell.pt <- function(cr.lp.return, beta.tgt) {
 }
 
 
-#' Computes the \eqn{(1-\alpha)}-confidence interval in the Cho-Russell
-#' procedure
+#' Computes the \eqn{(1-\alpha)}-confidence interval in the
+#' \code{\link[lpinfer]{chorussell}} procedure
 #'
 #' @description This function computes the \eqn{(1-\alpha)}-confidence
-#' interval in the Cho-Russell procedure by solving the optimization problem.
+#' interval in the \code{\link[lpinfer]{chorussell}} procedure by solving the
+#' optimization problem.
 #'
 #' @import future.apply progressr
 #'
 #' @inheritParams chorussell
 #' @inheritParams chorussell.simp
+#' @inheritParams chorussell.eval
+#' @param k Iteration number.
 #'
 #' @return Returns the following list of objects:
 #'   \item{bd}{A vector that represents the \eqn{(1-\alpha)}-confidence
 #'     interval.}
-#'   \item{unique}{Indicator variable of whether the solution is unique.}
+#'   \item{unique}{An indicator variable of whether the solution is unique.}
 #'
 #' @export
 #'
@@ -823,13 +852,15 @@ chorussell.lp <- function(lb.can1, lb.can2, ub.can1, ub.can2, n, R, alpha,
 }
 
 #' Computes whether the candidate bounds satisfy the constraints in the
-#' Cho-Russell procedure when the sample estimates are non-infinite
+#' \code{\link[lpinfer]{chorussell}} procedure when the sample estimates are
+#' non-infinite
 #'
-#' @description This function carries out the one set of computation in the
-#'   Cho-Russell procedure to check whether the sets of values satisfy the
-#'   constraints in the Cho-Russell procedure. In particular, given one
-#'   candidate of the lower bound, it checks all possible pairs with the upper
-#'   bounds and determine whether they satisfy the constraints.
+#' @description This function carries out one set of computation in the
+#'   \code{\link[lpinfer]{chorussell}} procedure to check whether the set of
+#'   values satisfy the constraints in the \code{\link[lpinfer]{chorussell}}
+#'   procedure. In particular, given one candidate of the lower bound, it
+#'   checks all possible pairs with the upper bounds and determine whether they
+#'   satisfy the constraints.
 #'
 #' @param x A candidate lower bound.
 #' @param ub.can All candidates of the upper bounds.
@@ -837,6 +868,7 @@ chorussell.lp <- function(lb.can1, lb.can2, ub.can1, ub.can2, n, R, alpha,
 #' @inheritParams chorussell.simp
 #' @inheritParams chorussell.simp.fn
 #' @inheritParams dkqs.bs.fn
+#' @inheritParams chorussell.lp
 #'
 #' @return Returns a data frame.
 #'   \item{df}{A data frame that contains the pairs of feasible lower bounds
@@ -882,21 +914,22 @@ chorussell.lp.fn <- function(x, lb.can1, lb.can2, ub.can1, ub.can2, ub.can,
 }
 
 #' Computes whether the candidate bounds satisfy the constraints in the
-#' Cho-Russell procedure when one of the sample estimates of the bounds is
-#' infinite
+#' \code{\link[lpinfer]{chorussell}} procedure when one of the sample
+#' estimates of the bounds is infinite
 #'
-#' @description This function computes whether the candidate bounds satisfy
-#'   the constraints in the Cho-Russell procedure when one of the sample
-#'   estimates of the bounds is infinite. If the upper bound is infinite,
-#'   then the third column of the data frame will store the negative of the
-#'   lower bound so the largest candidate for the lower bound will be chosen
-#'   in order to minimize the interval length.
+#' @description This function finds the candidate bounds that satisfy
+#'   the constraints in the \code{\link[lpinfer]{chorussell}} procedure when
+#'   one of the sample estimates of the bounds is infinite. If the upper bound
+#'   is infinite, then the third column of the data frame will store the
+#'   negative of the lower bound so the largest candidate for the lower bound
+#'   will be chosen in order to minimize the interval length. Similarly, if the
+#'   lower bound is infinite, then the third column of the data frame will
+#'   store the upper bound.
 #'
-#' @param x A candidate lower bound.
-#' @param ub.can All candidates of the upper bounds.
 #' @inheritParams chorussell
 #' @inheritParams chorussell.simp
 #' @inheritParams chorussell.simp.fn
+#' @inheritParams chorussell.lp.fn
 #'
 #' @return Returns a data frame.
 #'   \item{df}{A data frame that contains the pairs of feasible lower bounds
@@ -959,11 +992,12 @@ chorussell.lp.fn.unbd <- function(x, lb.can1, lb.can2, ub.can1, ub.can2,
   return(df)
 }
 
-#' Checks and updates the input in the Cho-Russell procedure
+#' Checks and updates the input in the \code{\link[lpinfer]{chorussell}}
+#' procedure
 #'
-#' @description This function checks and updates the input of the user. If
-#'    there is any invalid input, this function will be terminated and
-#'    generates appropriate error messages.
+#' @description This function checks and updates the input from the user in the
+#'    \code{\link[lpinfer]{chorussell}} function. If there is any invalid input,
+#'    the function will be terminated and error messages will be printed.
 #'
 #' @inheritParams chorussell
 #' @inheritParams dkqs
@@ -1055,21 +1089,22 @@ chorussell.check <- function(data, lpmodel, beta.tgt, R, Rmulti, kappa,
   # ---------------- #
   # Step 7: Return updated items
   # ---------------- #
-  return(list(solver = solver,
+  return(list(data = data,
+              solver = solver,
               solver.name = solver.name,
-              data = data,
               test.logical = test.logical,
+              n = n,
               logical.lb = logical.lb,
-              logical.ub = logical.ub,
-              n = n))
+              logical.ub = logical.ub))
 }
 
-#' Print results from \code{chorussell}
+#' Print results from \code{\link[lpinfer]{chorussell}}
 #'
 #' @description This function either prints the \eqn{p}-values or a
-#'   \eqn{(1-\alpha)} confidence interval from \code{chorussell}.
+#'   \eqn{(1-\alpha)} confidence interval from
+#'   \code{\link[lpinfer]{chorussell}}.
 #'
-#' @param x Object returned from \code{chorussell}.
+#' @param x The output objects returned from \code{\link[lpinfer]{chorussell}}.
 #' @param ... Additional arguments.
 #'
 #' @return Nothing is returned.
@@ -1127,13 +1162,12 @@ print.chorussell <- function(x, ...) {
   }
 }
 
-#' Summary of results from \code{chorussell}
+#' Summary of results from \code{\link[lpinfer]{chorussell}}
 #'
 #' @description This function prints a summary of the results obtained from
-#'   \code{chorussell}.
+#'   \code{\link[lpinfer]{chorussell}}.
 #'
-#' @param x Object returned from \code{chorussell}.
-#' @param ... Additional arguments.
+#' @inheritParams print.chorussell
 #'
 #' @return Nothing is returned.
 #'

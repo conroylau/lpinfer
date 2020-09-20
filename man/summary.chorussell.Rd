@@ -2,12 +2,12 @@
 % Please edit documentation in R/chorussell.R
 \name{summary.chorussell}
 \alias{summary.chorussell}
-\title{Summary of results from \code{chorussell}}
+\title{Summary of results from \code{\link[lpinfer]{chorussell}}}
 \usage{
 \method{summary}{chorussell}(x, ...)
 }
 \arguments{
-\item{x}{Object returned from \code{chorussell}.}
+\item{x}{The output objects returned from \code{\link[lpinfer]{chorussell}}.}
 
 \item{...}{Additional arguments.}
 }
@@ -16,5 +16,5 @@ Nothing is returned.
 }
 \description{
 This function prints a summary of the results obtained from
-  \code{chorussell}.
+  \code{\link[lpinfer]{chorussell}}.
 }

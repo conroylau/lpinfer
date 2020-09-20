@@ -11,25 +11,17 @@ fsst.beta.bs.fn(x, data, lpmodel, pbar, progress, eval.count, n.bs)
 replications, or the list of bootstrap components of the \code{lpmodel}
 object passed from the user.}
 
-\item{data}{Data used in the tests.}
+\item{data}{An \code{data frame} or a \code{matrix}.}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test. The following
-components are required in the \code{lpmodel} for the FSST test:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{A.shp}}
-   \item{\code{beta.obs}}
-   \item{\code{beta.shp}}
- }}
+\item{lpmodel}{The \code{lpmodel} object.}
 
-\item{pbar}{Progress bar object.}
+\item{pbar}{The progress bar object.}
 
 \item{progress}{The boolean variable for whether the progress bars should
 be displayed. If it is set as \code{TRUE}, the progress bars will be
 displayed while the code is running.}
 
-\item{eval.count}{Count for the number of times the \code{future_lapply}
+\item{eval.count}{The count for the number of times the \code{future_lapply}
 function has been called. If this object is zero, it means that the
 \code{future_lapply} function is being called for the first time in this
 subprocedure. Otherwise, it means that the \code{future_lapply} function
@@ -37,16 +29,18 @@ has been called for more than once. This situation typically refers to the
 situations where there are some errors in the first time of the
 replications.}
 
-\item{n.bs}{Total number of replications to be conducted in this procedure.}
+\item{n.bs}{The total number of replications to be conducted in this
+procedure.}
 }
 \value{
 Returns a list of output that are obtained from the subsampling
   procedure:
-  \item{beta}{Bootstrap estimator.}
-  \item{msg}{Error message (if applicable).}
+  \item{beta}{A bootstrap estimator of \eqn{\hat{\beta}_{n,b}}.}
+  \item{msg}{An error message (if applicable).}
 }
 \description{
-This function carries out the one bootstrap replication for
-  getting \code{beta.obs} in the FSST test. This function is used in the
-  \code{fsst.beta.bs} function via the \code{future_lapply} command.
+This function carries out one bootstrap replication for
+  getting \code{beta.obs} in the \code{\link[lpinfer]{fsst}} procedure.
+  This function is used in the \code{\link[lpinfer]{fsst.beta.bs}} function
+  via the \code{future_lapply} command.
 }

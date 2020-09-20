@@ -7,31 +7,24 @@
 estbounds.check(data, lpmodel, kappa, norm, solver, estimate)
 }
 \arguments{
-\item{data}{Data used in the tests.}
+\item{data}{An \code{data frame} or a \code{matrix}.}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test that consists of
-the following objects:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{A.shp}}
-   \item{\code{beta.obs}}
-   \item{\code{beta.shp}}
- }}
+\item{lpmodel}{The \code{lpmodel} object.}
 
-\item{kappa}{Tuning parameter used in the second step of the two-step
+\item{kappa}{The tuning parameter used in the second step of the two-step
 procedure for obtaining the bounds subject to the shape constraints.
 It can be any nonnegative number.}
 
-\item{norm}{Norm used in the optimization problem. It can be either a 1-norm
-or a 2-norm.}
+\item{norm}{The norm used in the optimization problem. It can be either a
+1-norm or a 2-norm. See the details section of
+\code{\link[lpinfer]{estbounds}} for a list of accepted strings.}
 
-\item{solver}{Name of the linear and quadratic programming solver that
-are used to obtain the solution to linear and quadratic programs.
+\item{solver}{The name of the linear and quadratic programming solver that
+is used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
 
-\item{estimate}{Boolean variable to indicate whether the bounds should be
+\item{estimate}{A boolean variable to indicate whether the bounds should be
 estimated or not.}
 }
 \value{
@@ -47,8 +40,7 @@ Returns the updated parameters and objects back to the function
    }
 }
 \description{
-This function checks and updates the input from the user for
-   the function \code{estbounds}. If there is any invalid input, this
-   function will terminate the procedure and generate appropriate error
-   messages.
+This function checks and updates the input from the user in the
+   \code{\link[lpinfer]{estbounds}} function. If there is any invalid input,
+   the function will be terminated and error messages will be printed.
 }

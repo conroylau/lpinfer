@@ -2,7 +2,8 @@
 % Please edit documentation in R/chorussell.R
 \name{chorussell.check}
 \alias{chorussell.check}
-\title{Checks and updates the input in the Cho-Russell procedure}
+\title{Checks and updates the input in the \code{\link[lpinfer]{chorussell}}
+procedure}
 \usage{
 chorussell.check(
   data,
@@ -22,49 +23,45 @@ chorussell.check(
 )
 }
 \arguments{
-\item{data}{Data used in the tests.}
+\item{data}{An \code{data frame} or a \code{matrix}.}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test that consists of
-the following objects:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{A.shp}}
-   \item{\code{beta.obs}}
-   \item{\code{beta.shp}}
- }}
+\item{lpmodel}{The \code{lpmodel} object.}
 
-\item{beta.tgt}{Value of beta to be tested.}
+\item{beta.tgt}{The value to be tested.}
 
-\item{R}{Number of bootstrap replications.}
+\item{R}{The number of bootstrap replications.}
 
-\item{Rmulti}{Multiplier for the number of bootstrap replications. The
+\item{Rmulti}{The multiplier for the number of bootstrap replications. The
 product of \code{Rmulti} and \code{R} refers to the maximum
 number of bootstrap replications to be conducted if there are errors.}
 
-\item{kappa}{Tuning parameter used in the second step of the two-step
+\item{kappa}{The tuning parameter used in the second step of the two-step
 procedure for obtaining the bounds subject to the shape constraints.
 It can be any nonnegative number or a vector of nonnegative numbers.}
 
-\item{norm}{Norm used in the optimization problem. It can be either a 1-norm
-or a 2-norm.}
+\item{norm}{The norm used in the optimization problem. It can be either a
+1-norm or a 2-norm. See the details section of
+\code{\link[lpinfer]{estbounds}} for a list of accepted strings.}
 
-\item{n}{Sample size (only required if \code{data} is omitted in the input).}
+\item{n}{The sample size. This is only required if \code{data} is omitted
+in the input.}
 
-\item{estimate}{Boolean variable to indicate whether the bounds should be
+\item{estimate}{A boolean variable to indicate whether the bounds should be
 estimated or not.}
 
-\item{solver}{Name of the linear and quadratic programming solver that
-are used to obtain the solution to linear and quadratic programs.
+\item{solver}{The name of the linear and quadratic programming solver that
+is used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
 
-\item{ci}{Boolean variable that indicates whether a \eqn{p}-value or a
+\item{ci}{A boolean variable that indicates whether a \eqn{p}-value or a
 \eqn{(1-\alpha)}-confidence interval is returned. If \code{ci} is
 \code{TRUE}, then a confidence interval is returned. Otherwise, a
 \eqn{p}-value is returned.}
 
-\item{alpha}{Significance level. This can be a vector.}
+\item{alpha}{The significance level. This can be a vector.}
+
+\item{tol}{The tolerance level in the bisection procedure.}
 
 \item{progress}{The boolean variable for whether the progress bars should
 be displayed. If it is set as \code{TRUE}, the progress bars will be
@@ -84,7 +81,7 @@ Returns the updated parameters back to the function
    }
 }
 \description{
-This function checks and updates the input of the user. If
-   there is any invalid input, this function will be terminated and
-   generates appropriate error messages.
+This function checks and updates the input from the user in the
+   \code{\link[lpinfer]{chorussell}} function. If there is any invalid input,
+   the function will be terminated and error messages will be printed.
 }

@@ -7,38 +7,40 @@
 bisec.print(procedure, alphahalf, returnlist, a, b, progress, dp, df_bis)
 }
 \arguments{
-\item{procedure}{Variable indicating whether the function is evaluating
+\item{procedure}{The variable indicating whether the function is evaluating
 the end-points or first mid-point, or is iterating through the bisection
 procedure.}
 
 \item{alphahalf}{Half of significance value that is used to evaluate the
 confidence interval.}
 
-\item{returnlist}{List of information obtained from running
-\code{bisec.eval}.}
+\item{returnlist}{The list of information obtained from running
+\code{\link[lpinfer]{bisec.eval}}.}
 
-\item{a}{Lower bound of the current interval. This is \code{NULL} if the
-initial end-points are being evaluated.}
+\item{a}{The lower bound of the current interval. This is \code{NULL} if
+the initial end-points are being evaluated.}
 
-\item{b}{Upper bound of the current interval. This is \code{NULL} if the
-initial end-points are being evaluated.}
+\item{b}{The upper bound of the current interval. This is \code{NULL} if
+the initial end-points are being evaluated.}
 
 \item{progress}{The boolean variable for whether the result messages should
 be displayed in the procedure of constructing confidence interval. If
 it is set as \code{TRUE}, the messages are displayed throughout the
 procedure. Otherwise, the messages will not be displayed.}
 
-\item{dp}{Number of decimal places in the output.}
+\item{dp}{The number of decimal places in the output.}
 
-\item{df_bis}{Data frame storing the information from the bisection method.}
+\item{df_bis}{A data frame storing the information from the bisection
+method.}
 }
 \value{
 Return the updated data frame that stores the information for the
    the iteration.
-   \item{df_bis}{Data frame storing the information for the bisection
+   \item{df_bis}{The data frame storing the information for the bisection
       method in each iteration.}
 }
 \description{
-This function prints the information in \code{ci\_bisection}
-   and store the result for each iteration.
+This function prints the information in
+  \code{\link[lpinfer]{ci.bisection}} and store the result for each
+  iteration.
 }

@@ -7,23 +7,16 @@
 mincriterion.check(data, lpmodel, norm, solver)
 }
 \arguments{
-\item{data}{Data used in the tests.}
+\item{data}{An \code{data frame} or a \code{matrix}.}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test that consists of
-the following objects:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{A.shp}}
-   \item{\code{beta.obs}}
-   \item{\code{beta.shp}}
- }}
+\item{lpmodel}{The \code{lpmodel} object.}
 
-\item{norm}{Norm used in the optimization problem. It can be either a 1-norm
-or a 2-norm.}
+\item{norm}{The norm used in the optimization problem. It can be either a
+1-norm or a 2-norm. See the details section of
+\code{\link[lpinfer]{estbounds}} for a list of accepted strings.}
 
-\item{solver}{Name of the linear and quadratic programming solver that
-are used to obtain the solution to linear and quadratic programs.
+\item{solver}{The name of the linear and quadratic programming solver that
+is used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
 }
@@ -39,8 +32,7 @@ Returns the updated parameters back to the function
    }
 }
 \description{
-This function checks and updates the input from the user for
-   the function \code{mincriterion}. If there is any invalid input, this
-   function will terminate the procedure and generate appropriate error
-   messages.
+This function checks and updates the input from the user in the
+   \code{\link[lpinfer]{mincriterion}} function. If there is any invalid
+   input, the function will be terminated and error messages will be printed.
 }

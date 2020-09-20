@@ -7,31 +7,25 @@
 fsst.range(n, beta.obs.hat, x.star, lpmodel, weight.mat)
 }
 \arguments{
-\item{n}{Sample size (only required if \code{data} is omitted in the input).}
+\item{n}{The sample size. This is only required if \code{data} is omitted
+in the input.}
 
-\item{beta.obs.hat}{Estimator of
+\item{beta.obs.hat}{The sample estimator
 \eqn{\widehat{\bm{\beta}}_{\mathrm{obs}, n}} based on the given
-information in \code{lpmodel}.}
+information in \code{lpmodel} (and \code{data} if applicable).}
 
-\item{x.star}{Optimal value from \code{beta.star.qp}.}
+\item{x.star}{The optimal value from \code{beta.star.qp}.}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test. The following
-components are required in the \code{lpmodel} for the FSST test:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{A.shp}}
-   \item{\code{beta.obs}}
-   \item{\code{beta.shp}}
- }}
+\item{lpmodel}{The \code{lpmodel} object.}
 
-\item{weight.mat}{Weighting matrix.}
+\item{weight.mat}{The weighting matrix for the \code{\link[lpinfer]{fsst}}
+procedure.}
 }
 \value{
-Returns the optimal point and optimal value.
- \item{range}{Range component of the test statistic.}
+Returns the range test statistic.
+ \item{range}{The sample range test statistic.}
 }
 \description{
 This function computes the range component of the test
-  statistics in the FSST procedure.
+  statistics in the \code{\link[lpinfer]{fsst}} procedure.
 }

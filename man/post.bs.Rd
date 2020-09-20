@@ -19,41 +19,41 @@ post.bs(
 )
 }
 \arguments{
-\item{test.return}{List of information returned from the test function.}
+\item{test.return}{The list of information returned from the test function.}
 
-\item{i0}{Starting index to be evaluated.}
+\item{i0}{The starting index to be evaluated.}
 
-\item{i1}{Last index to be evaluated.}
+\item{i1}{The last index to be evaluated.}
 
-\item{R.eval}{Number of bootstrap replications that has been evaluated.}
+\item{R.eval}{The number of bootstrap replications that has been evaluated.}
 
-\item{T.list}{List of bootstrap test statistics.}
+\item{T.list}{The list of bootstrap test statistics.}
 
-\item{beta.list}{List of the bootstrap replications of the \code{beta.obs}
-component.}
+\item{beta.list}{The list of the bootstrap replications of the
+\code{beta.obs} component.}
 
-\item{error.list}{List of error messages.}
+\item{error.list}{The list of error messages.}
 
-\item{error.param}{List of parameters that lead to errors (if applicable).}
+\item{error.param}{The list of parameters that lead to errors (if applicable).}
 
-\item{ub.list}{List of upper bounds (if applicable).}
+\item{ub.list}{The list of upper bounds (if applicable).}
 
-\item{lb.list}{List of lower bounds (if applicable).}
+\item{lb.list}{The list of lower bounds (if applicable).}
 
-\item{param.list}{List of parameters (if applicable).}
+\item{param.list}{The list of parameters (if applicable).}
 }
 \value{
 Returns the following three objects.
-  \item{R.succ}{Number of successful bootstrap replications.}
-  \item{R.eval}{Number of bootstrap replications that has been evaluated.}
-  \item{T.list}{List of test statistics.}
-  \item{beta.list}{List of the bootstrap replications of the
+  \item{R.succ}{The number of successful bootstrap replications.}
+  \item{R.eval}{The number of bootstrap replications that has been evaluated.}
+  \item{T.list}{The list of test statistics.}
+  \item{beta.list}{The list of the bootstrap replications of the
     \code{beta.obs} component.}
-  \item{error.list}{List of error messages (if applicable).}
-  \item{error.param}{List of parameters that lead to errors (if
+  \item{error.list}{The list of error messages (if applicable).}
+  \item{error.param}{The list of parameters that lead to errors (if
     applicable).}
-  \item{ub.list}{List of upper messages (if applicable).}
-  \item{lb.list}{List of lower messages (if applicable).}
+  \item{ub.list}{The list of upper messages (if applicable).}
+  \item{lb.list}{The list of lower messages (if applicable).}
 }
 \description{
 This function is used after the bootstrap replications to

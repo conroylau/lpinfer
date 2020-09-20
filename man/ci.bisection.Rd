@@ -21,23 +21,22 @@ ci.bisection(
 )
 }
 \arguments{
-\item{f}{Function that represents a testing procedure.}
+\item{f}{The function that represents a testing procedure.}
 
-\item{farg}{List of arguments to be passed to the function of testing
+\item{farg}{The list of arguments to be passed to the function of testing
 procedure.}
 
-\item{alpha}{Significance level of the test.}
+\item{alpha}{The significance level(s). This can be a vector.}
 
-\item{b0}{Logical lower or upper bound for the confidence interval.}
+\item{b0}{The lower bound of the initial bracket.}
 
-\item{b1}{Maximum possible lower bound or minimum possible upper bound for
-the confidence interval.}
+\item{b1}{The upper bound of the initial bracket.}
 
-\item{tol}{Tolerance level in the bisection method.}
+\item{tol}{The tolerance level in the bisection method.}
 
-\item{max.iter}{Maximum number of iterations in the bisection method.}
+\item{max.iter}{The maximum number of iterations in the bisection method.}
 
-\item{df_ci}{Data frame that consists the points and the corresponding
+\item{df_ci}{The data frame that consists the points and the corresponding
 \eqn{p}-values that have been tested in the previous iterations.}
 
 \item{progress}{The boolean variable for whether the result messages should
@@ -45,27 +44,30 @@ be displayed in the procedure of constructing confidence interval. If
 it is set as \code{TRUE}, the messages are displayed throughout the
 procedure. Otherwise, the messages will not be displayed.}
 
-\item{type}{Type of the confidence interval. Set \code{type} as 1 for the
+\item{type}{The type of the confidence interval. Set \code{type} as 1 for the
 upper bound of the confidence interval and set \code{type} as -1 for the
 lower bound of the confidence interval.}
 
-\item{dp}{Number of decimal places to be displayed for the \eqn{p}-values
+\item{dp}{The number of decimal places to be displayed for the \eqn{p}-values
 and confidence intervals in the messages if \code{progress} is set
 as \code{TRUE}.}
 
 \item{rngstate}{The current RNG state obtained from \code{.Random.seed}.}
 
-\item{para.match}{The list of parameters to match.}
+\item{para.match}{The list of parameters to be matched.}
 }
 \value{
 Return the solution of the bisection method and the updated
    data frame.
-   \item{soln}{Solution to the bisection method.}
-   \item{df_ci}{Data frame that consists of the points and the
+   \item{pt}{The last test point.}
+   \item{iter}{The number of iterations.}
+   \item{df_ci}{The data frame that consists of the points and the
       corresponding \eqn{p}-values that have been tested in constructing the
       confidence intervals.}
-   \item{df_bis}{Data frame storing the information for the bisection
+   \item{df_bis}{The data frame storing the information for the bisection
       method in each iteration.}
+   \item{last_iter_msg}{The message for the last iteration. This refers to
+      whether why the bisection method stops.}
 }
 \description{
 This function constructs the two-sided confidence interval

@@ -23,88 +23,97 @@ chorussell(
 )
 }
 \arguments{
-\item{data}{Data used in the tests.}
+\item{data}{An \code{data frame} or a \code{matrix}.}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test that consists of
-the following objects:
- \itemize{
-   \item{\code{A.tgt}}
-   \item{\code{A.obs}}
-   \item{\code{A.shp}}
-   \item{\code{beta.obs}}
-   \item{\code{beta.shp}}
- }}
+\item{lpmodel}{The \code{lpmodel} object.}
 
-\item{beta.tgt}{Value of beta to be tested.}
+\item{beta.tgt}{The value to be tested.}
 
-\item{n}{Sample size (only required if \code{data} is omitted in the input).}
+\item{n}{The sample size. This is only required if \code{data} is omitted
+in the input.}
 
-\item{R}{Number of bootstrap replications.}
+\item{R}{The number of bootstrap replications.}
 
-\item{Rmulti}{Multiplier for the number of bootstrap replications. The
+\item{Rmulti}{The multiplier for the number of bootstrap replications. The
 product of \code{Rmulti} and \code{R} refers to the maximum
 number of bootstrap replications to be conducted if there are errors.}
 
-\item{kappa}{Tuning parameter used in the second step of the two-step
+\item{kappa}{The tuning parameter used in the second step of the two-step
 procedure for obtaining the bounds subject to the shape constraints.
 It can be any nonnegative number or a vector of nonnegative numbers.}
 
-\item{norm}{Norm used in the optimization problem. It can be either a 1-norm
-or a 2-norm.}
+\item{norm}{The norm used in the optimization problem. It can be either a
+1-norm or a 2-norm. See the details section of
+\code{\link[lpinfer]{estbounds}} for a list of accepted strings.}
 
-\item{estimate}{Boolean variable to indicate whether the bounds should be
+\item{estimate}{A boolean variable to indicate whether the bounds should be
 estimated or not.}
 
-\item{solver}{Name of the linear and quadratic programming solver that
-are used to obtain the solution to linear and quadratic programs.
+\item{solver}{The name of the linear and quadratic programming solver that
+is used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \code{limSolve} and \code{Rcplex}.}
 
-\item{ci}{Boolean variable that indicates whether a \eqn{p}-value or a
+\item{ci}{A boolean variable that indicates whether a \eqn{p}-value or a
 \eqn{(1-\alpha)}-confidence interval is returned. If \code{ci} is
 \code{TRUE}, then a confidence interval is returned. Otherwise, a
 \eqn{p}-value is returned.}
 
-\item{alpha}{Significance level. This can be a vector.}
+\item{alpha}{The significance level. This can be a vector.}
+
+\item{tol}{The tolerance level in the bisection procedure.}
 
 \item{progress}{The boolean variable for whether the progress bars should
 be displayed. If it is set as \code{TRUE}, the progress bars will be
 displayed while the code is running.}
 
-\item{remove.const}{Determine whether the constraints are to be removed.}
+\item{remove.const}{A boolean variable. This determine whether the
+constraints are to be removed.}
 }
 \value{
 Returns the following list of output:
-  \item{ub}{Upper bound from original data.}
-  \item{lb}{Lower bound from original data.}
-  \item{ub.bs}{List of upper bounds from bootstrap data.}
-  \item{lb.bs}{List of lower bounds from bootstrap data.}
-  \item{test.logical}{Indicator variable for whether the computation has
+  \item{ub}{The upper bound from original data.}
+  \item{lb}{The lower bound from original data.}
+  \item{ub.bs}{The list of upper bounds from bootstrap data.}
+  \item{lb.bs}{The list of lower bounds from bootstrap data.}
+  \item{test.logical}{An indicator variable for whether the computation has
     been conducted. If \code{test.logical} is 1, it refers to the case
     where \code{beta.tgt} is inside the logical bound. If
     \code{test.logical} is 0, it refers to the case where
     \code{beta.tgt} is outside the logical bound.}
-  \item{logical.lb}{Logical lower bound.}
-  \item{logical.ub}{Logical upper bound.}
-  \item{df.error}{Table showing the id of the bootstrap replication(s)
+  \item{logical.lb}{The logical lower bound.}
+  \item{logical.ub}{The logical upper bound.}
+  \item{df.error}{A table showing the id of the bootstrap replication(s)
     with error(s) and the corresponding error message(s).}
-  \item{R.succ}{Number of successful bootstrap replications.}
-  \item{ci}{Boolean variable that indicates whether a \eqn{p}-value or a
+  \item{R.succ}{The number of successful bootstrap replications.}
+  \item{ci}{A boolean variable that indicates whether a \eqn{p}-value or a
     \eqn{(1-\alpha)}-confidence interval is returned.}
   \item{pval}{\eqn{p}-value (if \code{ci} is set as \code{FALSE}).}
-  \item{c.ub}{Upper bound of the \eqn{(1-\alpha)}-confidence interval.}
-  \item{c.lb}{Lower bound of the \eqn{(1-\alpha)}-confidence interval.}
-  \item{alpha}{Significance level.}
-  \item{iter}{Total number of iterations (if \code{ci} is \code{FALSE}.)}
-  \item{unique}{Whether the solution is unique.}
+  \item{c.ub}{The upper bound of the \eqn{(1-\alpha)}-confidence interval.}
+  \item{c.lb}{The lower bound of the \eqn{(1-\alpha)}-confidence interval.}
+  \item{alpha}{The significance level.}
+  \item{iter}{The total number of iterations (if \code{ci} is \code{FALSE}.)}
+  \item{unique}{A boolean variable showing whether the solution is unique.}
 }
 \description{
 This function conducts inference using the procedure
   proposed by Cho and Russell (2019).
 }
 \details{
-See the details section of \code{\link[lpinfer]{estbounds}} for a
-  list of strings acceptable for the option \code{norm}.
+\itemize{
+  \item{See the details section of the \code{\link[lpinfer]{estbounds}}
+    function for a list of strings acceptable for the option \code{norm}.}
+ \item{The following components are required in the \code{lpmodel} for the
+   Cho-Russell procedure:
+   \itemize{
+     \item{\code{A.tgt}}
+     \item{\code{A.obs}}
+     \item{\code{A.shp}}
+     \item{\code{beta.obs}}
+     \item{\code{beta.shp}}
+   }
+ }
+}
 }
 \examples{
 ## ========================================================================= ##
@@ -163,7 +172,7 @@ cr2 <- chorussell(data = data,
                   solver = "gurobi")
 
 # Example 3: Find the 95\% confidence interval with full-information approach
-# The default is to set the signficance level as 0.05
+# The default is to set the significance level as 0.05
 set.seed(1)
 cr3 <- chorussell(data = data,
                   lpmodel = lpmodel.full,

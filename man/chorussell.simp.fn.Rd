@@ -2,7 +2,7 @@
 % Please edit documentation in R/chorussell.R
 \name{chorussell.simp.fn}
 \alias{chorussell.simp.fn}
-\title{Checks one candidate in \code{chorussell}}
+\title{Checks one candidate in \code{\link[lpinfer]{chorussell}}}
 \usage{
 chorussell.simp.fn(x, can1, alpha, pbar, bd, progress)
 }
@@ -11,11 +11,11 @@ chorussell.simp.fn(x, can1, alpha, pbar, bd, progress)
 
 \item{can1}{This refers to either \code{lb.can1} or \code{ub.can1}.}
 
-\item{alpha}{Significance level. This can be a vector.}
+\item{alpha}{The significance level. This can be a vector.}
 
-\item{pbar}{Progress bar object.}
+\item{pbar}{The progress bar object.}
 
-\item{bd}{String indicating which set of candidates that the function is
+\item{bd}{A string indicating which set of candidates that the function is
 trying to simplify.}
 
 \item{progress}{The boolean variable for whether the progress bars should
@@ -29,8 +29,8 @@ Returns the decision to drop or not to drop the candidate. If the
   function.
 }
 \description{
-This function checks one candidate for the \eqn{(1-\alpha)}-
-  confidence interval to see whether it should be dropped from the list of
-  considerations. For details, please see the description of the
-  \code{chorussell.simp} function.
+This function checks one candidate for the
+  \eqn{(1-\alpha)}-confidence interval to see whether it should be dropped
+  from the list of considerations. For details, please see the description
+  of the \code{\link[lpinfer]{chorussell.simp}} function.
 }

@@ -2,12 +2,12 @@
 % Please edit documentation in R/fsst.R
 \name{summary.fsst}
 \alias{summary.fsst}
-\title{Summary of results from \code{fsst}}
+\title{Summary of results from \code{\link[lpinfer]{fsst}}}
 \usage{
 \method{summary}{fsst}(x, ...)
 }
 \arguments{
-\item{x}{Objects returned from \code{fsst}.}
+\item{x}{The output objects returned from \code{\link[lpinfer]{fsst}}.}
 
 \item{...}{Additional arguments.}
 }
@@ -16,5 +16,5 @@ Nothing is returned.
 }
 \description{
 This function prints a summary of the results obtained from
-  \code{fsst}.
+  \code{\link[lpinfer]{fsst}}.
 }
