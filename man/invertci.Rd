@@ -125,7 +125,7 @@ invertci1 <- invertci(f = subsample,
                       init.ub = c(.6, 1),
                       tol = 0.001,
                       max.iter = 50,
-                      df_ci = NULL,
+                      pvals = NULL,
                       progress = FALSE)
 print(invertci1)
 summary(invertci1)
@@ -139,7 +139,7 @@ invertci2 <- invertci(f = subsample,
                       init.ub = c(.6, 1),
                       tol = 0.001,
                       max.iter = 5,
-                      df_ci = NULL,
+                      pvals = NULL,
                       progress = FALSE)
 print(invertci2)
 summary(invertci2)
@@ -156,7 +156,7 @@ invertci4 <- invertci(f = subsample,
                       init.lb = c(.1, .9),
                       tol = 0.001,
                       max.iter = 50,
-                      df_ci = NULL,
+                      pvals = NULL,
                       progress = FALSE)
 print(invertci4)
 summary(invertci4)
@@ -169,7 +169,7 @@ invertci5 <- invertci(f = subsample,
                       alpha = 0.05,
                       tol = 0.001,
                       max.iter = 50,
-                      df_ci = NULL,
+                      pvals = NULL,
                       progress = FALSE)
 print(invertci5)
 summary(invertci5)
