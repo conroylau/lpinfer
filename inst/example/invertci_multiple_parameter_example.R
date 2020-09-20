@@ -48,10 +48,8 @@ set.seed(1)
 r <- invertci(f = eg_procedure,
               farg = list(beta = c(.1, .3),
                           gamma = c(.1, .5)),
-              lb0 = 0,
-              lb1 = .5,
-              ub1 = .6,
-              ub0 = 1,
+              init.lb = c(0, .4),
+              init.ub = c(.6, 1),
               max.iter = 5,
               alpha = c(.9, .95),
               progress = FALSE)
