@@ -1076,8 +1076,8 @@ check.betatgt <- function(data, lpmodel, beta.tgt, solver) {
   # ---------------- #
   # Step 1: Compute the logical upper and lower bound
   # ---------------- #
-  ub <- check.betatgt.lp(data, lpmodel, beta.tgt, "max", solver)
-  lb <- check.betatgt.lp(data, lpmodel, beta.tgt, "min", solver)
+  ub <- check.betatgt.lp(data, lpmodel, "max", solver)
+  lb <- check.betatgt.lp(data, lpmodel, "min", solver)
 
   # ---------------- #
   # Step 2: Return the indicator
@@ -1122,7 +1122,7 @@ check.betatgt <- function(data, lpmodel, beta.tgt, solver) {
 #'
 #' @export
 #'
-check.betatgt.lp <- function(data, lpmodel, beta.tgt, modelsense, solver) {
+check.betatgt.lp <- function(data, lpmodel, modelsense, solver) {
   # ---------------- #
   # Step 1: Obtain the deterministic components of the objects in lpmodel
   # ---------------- #

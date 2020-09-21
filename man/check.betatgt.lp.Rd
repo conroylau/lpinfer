@@ -5,14 +5,12 @@
 \title{Construct the linear program for the function
   \code{\link[lpinfer]{check.betatgt}}}
 \usage{
-check.betatgt.lp(data, lpmodel, beta.tgt, modelsense, solver)
+check.betatgt.lp(data, lpmodel, modelsense, solver)
 }
 \arguments{
 \item{data}{An \code{data frame} or a \code{matrix}.}
 
 \item{lpmodel}{An \code{lpmodel} object.}
-
-\item{beta.tgt}{The value to be tested.}
 
 \item{modelsense}{A string that indicates whether the program is a
 maximization or minimization problem. If it is "max", then it is referring
