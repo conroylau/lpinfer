@@ -1000,7 +1000,7 @@ invertci.check <- function(f, farg, alpha, init.lb, init.ub, tol, max.iter,
       # Set pvals as a data frame
       pvals = as.data.frame(pvals)
       # Check the column names
-      if (("point" %in% colnames(pvals)) & ("p-value" %in% colnames(pvals))) {
+      if (!(("point" %in% colnames(pvals)) & ("p-value" %in% colnames(pvals)))) {
         stop("The column names of the data frame 'pvals' need to contain 'point'
              and 'p-value'.", call. = FALSE)
       }
