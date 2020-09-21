@@ -236,6 +236,13 @@ chorussell <- function(data = NULL, lpmodel, beta.tgt = NULL, n = NULL, R = 100,
                    test.logical = test.logical)
   }
 
+  # Turn returned lists for bounds as vectors if parameter is not multivalued
+  if (length(kappa) == 1) {
+    for (x in c("ub", "lb", "ub.bs", "lb.bs")) {
+      output[[x]] <- unlist(output[[x]])
+    }
+  }
+
   # ---------------- #
   # Step 6: Issue warning message for estimate = FALSE
   # ---------------- #
