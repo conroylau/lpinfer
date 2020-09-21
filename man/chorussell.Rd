@@ -7,7 +7,7 @@
 chorussell(
   data = NULL,
   lpmodel,
-  beta.tgt,
+  beta.tgt = NULL,
   n = NULL,
   R = 100,
   Rmulti = 1.25,
@@ -15,7 +15,7 @@ chorussell(
   norm = 2,
   estimate = TRUE,
   solver = NULL,
-  ci = FALSE,
+  ci = TRUE,
   alpha = 0.05,
   tol = 1e-04,
   progress = TRUE,
@@ -101,7 +101,7 @@ This function conducts inference using the procedure
 }
 \details{
 \itemize{
-  \item{See the details section of the \code{\link[lpinfer]{estbounds}}
+ \item{See the details section of the \code{\link[lpinfer]{estbounds}}
     function for a list of strings acceptable for the option \code{norm}.}
  \item{The following components are required in the \code{lpmodel} for the
    Cho-Russell procedure:
@@ -112,6 +112,7 @@ This function conducts inference using the procedure
      \item{\code{beta.obs}}
      \item{\code{beta.shp}}
    }
+ \item{The input \code{beta.tgt} is not required when \code{ci = TRUE}.}
  }
 }
 }

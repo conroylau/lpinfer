@@ -43,7 +43,7 @@
 #'
 #' @details
 #' \itemize{
-#'   \item{See the details section of the \code{\link[lpinfer]{estbounds}}
+#'  \item{See the details section of the \code{\link[lpinfer]{estbounds}}
 #'     function for a list of strings acceptable for the option \code{norm}.}
 #'  \item{The following components are required in the \code{lpmodel} for the
 #'    Cho-Russell procedure:
@@ -54,6 +54,7 @@
 #'      \item{\code{beta.obs}}
 #'      \item{\code{beta.shp}}
 #'    }
+#'  \item{The input \code{beta.tgt} is not required when \code{ci = TRUE}.}
 #'  }
 #' }
 #'
@@ -61,7 +62,7 @@
 #'
 #' @export
 #'
-chorussell <- function(data = NULL, lpmodel, beta.tgt, n = NULL, R = 100,
+chorussell <- function(data = NULL, lpmodel, beta.tgt = NULL, n = NULL, R = 100,
                        Rmulti = 1.25, kappa = 0, norm = 2, estimate = TRUE,
                        solver = NULL, ci = TRUE, alpha = 0.05, tol = 1e-4,
                        progress = TRUE, remove.const = TRUE) {
@@ -1055,7 +1056,9 @@ chorussell.check <- function(data, lpmodel, beta.tgt, R, Rmulti, kappa,
   # ---------------- #
   # Step 4: Check numerics
   # ---------------- #
-  check.numeric(beta.tgt, "beta.tgt")
+  if (isFALSE(ci)) {
+    check.numeric(beta.tgt, "beta.tgt") 
+  }
   check.positiveinteger(R, "R")
   check.nonnegative(tol, "tol")
   check.norm(norm, "norm")
@@ -1074,10 +1077,16 @@ chorussell.check <- function(data, lpmodel, beta.tgt, R, Rmulti, kappa,
   # ---------------- #
   # Step 5: Check whether beta.tgt is within the logical bounds
   # ---------------- #
-  test.return <- check.betatgt(data, lpmodel, beta.tgt, solver)
-  test.logical <- test.return$inout
-  logical.lb <- test.return$lb
-  logical.ub <- test.return$ub
+  if (isFALSE(ci)) {
+    test.return <- check.betatgt(data, lpmodel, beta.tgt, solver)
+    test.logical <- test.return$inout
+    logical.lb <- test.return$lb
+    logical.ub <- test.return$ub 
+  } else {
+    test.logical <- 1
+    logical.lb <- check.betatgt.lp(data, lpmodel, "min", solver)
+    logical.ub <- check.betatgt.lp(data, lpmodel, "max", solver)
+  }
 
   # ---------------- #
   # Step 6: Check Boolean
