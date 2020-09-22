@@ -918,8 +918,6 @@ chorussell.lp.fn <- function(x, lb.can1, lb.can2, ub.can1, ub.can2, ub.can,
   # Step 3: Check if the candidate bounds satisfy the inequalities
   # ---------------- #
   for (i in seq_along(ub.can)) {
-    print(mean((lb.can1 <= x) * (-ub.can[i] <= ub.can2)))
-    print(mean((lb.can2 <= x) * (-ub.can[i] <= ub.can1)))
     ind1 <- (mean((lb.can1 <= x) * (-ub.can[i] <= ub.can2)) >= (1 - alpha))
     ind2 <- (mean((lb.can2 <= x) * (-ub.can[i] <= ub.can1)) >= (1 - alpha))
     if (isTRUE(ind1) & isTRUE(ind2)) {
