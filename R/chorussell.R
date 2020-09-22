@@ -177,6 +177,7 @@ chorussell <- function(data = NULL, lpmodel, beta.tgt = NULL, n = NULL, R = 100,
                                              lb.can2[[i]], ub.can1[[i]],
                                              ub.can2[[i]], n, R, ci, alpha,
                                              tol, ub[[i]], lb[[i]],
+                                             logical.ub, logical.lb,
                                              remove.const, kappa[i],
                                              progress)
       }
@@ -646,6 +647,8 @@ chorussell.bs.fn <- function(x, data, lpmodel, beta.tgt, kappa, norm, n,
 #'
 #' @inheritParams chorussell
 #' @inheritParams chorussell.simp
+#' @param logical.ub The logical upper bound.
+#' @param logical.lb The logical lower bound.
 #' @param ub The sample upper bound.
 #' @param lb The sample lower bound.
 #'
@@ -655,8 +658,8 @@ chorussell.bs.fn <- function(x, data, lpmodel, beta.tgt, kappa, norm, n,
 #' @export
 #'
 chorussell.eval <- function(beta.tgt, lb.can1, lb.can2, ub.can1, ub.can2, n, R,
-                            ci, alpha, tol, ub, lb, remove.const, kappa,
-                            progress) {
+                            ci, alpha, tol, ub, lb, logical.ub, logical.lb,
+                            remove.const, kappa, progress) {
   if (isFALSE(ci)) {
     # ---------------- #
     # Case 1: ci == FALSE, i.e. computes the p-value via bisection method
@@ -664,8 +667,9 @@ chorussell.eval <- function(beta.tgt, lb.can1, lb.can2, ub.can1, ub.can2, n, R,
     # Predefine the two end-points and check b = 1 first
     a <- 0
     b <- 1
-    b.lp <- chorussell.lp(lb.can1, lb.can2, ub.can1, ub.can2, n, R, b, ub, lb,
-                          remove.const, ci, kappa, 1, progress)
+    b.lp <- chorussell.lp(lb.can1, lb.can2, ub.can1, ub.can2, n, R, b, ub, lb, 
+                          logical.ub, logical.lb, remove.const, ci, kappa,
+                          1, progress)
     b.inout <- chorussell.pt(b.lp, beta.tgt)
     if (isTRUE(b.inout)) {
       return(list(pval = b))
@@ -676,7 +680,8 @@ chorussell.eval <- function(beta.tgt, lb.can1, lb.can2, ub.can1, ub.can2, n, R,
     while (abs(b - a) > tol) {
       c <- (a + b)/2
       c.lp <- chorussell.lp(lb.can1, lb.can2, ub.can1, ub.can2, n, R, c, ub,
-                            lb, remove.const, ci, kappa, k, progress)
+                            lb, logical.ub, logical.lb, remove.const, ci,
+                            kappa, k, progress)
       c.inout <- chorussell.pt(c.lp, beta.tgt)
       if (isFALSE(c.inout)) {
         b <- c
@@ -693,9 +698,9 @@ chorussell.eval <- function(beta.tgt, lb.can1, lb.can2, ub.can1, ub.can2, n, R,
     # Computes the confidence interval for each alpha
     cr.bd.return <- list()
     for (j in seq_along(alpha)) {
-      cr.bd.temp <- chorussell.lp(lb.can1, lb.can2, ub.can1, ub.can2, n, R,
-                                  alpha[j], ub, lb, remove.const, ci, kappa,
-                                  0, progress)
+      cr.bd.temp <- chorussell.lp(lb.can1, lb.can2, ub.can1, ub.can2,  n, R,
+                                  alpha[j], ub, lb, logical.ub, logical.lb,
+                                  remove.const, ci, kappa, 0, progress)
       cr.bd.return[[j]] <- cr.bd.temp
     }
     return(cr.bd.return)
@@ -757,7 +762,8 @@ chorussell.pt <- function(cr.lp.return, beta.tgt) {
 #' @export
 #'
 chorussell.lp <- function(lb.can1, lb.can2, ub.can1, ub.can2, n, R, alpha,
-                          ub, lb, remove.const, ci, kappa, k = 0, progress) {
+                          ub, lb, logical.ub, logical.lb, remove.const, ci,
+                          kappa, k = 0, progress) {
   # ---------------- #
   # Step 1: Select the candidates of the optimization problem
   # ---------------- #
@@ -771,12 +777,16 @@ chorussell.lp <- function(lb.can1, lb.can2, ub.can1, ub.can2, n, R, alpha,
     ub.can <- c(ub.can1, ub.can2)
   }
 
+  # Include the logical bounds if none of the candidates satisfy the answer
+  delta <- ub - lb
   if (is.null(lb.can)) {
-    lb.can <- -Inf
+    lb.can <- c(sqrt(n) * (logical.lb - lb),
+                sqrt(n) * (logical.lb - lb - delta))
   }
 
   if (is.null(ub.can)) {
-    ub.can <- Inf
+    ub.can <- c(sqrt(n) * (logical.ub - ub),
+                sqrt(n) * (logical.ub - ub + delta))
   }
 
   # ---------------- #
@@ -908,6 +918,8 @@ chorussell.lp.fn <- function(x, lb.can1, lb.can2, ub.can1, ub.can2, ub.can,
   # Step 3: Check if the candidate bounds satisfy the inequalities
   # ---------------- #
   for (i in seq_along(ub.can)) {
+    print(mean((lb.can1 <= x) * (-ub.can[i] <= ub.can2)))
+    print(mean((lb.can2 <= x) * (-ub.can[i] <= ub.can1)))
     ind1 <- (mean((lb.can1 <= x) * (-ub.can[i] <= ub.can2)) >= (1 - alpha))
     ind2 <- (mean((lb.can2 <= x) * (-ub.can[i] <= ub.can1)) >= (1 - alpha))
     if (isTRUE(ind1) & isTRUE(ind2)) {

@@ -15,6 +15,8 @@ chorussell.lp(
   alpha,
   ub,
   lb,
+  logical.ub,
+  logical.lb,
   remove.const,
   ci,
   kappa,
@@ -47,6 +49,10 @@ in the input.}
 \item{ub}{The sample upper bound.}
 
 \item{lb}{The sample lower bound.}
+
+\item{logical.ub}{The logical upper bound.}
+
+\item{logical.lb}{The logical lower bound.}
 
 \item{remove.const}{A boolean variable. This determine whether the
 constraints are to be removed.}
