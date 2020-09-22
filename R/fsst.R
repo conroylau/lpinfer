@@ -472,6 +472,11 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                          logical.lb = logical.lb,
                          logical.ub = logical.ub))
 
+   # Turn returned lists for bounds as vectors if parameter is not multivalued
+   if (length(output$cone.n.list) == 1) {
+      output$cone.n.list <- unlist(output$cone.n.list)
+   }
+
    # Assign class
    attr(output, "class") <- "fsst"
 

@@ -295,6 +295,13 @@ invertci <- function(f, farg = list(), alpha = .05, init.lb = NULL,
   output$para.vals <- para.vals
   attr(output, "class") <- "invertci"
 
+  # Turn returned lists for bounds as vectors if parameter is not multivalued
+  if (nrow(output$ci) == 1) {
+    for (x in c("iter", "df_ub", "df_lb", "termination")) {
+      output[[x]] <- output[[x]][[1]][[1]]
+    }
+  }
+
   # Return output
   return(output)
 }
@@ -730,7 +737,7 @@ summary.invertci_single <- function(x, alphas, msg.bound, ...) {
   cat(sprintf("Confidence interval: [%s, %s]\n",
               round(x$ci[1, 3], digits = 5),
               round(x$ci[1, 4], digits = 5)))
-  cat(sprintf("\nMaximum number of iterations: %s\n", x$max.iter[[1]][[1]]))
+  cat(sprintf("\nMaximum number of iterations: %s\n", x$max.iter))
   cat(sprintf("Tolerance level: %s\n", x$tol))
 
   # Display the details if `f` is not `chorussell` (where x$df_ub and
@@ -742,14 +749,14 @@ summary.invertci_single <- function(x, alphas, msg.bound, ...) {
     # ---------------- #
     cat("Details:\n\n")
     cat(sprintf(msg.bound, "upper"))
-    consolidate.invertci(x$df_ub[[1]][[1]], x$termination$ub)
+    consolidate.invertci(x$df_ub, x$termination$ub)
     cat("\n")
 
     # ---------------- #
     # Step 3: Messages in constructing the lower bound
     # ---------------- #
     cat(sprintf(msg.bound, "lower"))
-    consolidate.invertci(x$df_lb[[1]][[1]], x$termination$lb)
+    consolidate.invertci(x$df_lb, x$termination$lb)
   }
 }
 
