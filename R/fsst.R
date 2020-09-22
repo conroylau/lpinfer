@@ -1590,7 +1590,7 @@ fsst.cone.bs <- function(n, omega.i, beta.n, beta.star, lpmodel, R.succ,
                                                  data.driven = data.driven)
    })
 
-   cone.n.list <- unlist(sapply(cone.return, "[", "Ts"))
+   cone.n.list <- unlist(sapply(cone.return, "[", "Ts"), use.names = FALSE)
    error.list <- sapply(cone.return, "[", "msg")
    R.succ <- length(cone.n.list)
    R.eval <- length(beta.star.list) - 1
