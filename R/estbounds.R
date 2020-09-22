@@ -816,7 +816,7 @@ mincriterion.check <- function(data, lpmodel, norm, solver) {
 #'
 print.mincriterion <- function(x, ...) {
   # Print the minimum value
-  cat(sprintf("Minimum value: %s \n", round(x$objval)))
+  cat(sprintf("Minimum value: %s \n", round(x$objval, digits = 5)))
 }
 
 #' Summary of results from \code{\link[lpinfer]{mincriterion}}
