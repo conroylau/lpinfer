@@ -313,7 +313,7 @@ chorussell.simp <- function(lb.can1, lb.can2, ub.can1, ub.can2, alpha,
   # Step 1: Combine the candidates
   # ---------------- #
   lb.can <- c(lb.can1, lb.can2)
-  ub.can <- c(ub.can1, ub.can2)
+  ub.can <- -c(ub.can1, ub.can2)
 
   # ---------------- #
   # Step 2: Obtain the updated candidates
@@ -774,7 +774,7 @@ chorussell.lp <- function(lb.can1, lb.can2, ub.can1, ub.can2, n, R, alpha,
     ub.can <- cr.updatecan$ub
   } else {
     lb.can <- c(lb.can1, lb.can2)
-    ub.can <- c(ub.can1, ub.can2)
+    ub.can <- -c(ub.can1, ub.can2)
   }
 
   # Include the logical bounds if none of the candidates satisfy the answer
@@ -785,8 +785,8 @@ chorussell.lp <- function(lb.can1, lb.can2, ub.can1, ub.can2, n, R, alpha,
   }
 
   if (is.null(ub.can)) {
-    ub.can <- c(sqrt(n) * (logical.ub - ub),
-                sqrt(n) * (logical.ub - ub + delta))
+    ub.can <- -c(sqrt(n) * (logical.ub - ub),
+                 sqrt(n) * (logical.ub - ub + delta))
   }
 
   # ---------------- #
