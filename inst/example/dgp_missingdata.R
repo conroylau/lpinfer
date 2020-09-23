@@ -1,13 +1,24 @@
 ## ========================================================================= ##
 ##
-##  Example file for generating an `lpmodel` object and drawing a DGP
+##  Example for the missing data problem
 ##
 ##  This is an example code of generating an `lpmodel` object and drawing a
 ##  DGP based on the missing data problem.
 ##
 ## ========================================================================= ##
 
-# Function to generate the `lpmodel` object in the missing data problem
+#' Creates the \code{lpmodel} object for the missing data problem
+#' 
+#' @description This function creates the \code{lpmodel} object for the 
+#'   missing data problem.
+#'
+#' @param J The number of distinct outcomes in Y.
+#' @param info The string that indicates whether the full-information or the 
+#'   two-moments approach is used.
+#' @param data The data set that represents the missing data problem.
+#' 
+#' @return An \code{lpmodel} object.
+#' 
 missingdata_lpm <- function(J = 5, info = "mean", data = NULL) {
   # Initialize the parameters
   J1 <- J + 1
@@ -76,9 +87,24 @@ missingdata_lpm <- function(J = 5, info = "mean", data = NULL) {
                  A.tgt = A.tgt,
                  beta.obs = beta.obs,
                  beta.shp = beta.shp)
+  
+  return(lpm)
 }
 
-# Function to draw data in the missing data problem
+#' Simulate the missing data for the missing data problem
+#' 
+#' @description This function generates the simulated data for the missing
+#'   data problem. There are two variables in this DGP (D, Y), where Y is the
+#'   outcome variable and D is the variable that determines whether Y is 
+#'   observed.
+#'
+#' @param J The number of distinct outcomes in Y.
+#' @param n The number of observations.
+#' @param seed The seed.
+#' @param prob.obs The probability that Y is observed.
+#' 
+#' @return A data frame that contains the simulated data.
+#' 
 missingdata_draw <- function(J = 5, n = 500, seed = 1, prob.obs = .5) {
   set.seed(seed)
 
