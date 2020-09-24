@@ -80,7 +80,7 @@ beta_shp <- c(1)
 # ---------------- #
 # Parameters to test
 beta.tgt <- .365
-kappa <- 1e-5
+kappa <- 0
 reps <- 100
 tol <- 1e-3
 
@@ -91,6 +91,7 @@ farg <- list(data = sampledata,
              kappa = kappa,
              estimate = TRUE,
              tol = tol,
+             ci = FALSE,
              solver = "gurobi")
 
 # Define the lpmodels
@@ -111,7 +112,7 @@ lpmodel.twom <- lpmodel(A.obs    = A_obs_twom,
 # Output 1: beta.obs is a function and output is p-value
 # ---------------- #
 # List of cores, lpmodel and norm objects to be used
-i.cores <- list(1, 8)
+i.cores <- list(1)
 j.lpmodel <- list(lpmodel.full, lpmodel.twom)
 k.norm <- list(1, 2)
 
@@ -124,7 +125,6 @@ for (i in seq_along(i.cores)) {
     farg$lpmodel <- j.lpmodel[[j]]
     cr.out.pval[[i]][[j]] <- list()
     for (k in seq_along(k.norm)) {
-      RNGkind(kind = "L'Ecuyer-CMRG")
       set.seed(1)
       farg$norm <- k.norm[[k]]
       cr.out.pval[[i]][[j]][[k]] <- do.call(chorussell, farg)
@@ -145,7 +145,6 @@ for (i in seq_along(i.cores)) {
     farg$lpmodel <- j.lpmodel[[j]]
     cr.out.ci[[i]][[j]] <- list()
     for (k in seq_along(k.norm)) {
-      RNGkind(kind = "L'Ecuyer-CMRG")
       set.seed(1)
       farg$norm <- k.norm[[k]]
       cr.out.ci[[i]][[j]][[k]] <- do.call(chorussell, farg)
@@ -167,17 +166,15 @@ draw.bs.data <- function(x, f, data) {
 
 # Draw bootstrap data for the full information and two moments method
 set.seed(1)
-bobs.bs.full.list <- future.apply::future_lapply(1:reps,
-                                                 FUN = draw.bs.data,
-                                                 future.seed = TRUE,
-                                                 f = func_full_info,
-                                                 data = sampledata)
+bobs.bs.full.list <- lapply(1:reps,
+                            FUN = draw.bs.data,
+                            f = func_full_info,
+                            data = sampledata)
 set.seed(1)
-bobs.bs.twom.list <- future.apply::future_lapply(1:reps,
-                                                 FUN = draw.bs.data,
-                                                 future.seed = TRUE,
-                                                 f = func_two_moment,
-                                                 data = sampledata)
+bobs.bs.twom.list <- lapply(1:reps,
+                            FUN = draw.bs.data,
+                            f = func_two_moment,
+                            data = sampledata)
 
 bobs.full.list <- c(list(func_full_info(sampledata)$beta), bobs.bs.full.list)
 bobs.twom.list <- c(list(func_two_moment(sampledata)$beta), bobs.bs.twom.list)
@@ -199,6 +196,7 @@ farg2 <- list(beta.tgt = beta.tgt,
               n = nrow(sampledata),
               solver = "gurobi",
               tol = tol,
+              ci = FALSE,
               progress = TRUE)
 
 # Compute the chorussell output again
@@ -210,7 +208,6 @@ for (i in seq_along(i.cores)) {
     farg2$lpmodel <- j.lpmodel2[[j]]
     cr.out.pval2[[i]][[j]] <- list()
     for (k in seq_along(k.norm)) {
-      RNGkind(kind = "L'Ecuyer-CMRG")
       set.seed(1)
       farg2$norm <- k.norm[[k]]
       cr.out.pval2[[i]][[j]][[k]] <- do.call(chorussell, farg2)
@@ -231,7 +228,6 @@ for (i in seq_along(i.cores)) {
     farg2$lpmodel <- j.lpmodel2[[j]]
     cr.out.ci2[[i]][[j]] <- list()
     for (k in seq_along(k.norm)) {
-      RNGkind(kind = "L'Ecuyer-CMRG")
       set.seed(1)
       farg2$norm <- k.norm[[k]]
       cr.out.ci2[[i]][[j]][[k]] <- do.call(chorussell, farg2)
@@ -272,14 +268,13 @@ for (j in seq_along(j.lpmodel)) {
     delta[[j]][[k]] <- temp$ub - temp$lb
     # Bootstrap bounds
     set.seed(1)
-    temp <- future.apply::future_lapply(1:reps,
-                                        FUN = cr.bs.fn,
-                                        lpmodel = j.lpmodel[[j]],
-                                        data = sampledata,
-                                        kappa = kappa,
-                                        norm = k.norm[[k]],
-                                        estimate = TRUE,
-                                        future.seed = TRUE)
+    temp <- lapply(1:reps,
+                   FUN = cr.bs.fn,
+                   lpmodel = j.lpmodel[[j]],
+                   data = sampledata,
+                   kappa = kappa,
+                   norm = k.norm[[k]],
+                   estimate = TRUE)
     ub.bs[[j]][[k]] <- unlist(sapply(temp, "[", "ub"), use.names = FALSE)
     lb.bs[[j]][[k]] <- unlist(sapply(temp, "[", "lb"), use.names = FALSE)
   }
@@ -310,7 +305,7 @@ for (j in seq_along(j.lpmodel)) {
 cr.optim <- function(lb.can1, lb.can2, ub.can1, ub.can2, lb, ub, alpha) {
   ## Combine the list of candidates
   lb.can <- c(lb.can1, lb.can2)
-  ub.can <- c(ub.can1, ub.can2)
+  ub.can <- -c(ub.can1, ub.can2)
 
   ## Data frame to store the results
   df <- data.frame(matrix(vector(), nrow = 0, ncol = 3))
@@ -400,7 +395,7 @@ test.cr.pval <- function(cr.out, test.name, test.type) {
     for (i in seq_along(i.cores)) {
       j <- 1
       for (k in seq_along(k.norm)) {
-        expect_equal(pval[[j]][[k]], cr.out[[i]][[j]][[k]]$pval[,2])
+        expect_equal(pval[[j]][[k]], cr.out[[i]][[j]][[k]]$pval[1, 2])
       }
     }
   })
@@ -410,7 +405,7 @@ test.cr.pval <- function(cr.out, test.name, test.type) {
     for (i in seq_along(i.cores)) {
       j <- 2
       for (k in seq_along(k.norm)) {
-        expect_equal(pval[[j]][[k]], cr.out[[i]][[j]][[k]]$pval[,2])
+        expect_equal(pval[[j]][[k]], cr.out[[i]][[j]][[k]]$pval[1, 2])
       }
     }
   })
@@ -445,8 +440,8 @@ test.cr.ci <- function(cr.out, test.name, test.type) {
     for (i in seq_along(i.cores)) {
       j <- 1
       for (k in seq_along(k.norm)) {
-        expect_equal(c.lb[[j]][[k]], cr.out[[i]][[j]][[k]]$ci.df[1,2])
-        expect_equal(c.ub[[j]][[k]], cr.out[[i]][[j]][[k]]$ci.df[1,3])
+        expect_equal(c.lb[[j]][[k]], cr.out[[i]][[j]][[k]]$ci.df[1,3])
+        expect_equal(c.ub[[j]][[k]], cr.out[[i]][[j]][[k]]$ci.df[1,4])
       }
     }
   })
@@ -456,8 +451,8 @@ test.cr.ci <- function(cr.out, test.name, test.type) {
     for (i in seq_along(i.cores)) {
       j <- 2
       for (k in seq_along(k.norm)) {
-        expect_equal(c.lb[[j]][[k]], cr.out[[i]][[j]][[k]]$ci.df[1,2])
-        expect_equal(c.ub[[j]][[k]], cr.out[[i]][[j]][[k]]$ci.df[1,3])
+        expect_equal(c.lb[[j]][[k]], cr.out[[i]][[j]][[k]]$ci.df[1,3])
+        expect_equal(c.ub[[j]][[k]], cr.out[[i]][[j]][[k]]$ci.df[1,4])
       }
     }
   })
@@ -603,4 +598,64 @@ test.cr.pval(cr.out.pval2, "list", "p-value")
 test.cr.ci(cr.out.ci, "function", "confidence interval")
 
 # beta.obs is a list of bootstrap estimates
-test.cr.ci(cr.out.ci, "list", "confidence interval")
+test.cr.ci(cr.out.ci2, "list", "confidence interval")
+
+# ---------------- #
+# Make sure the results obtained from the brute force approach is the 
+# same as the refinement approach
+# ---------------- #
+cr.out.brute.pval <- list()
+cr.out.brute.ci <- list()
+
+# p-value
+farg$ci <- FALSE
+farg$remove.const <- FALSE
+for (j in seq_along(j.lpmodel)) {
+  farg$lpmodel <- j.lpmodel[[j]]
+  cr.out.brute.pval[[j]] <- list()
+  for (k in seq_along(k.norm)) {
+    set.seed(1)
+    farg$norm <- k.norm[[k]]
+    cr.out.brute.pval[[j]][[k]] <- do.call(chorussell, farg)
+  }
+}
+
+# Confidence intervals
+farg$ci <- TRUE
+farg$remove.const <- FALSE
+for (j in seq_along(j.lpmodel)) {
+  farg$lpmodel <- j.lpmodel[[j]]
+  cr.out.brute.ci[[j]] <- list()
+  for (k in seq_along(k.norm)) {
+    set.seed(1)
+    farg$norm <- k.norm[[k]]
+    cr.out.brute.ci[[j]][[k]] <- do.call(chorussell, farg)
+  }
+}
+
+# Compare the confidence intervals
+test_that("Same answers in brute force and refinement approaches", {
+  for (i in seq_along(i.cores)) {
+    for (j in seq_along(j.lpmodel)) {
+      for (k in seq_along(k.norm)) {
+        # p-value
+        expect_equal(cr.out.brute.pval[[j]][[k]]$pval[1, 2],
+                     cr.out.pval[[i]][[j]][[k]]$pval[1, 2])
+        expect_equal(cr.out.brute.pval[[j]][[k]]$pval[1, 2],
+                     cr.out.pval2[[i]][[j]][[k]]$pval[1, 2])
+        
+        # Lower-bound of the confidence intervals
+        expect_equal(cr.out.brute.ci[[j]][[k]]$ci.df[1, 3],
+                     cr.out.ci[[i]][[j]][[k]]$ci.df[1, 3])
+        expect_equal(cr.out.brute.ci[[j]][[k]]$ci.df[1, 3],
+                     cr.out.ci2[[i]][[j]][[k]]$ci.df[1, 3])
+
+        # Upper-bound of the confidence intervals
+        expect_equal(cr.out.brute.ci[[j]][[k]]$ci.df[1, 4],
+                     cr.out.ci[[i]][[j]][[k]]$ci.df[1, 4])
+        expect_equal(cr.out.brute.ci[[j]][[k]]$ci.df[1, 4],
+                     cr.out.ci2[[i]][[j]][[k]]$ci.df[1, 4])
+      }
+    }
+  }
+})
