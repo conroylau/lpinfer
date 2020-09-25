@@ -71,6 +71,7 @@ displayed while the code is running.}
 Returns the updated parameters back to the function
   \code{chorussell}. The following information are updated:
    \itemize{
+      \item{\code{ci}}
       \item{\code{data}}
       \item{\code{solver}}
       \item{\code{solver.name}}

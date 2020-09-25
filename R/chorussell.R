@@ -64,7 +64,7 @@
 #'
 chorussell <- function(data = NULL, lpmodel, beta.tgt = NULL, n = NULL, R = 100,
                        Rmulti = 1.25, kappa = 0, norm = 2, estimate = TRUE,
-                       solver = NULL, ci = TRUE, alpha = 0.05, tol = 1e-4,
+                       solver = NULL, ci = NULL, alpha = 0.05, tol = 1e-4,
                        progress = TRUE, remove.const = TRUE) {
   # ---------------- #
   # Step 1: Update call, check and update the arguments; initialize df.error
@@ -78,6 +78,7 @@ chorussell <- function(data = NULL, lpmodel, beta.tgt = NULL, n = NULL, R = 100,
                                         ci, alpha, tol, progress)
 
   # Update the arguments
+  ci <- chorussell.return$ci
   data <- chorussell.return$data
   solver <- chorussell.return$solver
   solver.name <- chorussell.return$solver.name
@@ -1023,6 +1024,7 @@ chorussell.lp.fn.unbd <- function(x, lb.can1, lb.can2, ub.can1, ub.can2,
 #' @return Returns the updated parameters back to the function
 #'   \code{chorussell}. The following information are updated:
 #'    \itemize{
+#'       \item{\code{ci}}
 #'       \item{\code{data}}
 #'       \item{\code{solver}}
 #'       \item{\code{solver.name}}
@@ -1071,7 +1073,18 @@ chorussell.check <- function(data, lpmodel, beta.tgt, R, Rmulti, kappa,
   solver.name <- solver.return$solver.name
 
   # ---------------- #
-  # Step 4: Check numerics
+  # Step 4: Assign ci
+  # ---------------- #
+  if (is.null(beta.tgt) & is.null(ci)) {
+    # If beta.tgt and ci are not passed, build a confidence interval
+    ci <- TRUE
+  } else if ((!is.null(beta.tgt)) & is.null(ci)) {
+    # If beta.tgt is given but ci is not passed, compute the p-value
+    ci <- FALSE
+  }
+
+  # ---------------- #
+  # Step 5: Check numerics
   # ---------------- #
   if (isFALSE(ci)) {
     check.numeric(beta.tgt, "beta.tgt") 
@@ -1092,7 +1105,7 @@ chorussell.check <- function(data, lpmodel, beta.tgt, R, Rmulti, kappa,
   }
 
   # ---------------- #
-  # Step 5: Check whether beta.tgt is within the logical bounds
+  # Step 6: Check whether beta.tgt is within the logical bounds
   # ---------------- #
   if (isFALSE(ci)) {
     test.return <- check.betatgt(data, lpmodel, beta.tgt, solver)
@@ -1106,16 +1119,17 @@ chorussell.check <- function(data, lpmodel, beta.tgt, R, Rmulti, kappa,
   }
 
   # ---------------- #
-  # Step 6: Check Boolean
+  # Step 7: Check Boolean
   # ---------------- #
   check.boolean(estimate, "estimate")
   check.boolean(ci, "ci")
   check.boolean(progress, "progress")
 
   # ---------------- #
-  # Step 7: Return updated items
+  # Step 8: Return updated items
   # ---------------- #
-  return(list(data = data,
+  return(list(ci = ci,
+              data = data,
               solver = solver,
               solver.name = solver.name,
               test.logical = test.logical,

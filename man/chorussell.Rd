@@ -15,7 +15,7 @@ chorussell(
   norm = 2,
   estimate = TRUE,
   solver = NULL,
-  ci = TRUE,
+  ci = NULL,
   alpha = 0.05,
   tol = 1e-04,
   progress = TRUE,
