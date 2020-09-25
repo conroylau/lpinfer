@@ -166,9 +166,16 @@ invertci <- function(f, farg = list(), alpha = .05, init.lb = NULL,
         }
 
         # Append the result that has already been evaluated in step 2
-        pvals[nrow(pvals) + 1, "point"] <- ub1
-        pvals[nrow(pvals), "p-value"] <- pval[j, 2]
-        pvals[nrow(pvals), 1:(ncol(pvals) - 2)] <- para.vals[j, ]
+        ptemp <- data.frame(pval[j, 1:(pval.col - 1)])
+        colnames(ptemp) <- para.name
+        temp <- cbind(ptemp, data.frame(point = ub1))
+
+        # If the p-value of ub1 is given, use the given value
+        if (nrow(merge(temp, pvals)) == 0) {
+          pvals[nrow(pvals) + 1, "point"] <- ub1
+          pvals[nrow(pvals), 1:(ncol(pvals) - 2)] <- para.vals[j, ]
+          pvals[nrow(pvals), "p-value"] <- pval[j, 2]
+        }
 
         para.match <- para.vals[j, ]
         if (is.null(nrow(para.match))) {
