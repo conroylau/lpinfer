@@ -83,7 +83,7 @@ lpmodel.twom <- lpmodel(A.obs    = A_obs_twom,
 # Output 1: beta.obs is a function
 # ---------------- #
 # List of cores, lpmodel and norm objects to be used
-i.cores <- list(1)
+i.cores <- list(1, 8)
 j.lpmodel <- list(lpmodel.full, lpmodel.twom)
 k.solver <- list("gurobi", "Rcplex", "limSolve")
 
@@ -115,17 +115,15 @@ draw.bs.data <- function(x, f, data) {
 
 # Draw bootstrap data for the full information and two moments method
 set.seed(1)
-bobs.bs.full.list <- future.apply::future_lapply(1:reps,
-                                                 FUN = draw.bs.data,
-                                                 future.seed = TRUE,
-                                                 f = func_full_info,
-                                                 data = sampledata)
+bobs.bs.full.list <- lapply(1:reps,
+                            FUN = draw.bs.data,
+                            f = func_full_info,
+                            data = sampledata)
 set.seed(1)
-bobs.bs.twom.list <- future.apply::future_lapply(1:reps,
-                                                 FUN = draw.bs.data,
-                                                 future.seed = TRUE,
-                                                 f = func_two_moment,
-                                                 data = sampledata)
+bobs.bs.twom.list <- lapply(1:reps,
+                            FUN = draw.bs.data,
+                            f = func_two_moment,
+                            data = sampledata)
 
 bobs.full.list <- c(list(func_full_info(sampledata)), bobs.bs.full.list)
 bobs.twom.list <- c(list(func_two_moment(sampledata)), bobs.bs.twom.list)
@@ -319,13 +317,12 @@ for (j in seq_along(j.lpmodel)) {
   set.seed(1)
   lpm <- j.lpmodel[[j]]
   T.bs[[j]] <-
-    unlist(future.apply::future_lapply(1:reps,
-                                       FUN = dkqs.fn,
-                                       future.seed = TRUE,
-                                       data = sampledata,
-                                       lpmodel = lpm,
-                                       beta.obs = lpm$beta.obs(sampledata),
-                                       s.star = s.star.list[[j]]))
+    unlist(lapply(1:reps,
+                  FUN = dkqs.fn,
+                  data = sampledata,
+                  lpmodel = lpm,
+                  beta.obs = lpm$beta.obs(sampledata),
+                  s.star = s.star.list[[j]]))
 }
 
 # 4. Compute the p-values
@@ -373,7 +370,7 @@ taumax <- taureturn$objval
 tests.dkqs <- function(dkqs.out, test.name) {
   # Assign the name
   test.name <- sprintf("'beta.obs' as %s:", test.name)
-  
+
   # 1. Full information approach p-values
   test_that(sprintf("%s Full information approach", test.name), {
     for (i in seq_along(i.cores)) {
@@ -383,7 +380,7 @@ tests.dkqs <- function(dkqs.out, test.name) {
       }
     }
   })
-  
+
   # 2. Two moments p-values
   test_that(sprintf("%s Two moments approach", test.name), {
     for (i in seq_along(i.cores)) {
@@ -393,7 +390,7 @@ tests.dkqs <- function(dkqs.out, test.name) {
       }
     }
   })
-  
+
   # 3. The list of feasible taus
   test_that(sprintf("%s Feasible taus", test.name), {
     for (i in seq_along(i.cores)) {
@@ -404,7 +401,7 @@ tests.dkqs <- function(dkqs.out, test.name) {
       }
     }
   })
-  
+
   # 4. The list of infeasible taus
   test_that(sprintf("%s Infeasible taus", test.name), {
     for (i in seq_along(i.cores)) {
@@ -415,7 +412,7 @@ tests.dkqs <- function(dkqs.out, test.name) {
       }
     }
   })
-  
+
   # 5. Maximum feasible tau
   test_that(sprintf("%s Maximum feasible tau", test.name), {
     for (i in seq_along(i.cores)) {
@@ -426,7 +423,7 @@ tests.dkqs <- function(dkqs.out, test.name) {
       }
     }
   })
-  
+
   # 6. Test statistics
   test_that(sprintf("%s Test statistics", test.name), {
     for (i in seq_along(i.cores)) {
@@ -437,7 +434,7 @@ tests.dkqs <- function(dkqs.out, test.name) {
       }
     }
   })
-  
+
   # 7. Test logical lower bound
   test_that(sprintf("%s Logical lower bound", test.name), {
     for (i in seq_along(i.cores)) {
@@ -448,7 +445,7 @@ tests.dkqs <- function(dkqs.out, test.name) {
       }
     }
   })
-  
+
   # 8. Test logical upper bound
   test_that(sprintf("%s Logical upper bound", test.name), {
     for (i in seq_along(i.cores)) {
@@ -459,7 +456,7 @@ tests.dkqs <- function(dkqs.out, test.name) {
       }
     }
   })
-  
+
   # 9. Solver name
   test_that(sprintf("%s Solver name", test.name), {
     for (i in seq_along(i.cores)) {
@@ -470,7 +467,7 @@ tests.dkqs <- function(dkqs.out, test.name) {
       }
     }
   })
-  
+
   # 10. cv.table
   test_that(sprintf("%s cv.table", test.name), {
     cv <- list()
@@ -485,7 +482,7 @@ tests.dkqs <- function(dkqs.out, test.name) {
       cv[[j]][[3]] <- sort(T.bs[[j]])[n95]
       cv[[j]][[4]] <- sort(T.bs[[j]])[n90]
     }
-    
+
     for (i in seq_along(i.cores)) {
       for (j in seq_along(j.lpmodel)) {
         for (k in seq_along(k.solver)) {
@@ -501,7 +498,7 @@ tests.dkqs <- function(dkqs.out, test.name) {
       }
     }
   })
-  
+
   # 11. Test logical
   test_that(sprintf("%s Test logical", test.name), {
     for (i in seq_along(i.cores)) {
@@ -512,7 +509,7 @@ tests.dkqs <- function(dkqs.out, test.name) {
       }
     }
   })
-  
+
   # 12. df.error
   test_that(sprintf("%s Table for problematic bootstrap replications",
                     test.name), {
@@ -524,7 +521,7 @@ tests.dkqs <- function(dkqs.out, test.name) {
       }
     }
   })
-  
+
   # 13. Number of successful bootstrap replications
   test_that(sprintf("%s Number of successful bootstrap replications",
                     test.name), {

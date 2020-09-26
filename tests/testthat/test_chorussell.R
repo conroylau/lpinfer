@@ -7,7 +7,6 @@ library(lpinfer)
 library(future)
 library(future.apply)
 
-
 # =========================================================================== #
 # Case 1: d >= p
 # =========================================================================== #
@@ -112,7 +111,7 @@ lpmodel.twom <- lpmodel(A.obs    = A_obs_twom,
 # Output 1: beta.obs is a function and output is p-value
 # ---------------- #
 # List of cores, lpmodel and norm objects to be used
-i.cores <- list(1)
+i.cores <- list(1, 8)
 j.lpmodel <- list(lpmodel.full, lpmodel.twom)
 k.norm <- list(1, 2)
 
@@ -601,7 +600,7 @@ test.cr.ci(cr.out.ci, "function", "confidence interval")
 test.cr.ci(cr.out.ci2, "list", "confidence interval")
 
 # ---------------- #
-# Make sure the results obtained from the brute force approach is the 
+# Make sure the results obtained from the brute force approach is the
 # same as the refinement approach
 # ---------------- #
 cr.out.brute.pval <- list()
@@ -643,7 +642,7 @@ test_that("Same answers in brute force and refinement approaches", {
                      cr.out.pval[[i]][[j]][[k]]$pval[1, 2])
         expect_equal(cr.out.brute.pval[[j]][[k]]$pval[1, 2],
                      cr.out.pval2[[i]][[j]][[k]]$pval[1, 2])
-        
+
         # Lower-bound of the confidence intervals
         expect_equal(cr.out.brute.ci[[j]][[k]]$ci.df[1, 3],
                      cr.out.ci[[i]][[j]][[k]]$ci.df[1, 3])

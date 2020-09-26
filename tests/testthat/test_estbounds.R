@@ -140,7 +140,6 @@ for (i in 1:ni) {
 # ---------------- #
 farg$kappa <- kap
 farg$estimate <- TRUE
-farg$progress <- TRUE
 estbounds.out <- list()
 for (i in 1:ni) {
   farg$lpmodel <- i.lpmodel[[i]]
@@ -189,7 +188,6 @@ for (i in 1:ni) {
 # ---------------- #
 farg$kappa <- kap
 farg$estimate <- TRUE
-farg$progress <- TRUE
 estbounds.out2 <- list()
 for (i in 1:ni) {
   farg$lpmodel <- i.lpmodel2[[i]]
@@ -370,7 +368,7 @@ for (i in 1:ni) {
 tests.minc <- function(estbounds.out, test.name) {
   # Assign the name
   test.name <- sprintf("'beta.obs' as %s:", test.name)
-  
+
   # 1. Qhat
   test_that(sprintf("%s 'mincriterion': Q-hat", test.name), {
     for (i in 1:ni) {
@@ -383,7 +381,7 @@ tests.minc <- function(estbounds.out, test.name) {
       }
     }
   })
-  
+
   # 2. Norm
   test_that(sprintf("%s 'mincriterion': Norm", test.name), {
     for (i in 1:ni) {
@@ -394,7 +392,7 @@ tests.minc <- function(estbounds.out, test.name) {
       }
     }
   })
-  
+
   # 3. Solver
   test_that(sprintf("%s 'mincriterion': Solver", test.name), {
     for (i in 1:ni) {
@@ -413,7 +411,7 @@ tests.minc <- function(estbounds.out, test.name) {
 tests.estb <- function(estbounds.out, test.name) {
   # Assign the name
   test.name <- sprintf("'beta.obs' as %s:", test.name)
-  
+
   # 1. Lower bounds (lb)
   test_that(sprintf("%s 'estbounds': Lower bounds", test.name), {
     for (i in 1:ni) {
@@ -428,7 +426,7 @@ tests.estb <- function(estbounds.out, test.name) {
       }
     }
   })
-  
+
   # 2. Upper bounds (ub)
   test_that(sprintf("%s 'estbounds': Upper bounds", test.name), {
     for (i in 1:ni) {
@@ -443,7 +441,7 @@ tests.estb <- function(estbounds.out, test.name) {
       }
     }
   })
-  
+
   # 3. Checking the value of the mincriterion
   test_that(sprintf("%s 'estbounds': Checking the value of the mincriterion",
                     test.name), {
@@ -461,7 +459,7 @@ tests.estb <- function(estbounds.out, test.name) {
       }
     }
   })
-  
+
   # 4. Estimate
   test_that(sprintf("%s 'estbounds': Estimate", test.name), {
     for (i in 1:ni) {
@@ -476,7 +474,7 @@ tests.estb <- function(estbounds.out, test.name) {
       }
     }
   })
-  
+
   # 5. Norm
   test_that(sprintf("%s 'estbounds': Norm", test.name), {
     for (i in 1:ni) {
@@ -491,7 +489,7 @@ tests.estb <- function(estbounds.out, test.name) {
       }
     }
   })
-  
+
   # 6. Solver
   test_that(sprintf("%s 'estbounds': Solver", test.name), {
     for (i in 1:ni) {

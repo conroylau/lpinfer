@@ -148,17 +148,15 @@ draw.bs.data <- function(x, f, data) {
 
 # Draw bootstrap data for the full information and two moments method
 set.seed(1)
-bobs.bs.full.list <- future.apply::future_lapply(1:reps,
-                                                 FUN = draw.bs.data,
-                                                 future.seed = TRUE,
-                                                 f = func_full_info,
-                                                 data = sampledata)
+bobs.bs.full.list <- lapply(1:reps,
+                            FUN = draw.bs.data,
+                            f = func_full_info,
+                            data = sampledata)
 set.seed(1)
-bobs.bs.twom.list <- future.apply::future_lapply(1:reps,
-                                                 FUN = draw.bs.data,
-                                                 future.seed = TRUE,
-                                                 f = func_two_moment,
-                                                 data = sampledata)
+bobs.bs.twom.list <- lapply(1:reps,
+                            FUN = draw.bs.data,
+                            f = func_two_moment,
+                            data = sampledata)
 
 bobs.full.list <- c(list(func_full_info(sampledata)$beta), bobs.bs.full.list)
 bobs.twom.list <- c(list(func_two_moment(sampledata)$beta), bobs.bs.twom.list)
@@ -276,11 +274,10 @@ fsst.bs.fn <- function(x, data, lpmodel) {
 beta.bs <- list()
 for (j in seq_along(j.lpmodel)) {
   set.seed(1)
-  beta.bs[[j]] <- future.apply::future_lapply(1:reps,
-                                              FUN = fsst.bs.fn,
-                                              future.seed = TRUE,
-                                              data = sampledata,
-                                              lpmodel = j.lpmodel[[j]])
+  beta.bs[[j]] <- lapply(1:reps,
+                         FUN = fsst.bs.fn,
+                         data = sampledata,
+                         lpmodel = j.lpmodel[[j]])
 }
 
 # 3. Solve problem (3) - with the sample estimates and the bootstrap estimates
@@ -864,11 +861,10 @@ for (i in seq_along(i.cores)) {
 # ---------------- #
 # Draw bootstrap data for the full information and two moments method
 set.seed(1)
-bobs.dlp.list <- future.apply::future_lapply(1:reps,
-                                             FUN = draw.bs.data,
-                                             future.seed = TRUE,
-                                             f = betafunc,
-                                             data = sampledata)
+bobs.dlp.list <- lapply(1:reps,
+                        FUN = draw.bs.data,
+                        f = betafunc,
+                        data = sampledata)
 
 bobs.dlp.list <- c(list(betafunc(sampledata)$beta), bobs.dlp.list)
 bobs.dlp.list[[1]] <- betafunc(sampledata)
@@ -913,11 +909,10 @@ bobs2 <- lpm2$beta.obs(sampledata)$beta
 ## Estimator of asymptotic variance of beta.obs
 set.seed(1)
 bobs.bs2 <- list()
-bobs.bs2 <- future.apply::future_lapply(1:reps,
-                                        FUN = fsst.bs.fn,
-                                        future.seed = TRUE,
-                                        data = sampledata,
-                                        lpmodel = lpm2)
+bobs.bs2 <- lapply(1:reps,
+                   FUN = fsst.bs.fn,
+                   data = sampledata,
+                   lpmodel = lpm2)
 
 # 3. Solve problem (3) - with the sample estimates and the bootstrap estimates
 fsst.3.args2 <- fsst.3.arg(lpm2, bobs2, btgt, sigma.bobs2, "avar")

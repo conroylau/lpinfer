@@ -95,7 +95,7 @@ phi <- 2/3
 m <- floor(N^phi)
 # Define arguments for the `subsample` function
 farg <- list(data = sampledata,
-             R = 100,
+             R = reps,
              beta.tgt = beta.tgt,
              norm = 2,
              phi = phi,
@@ -126,7 +126,8 @@ lpmodel.twom <- lpmodel(A.obs    = A_obs_twom,
 i.cores <- list(1)
 j.lpmodel <- list(lpmodel.full, lpmodel.twom)
 k.norm <- list(1, 2)
-l.solver <- list("gurobi", "Rcplex", "limSolve")
+# l.solver <- list("gurobi", "Rcplex", "limSolve")
+l.solver <- list("gurobi")
 
 # Generate output
 ss.out <- list()
@@ -162,17 +163,15 @@ draw.bs.data <- function(x, f, data) {
 
 # Draw bootstrap data for the full information and two moments method
 set.seed(1)
-bobs.bs.full.list <- future.apply::future_lapply(1:reps,
-                                                 FUN = draw.bs.data,
-                                                 future.seed = TRUE,
-                                                 f = func_full_info,
-                                                 data = sampledata)
+bobs.bs.full.list <- lapply(1:reps,
+                            FUN = draw.bs.data,
+                            f = func_full_info,
+                            data = sampledata)
 set.seed(1)
-bobs.bs.twom.list <- future.apply::future_lapply(1:reps,
-                                                 FUN = draw.bs.data,
-                                                 future.seed = TRUE,
-                                                 f = func_two_moment,
-                                                 data = sampledata)
+bobs.bs.twom.list <- lapply(1:reps,
+                            FUN = draw.bs.data,
+                            f = func_two_moment,
+                            data = sampledata)
 
 bobs.full.list <- c(list(func_full_info(sampledata)$beta), bobs.bs.full.list)
 bobs.twom.list <- c(list(func_two_moment(sampledata)$beta), bobs.bs.twom.list)
@@ -187,7 +186,7 @@ lpmodel.twom.list$beta.obs <- bobs.twom.list
 
 # Define the new lpmodel object and the arguments to be passed to the function
 j.lpmodel2 <- list(lpmodel.full.list, lpmodel.twom.list)
-farg2 <- list(R = 100,
+farg2 <- list(R = reps,
               beta.tgt = beta.tgt,
               norm = 2,
               phi = phi,
@@ -358,14 +357,13 @@ for (j in seq_along(ngs)) {
   for (k in seq_along(k.norm)) {
     set.seed(1)
     ss.bs.ts[[j]][[k]] <-
-      unlist(future.apply::future_lapply(1:reps,
-                                         FUN = ss.fn,
-                                         future.seed = TRUE,
-                                         data = sampledata,
-                                         lpmodel = j.lpmodel[[j]],
-                                         m = m,
-                                         ng = ngs[[j]],
-                                         norm = k.norm[[k]]))
+      unlist(lapply(1:reps,
+                    FUN = ss.fn,
+                    data = sampledata,
+                    lpmodel = j.lpmodel[[j]],
+                    m = m,
+                    ng = ngs[[j]],
+                    norm = k.norm[[k]]))
   }
 }
 
@@ -391,7 +389,8 @@ tests.ss <- function(ss.out, test.name) {
       j <- 1
       for (k in seq_along(k.norm)) {
         for (l in seq_along(l.solver)) {
-          expect_lte(abs(ss.pval[[j]][[k]] - ss.out[[i]][[j]][[k]][[l]]$pval),
+          expect_lte(abs(ss.pval[[j]][[k]] -
+                           ss.out[[i]][[j]][[k]][[l]]$pval[1, 2]),
                      1e-5)
         }
       }
@@ -403,7 +402,8 @@ tests.ss <- function(ss.out, test.name) {
     for (i in seq_along(i.cores)) {
       j <- 2
       for (k in seq_along(k.norm)) {
-        expect_lte(abs(ss.pval[[j]][[k]] - ss.out[[i]][[j]][[k]][[l]]$pval),
+        expect_lte(abs(ss.pval[[j]][[k]] -
+                         ss.out[[i]][[j]][[k]][[l]]$pval[1, 2]),
                    1e-5)
       }
     }
