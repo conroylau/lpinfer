@@ -104,28 +104,28 @@ invertci <- function(f, farg = list(), alpha = .05, init.lb = NULL,
     para.name <- colnames(pval)[1:(pval.col - 1)]
     para.vals <- data.frame(pval[, 1:(pval.col - 1)])
     colnames(para.vals) <- para.name
-  }
 
-  if (is.null(pvals)) {
-    ## Construct pvals if it is null
-    pvals <- data.frame(matrix(vector(),
-                               nrow = 0,
-                               ncol = length(para.name) + 2))
-    colnames(pvals) <- c(para.name, "point", "p-value")
-  } else {
-    # Check pvals if it already exists
-    ## Check whether the number of columns match
-    if (ncol(pvals) != length(para.name) + 2) {
-      stop(paste0("The number of columns in 'pvals' needs to equal to ",
-                  "the number of tuning parameters that can be ",
-                  "multivalued plus 2."))
-    }
-
-    ## Check whether the column names match
-    if (!setequal(c(para.name, "point", "p-value"), colnames(pvals))) {
-      stop(paste0("The column names in 'pvals' need to contain the names ",
-                  "of the tuning parameters that can be multivalued and ",
-                  "the two strings 'point' and 'p-value'."))
+    if (is.null(pvals)) {
+      ## Construct pvals if it is null
+      pvals <- data.frame(matrix(vector(),
+                                 nrow = 0,
+                                 ncol = length(para.name) + 2))
+      colnames(pvals) <- c(para.name, "point", "p-value")
+    } else {
+      # Check pvals if it already exists
+      ## Check whether the number of columns match
+      if (ncol(pvals) != length(para.name) + 2) {
+        stop(paste0("The number of columns in 'pvals' needs to equal to ",
+                    "the number of tuning parameters that can be ",
+                    "multivalued plus 2."))
+      }
+  
+      ## Check whether the column names match
+      if (!setequal(c(para.name, "point", "p-value"), colnames(pvals))) {
+        stop(paste0("The column names in 'pvals' need to contain the names ",
+                    "of the tuning parameters that can be multivalued and ",
+                    "the two strings 'point' and 'p-value'."))
+      }
     }
   }
 
@@ -303,9 +303,11 @@ invertci <- function(f, farg = list(), alpha = .05, init.lb = NULL,
   attr(output, "class") <- "invertci"
 
   # Turn returned lists for bounds as vectors if parameter is not multivalued
-  if (nrow(output$ci) == 1) {
-    for (x in c("iter", "df_ub", "df_lb", "termination")) {
-      output[[x]] <- output[[x]][[1]][[1]]
+  if (!identical(f, chorussell)) {
+    if (nrow(output$ci) == 1) {
+      for (x in c("iter", "df_ub", "df_lb", "termination")) {
+        output[[x]] <- output[[x]][[1]][[1]]
+      }
     }
   }
 
@@ -661,7 +663,8 @@ print.invertci <- function(x, ...) {
 #' @export
 #'
 print.invertci_single <- function(x, ...) {
-  cat(sprintf("Confidence interval: [%s, %s]\n",
+  cat(sprintf("%s%% confidence interval: [%s, %s]\n",
+              100 * (1 - round(x$ci[1, 1], digits = 5)),
               round(x$ci[1, 3], digits = 5),
               round(x$ci[1, 4], digits = 5)))
 }
