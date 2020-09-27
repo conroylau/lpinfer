@@ -12,6 +12,7 @@ fsst.cv.table(
   range.n.list,
   cone.bs.list,
   range.bs.list,
+  T.bs.list,
   levels = c(0.99, 0.95, 0.9),
   digits = 5
 )
@@ -28,6 +29,8 @@ fsst.cv.table(
 \item{cone.bs.list}{A vector or a list of bootstrap cone test statistics.}
 
 \item{range.bs.list}{A vector or a list of bootstrap range test statistics.}
+
+\item{T.bs.list}{A vector or a list of bootstrap test statistics.}
 
 \item{levels}{The confidence levels.}
 

@@ -115,7 +115,8 @@ farg <- list(data = sampledata,
 # d >= p
 # ---------------- #
 # Define the parameters
-i.cores <- list(1, 8)
+# i.cores <- list(1, 8)
+i.cores <- list(1)
 j.lpmodel <- list(lpmodel.full, lpmodel.twom)
 k.lambdas <- list(lam1, lam2)
 

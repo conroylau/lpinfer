@@ -25,6 +25,7 @@ test statistics.}
 Returns the \eqn{p}-value and the decision.
   \item{pval}{The \eqn{p}-value.}
   \item{decision}{The decision to reject or not.}
+  \item{T.bs}{List of bootstrap test statistics.}
 }
 \description{
 This function computes the \eqn{p}-value of the test based on

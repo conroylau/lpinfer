@@ -418,17 +418,19 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          # Step 8: Compute decision, p-value and the quantiles of the test
          # statistics
          # ---------------- #
+         T.bs <- list()
          for (i in 1:n.lambda) {
             # Compute the p-values
             pval.return <- fsst.pval(range.n, cone.n$objval, range.n.list,
                                      cone.n.list[[i]], R.succ)
             df.pval[i, 2] <- pval.return$pval
+            T.bs[[i]] <- pval.return$T.bs
          }
 
          # Compute cv.table
          cv.table <- fsst.cv.table(lambda, "lambda",
                                    rep(cone.n$objval, n.lambda),
-                                   range.n, cone.n.list, range.n.list)
+                                   range.n, cone.n.list, range.n.list, T.bs)
 
          # ---------------- #
          # Step 9: Assign the return list and return output
@@ -1727,6 +1729,7 @@ fsst.cone.bs.fn <- function(beta.star.bs, n, omega.i, beta.n, beta.star,
 #' @return Returns the \eqn{p}-value and the decision.
 #'   \item{pval}{The \eqn{p}-value.}
 #'   \item{decision}{The decision to reject or not.}
+#'   \item{T.bs}{List of bootstrap test statistics.}
 #'
 #' @export
 #'
@@ -1754,7 +1757,8 @@ fsst.pval <- function(range.n, cone.n, range.n.list, cone.n.list, R,
       decision <- 0
    }
    return(list(pval = pval,
-               decision = decision))
+               decision = decision,
+               T.bs = T.bs))
 }
 
 #' Checks and updates the input in \code{fsst}

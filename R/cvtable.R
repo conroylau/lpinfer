@@ -71,6 +71,7 @@ construct.cv.table <- function(param, param.name, ts.sample.list,
 #' @param range.n.list A list of sample range test statistics.
 #' @param cone.bs.list A vector or a list of bootstrap cone test statistics.
 #' @param range.bs.list A vector or a list of bootstrap range test statistics.
+#' @param T.bs.list A vector or a list of bootstrap test statistics.
 #' @inheritParams construct.cv.table
 #'
 #' @return Returns a table of critical values.
@@ -79,7 +80,7 @@ construct.cv.table <- function(param, param.name, ts.sample.list,
 #' @export
 #'
 fsst.cv.table <- function(param, param.name, cone.n.list, range.n.list,
-                          cone.bs.list, range.bs.list,
+                          cone.bs.list, range.bs.list, T.bs.list,
                           levels = c(.99, .95, .9), digits = 5) {
   # ---------------- #
   # Step 1: Initialization
@@ -91,6 +92,12 @@ fsst.cv.table <- function(param, param.name, cone.n.list, range.n.list,
   # ---------------- #
   # Step 2: Construct the CV table for the cone and range component
   # ---------------- #
+  # Create table for the sample test statistics
+  cv.test <- construct.cv.table(param, param.name,
+                                rep(max(cone.n.list, range.n.list),
+                                    length(T.bs.list)),
+                                T.bs.list, levels, digits)
+  
   # Create table for the cone component
   cv.cone <- construct.cv.table(param, param.name, cone.n.list,
                                 cone.bs.list, levels, digits)
@@ -102,20 +109,10 @@ fsst.cv.table <- function(param, param.name, cone.n.list, range.n.list,
   cv.range[, 1:2] <- cv.range.temp[, 1:2]
 
   # ---------------- #
-  # Step 3: Construct the component that corresponds to the "max" statistics
-  # ---------------- #
-  cv.max <- cv.cone
-  for (i in 1:nrow(cv.cone)) {
-    for (j in 2:ncol(cv.cone)) {
-      cv.max[i, j] <- max(cv.cone[i, j], cv.range[i, 2])
-    }
-  }
-
-  # ---------------- #
-  # Step 4: Construct the full CV table
+  # Step 3: Construct the full CV table
   # ---------------- #
   # Construct the two parts
-  cv.table.temp <- rbind(cv.max, cv.cone, cv.range)
+  cv.table.temp <- rbind(cv.test, cv.cone, cv.range)
 
   # Generate the column names
   n.levels <- length(levels)
@@ -129,7 +126,7 @@ fsst.cv.table <- function(param, param.name, cone.n.list, range.n.list,
   colnames(cv.table)[1] <- ""
 
   # ---------------- #
-  # Step 5: Return the cv.table
+  # Step 4: Return the cv.table
   # ---------------- #
   return(cv.table)
 }
