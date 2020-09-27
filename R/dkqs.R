@@ -884,9 +884,11 @@ print.dkqs <- function(x, ...) {
 
     # Merge the table with the infeasible taus
     if (!is.null(x$tau.infeasible)) {
-      df.infeasible <- cbind(x$tau.infeasible, "infeasible")
+      df.infeasible <- cbind(round(x$tau.infeasible, digits = 5),
+                             "infeasible")
       colnames(df.infeasible) <- colnames(df.pval)
-      df.pval <- rbind(df.pval, df.infeasible)
+      df.pval <- rbind(round(df.pval, digits = 5),
+                       df.infeasible)
     }
 
     # Print the p-values
