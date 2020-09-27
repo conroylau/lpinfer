@@ -335,8 +335,8 @@ dkqs.qlp <- function(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
   # Updated lb for certain indices
   rhs.up <- (beta.tgt - theta.down$objval) * tau / length(c(ind.0, ind.up))
   rhs.down <- (theta.up$objval - beta.tgt) * tau / length(c(ind.0, ind.down))
-  rhs.0 <- (1 - rhs.up * length(ind.up) -
-              rhs.down * length(ind.down)) * tau / length(ind.0)
+  rhs.0 <- (1 - (rhs.up * length(ind.up) / tau) -
+              (rhs.down * length(ind.down) / tau)) * tau / length(ind.0)
 
   # RHS vector and sense for the linear or quadratic program
   lp.rhs <- c(beta.tgt, 1)
