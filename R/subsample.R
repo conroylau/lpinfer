@@ -688,10 +688,10 @@ summary.subsample <- function(x, ...) {
     # Print test statistic, solver used, norm used, and the number of
     # successful bootstrap replications
     cat(sprintf("Test statistic: %s\n", round(x$T.n, digits = 5)))
-    cat(sprintf("Solver used: %s\n", x$solver))
-    cat(sprintf("Norm used: %s\n", x$norm))
-    cat(sprintf("Phi used: %s\n", round(x$phi, digits = 5)))
+    cat(sprintf("phi: %s\n", round(x$phi, digits = 5)))
     cat(sprintf("Size of each subsample: %s\n", x$subsample.size))
+    cat(sprintf("Norm: %s\n", x$norm))
+    cat(sprintf("Solver: %s\n", x$solver))
     cat(sprintf("Number of successful bootstrap replications: %s\n", x$R.succ))
 
     # Number of failed bootstrap replications

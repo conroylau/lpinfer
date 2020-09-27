@@ -576,7 +576,7 @@ summary.estbounds <- function(x, ...) {
     # Case 1: Report the estimated bounds
     cat(sprintf("Estimated bounds: [%s, %s] \n",
                 round(x$lb, digits = 5), round(x$ub, digits = 5)))
-    cat(sprintf("Norm used: %s \n", x$norm))
+    cat(sprintf("Norm: %s \n", x$norm))
   } else {
     # Case 2: Report the true bounds
     print(x)
@@ -833,6 +833,6 @@ print.mincriterion <- function(x, ...) {
 summary.mincriterion <- function(x, ...) {
   # Print the minimum value, norm used and solver
   cat(sprintf("Minimum value: %s \n", round(x$objval, digits = 5)))
-  cat(sprintf("Norm used: %s \n", x$norm))
+  cat(sprintf("Norm: %s \n", x$norm))
   cat(sprintf("Solver: %s \n", x$solver))
 }

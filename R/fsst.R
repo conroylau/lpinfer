@@ -1890,8 +1890,10 @@ print.fsst <- function(x, ...) {
          }
          cat(sprintf("%s: %s\n", pv, df.pval[1, 2]))
       } else {
+         cat("p-values:\n")
          # Label the data-driven lambda with a "*" if it is used
-         dfl <- fsst.label.lambda(df.pval$`lambda`, x$lambda.data)
+         dfl <- fsst.label.lambda(round(df.pval$`lambda`, digits = 5),
+                                  x$lambda.data)
          df.pval$`lambda` <- dfl$lambdas
          print(df.pval, row.names = FALSE)
 
@@ -1921,29 +1923,13 @@ summary.fsst <- function(x, ...) {
 
    if (x$test.logical == 1) {
       # Case 1: 'beta.tgt' is within the logical bound
-      # Print the sample and bootstrap test statistics
-      if (!is.null(nrow(x$cv.table))) {
-         cat("\nSample and quantiles of bootstrap test statistics: \n")
-         cv.tab <- x$cv.table
-         cv.tab[is.na(cv.tab)] <- ""
-         cv.tab[, 1] <- paste0("   ", cv.tab[, 1], " ")
-         cv.tab[, 2] <- paste0(cv.tab[, 2], "  ")
-         colnames(cv.tab)[2] <- paste0(colnames(cv.tab)[2], "  ")
-         # Label the data-driven lambda with a "*" if it is used
-         cvlambda <- as.numeric(colnames(cv.tab)[-c(1, 2)])
-         cvlambda <- fsst.label.lambda(cvlambda, x$lambda.data)
-         colnames(cv.tab)[-c(1, 2)] <- cvlambda$lambdas
-         print(cv.tab, row.names = FALSE)
-      }
-
       # Print the p-values
       df.pval <- x$pval
       n.pval <- nrow(df.pval)
       if (n.pval == 1) {
-         cat("\n")
          print.fsst(x)
       } else {
-         cat("\np-values:\n")
+         cat("p-values:\n")
          df.pval.2 <- data.frame(matrix(vector(), nrow = 1, ncol = n.pval + 1))
          # Label the data-driven lambda with a "*" if it is used
          dfl <- df.pval$lambda
@@ -1953,29 +1939,46 @@ summary.fsst <- function(x, ...) {
          print(df.pval.2, row.names = FALSE)
       }
 
-      # Print solver
-      cat(sprintf("\nSolver used: %s\n", x$solver.name))
+      # Print the sample and bootstrap test statistics
+      if (!is.null(nrow(x$cv.table))) {
+         cat("Sample and quantiles of bootstrap test statistics: \n")
+         cv.tab <- x$cv.table
+         cv.tab[is.na(cv.tab)] <- ""
+         cv.tab[, 1] <- paste0("   ", cv.tab[, 1], " ")
+         cv.tab[, 2] <- paste0(cv.tab[, 2], "  ")
+         colnames(cv.tab)[2] <- paste0(colnames(cv.tab)[2], "  ")
+         # Label the data-driven lambda with a "*" if it is used
+         cvlambda <- as.numeric(colnames(cv.tab)[-c(1, 2)])
+         if (is.null(x$lambda.data)) {
+            x.lambda.data <- x$lambda.data
+         } else {
+            x.lambda.data <- round(x$lambda.data, digits = 5)
+         }
+         cvlambda <- fsst.label.lambda(cvlambda, x.lambda.data)
+         colnames(cv.tab)[-c(1, 2)] <- cvlambda$lambdas
+         print(cv.tab, row.names = FALSE)
+      }
 
       # Regularization parameters
-      cat("\nRegularization parameters: \n")
+      cat("Regularization parameters: \n")
       cat(sprintf("   - Input value of rho: %s\n",
                   round(x$rho, digits = 5)))
       cat(sprintf(paste0("   - Regularization parameter for the Cone ",
                          "studentization matrix: %s\n"),
                   round(x$rhobar.i, digits = 5)))
-      cat(sprintf(paste0("\nThe asymptotic variance of the observed component ",
-                         "of the beta vector is approximated from the %s.\n"),
-                  x$var.method))
+
+      # Print solver
+      cat(sprintf("Solver: %s\n", x$solver))
 
       # Number of successful bootstrap replications
-      cat(sprintf("\nNumber of successful bootstrap replications: %s\n",
+      cat(sprintf("Number of successful bootstrap replications: %s\n",
                   x$R.succ))
 
       # Number of failed bootstrap replications
       if (!is.null(x$df.error)) {
          if (nrow(x$df.error) != 0) {
             nerr <- nrow(x$df.error)
-            errstring <- "\nNumber of failed bootstrap"
+            errstring <- "Number of failed bootstrap"
             if (nerr == 1) {
                cat(sprintf(paste(errstring, "replication: %s\n"), nerr))
             } else {
@@ -1983,6 +1986,11 @@ summary.fsst <- function(x, ...) {
             }
          }
       }
+
+      # How the variance matrix is estimated
+      cat(sprintf(paste0("The asymptotic variance of the observed component ",
+                         "of the beta vector is approximated from the %s.\n"),
+                  x$var.method))
 
       # Print the message for data-driven lambda if necessary
       if (!is.null(nrow(x$cv.table))) {
@@ -2091,12 +2099,12 @@ fsst.lambda <- function(n, omega.i, beta.n, beta.star, lpmodel, R.succ,
 #'
 fsst.label.lambda <- function(lambdas, lambda.data) {
    if (!is.null(lambda.data)) {
-      lambdas[lambdas %in% lambda.data] <- paste(lambda.data, "*")
+      lambdas[lambdas %in% lambda.data] <-
+         paste(round(lambda.data, digits = 5), "*")
       msg <- "\n* refers to the data-driven 'lambda' parameter.\n"
    } else {
       msg <- NULL
    }
-
    return(list(lambdas = lambdas,
                msg = msg))
 }

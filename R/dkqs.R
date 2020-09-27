@@ -891,10 +891,11 @@ print.dkqs <- function(x, ...) {
 
     # Print the p-values
     if (nrow(df.pval) == 1) {
-      cat(sprintf(" p-value: %s\n", round(df.pval[1, 2], digits = 5)))
-      cat(sprintf(" tau used: %s\n", round(df.pval[1, 1], digits = 5)))
+      cat(sprintf("p-value: %s\n", round(df.pval[1, 2], digits = 5)))
+      cat(sprintf("tau: %s\n", round(df.pval[1, 1], digits = 5)))
     } else {
-      print(df.pval, row.names = FALSE)
+      cat("p-values:\n")
+      print(df.pval, row.names = FALSE, digits = 5)
     }
   } else {
     # Case 2: 'beta.tgt' is outside the logical bound
@@ -917,14 +918,21 @@ summary.dkqs <- function(x, ...) {
   if (x$test.logical == 1) {
     # Case 1: 'beta.tgt' is within the logical bound
     # Print the p-values
-    print(x)
+    if (nrow(x$pval) > 1) {
+      print(x)
+    } else {
+      cat(sprintf("p-value: %s\n", round(x$pval[1, 2], digits = 5)))
+    }
 
     # Print maximum feasible tau, test statistic, solver used used and the
     # number of bootstrap replications
-    cat(sprintf(" Maximum feasible tau: %s\n", round(x$tau.max, digits = 5)))
-    cat(sprintf(" Test statistic: %s\n", round(x$T.n, digits = 5)))
-    cat(sprintf(" Solver used: %s\n", x$solver))
-    cat(sprintf(" Number of successful bootstrap replications: %s\n",
+    cat(sprintf("Test statistic: %s\n", round(x$T.n, digits = 5)))
+    if (nrow(x$pval) == 1) {
+      cat(sprintf("tau used: %s\n", round(x$pval[1, 1], digits = 5)))
+    } 
+    cat(sprintf("Maximum feasible tau: %s\n", round(x$tau.max, digits = 5)))
+    cat(sprintf("Solver: %s\n", x$solver))
+    cat(sprintf("Number of successful bootstrap replications: %s\n",
                 x$R.succ))
 
     # Number of failed bootstrap replications
@@ -940,6 +948,6 @@ summary.dkqs <- function(x, ...) {
   } else if (x$test.logical == 0) {
     # Case 2: 'beta.tgt' is outside the logical bound
     infeasible.pval.msg()
-    cat(sprintf("\nSolver used: %s\n", x$solver))
+    cat(sprintf("\nSolver: %s\n", x$solver))
   }
 }

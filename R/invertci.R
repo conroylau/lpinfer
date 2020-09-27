@@ -743,11 +743,8 @@ summary.invertci_single <- function(x, alphas, msg.bound, ...) {
   # ---------------- #
   # Step 1: Summary of results
   # ---------------- #
-  cat(sprintf("Significance level: %s\n", round(x$alpha, digits = 5)))
-  cat(sprintf("Confidence interval: [%s, %s]\n",
-              round(x$ci[1, 3], digits = 5),
-              round(x$ci[1, 4], digits = 5)))
-  cat(sprintf("\nMaximum number of iterations: %s\n", x$max.iter))
+  print.invertci_single(x)
+  cat(sprintf("Maximum number of iterations: %s\n", x$max.iter))
   cat(sprintf("Tolerance level: %s\n", x$tol))
 
   # Display the details if `f` is not `chorussell` (where x$df_ub and
@@ -801,7 +798,6 @@ summary.invertci_multiple <- function(x, alphas, msg.bound, ...) {
     # ---------------- #
     # Print confidence interval
     print.invertci_multiple(x, alphas)
-    cat("\n")
 
     # Print the relevant parameters
     cat(sprintf("Maximum number of iterations: %s\n", x$max.iter))
@@ -819,9 +815,9 @@ summary.invertci_multiple <- function(x, alphas, msg.bound, ...) {
         # Only print the result if alpha appears in alphas
         if (x$alpha[i] %in% alphas) {
           # Print the significance level
-          cat(sprintf(paste0("********** Confidence interval for significance",
-                             "level = %s **********"),
-                      x$alpha[i]))
+          cat(sprintf(paste0("********** %s%% confidence interval ",
+                             "**********"),
+                      100 * (1 - round(x$alpha[i], digits = 5))))
 
           for (j in 1:nrow(x$para.vals)) {
             # Print the parameters

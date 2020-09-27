@@ -1166,6 +1166,7 @@ print.chorussell <- function(x, ...) {
       if (nrow(df.pval) == 1) {
         cat(sprintf("p-value: %s\n", round(df.pval[1, 2], digits = digits)))
       } else {
+        cat("p-values: \n")
         colnames(df.pval) <- c("kappa", "p-value")
         df.pval[, 2] <- round(df.pval[, 2], digits = digits)
         print(df.pval, row.names = FALSE)
@@ -1176,7 +1177,7 @@ print.chorussell <- function(x, ...) {
       n.ci.df <- nrow(ci.df)
 
       if (n.ci.df == 1) {
-        cat(sprintf("%s%%-confidence interval: [%s, %s]\n",
+        cat(sprintf("%s%% confidence interval: [%s, %s]\n",
                     round(100 * (1 - x$alpha), digits = digits),
                     round(x$ci.df[1, 3], digits = digits),
                     round(x$ci.df[1, 4], digits = digits)))
@@ -1219,10 +1220,16 @@ summary.chorussell <- function(x, ...) {
     # Print the p-value or the corresponding confidence interval
     print(x)
 
+    # Print kappa if x$pval or x$ci.df is one dimensional
+    if ((isTRUE(x$ci) & isTRUE(nrow(x$ci.df) == 1)) |
+        (isFALSE(x$ci) & isTRUE(nrow(x$pval) == 1))) {
+      cat(sprintf("kappa: %s\n", x$kappa))
+    }
+    
     # Print test statistic, solver used, norm used, and the number of
     # successful bootstrap replications
-    cat(sprintf("Solver: %s\n", x$solver))
     cat(sprintf("Norm: %s\n", x$norm))
+    cat(sprintf("Solver: %s\n", x$solver))
     cat(sprintf("Number of successful bootstrap replications: %s\n", x$R.succ))
 
     # Number of failed bootstrap replications
