@@ -127,7 +127,7 @@ estb2 <- estbounds(data = data,
                    kappa = kappa,
                    norm = 1,
                    solver = "gurobi",
-                   estimate = FALSE)
+                   estimate = TRUE)
 
 # Example 3 - Estimated bounds with two-moments approach and 2-norm
 estb3 <- estbounds(data = data,
@@ -135,5 +135,5 @@ estb3 <- estbounds(data = data,
                    kappa = kappa,
                    norm = 2,
                    solver = "gurobi",
-                   estimate = FALSE)
+                   estimate = TRUE)
 }
