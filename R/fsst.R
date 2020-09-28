@@ -1897,7 +1897,7 @@ print.fsst <- function(x, ...) {
          cat("p-values:\n")
          # Label the data-driven lambda with a "*" if it is used
          dfl <- fsst.label.lambda(round(df.pval$`lambda`, digits = 5),
-                                  x$lambda.data)
+                                  round(x$lambda.data, digits = 5))
          df.pval$`lambda` <- dfl$lambdas
          print(df.pval, row.names = FALSE)
 
