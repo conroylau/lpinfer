@@ -439,8 +439,8 @@ test.cr.ci <- function(cr.out, test.name, test.type) {
     for (i in seq_along(i.cores)) {
       j <- 1
       for (k in seq_along(k.norm)) {
-        expect_equal(c.lb[[j]][[k]], cr.out[[i]][[j]][[k]]$ci.df[1,3])
-        expect_equal(c.ub[[j]][[k]], cr.out[[i]][[j]][[k]]$ci.df[1,4])
+        expect_equal(c.lb[[j]][[k]], cr.out[[i]][[j]][[k]]$ci.df[1, 3])
+        expect_equal(c.ub[[j]][[k]], cr.out[[i]][[j]][[k]]$ci.df[1, 4])
       }
     }
   })
@@ -450,8 +450,8 @@ test.cr.ci <- function(cr.out, test.name, test.type) {
     for (i in seq_along(i.cores)) {
       j <- 2
       for (k in seq_along(k.norm)) {
-        expect_equal(c.lb[[j]][[k]], cr.out[[i]][[j]][[k]]$ci.df[1,3])
-        expect_equal(c.ub[[j]][[k]], cr.out[[i]][[j]][[k]]$ci.df[1,4])
+        expect_equal(c.lb[[j]][[k]], cr.out[[i]][[j]][[k]]$ci.df[1, 3])
+        expect_equal(c.ub[[j]][[k]], cr.out[[i]][[j]][[k]]$ci.df[1, 4])
       }
     }
   })
