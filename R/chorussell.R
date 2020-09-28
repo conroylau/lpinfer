@@ -174,13 +174,25 @@ chorussell <- function(data = NULL, lpmodel, beta.tgt = NULL, n = NULL, R = 100,
         cr.lp.return[[i]]$c.lb <- -Inf
         cr.lp.return[[i]]$unique <- TRUE
       } else {
+        # Simplify the constraints if needed
+        if (isTRUE(remove.const)) {
+          simp.return <- chorussell.simp(lb.can1[[i]], lb.can2[[i]],
+                                         ub.can1[[i]], ub.can2[[i]],
+                                         progress)
+          df.lb <- simp.return$df.lb
+          df.ub <- simp.return$df.ub
+        } else {
+          df.lb <- NULL
+          df.ub <- NULL
+        }
+        
         cr.lp.return[[i]] <- chorussell.eval(beta.tgt, lb.can1[[i]],
                                              lb.can2[[i]], ub.can1[[i]],
                                              ub.can2[[i]], n, R, ci, alpha,
                                              tol, ub[[i]], lb[[i]],
                                              logical.ub, logical.lb,
                                              remove.const, kappa[i],
-                                             progress)
+                                             progress, df.lb, df.ub)
       }
     }
 
@@ -308,8 +320,7 @@ chorussell <- function(data = NULL, lpmodel, beta.tgt = NULL, n = NULL, R = 100,
 #'
 #' @export
 #'
-chorussell.simp <- function(lb.can1, lb.can2, ub.can1, ub.can2, alpha,
-                            progress) {
+chorussell.simp <- function(lb.can1, lb.can2, ub.can1, ub.can2, progress) {
   # ---------------- #
   # Step 1: Combine the candidates
   # ---------------- #
@@ -333,10 +344,13 @@ chorussell.simp <- function(lb.can1, lb.can2, ub.can1, ub.can2, alpha,
     lb.return <- future.apply::future_lapply(lb.can,
                                              FUN = chorussell.simp.fn,
                                              can1 = lb.can1,
-                                             alpha = alpha,
                                              pbar = pbar,
                                              bd = "lower",
                                              progress = progress)
+    df.lb <- data.frame(bd = unlist(sapply(lb.return, "[", "bd"),
+                                    use.names = FALSE),
+                        sum = unlist(sapply(lb.return, "[", "sum"),
+                                     use.names = FALSE))
   })
 
   # Upper bound
@@ -349,15 +363,18 @@ chorussell.simp <- function(lb.can1, lb.can2, ub.can1, ub.can2, alpha,
 
     ub.return <- future.apply::future_lapply(ub.can,
                                              FUN = chorussell.simp.fn,
-                                             can1 = -ub.can1,
-                                             alpha = alpha,
+                                             can1 = ub.can1,
                                              pbar = pbar,
                                              bd = "upper",
                                              progress = progress)
+    df.ub <- data.frame(bd = unlist(sapply(ub.return, "[", "bd"),
+                                    use.names = FALSE),
+                        sum = unlist(sapply(ub.return, "[", "sum"),
+                                     use.names = FALSE))
   })
 
-  return(list(lb = unlist(lb.return, use.names = FALSE),
-              ub = unlist(ub.return, use.names = FALSE)))
+  return(list(df.lb = df.lb,
+              df.ub = df.ub))
 }
 
 #' Checks one candidate in \code{\link[lpinfer]{chorussell}}
@@ -381,19 +398,18 @@ chorussell.simp <- function(lb.can1, lb.can2, ub.can1, ub.can2, alpha,
 #'
 #' @export
 #'
-chorussell.simp.fn <- function(x, can1, alpha, pbar, bd, progress) {
+chorussell.simp.fn <- function(x, can1, pbar, bd, progress) {
   # Message for progress bar
   if (isTRUE(progress)) {
     pbar(sprintf("(Checking the candidates for the %s bound)", bd))
   }
 
-  decision <- (mean(can1 <= x) < (1 - alpha))
-
-  # If decision == 1, then it does not satisfy the constraint
-  if (decision == 1) {
-    return(NULL)
-  } else {
-    return(x)
+  if (bd == "lower") {
+    return(list(bd = x,
+                sum = mean(can1 <= x)))
+  } else if (bd == "upper") {
+    return(list(bd = x,
+                sum = mean(-x <= can1)))
   }
 }
 
@@ -660,21 +676,15 @@ chorussell.bs.fn <- function(x, data, lpmodel, beta.tgt, kappa, norm, n,
 #'
 chorussell.eval <- function(beta.tgt, lb.can1, lb.can2, ub.can1, ub.can2, n, R,
                             ci, alpha, tol, ub, lb, logical.ub, logical.lb,
-                            remove.const, kappa, progress) {
+                            remove.const, kappa, progress, df.lb = NULL,
+                            df.ub = NULL) {
   if (isFALSE(ci)) {
     # ---------------- #
     # Case 1: ci == FALSE, i.e. computes the p-value via bisection method
     # ---------------- #
-    # Predefine the two end-points and check b = 1 first
+    # Predefine the two end-points
     a <- 0
     b <- 1
-    b.lp <- chorussell.lp(lb.can1, lb.can2, ub.can1, ub.can2, n, R, b, ub, lb, 
-                          logical.ub, logical.lb, remove.const, ci, kappa,
-                          1, progress)
-    b.inout <- chorussell.pt(b.lp, beta.tgt)
-    if (isTRUE(b.inout)) {
-      return(list(pval = b))
-    }
 
     # Initialization
     k <- 2
@@ -682,7 +692,7 @@ chorussell.eval <- function(beta.tgt, lb.can1, lb.can2, ub.can1, ub.can2, n, R,
       c <- (a + b)/2
       c.lp <- chorussell.lp(lb.can1, lb.can2, ub.can1, ub.can2, n, R, c, ub,
                             lb, logical.ub, logical.lb, remove.const, ci,
-                            kappa, k, progress)
+                            kappa, k, progress, df.lb, df.ub)
       c.inout <- chorussell.pt(c.lp, beta.tgt)
       if (isFALSE(c.inout)) {
         b <- c
@@ -701,7 +711,8 @@ chorussell.eval <- function(beta.tgt, lb.can1, lb.can2, ub.can1, ub.can2, n, R,
     for (j in seq_along(alpha)) {
       cr.bd.temp <- chorussell.lp(lb.can1, lb.can2, ub.can1, ub.can2,  n, R,
                                   alpha[j], ub, lb, logical.ub, logical.lb,
-                                  remove.const, ci, kappa, 0, progress)
+                                  remove.const, ci, kappa, 0, progress, df.lb,
+                                  df.ub)
       cr.bd.return[[j]] <- cr.bd.temp
     }
     return(cr.bd.return)
@@ -764,15 +775,13 @@ chorussell.pt <- function(cr.lp.return, beta.tgt) {
 #'
 chorussell.lp <- function(lb.can1, lb.can2, ub.can1, ub.can2, n, R, alpha,
                           ub, lb, logical.ub, logical.lb, remove.const, ci,
-                          kappa, k = 0, progress) {
+                          kappa, k = 0, progress, df.lb, df.ub) {
   # ---------------- #
   # Step 1: Select the candidates of the optimization problem
   # ---------------- #
   if (isTRUE(remove.const)) {
-    cr.updatecan <- chorussell.simp(lb.can1, lb.can2, ub.can1, ub.can2, alpha,
-                                    progress)
-    lb.can <- cr.updatecan$lb
-    ub.can <- cr.updatecan$ub
+    lb.can <- df.lb[df.lb$sum >= 1 - alpha, "bd"]
+    ub.can <- df.ub[df.ub$sum >= 1 - alpha, "bd"]
   } else {
     lb.can <- c(lb.can1, lb.can2)
     ub.can <- -c(ub.can1, ub.can2)

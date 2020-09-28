@@ -21,7 +21,9 @@ chorussell.lp(
   ci,
   kappa,
   k = 0,
-  progress
+  progress,
+  df.lb,
+  df.ub
 )
 }
 \arguments{

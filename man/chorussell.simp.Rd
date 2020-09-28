@@ -5,7 +5,7 @@
 \title{Simplifies the candidates to be considered in
 \code{\link[lpinfer]{chorussell}}}
 \usage{
-chorussell.simp(lb.can1, lb.can2, ub.can1, ub.can2, alpha, progress)
+chorussell.simp(lb.can1, lb.can2, ub.can1, ub.can2, progress)
 }
 \arguments{
 \item{lb.can1}{The vector of values that corresponds to
@@ -21,8 +21,6 @@ chorussell.simp(lb.can1, lb.can2, ub.can1, ub.can2, alpha, progress)
 \item{ub.can2}{The vector of values that corresponds to
 \eqn{\sqrt{n}\left(\hat{\theta}^b_{\rm ub} - \hat{\theta}_{\rm ub} +
 \Delta \right)}.}
-
-\item{alpha}{The significance level. This can be a vector.}
 
 \item{progress}{The boolean variable for whether the progress bars should
 be displayed. If it is set as \code{TRUE}, the progress bars will be

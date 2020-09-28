@@ -22,7 +22,9 @@ chorussell.eval(
   logical.lb,
   remove.const,
   kappa,
-  progress
+  progress,
+  df.lb = NULL,
+  df.ub = NULL
 )
 }
 \arguments{

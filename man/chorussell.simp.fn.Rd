@@ -4,14 +4,12 @@
 \alias{chorussell.simp.fn}
 \title{Checks one candidate in \code{\link[lpinfer]{chorussell}}}
 \usage{
-chorussell.simp.fn(x, can1, alpha, pbar, bd, progress)
+chorussell.simp.fn(x, can1, pbar, bd, progress)
 }
 \arguments{
 \item{x}{One candidate of the upper or lower bound.}
 
 \item{can1}{This refers to either \code{lb.can1} or \code{ub.can1}.}
-
-\item{alpha}{The significance level. This can be a vector.}
 
 \item{pbar}{The progress bar object.}
 
