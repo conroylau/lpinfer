@@ -1,6 +1,8 @@
 lpinfer: An R Package for Inference in Linear Programs
 ================
-Conroy Lau and Alexander Torgovitsky
+*[Conroy Lau](https://github.com/conroylau/) and [Alexander Torgovitsky](https://a-torgovitsky.github.io/)*
+
+[![DOI](https://zenodo.org/badge/229877396.svg)](https://zenodo.org/badge/latestdoi/229877396)
 
 Introduction
 ------------
