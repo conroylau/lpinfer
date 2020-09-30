@@ -68,7 +68,7 @@ More inference procedures will be added soon.
 
 Usage
 -----------------------------
-A detailed vignette is available [here](./vignette/vignette.pdf).
+A detailed vignette is available [here](./inst/doc/lpinfer.pdf).
 
 Help, Feature Requests, Bug Reports, and Contributing
 --------------------------------------

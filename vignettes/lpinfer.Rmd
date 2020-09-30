@@ -1,193 +1,672 @@
 ---
-title: "lpinfer: An R Package for Inference in Linear Programs"
-author: ""
-bibliography: refs.bib
+title: "User Guide for `lpinfer`"
+author: 
+  - "Conroy Lau^[Kenneth C. Griffin Department of Economics, University of Chicago.]"
+  - "Alexander Torgovitsky^[Kenneth C. Griffin Department of Economics, University of Chicago. Research supported by National Science Foundation grant SES-1846832.]"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
 output:
-  github_document:
-    keep_html: true
-    toc: true
-  pdf_document:
-    toc: true
-    df_print: paged
-  html_document:
-    keep_md: true
-    toc: true
-    df_print: paged
+  bookdown::pdf_document2:
+    toc: no
+    number_sections: true
+    mathjax: local
+    self_contained: false
+  bookdown::html_document2:
+    number_sections: true
+    mathjax: local
+    self_contained: false
+bibliography: refs.bib
+indent: true
+fontsize: 11pt
+linestretch: 1.25
 vignette: >
-  %\VignetteIndexEntry{lpinfer} 
-  %\VignetteEncoding{UTF-8} 
+  %\VignetteIndexEntry{lpinfer}
+  %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
+header-includes:
+  - \usepackage{amsmath, amsthm, amsfonts, amssymb, bm}
+  - \usepackage{booktabs}
+  - \usepackage{multirow}
+  - \usepackage{natbib}
+  - \usepackage[title]{appendix}
+  - \usepackage{fullpage}
+  - \usepackage{setspace}
+  - \usepackage{graphicx}
+  - \usepackage{enumitem}
+  - \theoremstyle{plain}
+  - \newtheorem{proposition}{Proposition}
+  - \newtheorem{lemma}{Lemma}
+  - \newtheorem{theorem}{Theorem}
+  - \DeclareMathAlphabet\mathbb{U}{fplmbb}{m}{n} %Preferred style of \mathbb
+  - \renewcommand{\qedsymbol}{\itshape Q.E.D.}
+  - \newcommand{\re}{\mathbb{R}}
+  - \newcommand{\reext}{\overline{\re}}
+  - \DeclareMathOperator{\Cov}{Cov}
+  - \DeclareMathOperator{\Corr}{Corr}
+  - \DeclareMathOperator{\Exp}{\mathbb{E}}
+  - \DeclareMathOperator{\Var}{Var}
+  - \DeclareMathOperator{\Prob}{\mathbb{P}}
+  - \DeclareMathOperator{\AsyVar}{AVar}
+  - \DeclareMathOperator{\con}{con}
+  - \DeclareMathOperator{\rng}{rng}
+  - \DeclareMathOperator{\dom}{dom}
+  - \DeclareMathOperator{\real}{Re}
+  - \DeclareMathOperator{\diag}{diag}
+  - \DeclareMathOperator{\imag}{Im}
+  - \DeclareMathOperator{\interior}{int}
+  - \DeclareMathOperator{\diameter}{diam}
+  - \DeclareMathOperator{\range}{range}
+  - \DeclareMathOperator{\nullsp}{null}
+  - \DeclareMathOperator{\median}{med}
+  - \DeclareMathOperator{\dimension}{dim}
+  - \DeclareMathOperator{\trace}{tr}
+  - \DeclareMathOperator{\rank}{rk}
+  - \DeclareMathOperator{\std}{std}
+  - \DeclareMathOperator{\sign}{sgn}
+  - \DeclareMathOperator{\supp}{supp}
+  - \DeclareMathOperator{\Trace}{Tr}
+  - \DeclareMathOperator{\closure}{cl}
+  - \DeclareMathOperator{\boundary}{bd}
+  - \def\argmax{\operatornamewithlimits{arg\,max}}
+  - \def\argmin{\operatornamewithlimits{arg\,min}}
+  - \def\argsup{\operatornamewithlimits{arg\,sup}}
+  - \def\arginf{\operatornamewithlimits{arg\,inf}}
+  - \def\minmax{\operatornamewithlimits{min/max}}
+  - \newcommand{\plim}{\mathchoice{\stackrel{\mathbb{P}}{\rightarrow}}{\rightarrow_\mathbb{P}}{\rightarrow_\mathbb{P}}{\rightarrow_\mathbb{P}}}
+  - \newcommand{\dlim}{\mathchoice{\stackrel{d}{\rightarrow}}{\rightarrow_d}{\rightarrow_d}{\rightarrow_d}}
+  - \newcommand{\aslim}{\mathchoice{\stackrel{as}{\rightarrow}}{\rightarrow_{as}}{\rightarrow_{as}}{\rightarrow_{as}}}
+  - \newcommand{\Llim}[1]{\mathchoice{\stackrel{L_{#1}}{\rightarrow}}{\rightarrow_{L_{#1}}}{\rightarrow_{L_{#1}}}{\rightarrow_{L_{#1}}}}
+  - \newcommand{\abs}[1]{\left\vert#1 \right\vert}
+  - \newcommand{\absSmall}[1]{\vert#1 \vert}
+  - \newcommand{\norm}[1]{\left\Vert#1 \right\Vert}
+  - \newcommand{\normSmall}[1]{\Vert#1 \Vert}
+  - \newcommand{\innerprod}[2]{\langle#1,#2 \rangle}
+  - \newcommand{\Indic}[1]{\mathbb{1}\left[#1\right]}
+  - \newcommand{\IndicSmall}[1]{\mathbb{1}[#1]}
+  - \newcommand{\note}[1]{\textcolor{red}{**#1**}}
+  - \newcommand{\NOTE}[1]{\note{#1}}
+  - \newcommand\independenT{\protect\mathpalette{\protect\independeNT}{\perp}}
+  - \def\independeNT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
+  - \DeclareMathOperator{\independent}{\independenT}
+  - \DeclareMathOperator{\dependent}{\independenT \! \! \! \! \! \! \! \diagup}
+  - \newcommand{\Aobs}{A_{\text{obs}}}
+  - \newcommand{\Ashape}{A_{\text{shp}}}
+  - \newcommand{\Atarget}{A_{\text{tgt}}}
+  - \newcommand{\betaobs}{\beta_{\text{obs}}}
+  - \newcommand{\betahatobsn}{\hat{\beta}_{\text{obs}, n}}
+  - \newcommand{\betahatobsnb}{\hat{\beta}_{\text{obs}, n,b}}
+  - \newcommand{\betashape}{\beta_{\text{shp}}}
+  - \newcommand{\betatarget}{\beta_{\text{tgt}}}
+  - \newcommand{\betahatlb}{\hat{\beta}_{\text{lb}}}
+  - \newcommand{\betahatub}{\hat{\beta}_{\text{ub}}}
+  - \newcommand{\betalb}{\beta_{\text{lb}}}
+  - \newcommand{\betaub}{\beta_{\text{ub}}}
+  - \newcommand{\clb}{c_{\text{lb}}}
+  - \newcommand{\cub}{c_{\text{ub}}}
 ---
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: { equationNumbers: { autoNumber: "AMS" } }
+});
+</script>
 
-```{r setup1, include = FALSE}
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  cache = TRUE
+	error = TRUE,
+	fig.height = 4,
+	fig.path = "figs/",
+	background = "#F0F0F0",
+	cache = FALSE,
+	include = TRUE,
+	size = "scriptsize"
 )
 ```
 
-```{r setup2, include = FALSE}
-require(lpinfer)
-require(data.table)
-require(pander)
-require(gurobi)
-require(knitr)
-require(kableExtra)
-require(foreach)
-require(doMC)
-require(parallel)
-require(PtProcess)
-require(doSNOW)
-require(doRNG)
-require(doParallel)
-require(future)
-RNGkind(kind = "L'Ecuyer-CMRG")
+
+```{r clean-up, include=FALSE}
+rm(list = ls())
 ```
 
-## Introduction
-This package provides a set of methods to conduct inference on econometrics 
-problems that can be studied by linear programs. Currently, this package 
-supports the following tests:
+# Introduction
 
-1. Cone-tightening procedure by @dkqs2018
-1. Subsampling procedure
-1. FSST procedure by @fsst2020
-1. Procedure by @cr2019
+The `lpinfer` package for `R` contains a collection of tools for estimation and inference on the solutions for linear programs.
+Our motivation comes from the econometrics literature on partial identification or "bounds" approaches.
+A string of recent research has shown that bounds in many interesting models can be constructed by solving two linear programs:
+\begin{equation}
+    \mathrm{min/max}_{x \in \re^{d}_{+}}
+    \Atarget x
+    \quad
+    \text{s.t.}
+    \quad
+    \Ashape x = \betashape
+    \quad
+    \text{and}
+    \quad
+    \Aobs x = \betaobs.
+    \label{eq:linear-programs}
+\end{equation}
+The notation in $\eqref{eq:linear-programs}$ means the following:
 
-Apart from computing the *p*-values based on the above tests, this package
-can also construct confidence intervals and estimate the bounds of the 
-estimators in linear programs subject to certain shape constraints.
+-  $x \in \re^{d}_{+}$ constitutes the unknown model parameters. In many settings, $d$ will be quite large.
+    The `lpinfer` package assumes that $x$ is constrained to be non-negative.
+    As we discuss in Section \@ref(converting-linear-programs-to-standard-form), it is possible to convert any linear program to such a form by adding slack variables.
 
-## Scope of the Vignette
-This vignette is intended as a guide to use the `lpinfer` package without
-further explanation for the methods. Readers may refer to each of the 
-sections for the tests for references to more details about the 
-methods.
+-  $\Atarget$ is a $1 \times d$ dimensional matrix (a row vector) that encodes the **target parameter**, $\Atarget x$.
+    The target parameter is the one--dimensional summary of $x$ that the researcher wants to infer.
 
-## Installation and Requirements
-`lpinfer` can be installed from our GitHub repository via
+-  $\Ashape$ and $\betashape$ encode **shape constraints** on the possible values that $x$ can take.
+    These are used to enforce logical or *a priori* assumptions on the model.
 
-```{r install.github, eval = FALSE}
-devtools::install_github("conroylau/lpinfer")
+-  $\Aobs$ and $\betaobs$ encode the **data-matching** (sometimes called "observational equivalence") constraints.
+    These require $x$ to be consistent with the observed data; typically $\betaobs$ would be some moments estimated from the data, and $\Aobs x$ would be the moments implied by the model if the parameters are $x$.
+    
+A concrete example of how $\eqref{eq:linear-programs}$ arises from an econometric model is given in the next section.
+
+Although the shape and data-matching constraints enter $\eqref{eq:linear-programs}$ in the same way, their conceptual difference will be important in the procedures ahead.
+The shape constraints will be *required* to hold.
+Subject to that requirement, $x$ will be chosen so that the data-matching constraints are met as well as possible.
+
+Often, it will not be possible to meet the data-matching constraints exactly.
+This is no different here than in other statistical models.
+The estimation procedure described in Section \@ref(estimation) modifies $\eqref{eq:linear-programs}$ to account for this possibility.
+Applying this estimation procedure yields bound estimates for the target parameter, $[\betahatlb, \betahatub]$.
+These estimates can be expected to be consistent for the "true" population bounds, $[\betalb, \betaub]$, that would arise if the model were correctly-specified and the population data were known; see @mogstadsantostorgovitsky2018e for more detail.
+
+In addition to estimating the population bounds, we might also want to conduct frequentist statistical inference on them, either by testing the null hypothesis $H_{0}: \betatarget \in [\betalb, \betaub]$ for some pre-specified value $\betatarget$, or by constructing a confidence interval $[\clb(\alpha), \cub(\alpha)]$ that contains $[\betalb, \betaub]$ in repeated samples with probability $1-\alpha$.
+This problem falls into the large and ever-expanding literature on inference in partially identified models; see the recent surveys by @canayshaikh2017ic or @molinari2020ae for extensive reviews.
+
+For the `lpinfer` package, we focus on the subset of these procedures that scale well both in terms of $d$ (the dimension of the parameters, $x$), and in terms of the number of rows in $\Aobs$ and $\Ashape$.
+This limits our focus to procedures specifically focused on *projection inference*.
+We limit our focus even further to those procedures that can be implemented reliably in the sense that they involve only calculations for which certificates are available.
+This means that we do not consider methods that involve solving unstructured nonlinear, non-convex optimization problems.
+We would, however, be amenable to considering methods that involve non-convex optimization problems for which certificates of optimality are available, such as linear integer programs or bilinear programs.
+
+Even with these restrictions, there are still many procedures.
+Currently, we have implemented four in `lpinfer`; see Section \@ref(statistical-inference-testing) for details.
+We have a list of other applicable procedures that we intend to implement in the future, and we plan to continually add new procedures as they are proposed.
+
+# Example: The Mixed Logit Model 
+
+In this section, we give a simple example of how $\eqref{eq:linear-programs}$ arises in an empirically-relevant econometric model.
+For more examples, see @fangsantosshaikhetal2020wp [, section 2] and the references cited therein.
+
+@bajarifoxryan2007aer and @foxkimryanetal2011qe consider a class of discrete choice random coefficient models.
+The binary choice version of this model has the structure
+\begin{equation}
+    \label{eq:mixedlogit}
+    Y_{i}
+    =
+    \IndicSmall{
+        V_{i}'W_{i} \geq U_{i}
+    },
+\end{equation}
+where $i$ denotes an individual, $Y_{i}$ is an observed binary random variable, $W_{i}$ is an observed random vector, and both $V_{i}$ and $U_{i}$ are unobserved random variables that are assumed to be independent of $W_{i}$.
+The unobservable $U_{i}$ is assumed to have a standard logistic distribution and be independent of $V_{i}$.
+Model $\eqref{eq:mixedlogit}$ is like the latent variable representation of the well-known logit model for binary outcomes, with the important difference that $V_{i}$ are unobserved random variables, not degenerate parameters.
+
+@foxkimryanetal2011qe consider approximating the distribution of $V_{i}$ with a discrete distribution.
+This discrete distribution is assumed to have known support points $(v_{1},\ldots,v_{d})$.
+The unknown parameters of the model are the masses that the distribution places on each support points, which are the $x = (x_{1},\ldots,x_{d})$ in $\eqref{eq:linear-programs}$.
+These masses must be non-negative, so that $x \in \re^{d}_{+}$.
+They also must sum to unity, so that
+\begin{equation}
+    \sum_{j=1}^{d} x_{j}
+    \equiv
+    \Ashape x
+    =
+    \betashape
+    \equiv
+    1.
+    \label{eq:mixedlogit-shape}
+\end{equation}
+These are the shape constraints of this simple model.
+More complicated models might have many more shape constraints.
+
+If $\eqref{eq:mixedlogit}$ were indeed the way that $Y_{i}$ were generated, then we would have
+\begin{equation}
+    \label{eq:data-matching}
+    \Prob[Y_{i} = 1 \vert W_{i} = w]
+    =
+    \sum_{j=1}^{d}x_{j}\ell(v_{j}'w),
+\end{equation}
+where $\ell(v_{j}'w)$ are the logit probabilities conditional on $V_{i} = v_{j}$, that is,
+
+$$
+    \ell(z)
+    \equiv
+    \frac{1}{
+        1 + \exp(-z)
+    }.
+$$
+The left-hand side of $\eqref{eq:data-matching}$ is a population moment, which is not observed but can be estimated.
+For example, if $W_{i}$ is discretely distributed, a simple estimator is
+$$
+    \betaobs(w)
+    \equiv
+    \frac{\sum_{i : W_{i} = w} Y_{i}}{\sum_{i : W_{i} = w} 1}.
+$$
+If we choose a set of supported points from the distribution of $W_{i}$, say $w_{1},\ldots,w_{p}$, then we obtain the data-matching constraints
+\begin{equation}
+    \betaobs
+    \equiv
+    \begin{bmatrix}
+        \betaobs(w_{1}) \\
+        \vdots \\
+        \betaobs(w_{p})
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        \ell(v_{1}'w_{1})
+        &
+        \cdots
+        &
+        \ell(v_{d}'w_{1}) \\
+        \vdots & & \vdots \\
+        \ell(v_{1}'w_{p})
+        &
+        \cdots
+        &
+        \ell(v_{d}'w_{p})
+    \end{bmatrix}
+    \begin{bmatrix}
+        x_{1} \\
+        \vdots \\
+        x_{d}
+    \end{bmatrix}
+    \equiv
+    \Aobs x.
+    \label{eq:logit-data-matching}
+\end{equation}
+If $p$ is smaller than $d$, then we would generally expect there to be multiple solutions to $\eqref{eq:logit-data-matching}$, even under the shape constraint $\eqref{eq:mixedlogit-shape}$.
+This is the source of partial identification in this model, and the reason that the solutions to the minimization and maximization problems defined in $\eqref{eq:linear-programs}$ might be different.
+
+There are many target parameters that might be of interest in this model.
+One example is the probability of choosing $Y_{i}$ at some value $w^{\star}$ not in the support of $W_{i}$:
+$$
+    \Prob[Y_{i} = 1 \vert W_{i} = w^{\star}]
+    =
+    \sum_{j=1}^{d}x_{j}\ell(v_{j}'w^{\star})
+    =
+    \begin{bmatrix}
+        \ell(v_{1}'w^{\star})
+        &
+        \cdots
+        &
+        \ell(v_{d}'w^{\star})
+    \end{bmatrix}
+    \begin{bmatrix}
+        x_{1} \\
+        \vdots \\
+        x_{d}
+    \end{bmatrix}
+    \equiv
+    \Atarget x.
+$$
+For a more elaborate example, consider the elasticity of choosing $Y_{i}$ with respect to $w_{k}$ at $W_{i} = w^{\star}$, and conditional on $V_{i} = v_{j}$:
+
+$$
+    \epsilon_{j}(w^{\star})
+    =
+    \left(
+        \frac{\partial}{\partial w_{k}}
+        \ell(v_{j}'w^{\star})
+    \right)
+    \frac{w_{k}^{\star}}{\ell(v_{j}'w^{\star})}
+    =
+    v_{jk}w_{k}^{\star}(1 - \ell(v_{j}'w^{\star})).
+$$
+We might want to conduct inference on the average of this elasticity over $V_{i}$:
+$$
+    \sum_{j=1}^{d}
+    x_{j}
+    \epsilon_{j}(w^{\star})
+    \equiv
+    \Atarget x,
+$$
+or perhaps on the probability that it lies below some pre-specified value $e$:
+\begin{equation}
+    \label{eq:dfelast}
+    \sum_{j=1}^{d}
+    x_{j}
+    \IndicSmall{\epsilon_{j}(w^{\star}) \leq e}
+    \equiv
+    \Atarget x.
+\end{equation}
+There are many other choices of target parameter that may be interesting, depending on the application.
+
+The `lpinfer` package includes example code for the mixed logit.
+This example code includes a function that generates the matrix $\Aobs$ and the vector $\betaobs$ in $\eqref{eq:logit-data-matching}$, a function that draws a sample of data, and a function that generates the $\Atarget$ vector that corresponds to the distribution of elasticity in $\eqref{eq:dfelast}$.
+The following snippet illustrates these functions.
+They will be used ahead to demonstrate the core features of `lpinfer`.
+
+```{r mixedlogit_dgp}
+source("/Users/conroylau/Library/R/3.6/library/lpinfer/example/dgp_mixedlogit.R")
+dgp <- mixedlogit_dgp(dimw = 4, dimv = 16)
+dgp$wdist
+head(dgp$vdist)
+dim(dgp$vdist)
+
+mixedlogit_Aobs(dgp)
+set.seed(67)
+df <- mixedlogit_draw(dgp, n = 4000)
+mixedlogit_betaobs(df, dgp)
+
+Atgt <- mixedlogit_Atgt_dfelast(dgp, w2eval = 1, eeval = -2)
+Atgt %*% dgp$vdist[,1] # The actual (unknown) value of the target parameter
+
+# Change the target parameter slightly
+Atgt <- mixedlogit_Atgt_dfelast(dgp, w2eval = 1, eeval = -1)
+Atgt %*% dgp$vdist[,1]
 ```
 
-To use most of the functions in this `lpinfer` package, one of the following
-packages for solving the linear and quadratic programs is required. There are 
-four options for the solver:
 
-1. Gurobi and the R package `gurobi` --- Gurobi can be downloaded from
-[Gurobi Optimization](https://www.gurobi.com/). A Gurobi software license is 
-required. The license can be obtained at no cost for academic researchers. The 
-instructions for installing `gurobi` on R can be found 
-[here](https://cran.r-project.org/web/packages/prioritizr/vignettes/gurobi_installation.html#r-package-installation).
+# The `lpmodel` Class
 
-1. IBM ILOG CPLEX Optimization Studio (CPLEX) and one of the R packages below 
---- CPLEX can be downloaded from 
-[IBM](https://www.ibm.com/analytics/cplex-optimizer). A CPLEX software license
-is required, which can be obtained at no cost for academic researchers. There 
-are two open-source and free R packages that uses CPLEX, and users are free to
-choose one of them. In addition, both packages have to be installed on the 
-command line to link the package to the correct CPLEX library. The two packages' 
-name and installation instructions are as follows:
-   i.  `Rcplex`  --- the instructions to install the R package can be found
-   [here](https://cran.r-project.org/web/packages/Rcplex/INSTALL).
-   
-   i. `cplexAPI` --- the instructions to install the R package can be found
-   [here](https://cran.r-project.org/web/packages/cplexAPI/INSTALL).
+The `lpinfer` package is built around an S3 class called `lpmodel`.
+This class simply consists of the five objects necessary to specify $\eqref{eq:linear-programs}$: $\Atarget, \Ashape, \betashape, \Aobs, \betaobs$.
+An instance of the class is created with the following syntax:
 
-1. `limSolve` --- a free and open-source package available on CRAN. This can be
-installed directly via the `install.packages` command in R.
 
-If no package is specified, one of the above packages will be automatically 
-chosen from those that are available.
+```{r create_lpm}
+library("lpinfer")
 
-The package `lpSolveAPI` is only supported in the function `estbounds`
-when the L1-norm is used. This is a free and open-source package available on
-CRAN. This can be installed directly via the `install.packages` command in R.
-
-## Sample data
-The classical missing data problem due to @manski1989 is used as a running
-example throughout this vignette to demonstrate the commands in this 
-`lpinfer` package. We consider this problem here because the sharp bounds for 
-the identified set of the expected values can be constructed by linear programs.
-
-In this package, a sample simulated data set on the missing data problem is
-included. This can be obtained by `sampledata`. This data set contains 1,000
-observations with 2 columns. The following shows the first 10 observations of 
-the simulated data set:
-
-```{r drawData-df, eval = TRUE}
-library(lpinfer)
-knitr::kable(head(sampledata, n = 10))
+lpm <- lpmodel(A.obs = mixedlogit_Aobs(dgp),
+               beta.obs = function(d) mixedlogit_betaobs(d, dgp),
+               A.shp = rep(1, nrow(dgp$vdist)),
+               beta.shp = 1,
+               A.tgt = mixedlogit_Atgt_dfelast(dgp, w2eval = 1, eeval = -1))
 ```
-where
 
-* `Y` is a multivariate discrete outcome variable that takes value from 0 to 1 
-with increment 0.1.
-* `D` is a binary treatment variable where *Y*~*i*~ is observed for 
-*D*~*i*~ = 1 and not observed for *D*~*i*~ = 0.
+All of the statistical inference procedures utilize either the bootstrap or subsampling.
+The procedures differ on which components of an `lpmodel` are allowed to change across resampling, that is, which components are treated as "stochastic". Table \@ref(tab:stochastic) catalogues these differences.
+In implementing the procedures, we have tried to allow for as much flexibility as possible.
+If the paper does not explicitly require a given object to be deterministic, then we allow it to be stochastic.
+In some cases, there may be additional restrictions on the form of some of the components of an `lpmodel`.
 
-## General Syntax
+Stochastic components can be specified in two ways.
+The first is to pass a function that accepts a `data.frame` as an argument and returns the realization of the object.
+This is what is being done for `beta.obs` in the syntax above, but it can be done for any of the other components as well.
+For `beta.obs` only, the function can also return two objects in a list, with the first object being a vector realization of $\betaobs$ and the second object being an estimate of the asymptotic variance matrix of $\betaobs$.
+This is useful in some procedures that make use of the variance--covariance matrix of $\betaobs$; if one is not passed, then `lpinfer` will estimate it via nonparametric bootstrap.
 
-In general, each of the tests in the `lpinfer` requires a data set, a 
-`lpmodel` object and some tuning parameters. The tuning parameters are 
-different for each of the test and will be explained in later sections. 
-For the `lpmodel` object, it consists of five components:
+Alternatively, the user can create a list of objects ahead of time and pass this in lieu of a function.
+For example,
 
-* `A.obs`
-* `A.shp`
-* `A.tgt`
-* `beta.obs`
-* `beta.shp`
+```{r create_lpm_alternative}
+R <- 100 # number of bootstrap replications
+beta.obs.list <- vector(mode = "list", length = R)
+for (i in 1:R) {
+    d <- mixedlogit_draw(dgp, n = 4000)
+    beta.obs.list[[i]] <- mixedlogit_betaobs(d, dgp)
+}
 
-Here, `A.obs` and `beta.obs` refers to the matrix of coefficients and the RHS
-variables for the "observed constraints" in the linear program. `A.shp` and
-`beta.shp` refers to the matrix of coefficients and the RHS variables for
-the shape constraints. `A.tgt` refers to the matrix of coefficients for the 
-linear constraints that we wish to test with `beta.tgt`. Since the object 
-`beta.tgt` is a parameter that is being tested, it will be defined outside
-the `lpmodel` object. 
+lpm2 <- lpmodel(A.obs = mixedlogit_Aobs(dgp),
+                beta.obs = beta.obs.list,
+                A.shp = rep(1, nrow(dgp$vdist)),
+                beta.shp = 1,
+                A.tgt = mixedlogit_Atgt_dfelast(dgp, w2eval = 1, eeval = -1))
+```
 
-Note that not all procedures will require all five components to be present
-in the `lpmodel` object. For instance, `A.shp` and `beta.shp` are not required
-in the `dkqs` procedure. 
+\noindent When using this list syntax, the number of bootstrap replications is inferred from the length of `boot.obs.list`.
+This makes it more error-prone for procedures where multiple components can be stochastic, since each one would need to have a list of the same length.
+We include the list syntax to accommodate models in which it might be costly to compute `beta.obs`; using the list approach the user can just calculate these once at the outset before running various testing procedures.
+When using the function syntax, the number of bootstrap replications can be specified in the testing procedure itself.
 
-#### Standard form
 
-For consistency, the tests in this `lpinfer` package assumes that all of the 
-components in the `lpmodel` object represent constraints that are  
-in standard form. Hence, the matrices in the `lpmodel` object are representing 
-equality constraints. To impose inequality constraints, users need to first 
-convert them to standard form by adding appropriate slack and surplus variables.
+```{r stochastic, echo=FALSE, message=FALSE, warning=FALSE}
+library(kableExtra)
 
-This can be done easily with the `standard.lpmodel` function in this `lpinfer`
-package with an object in the `lpmodel.natural` class. The `lpmodel.natural` 
-class consists of the following eight components:
+df.estb <- matrix(c("$\\texttt{estbounds}$", rep("$\\checkmark$", 5), "--"), nrow = 1)
+df.fsst <- matrix(c("$\\texttt{fsst}$", rep("", 4), "$\\checkmark$", "--"), nrow = 1)
+df.dkqs <- matrix(c("$\\texttt{dkqs}$", rep("", 4), "$\\checkmark$", "Must have $A_{\\rm shp} = 1_{1 \\times d}$ and $\\beta_{\\rm shp} = 1$"), nrow = 1)
+df.subs <- matrix(c("$\\texttt{subsample}$", rep("$\\checkmark$", 5), "--"), nrow = 1)
+df.cr <- matrix(c("$\\texttt{chorussell}$", rep("$\\checkmark$", 5), "--"), nrow = 1)
 
-* `A.obs`
-* `A.shp`
-* `A.tgt`
-* `beta.obs`
-* `beta.shp`
-* `sense.shp`
-* `x.lb`
-* `x.ub`
+df.lpm <- rbind(df.estb, df.fsst, df.dkqs, df.subs, df.cr)
+colnames(df.lpm) <- c(" ",
+                      "$A_{\\rm tgt}$",
+                      "$A_{\\rm shp}$",
+                      "$\\beta_{\\rm shp}$",
+                      "$A_{\\rm obs}$",
+                      "$\\beta_{\\rm obs}$",
+                      " ")
+kbl(df.lpm, caption = "Requirements for `lpmodel` by procedure", escape = FALSE, booktabs = TRUE) %>%
+   add_header_above(c("Procedure",
+                      "Can it be a function?" = 5,
+                      "Other notes"),
+                    escape = FALSE,
+                    bold = TRUE) %>%
+  kable_styling(position = "center")
+```
 
-The first five components are the same as the `lpmodel` class. The `sense.shp`
-vector stores the sense of the shape constraints (i.e. `>=`, `=` or `<=`). 
-The two components `x.lb` and `x.ub` correspond to the lower and upper
-bound of the `x` vector respectively.
 
-The procedure to convert an object from the `lpmodel.natural` class into the
-`lpmodel` class is as follows:
+# Estimation
 
-1. Create an object in the `lpmodel.natural` class.
-2. Apply the `standard.lpmodel` function on this object.
+Estimation is conducted using the procedure developed in @mogstadsantostorgovitsky2018e.
+The command is called `estbounds`:
 
-Below is an example of using the `standard.lpmodel` function on the object
-in the `lpmodel.natural` class, which is denoted by `lpmn0` in this example.
-```{r standard.form1}
+```{r estbounds_minimal}
+estbounds(data = df, lpmodel = lpm)
+```
+
+\noindent For a full description of the procedure and its theoretical justification, we refer the reader to @mogstadsantostorgovitsky2018e.
+However, the basic idea is intuitive.
+First we search over all $x \in \re^{d}_{+}$ that satisfy $\Ashape x = \betashape$ to try to minimize the distance between $\Aobs x$ and $\betaobs$.
+By default, this distance is measured using the Euclidean ($\ell_{2}$) norm, although in computationally difficult problems one might want to switch to the $\ell_{1}$ norm using the `norm` option:
+
+
+```{r estbounds_minimal_norm}
+r <- estbounds(data = df, lpmodel = lpm, norm = 1)
+print(r)
+```
+
+\noindent The outcome of this problem is saved in the field `mincriterion`:
+
+
+```{r estbounds_mincriterion}
+print(r$mincriterion)
+```
+
+\noindent Next, $\eqref{eq:linear-programs}$ is solved with the hard constraint $\Aobs x = \betaobs$ replaced by the soft-constraint that $x$ is such that the norm of $\Aobs x - \betaobs$ is within some tolerance of `mincriterion`.
+This tolerance is determined by a non-negative regularization parameter `kappa`.
+By default this parameter is set to $0$, but in some problems it may be theoretically important to set it to a small number.
+
+```{r estbounds_kappa}
+estbounds(data = df, lpmodel = lpm, kappa = 1e-3)
+```
+
+# Statistical Inference: Testing
+
+In this section, we briefly outline the syntax and options for the testing procedures that are currently available in `lpinfer`.
+For details on the theory, please consult the original paper.
+All of the tests are for the null hypothesis discussed in Section \@ref(introduction).
+
+An important comment---applicable to all of the procedures---is that the number of boostrap or subsampling replications is, by default, set to $100$.
+This should be increased to a conventional size for production runs.
+The optional argument for all procedures is called `R`.
+Examples of changing it are given ahead.
+
+## @fangsantosshaikhetal2020wp [, "FSST"]
+
+The basic syntax for testing $\betatarget = .2 \in [\betalb, \betaub]$ is this:
+
+```{r fsst_basic}
+fsst(data = df, lpmodel = lpm, beta.tgt = .2)
+fsst(data = df, lpmodel = lpm, beta.tgt = .2, R = 500) # more bootstraps
+```
+
+\noindent The tuning parameter in the procedure is called `lambda`, which is a number between $0$ and $1$.
+By default, a data-driven choice of `lambda` is used, which corresponds to `lambda = NA`.
+The test can be run for multiple values of `lambda` simultaneously by passing a vector:
+
+```{r fsst_multiple_lambda}
+fsst(data = df, lpmodel = lpm, beta.tgt = .2, lambda = c(.1, .2, .5, NA, .9))
+```
+
+\noindent Another choice that one might want to change in some settings is the weighting matrix used in an internal step of `fsst`.
+By default, it is set to the inverse of the diagonal of the asymptotic variance matrix of $\betaobs$, but one can also use the identity matrix, or the full asymptotic variance matrix.
+
+```{r fsst_weighting_matrix}
+set.seed(25)
+fsst(data = df, lpmodel = lpm, beta.tgt = .2, weight.matrix = "diag")
+set.seed(25)
+fsst(data = df, lpmodel = lpm, beta.tgt = .2, weight.matrix = "identity")
+set.seed(25)
+fsst(data = df, lpmodel = lpm, beta.tgt = .2, weight.matrix = "avar")
+```
+
+\noindent More detailed information on test statistics and critical values can be obtained by calling `summary` on the output of `fsst`.
+
+## @debkitamuraquahetal2018wp [, "DKQS"]
+
+The basic syntax for testing $\betatarget = .2 \in [\betalb, \betaub]$ is similar to `fsst`:
+
+```{r dkqs_basic}
+dkqs(data = df, lpmodel = lpm, beta.tgt = .2)
+dkqs(data = df, lpmodel = lpm, beta.tgt = .2, R = 500) # more bootstraps
+```
+
+\noindent The tuning parameter in DKQS is called `tau`, which is a number between $0$ and $1$.
+@kamat2018wp observed that a key optimization problem solved in the DKQS procedure can be infeasible unless `tau` is smaller than some maximum value.
+This value can be computed, and the default behavior of `dkqs` is to compute and use this value.
+Alternatively, the user can also pass their own values of `tau` as a list:
+
+```{r dkqs_moretau}
+set.seed(34)
+dkqs(data = df, lpmodel = lpm, beta.tgt = .2, tau = c(0, .5, .75))
+```
+
+\noindent One thing to note about the DKQS procedure is that it is only designed for a specific choice of $\Ashape$ and $\betashape$, as shown in Table \@ref(tab:stochastic).
+For this reason, `dkqs` ignores these fields of the `lpmodel`:
+
+```{r dkqs_ignores_inputs}
+lpm2 <- lpm
+lpm2$A.shp <- NULL
+set.seed(34)
+dkqs(data = df, lpmodel = lpm2, beta.tgt = .2, tau = .5) # still works
+```
+
+## Profiled Subsampling [@romanoshaikh2008jospai]
+
+Profiled subsampling is based on a criterion function that measures the distance between $\Aobs x$ and $\betaobs$ while constraining $x \in \re^{d}_{+}$, $\Ashape x = \betashape$ and $\Atarget x = \betatarget$ for a hypothetical $\betatarget$.
+The syntax is this:
+
+```{r subsampling_syntax}
+subsample(data = df, lpmodel = lpm, beta.tgt = .2)
+subsample(data = df, lpmodel = lpm, beta.tgt = .2, R = 500) # more bootstraps
+```
+
+\noindent As in `estbounds`, the user can change the norm used to measure distance to the $\ell_{1}$ norm, although for `subsample` there are no computational benefits from doing so.
+The main tuning parameter is `phi`, which is a number between $0$ and $1$ that determines the subsample size.
+If $n$ is the original number of observations, then the subsample size is taken to be $n^{\phi}$.
+The default value is `phi = 2/3`.
+The user can also change `replace` from its default of `FALSE` to `TRUE` to draw with replacement.
+Note that `replace = TRUE` and `phi = 1` is a standard nonparametric bootstrap.
+
+```{r subsampling_options}
+subsample(data = df, lpmodel = lpm, beta.tgt = .2, phi = 6/9)
+subsample(data = df, lpmodel = lpm, beta.tgt = .2, phi = 1,
+          replace = TRUE) # bootstrap
+```
+
+
+## @chorussell2019ae [, "CR"]
+
+The basic syntax for testing $\betatarget = .2 \in [\betalb, \betaub]$ is similar to the previous methods:
+```{r cho_russell_basic}
+chorussell(data = df, lpmodel = lpm, beta.tgt = .2)
+chorussell(data = df, lpmodel = lpm, beta.tgt = .2, R = 500) # more bootstraps
+```
+
+\noindent The CR procedure directly bootstraps estimates of the bounds.
+To handle situations when $\Aobs x = \betaobs$ cannot be met perfectly in sample, we use `estbounds` to construct these estimates.
+Thus, the `kappa` and `norm` tuning parameters from `estbounds` are also tuning parameters for `chorussell`.
+
+```{r cho_russell_norm_kappa}
+chorussell(data = df, lpmodel = lpm, beta.tgt = .2, kappa = 1e-3, norm = 1)
+```
+
+\noindent The CR procedure also differs from the others because it is designed to directly construct confidence intervals, rather than test specific points.
+The examples above actually do the opposite procedure of inverting confidence intervals to obtain $p$--values for a specific point.
+Alternatively, the user can directly obtain a level $1-\alpha$ confidence interval by just not passing `beta.tgt`, as in
+
+```{r cho_russell_ci}
+chorussell(data = df, lpmodel = lpm, alpha = .1)
+```
+
+# Statistical Inference: Confidence Intervals
+
+\noindent All of the procedures described in the previous section (other than CR) are designed for testing a given null hypothesis.
+The `lpinfer` package also provides a bisection routine that constructs a level $1 - \alpha$ confidence interval by inverting level $\alpha$ tests.
+For example,
+```{r invertci_basic}
+set.seed(5)
+invertci(f = fsst, farg = list(data = df, lpmodel = lpm), progress = FALSE)
+```
+
+\noindent The first argument gives the function that controls the test, while the second argument passes any arguments needed to run the test as a list.
+The third argument `progress` is option and used here for brevity; when `progress = TRUE` the sequential progress of the bisection procedure is printed.
+The default is to construct a level 95\% ($= 1 - .05$) confidence interval, but this can be changed with the `alpha` option:
+
+```{r invertci_change_level}
+set.seed(5)
+invertci(f = fsst, farg = list(data = df, lpmodel = lpm), progress = FALSE,
+         alpha = .10)
+```
+
+
+\noindent The bisection procedure attempts to find appropriate initial brackets, but the user can override this to help speed up computation.
+Although it won't be clear here, since `progress = FALSE`, the following requires many fewer iterations than the previous command.
+
+```{r invertci_bisection}
+set.seed(5)
+invertci(f = fsst, farg = list(data = df, lpmodel = lpm), progress = FALSE,
+         init.lb = c(.1, .5), init.ub = c(.75, .8))
+```
+
+\noindent The `invertci` also returns previous $p$--values it has computed, which can then be used as an input to future calls of `invertci` in order to speed up computation.
+For example, the second `invertci` here runs much more quickly with the optional `pvals` argument than it would without:
+
+```{r invertci_pval_recycle}
+set.seed(5)
+ci <- invertci(f = fsst, farg = list(data = df, lpmodel = lpm), progress = FALSE)
+set.seed(5)
+invertci(f = fsst, farg = list(data = df, lpmodel = lpm), progress = FALSE,
+         alpha = .10, pvals = ci$pvals) # this runs more quickly
+```
+
+# Parallelization
+
+All of the procedures discussed in Sections \@ref(statistical-inference-testing) and \@ref(statistical-inference-confidence-intervals) can be parallelized in `lpinfer` using the `future` package.
+
+```{r parallel, warning=FALSE}
+library("future")
+plan(multisession, workers = 3)
+
+t_start <- Sys.time()
+set.seed(1)
+fsst(df, lpm, .2, R = 3000)
+print(sprintf("That took %s seconds.", round(Sys.time() - t_start, digits = 3)))
+
+plan(multisession, workers = 1)
+
+t_start <- Sys.time()
+set.seed(1)
+fsst(df, lpm, .2, R = 3000)
+print(sprintf("That took %s seconds.", round(Sys.time() - t_start, digits = 3)))
+```
+
+# Converting Linear Programs to "Standard Form"
+
+All linear programs can be converted to a form that looks like $\eqref{eq:linear-programs}$ by including appropriate slack variables.
+We call this "standard form"
+with the scare quotes because it's not the standard "standard form" seen in most textbooks on linear programming.
+At the same time, it's also not non-standard to see $\eqref{eq:linear-programs}$ called "standard form"; one reference we know of is @bertsimastsitsiklis1997 [, page. 4].
+
+Semantics aside, we have included a function that helps one translate expressive linear programs in extensive form into the format $\eqref{eq:linear-programs}$ required by `lpinfer`.
+The idea is to use another S3 class in `lpinfer` called `lpmodel.natural`, which allows one to explicitly give bounds on variables and declare different "senses" of equality and inequality constraints.
+This functionality is still experimental, but here's an example of how it works:
+
+```{r convert-to-standard-form}
 ### Step 1: Create an object in the `lpmodel.natural` class
 # Obs
 Aobs0 <- matrix(c(1, 2), nrow = 1)
@@ -216,950 +695,23 @@ lpmn0 <- lpmodel.natural(A.obs = Aobs0,
                          sense.shp = sshp0,
                          x.ub = xub0,
                          x.lb = xlb0)
-```
 
-Then, these constraints can be transformed into a `lpmodel` object in standard
-form as follows:
-```{r standard.form2}
 ### Step 2: Apply the `standard.lpmodel` function
 lpm1 <- standard.lpmodel(lpmn0)
 ```
 
-The updated `A.shp` and `beta.shp` matrices reflect the updated shape 
-constraints and the lower and upper bounds in standard form by incorporating 
-slack and surplus variables. The two matrices can be viewed as follows:
-```{r standard.form3a}
+\noindent The new object, `lpm1` has updated `A.shp` and `beta.shp` matrices that incorporate the appropriate slack variables to fit into form $\eqref{eq:linear-programs}$.
+
+```{r print-standard-form}
 print(lpm1$A.shp)
 print(lpm1$beta.shp)
 ```
-- The first row corresponds to the `<=` constraint in the original `Ashp0` 
-and `bshp0` matrix.
-- The second and third rows correspond to the upper bounds.
-- The fourth row corresponds to the `>=` constraint in the original `Ashp0` 
-and `bshp0` matrix.
-- The last two rows correspond to the lower bounds.
 
-The resulting object `lpm1` is already in standard form and can be passed
-to the tests in this `lpinfer` package.
+\noindent For example, the first row corresponds to the `<=` components in the original `Ashp0` and `bshp0` specification, while the second and third rows correspond to the upper bounds on `x`.
+The `lpm1` instance can now be used as an `lpmodel` for all of the routines in `lpinfer`.
 
-#### Deterministic or stochastic components
+# Further Examples
 
-Depending on the testing procedure, the five components in the `lpmodel` 
-object can be either deterministic or stochastic. The component is said to 
-be deterministic if it remains unchanged in the bootstrap procedure. The
-component is said to be stochastic if it changes (and depends on the bootstrap 
-data) in the bootstrap procedure.
+Further syntax examples are contained in the installation directory for `lpinfer` under the `example` subdirectory.
 
-* If the component is deterministic, then the component is typically a 
-`matrix` or a `data.frame`. 
-
-* If the component is stochastic, then it is represented by a
-`function` or a `list`. If the component is a `function`, then it will be 
-re-evaluated based on the bootstrap data in each bootstrap draw. 
-If the component is a `list`, then each object in the list represents 
-the component in the bootstrap draw.
-
-* If `data` is passed to the testing procedure, then the argument `n` (that
-represents the total number of observations in the `data` is optional).
-Otherwise, when `data` is not passed to the testing procedure (which
-typically refers to the case where the bootstrap estimates have already been
-incorporated in the `lpmodel` object), then the argument `n` is required.
-
-#### Remarks for the component being a function
-
-If the component is a `function`, then it has to fulfill the following 
-requirements:
-
-* The function's only argument is the data set. The function needs to accept
-data sets in the class `data.frame`.
-* The function can return either one or two objects. If it returns one object, 
-then it has to be a vector or a column matrix that represents the estimator for
-`beta.obs`. If it has two objects, then it returns the estimator
-for `beta.obs` and a square matrix that refers to the estimator of the 
-asymptotic variance of `beta.obs`.
-
-#### Demonstration {#demonstration}
-
-The following is an example on how to construct each of the components in the
-`lpmodel` object and how to assign the `lpmodel` object based on the example 
-data mentioned [here](#sample-data):
-
-
-```{r syntax.fullinfo, eval = TRUE}
-# Extract relevant information from data
-N <- nrow(sampledata)
-J <- length(unique(sampledata[,"Y"])) - 1
-J1 <- J + 1
-
-# Construct A.obs
-Aobs.full <- cbind(matrix(rep(0, J1 * J1), nrow = J1), diag(1, J1))
-
-# Construct A.tgt
-yp <- seq(0, 1, 1/J)
-Atgt <- matrix(c(yp, yp), nrow = 1)
-
-# Construct A.shp
-Ashp <- matrix(rep(1, ncol(Aobs.full)), nrow = 1)
-
-# Construct beta.obs (a function)
-betaobs.fullinfo <- function(data) {
-  beta <- NULL
-  y.list <- sort(unique(data[,"Y"]))
-  n <- dim(data)[1]
-  yn <- length(y.list)
-  for (i in 1:yn) {
-    beta.i <- sum((data[,"Y"] == y.list[i]) * (data[,"D"] == 1))/n
-    beta <- c(beta, c(beta.i))
-  }
-  beta <- as.matrix(beta)
-  return(list(beta = beta,
-              var = diag(yn)))
-}
-
-# Define the lpmodel object
-lpm.full <- lpmodel(A.obs    = Aobs.full,
-                    A.tgt    = Atgt,
-                    A.shp    = Ashp,
-                    beta.obs = betaobs.fullinfo,
-                    beta.shp = c(1))
-
-```
-
-In the above, the `betaobs.fullinfo` function returns two information: `beta`
-is a vector of length that is equal to the number of distinct observations 
-for *Y* where element *i* of the vector refers to the probability that the
-corresponding value of *y*~*i*~ is observed. The `var` object is the 
-estimator of the asymptotic variance of `beta`, which is assumed to be an
-identity matrix here for illustration purpose.
-
-## Tests
-
-### Test 1: DKQS cone-tightening procedure
-
-The `dkqs` function in this `lpinfer` package is used to conduct the 
-cone-tightening procedure that is proposed by @dkqs2018. For details of the
-procedure, readers may refer to section 4.2 and the appendix of @dkqs2018. 
-
-#### Syntax
-The `dkqs` command has the following syntax:
-```{r syntax.dkqs , eval = FALSE}
-dkqs(data = sampledata,
-     lpmodel = lpm.full,
-     beta.tgt = .375,
-     R = 100,
-     tau = sqrt(log(N)/N),
-     n = NULL,
-     solver = "gurobi",
-     progress = FALSE)
-```
-
-where
-
-* `data` refers to the data set.
-* `lpmodel` refers to the `lpmodel` object.
-* `beta.tgt` refers to the parameter that is being tested.
-* `R` refers to the total number of bootstraps.
-* `tau` refers to the tuning parameter tau. This will be explained 
-[here](#choosing-the-tau-parameter). It can be a scalar or a vector.
-* `n` refers to the total number of observations in `data`. This is optional 
-if `data` is passed to the testing procedure. See
-[here](#deterministic-or-stochastic-components) for more details.
-* `solver` refers to the name of the solver.
-* `progress` refers to the boolean variable for whether the progress bar
-should be printed in the testing procedure.
-
-#### Choosing the tau parameter {#choosing-the-tau-parameter}
-
-Depending on the value of `tau`, the main quadratic program in @dkqs2018 is 
-not always feasible. The details on how to choose the maximum tau such 
-that the `dkqs` procedure is feasible can be found in the supplemental
-appendix of @kamat2019.
-
-In this module, we follow the procedure by @kamat2019 to pick the largest 
-feasible `tau`. If the value of `tau` chosen by the user is infeasible, then
-the module will evaluate the procedure using the largest possible `tau`. 
-Otherwise, the module will evaluate the procedure with the given `tau`.
-
-If `tau` is not specified by the user, the procedure will directly use
-the maximum feasible `tau`.
-
-On the other hand, this package provides the flexibility to the users to 
-pass multiple tuning parameters at the same time. Hence, `tau` can be a 
-vector as well.
-
-#### Components in `lpmodel`
-
-The following table summarizes whether the components in `lpmodel`
-can be deterministic or stochastic:
-
-| Component in `lpmodel`| Property |
-| --------------- | :-------------- |
-|`A.obs`| Deterministic |
-|`A.shp`| Not used |
-|`A.tgt`| Deterministic |
-|`beta.obs`| Stochastic |
-|`beta.shp`| Not used |
-
-`A.shp` and `beta.shp` will be ignored in the `dkqs` procedure.
-
-#### Data structure
-
-The function defined in this function needs to generate an estimator
-for the `beta.obs` object. 
-
-In addition, this procedure has an additional requirement on the data 
-structure: the column that represents the outcome variable has to be called
-either "Y" or "y".
-
-#### Example
-
-The following is what happens when the above code is run:
-``` {r dkqs.eg1, eval = TRUE}
-set.seed(1)
-dkqs.full1 <- dkqs(data = sampledata,
-                   lpmodel = lpm.full,
-                   beta.tgt = .375,
-                   R = 100,
-                   tau = sqrt(log(N)/N),
-                   solver = "gurobi",
-                   progress = FALSE)
-print(dkqs.full1)
-```
-
-As noted in the syntax section, we provide the flexibility for users to conduct
-inference with multiple tuning parameters at the same time. The following is
-an example when the user specifies multiple taus in the `dkqs` procedure:
-``` {r dkqs.eg2, eval = TRUE}
-set.seed(1)
-dkqs.full2 <- dkqs(data = sampledata,
-                   lpmodel = lpm.full,
-                   beta.tgt = .375,
-                   R = 100,
-                   tau = c(.1, .2, .3, .5),
-                   solver = "gurobi",
-                   progress = FALSE)
-print(dkqs.full2)
-```
-
-Users can get a more detailed summary of the results when applying the 
-`summary` command on the resulting object:
-``` {r dkqs.eg2summary, eval = TRUE}
-summary(dkqs.full2)
-```
-
-#### Alternative approach
-The approach that has been demonstrated so far is known as the 
-full information approach. The inference procedures in this `lpinfer` package
-is not limited to any single approach. In this section, we demonstrate 
-how to use the two moments approach. This alternative method is known as the
-two moments approach because the two moments **E**[*Y*~*i*~] and 
-**E**[*Y*~*i*~*D*~*i*~] are used in the inference procedure.
-
-Similar to what has been demonstrated in the [example](#demonstration) earlier,
-some of the components has to be updated in the `lpmodel` object. 
-This can be done as follows:
-
-```{r syntax.twom, eval = TRUE}
-# Construct A.obs
-Aobs.twom <- matrix(c(rep(0,J1), yp, rep(0,J1), rep(1, J1)), nrow = 2,
-                     byrow = TRUE)
-
-# Construct beta.obs (a function)
-betaobs.twom <- function(data) {
-  beta <- matrix(c(0,0), nrow = 2)
-  n <- dim(data)[1]
-  beta[1] <- sum(data[,"Y"] * data[,"D"])/n
-  beta[2] <- sum(data[,"D"])/n
-  return(list(beta = beta,
-              var = diag(2)))
-}
-
-# Define the lpmodel object
-lpm.twom <- lpmodel(A.obs    = Aobs.twom,
-                    A.tgt    = Atgt,
-                    A.shp    = Ashp,
-                    beta.obs = betaobs.twom,
-                    beta.shp = c(1))
-
-```
-
-The `dkqs` procedure can be ran in the same fashion as before. The following
-is an example on how this can be ran:
-
-``` {r dkqs.eg3, eval = TRUE}
-set.seed(1)
-dkqs.full3 <- dkqs(data = sampledata,
-                   lpmodel = lpm.twom,
-                   beta.tgt = .375,
-                   R = 100,
-                   tau =  sqrt(log(N)/N),
-                   solver = "gurobi",
-                   progress = FALSE)
-print(dkqs.full3)
-```
-
-As shown above, we get the same *p*-value as before.
-
-### Test 2: Subsampling procedure
-
-The `subsample` function in this package carries out the test using 
-the subsampling procedure. 
-
-#### Syntax
-
-The `subsample` command has the following syntax:
-```{r subsample.syntax, eval = FALSE}
-subsample(data = sampledata, 
-          lpmodel = lpm.full,
-          beta.tgt = 0.375,
-          R = 100,
-          solver = "gurobi",
-          norm = 2,
-          phi = 2/3,
-          n = NULL,
-          replace = FALSE,
-          progress = FALSE)
-```
-where 
-
-* `phi` refers to the parameter that controls the size of each subsample. 
-This will be further explained [here](#choosing-the-phi-and-replace-parameter).
-* `replace` refers to the boolean variable to indicate whether the function 
-samples the data with or without replacement. This will be further explained
-[here](#choosing-the-phi-and-replace-parameter).
-* `norm` refers to the norm used in the objective function.
-
-The rest of the arguments are the same as that in the `dkqs` procedure.
-
-#### Choosing the `phi` and `replace` parameter
-
-The `phi` parameter is a parameter to control the size of each subsample. 
-The sample size of the original data to the power `phi` is the size of each 
-subsample. On the other hand, the `replace` parameter is used to indicate 
-whether the function samples the data with or without replacement. 
-
-| `replace`| `phi` | Meaning |
-| --------------- | :-------------- | :-------------- |
-|`FALSE`| Any number in the interval (0, 1) | Subsample |
-|`TRUE`| Equals to 1 | Bootstrap |
-|`TRUE`| Any number in the interval (0, 1) | *m* out of *n* bootstrap |
-
-Note that users cannot specify `phi` as 1 when `replace` is set to `FALSE`
-because it will be generating the exactly same set of data in every 
-subsample draw.
-
-#### Components in `lpmodel`
-
-The following table summarizes whether the components in `lpmodel`
-can be deterministic or stochastic:
-
-| Component in `lpmodel`| Property |
-| --------------- | :-------------- |
-|`A.obs`| Deterministic or stochastic |
-|`A.shp`| Deterministic or stochastic |
-|`A.tgt`| Deterministic or stochastic |
-|`beta.obs`| Stochastic |
-|`beta.shp`| Deterministic or stochastic |
-
-#### Example
-
-The following is what happens when the above code is run:
-``` {r subsample.eg1, eval = TRUE}
-set.seed(1)
-subsample.full <- subsample(data = sampledata, 
-                            lpmodel = lpm.full,
-                            beta.tgt = 0.375,
-                            R = 100,
-                            solver = "gurobi",
-                            norm = 2,
-                            phi = 2/3,
-                            replace = FALSE,
-                            progress = FALSE)
-print(subsample.full)
-```
-
-Again, more detailed information can be extracted via the `summary` command:
-``` {r subsample.eg2, eval = TRUE}
-summary(subsample.full)
-```
-
-As indicated [earlier](#choosing-the-phi-and-replace-parameter), the 
-`subsample` command can perform the bootstrap and *m* out of *n* bootstrap 
-procedures. They are illustrated as follows.
-
-The following is an example of performing a bootstrapping procedure:
-
-``` {r subsample.eg3, eval = TRUE}
-set.seed(1)
-subsample.bootstrap <- subsample(data = sampledata, 
-                                 lpmodel = lpm.full,
-                                 beta.tgt = 0.375,
-                                 R = 100,
-                                 solver = "gurobi",
-                                 norm = 2,
-                                 phi = 1,
-                                 replace = TRUE,
-                                 progress = FALSE)
-print(subsample.bootstrap)
-```
-
-The following is an example of performing a *m* out of *n* bootstrapping 
-procedure:
-
-``` {r subsample.eg4, eval = TRUE}
-set.seed(1)
-subsample.bootstrap2 <- subsample(data = sampledata, 
-                                  lpmodel = lpm.full,
-                                  beta.tgt = 0.375,
-                                  R = 100,
-                                  solver = "gurobi",
-                                  norm = 2,
-                                  phi = 2/3,
-                                  replace = TRUE,
-                                  progress = FALSE)
-print(subsample.bootstrap2)
-```
-
-### Test 3: FSST procedure
-
-The `fsst` function in this `lpinfer` package is used to conduct the 
-testing procedure by @fsst2020.
-
-#### Syntax
-
-The `fsst` command has the following syntax:
-```{r fsst.syntax, eval = FALSE}
-fsst(data = sampledata, 
-     lpmodel = lpm.full,
-     beta.tgt = 0.375,
-     R = 100,
-     lambda = 0.5,
-     rho = 1e-4,
-     n = NULL,
-     weight.matrix = "diag",
-     solver = "gurobi",
-     progress = FALSE)
-```
-where 
-
-* `lambda` refers to the tuning parameter that is used to obtain the bootstrap
-estimates of the cone component in the test statistics. Users can pass 
-multiple `lambda`s in this argument. In addition, we also provide a 
-data-driven approach to choose the `lambda` parameter. The details can be found 
-[here](#data-driven-lambda).
-* `rho` refers to the parameter used to studentize the variance matrices
-in the FSST procedure.
-* `weight.matrix` is a string that determines the weighting matrix. 
-The details can be found [here](#weighting-matrix).
-
-The rest of the arguments are the same as that in the `dkqs` procedure.
-
-#### Weighting matrix
-
-This procedure provides three options for the weighting matrix in the FSST
-procedure:
-
-|`weight.matrix` | Definition |
-| --------------- | :-------------- |
-|`identity`| Identity matrix|
-|`avar`| Inverse of the asymptotic variance of `beta.obs`|
-|`diag`| Diagonal matrix with elements equal to the diagonal entries of `avar`|
-
-#### Components in `lpmodel`
-
-The following table summarizes whether the components in `lpmodel`
-can be deterministic or stochastic:
-
-| Component in `lpmodel`| Property |
-| --------------- | :-------------- |
-|`A.obs`| Deterministic |
-|`A.shp`| Deterministic |
-|`A.tgt`| Deterministic |
-|`beta.obs`| Stochastic |
-|`beta.shp`| Deterministic |
-
-#### Example
-
-The following is what happens when the above code is run:
-``` {r fsst.eg1, eval = TRUE}
-set.seed(1)
-fsst.full1 <- fsst(data = sampledata, 
-                   lpmodel = lpm.full,
-                   beta.tgt = 0.375,
-                   R = 100,
-                   lambda = 0.5,
-                   rho = 1e-4,
-                   weight.matrix = "diag",
-                   solver = "gurobi",
-                   progress = FALSE)
-print(fsst.full1)
-```
-
-As noted above, the `fsst` procedure provides the flexibility for users to 
-pass multiple tuning parameters.
-
-``` {r fsst.eg2, eval = TRUE}
-set.seed(1)
-fsst.full2 <- fsst(data = sampledata, 
-                   lpmodel = lpm.full,
-                   beta.tgt = 0.375,
-                   R = 100,
-                   lambda = c(0.1, 0.2, 0.5),
-                   rho = 1e-4,
-                   weight.matrix = "diag",
-                   solver = "gurobi",
-                   progress = FALSE)
-print(fsst.full2)
-```
-
-Again, more detailed information can be extracted via the `summary` command:
-``` {r fss.eg2summary, eval = TRUE}
-summary(fsst.full2)
-```
-
-#### Data-driven `lambda`
-To use the data-driven `lambda` in the FSST procedure, users can set `lambda` 
-as `NA` or include `NA` as one of the elements in the `lambda` vector. For
-instance, if `lambda` is  set as `c(0.1, NA)`, then both 0.1 and the 
-data-driven `lambda` will be applied in the FSST procedure. 
-
-For instance, the following code uses 0.1 and the data-driven `lambda` to
-compute the *p*-value:
-``` {r fsst.eg3, eval = TRUE}
-set.seed(1)
-fsst.full3 <- fsst(data = sampledata, 
-                   lpmodel = lpm.full,
-                   beta.tgt = 0.375,
-                   R = 100,
-                   lambda = c(0.1, NA),
-                   rho = 1e-4,
-                   weight.matrix = "diag",
-                   solver = "gurobi",
-                   progress = FALSE)
-print(fsst.full3)
-```
-
-In the FSST procedure, the default is to use the data-driven `lambda`.
-
-### Test 4: Cho-Russell procedure
-
-The `chorussell` function in this `lpinfer` package is used to conduct the 
-testing procedure by @cr2019.
-
-#### Syntax
-
-The `chorussell` command has the following syntax:
-```{r cr.syntax, eval = FALSE}
-chorussell(data = sampledata, 
-           lpmodel = lpm.full,
-           beta.tgt = 0.375,
-           R = 100,
-           kappa = 1e-5,
-           norm = 2,
-           n = NULL,
-           estimate = TRUE,
-           solver = "gurobi",
-           ci = FALSE,
-           alpha = 0.05,
-           tol = 1e-4,
-           progress = FALSE)
-```
-where 
-
-* `ci` refers to whether a confidence interval or the *p*-value is returned.
-By default, the *p*-value is returned.
-* `alpha` refers to the significance level. This argument is not required if
-`ci` is set as `FALSE`.
-* `tol` refers to the tolerance level used in the bisection method to search
-for the *p*-value. This argument is not required if `ci` is set as `TRUE`.
-
-The rest of the arguments are the same as that in the `dkqs` and the 
-`estbounds` procedures. In this function, `kappa` can be a vector.
-
-#### Components in `lpmodel`
-
-The following table summarizes whether the components in `lpmodel`
-can be deterministic or stochastic:
-
-| Component in `lpmodel`| Property |
-| --------------- | :-------------- |
-|`A.obs`| Deterministic or stochastic |
-|`A.shp`| Deterministic or stochastic |
-|`A.tgt`| Deterministic or stochastic |
-|`beta.obs`| Stochastic |
-|`beta.shp`| Deterministic or stochastic |
-
-#### Example (Returning confidence interval)
-
-To construct a confidence interval, the option `ci` has to be specified as
-`TRUE`. The following code can be used to construct a 95%-confidence interval:
-```{r cr.eg1, eval = TRUE}
-set.seed(1)
-cr.ci1 <- chorussell(data = sampledata, 
-                     lpmodel = lpm.full,
-                     beta.tgt = 0.375,
-                     R = 100,
-                     kappa = 1e-5,
-                     norm = 2,
-                     estimate = TRUE,
-                     solver = "gurobi",
-                     ci = TRUE,
-                     alpha = 0.05,
-                     progress = FALSE)
-print(cr.ci1)
-```
-
-As noted above, the `kappa` parameter can be a vector so one confidence 
-interval will be returned for each `kappa`:
-```{r cr.eg2, eval = TRUE}
-set.seed(1)
-cr.ci2 <- chorussell(data = sampledata, 
-                     lpmodel = lpm.full,
-                     beta.tgt = 0.375,
-                     R = 100,
-                     kappa = c(1e-3, 1e-5),
-                     norm = 2,
-                     estimate = TRUE,
-                     solver = "gurobi",
-                     ci = TRUE,
-                     alpha = 0.05,
-                     progress = FALSE)
-print(cr.ci2)
-```
-
-Again, more detailed information can be obtained via the `summary` command:
-```{r cr.eg3, eval = TRUE}
-summary(cr.ci2)
-```
-
-#### Example (Returning *p*-value)
-
-To compute the *p*-value, the option `ci` has to be specified as `FALSE`.
-The following code can be run to compute the *p*-value with tolerance level
-being 0.001:
-```{r cr.eg4, eval = TRUE}
-set.seed(1)
-cr.pv1 <- chorussell(data = sampledata, 
-                     lpmodel = lpm.full,
-                     beta.tgt = 0.375,
-                     R = 100,
-                     kappa = 1e-5,
-                     norm = 2,
-                     estimate = TRUE,
-                     solver = "gurobi",
-                     ci = FALSE,
-                     tol = 0.001,
-                     progress = FALSE)
-print(cr.pv1)
-```
-
-Again, the `kappa` parameter can be a vector:
-```{r cr.eg5, eval = TRUE}
-set.seed(1)
-cr.pv2 <- chorussell(data = sampledata, 
-                     lpmodel = lpm.full,
-                     beta.tgt = 0.375,
-                     R = 100,
-                     kappa = c(1e-3, 1e-5),
-                     norm = 2,
-                     estimate = TRUE,
-                     solver = "gurobi",
-                     ci = FALSE,
-                     tol = 0.001,
-                     progress = FALSE)
-print(cr.pv2)
-```
-
-More detailed information can be obtained via the `summary` command:
-```{r cr.eg6, eval = TRUE}
-summary(cr.pv2)
-```
-
-
-## Constructing Bounds subject to Shape Constraints
-
-Another key application of the `lpinfer` package is to construct the 
-bounds estimates subject to certain shape constraints. This is obtained by the
-`estbounds` function. The linear program for obtaining the exact bounds 
-subject to shape constraints may not be necessarily feasible. Hence, an 
-`estimate` option is available. The estimation can be conducted via L1-norm 
-or L2-norm.
-
-#### Syntax
-
-``` {r estbounds.syntax, eval = FALSE}
-estbounds(data = sampledata,
-          lpmodel = lpm.full,
-          kappa = 1e-5,
-          norm = 2,
-          solver = "gurobi",
-          estimate = TRUE)
-```
-where 
-
-* `norm` refers to the norm used in the optimization problem. The norms
-that are supported by this function are L1-norm and L2-norm. See 
-[here](#norms) for more details.
-* `kappa`  refers to the parameter used in the second step of the two-step
-procedure for obtaining the solution subject to the shape constraints.
-* `estimate` refers to the boolean variable that indicate whether the estimated
-problem should be considered.
-
-The rest of the arguments are the same as that in the `dkqs` procedure.
-
-#### Norms
-In constructing the estimated bounds, users are free to choose the L1-norm or
-the L2-norm. For the estimation with L2-norm, users need to choose `gurobi` as 
-the solver. For the estimation with L1-norm, users can choose one of the 
-following packages as the solver:
-
-* `gurobi`,
-* `limSolve`,
-* `cplexAPI`,
-* `Rcplex`,
-* `lpSolveAPI`.
-
-
-#### Example
-
-The following is what happens when the above code is run:
-``` {r estbounds.eg1, eval = TRUE}
-set.seed(1)
-estbounds.full <- estbounds(data = sampledata,
-                            lpmodel = lpm.full,
-                            kappa = 1e-5,
-                            norm = 2,
-                            solver = "gurobi",
-                            estimate = TRUE)
-print(estbounds.full)
-```
-
-Again, more detailed information can be extracted via the `summary` command:
-``` {r estbounds.eg1summary, eval = TRUE}
-summary(estbounds.full)
-```
-
-
-## Constructing Confidence Intervals
-
-Apart from conducting inference and estimating the bounds, the `lpinfer` 
-package can also construct confidence intervals via the `invertci` function. 
-The confidence interval is constructed by evaluating the *p*-value of a test 
-and applying the bisection method.
-
-#### Syntax {#invertci_syntax}
-The syntax of the `invertci` function is as follows:
-
-```{r invertci.syntax, eval = FALSE}
-invertci(f = subsample, 
-         farg = subsample.args, 
-         alpha = 0.05, 
-         lb0 = NULL, 
-         lb1 = NULL, 
-         ub0 = NULL, 
-         ub1 = NULL, 
-         tol = 0.0001, 
-         max.iter = 20, 
-         df_ci = NULL,
-         progress = FALSE)
-```
-where 
-
-* `f` refers to the function that represents a testing procedure.
-* `farg` refers to the list of arguments to be passed to the function of 
-testing procedure. The details can be found [here](#specifying-the-argument).
-* `alpha` refers to the significance level of the test. Please refer to the 
-details [here](#constructing-multiple-confidence-intervals).
-* `lb0` refers to the logical lower bound for the confidence interval.
-* `lb1` refers to the maximum possible lower bound for the confidence interval.
-* `ub0` refers to the logical upper bound for the confidence interval.
-* `ub1` refers to the minimum possible upper bound for the confidence interval.
-* `tol` refers to the tolerance level in the bisection method.
-* `max.iter` refers to the maximum number of iterations in the bisection 
-method.
-* `df_ci` refers to `data.frame` that consists of the points and the 
-corresponding *p*-values that have been tested in constructing the confidence 
-intervals. The details can be found 
-[here](#specifying-the-data-frame-df_ci).
-* `progress` refers to the boolean variable for whether the result messages 
-should be displayed in the procedure of constructing confidence interval. 
-
-#### Specifying the argument
-To use the `invertci` function, the arguments for the test statistic has to
-be specified and passed to the `farg` argument. For instance, if the testing
-procedure `subsample` is used, the arguments can be defined as follows:
-
-```{r invertci.args, eval = TRUE}
-subsample.args <- list(data = sampledata,
-                       lpmodel = lpm.full,
-                       R = 100,
-                       phi = .75,
-                       solver = "gurobi",
-                       progress = FALSE)
-```
-
-Note that the argument for the target value of beta, i.e. the value to be 
-tested under the null, is not required in the above argument assignment.
-
-#### Specifying the Data Frame `df_ci` {#dfci_invertci}
-If the *p*-values at certain points have already been evaluated, users can
-store them in a data frame and pass it to the function `invertci`. The 
-requirement for the data frame is as follows:
-
-* The data frame can only has two columns. The first column is `point` (which
-contains the values of betas that has been evaluated) and the second column is
-`value` (which corresponds to the *p*-values being evaluated).
-* The data frame can only contain numeric values.
-
-#### Example
-
-The following shows a sample output of the function `invertci` that is used to 
-the confidence interval for the test `dkqs` with significance level 0.05.
-
-```{r invertci.eg1, eval = TRUE}
-set.seed(1)
-invertci.subsample1 <- invertci(f = subsample,
-                                farg = subsample.args, 
-                                alpha = 0.05, 
-                                lb0 = 0, 
-                                lb1 = 0.4, 
-                                ub0 = 1, 
-                                ub1 = 0.6, 
-                                tol = 0.001, 
-                                max.iter = 5, 
-                                df_ci = NULL, 
-                                progress = FALSE)
-print(invertci.subsample1)
-```
-
-The details for each iteration can be obtained in real-time by setting
-`progress` as `TRUE` or applying the `summary` command on the resulting
-object:
-``` {r invertci.summary1, eval = TRUE}
-summary(invertci.subsample1)
-```
-
-#### Constructing Multiple Confidence Intervals
-
-The function `invertci` can also be used to generate multiple confidence
-intervals if the argument `alpha` is a vector. For instance, the following
-code produces confidence intervals for alpha equals 0.01, 0.05 and 0.1.
-
-```{r invertci.eg2, eval = TRUE}
-set.seed(1)
-invertci.subsample2 <- invertci(f = subsample, 
-                                farg = subsample.args, 
-                                alpha = c(0.01, 0.05, 0.1), 
-                                lb0 = 0, 
-                                lb1 = 0.4, 
-                                ub0 = 1, 
-                                ub1 = 0.6, 
-                                tol = 0.001, 
-                                max.iter = 5, 
-                                df_ci = NULL, 
-                                progress = FALSE)
-print(invertci.subsample2)
-```
-
-Again, the detailed steps in constructing the confidence intervals can be 
-obtained as follows:
-``` {r invertci.summary2, eval = TRUE}
-summary(invertci.subsample2)
-```
-
-Since the details of the iterations could potentially be a long list of
-outputs, users may specify a particular list of output that they wish to
-read in the `summary` command. For instance, to only print the details of the 
-iterations when the significance level is 0.05, it can be done as follows:
-``` {r invertci.summary2b, eval = TRUE}
-summary(invertci.subsample2, alphas = 0.05)
-```
-
-## Parallel Programming
-
-The `lpinfer` package supports parallel programming through the `future` 
-package.  The `future` package is freely available on CRAN and can be installed 
-directly via the `install.packages` command in R.
-
-To implement parallel programming, users need to first install and load the
-`future` package. Then, specify the number of workers to be used via the
-`plan` function before running any functions from the `lpinfer` package
-via the `plan` function after loading the `future` package. 
-
-Below is an example of running the `dkqs` function with parallel programming
-by the `future` package:
-``` {r dkqs.eg.cores, eval = FALSE}
-library(future)
-plan(multisession, workers = 8)
-set.seed(1)
-dkqs.full1 <- dkqs(data = sampledata,
-                   lpmodel = lpm.full,
-                   beta.tgt = .375,
-                   R = 1000,
-                   tau = sqrt(log(N)/N),
-                   solver = "gurobi",
-                   progress = FALSE)
-print(dkqs.full1)
-```
-
-The computational time for using multiple cores should be
-shorter than using a single core for a large number of bootstraps. This is
-illustrated by the example via the `dkqs` procedure below:
-
-```{r dkqs.eg.cores2, eval = TRUE}
-library(future)
-dkqs.args <- list(data = sampledata,
-                  lpmodel = lpm.full,
-                  beta.tgt = .375,
-                  R = 5000,
-                  tau = sqrt(log(N)/N),
-                  solver = "gurobi",
-                  progress = FALSE)
-
-# Run dkqs with one worker
-plan(multisession, workers = 1)
-t1 <- Sys.time()
-set.seed(1)
-do.call(dkqs, dkqs.args)
-t2 <- Sys.time()
-time1 <- t2 - t1
-
-# Run dkqs with three workers
-plan(multisession, workers = 3)
-t1 <- Sys.time()
-set.seed(1)
-do.call(dkqs, dkqs.args)
-t2 <- Sys.time()
-time3 <- t2 - t1
-
-# Print the time used
-print(sprintf("Time used with 1 core: %s", time1))
-print(sprintf("Time used with 3 cores: %s", time3))
-```
-
-Note that there are different options available for the `plan` command. The 
-availability of the options may depend on the operating systems used. Please 
-refer to the instructions from the `future` package for more details.
-
-## Further Examples
-For further examples on different procedures in this package, please refer
-to the codes in the `example` folder for more details.
-
-The following command can be used to set `path` as the string that contains
-the path to the `example` folder.
-
-``` r
-path0 <- .libPaths()
-path <- paste0(path0, "/lpinfer/example")
-```
-
-## Help, Feature Requests and Bug Reports
-Please post an issue on the 
-[issues page](https://github.com/conroylau/lpinfer/issues) of the GitHub 
-repository. We are happy to help.
-
-## References
-
-
-
- 
+# References {-}
