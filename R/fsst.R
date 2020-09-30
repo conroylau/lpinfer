@@ -1892,7 +1892,7 @@ print.fsst <- function(x, ...) {
          if (!is.null(x$lambda.data)) {
             pv <- paste(pv, "(by data-driven 'lambda')")
          }
-         cat(sprintf("%s: %s\n", pv, df.pval[1, 2]))
+         cat(sprintf("%s: %s\n", pv, round(df.pval[1, 2], digits = 5)))
       } else {
          cat("p-values:\n")
          # Label the data-driven lambda with a "*" if it is used
