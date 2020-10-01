@@ -658,3 +658,18 @@ test_that("Same answers in brute force and refinement approaches", {
     }
   }
 })
+
+# ---------------- #
+# Make sure the results from `chorussell` and `invertci` are the same
+# ---------------- #
+set.seed(1)
+cr.out.direct <- do.call(chorussell, farg)
+set.seed(1)
+cr.out.invertci <- invertci(f = chorussell,
+                            farg = farg,
+                            alpha = .05,
+                            max.iter = 100,
+                            tol = 1e-4)
+
+# Same confidence interval
+expect_equal(cr.out.direct$ci.df[1,], cr.out.invertci$ci[1,])
