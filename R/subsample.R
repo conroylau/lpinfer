@@ -400,9 +400,9 @@ subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver, n,
 #'
 #' @description This function carries out the bootstrap procedure of the
 #'   \code{\link[lpinfer]{subsample}} procedure This function supports
-#'   parallel programming via the \code{future.apply} package.
+#'   parallel programming via the \code{furrr} package.
 #'
-#' @import future.apply progressr
+#' @import furrr progressr
 #'
 #' @inheritParams dkqs
 #' @inheritParams estbounds
@@ -454,13 +454,10 @@ subsample.bs <- function(data, i1, lpmodel, beta.tgt, norm, solver,
     # Set seed
     assign(x = ".Random.seed", value = seed.list[[i]]$seed, envir = .GlobalEnv)
 
-    # Set the indices
-    bs.temp <- bs.assign(seed.list[[i]]$iter, R.eval, R.succ,
-                         seed.list[[i]]$iter, any.list, lpmodel, data, m,
-                         replace)
-    i0 <- bs.temp$i0
-    i1 <- bs.temp$i1
-    bs.list <- bs.temp$bs.list
+    # Evaluate the list of indices to be passed to 'future_map'
+    bs.ind <- bs.index(seed.list[[i]]$iter, R.eval, R.succ, seed.list[[i]]$iter)
+    i0 <- bs.ind$i0
+    i1 <- bs.ind$i1
 
     # Set the default for progress bar
     progressr::handlers("progress")
@@ -473,23 +470,25 @@ subsample.bs <- function(data, i1, lpmodel, beta.tgt, norm, solver,
         pbar <- NULL
       }
 
-      # Obtain results from future_lapply
-      subsample.return <- future.apply::future_lapply(bs.list,
-                                                      FUN = subsample.bs.fn,
-                                                      future.seed = TRUE,
-                                                      data = data,
-                                                      lpmodel = lpmodel,
-                                                      beta.tgt = beta.tgt,
-                                                      norm = norm,
-                                                      m = m,
-                                                      solver = solver,
-                                                      replace = replace,
-                                                      n = n,
-                                                      pbar = pbar,
-                                                      progress = progress,
-                                                      eval.count = eval.count,
-                                                      n.bs = i1 - i0 + 1,
-                                                      omega.hat = omega.hat)
+      # Obtain results from future_map
+      subsample.return <- furrr::future_map(i0:i1,
+                                            .f = subsample.bs.fn,
+                                            data = data,
+                                            lpmodel = lpmodel,
+                                            beta.tgt = beta.tgt,
+                                            norm = norm,
+                                            m = m,
+                                            solver = solver,
+                                            replace = replace,
+                                            n = n,
+                                            pbar = pbar,
+                                            progress = progress,
+                                            eval.count = eval.count,
+                                            n.bs = i1 - i0 + 1,
+                                            omega.hat = omega.hat,
+                                            any.list = any.list,
+                                            .options = 
+                                              furrr::furrr_options(seed = TRUE))
     })
 
     # Extract the test statistics and list of errors
@@ -551,7 +550,7 @@ subsample.bs <- function(data, i1, lpmodel, beta.tgt, norm, solver,
 #' @description This function carries out the one bootstrap replication of the
 #'   subsampling test. This function is used in the
 #'   \code{\link[lpinfer]{subsample.bs}} function via the
-#'   \code{future_lapply} command.
+#'   \code{future_map} function.
 #'
 #' @inheritParams dkqs
 #' @inheritParams estbounds
@@ -573,8 +572,8 @@ subsample.bs <- function(data, i1, lpmodel, beta.tgt, norm, solver,
 #' @export
 #'
 subsample.bs.fn <- function(x, data, lpmodel, beta.tgt, norm, m, solver,
-                            replace, n, pbar, eval.count, n.bs, progress,
-                            omega.hat) {
+                            replace, n, pbar, eval.count, n.bs, any.list,
+                            progress, omega.hat) {
   # ---------------- #
   # Step 1: Print progress bar
   # ---------------- #
@@ -599,10 +598,11 @@ subsample.bs.fn <- function(x, data, lpmodel, beta.tgt, norm, m, solver,
   # Step 2: Initialize the parameters
   # ---------------- #
   # Replace lpmodel by x if x is a list
-  if (is.list(x)) {
-    lpm <- lpmodel.update(lpmodel, x)
-  } else {
-    lpm <- lpmodel
+  lpm <- lpmodel
+  if (!is.null(any.list)) {
+    for (nm in any.list$name) {
+      lpm[[nm]] <- lpmodel[[nm]][[x + 1]]
+    }
   }
 
   # ---------------- #

@@ -6,7 +6,7 @@ rm(list = ls())
 # ---------------- #
 library(lpinfer)
 library(future)
-library(future.apply)
+library(furrr)
 
 # ---------------- #
 # Define functions to match the moments
@@ -163,15 +163,19 @@ draw.bs.data <- function(x, f, data) {
 
 # Draw bootstrap data for the full information and two moments method
 set.seed(1)
-bobs.bs.full.list <- lapply(1:reps,
-                            FUN = draw.bs.data,
-                            f = func_full_info,
-                            data = sampledata)
+bobs.bs.full.list <- furrr::future_map(1:reps,
+                                       .f = draw.bs.data,
+                                       f = func_full_info,
+                                       data = sampledata,
+                                       .options = 
+                                         furrr::furrr_options(seed = TRUE))
 set.seed(1)
-bobs.bs.twom.list <- lapply(1:reps,
-                            FUN = draw.bs.data,
-                            f = func_two_moment,
-                            data = sampledata)
+bobs.bs.twom.list <- furrr::future_map(1:reps,
+                                       .f = draw.bs.data,
+                                       f = func_two_moment,
+                                       data = sampledata,
+                                       .options = 
+                                         furrr::furrr_options(seed = TRUE))
 
 bobs.full.list <- c(list(func_full_info(sampledata)$beta), bobs.bs.full.list)
 bobs.twom.list <- c(list(func_two_moment(sampledata)$beta), bobs.bs.twom.list)
@@ -357,13 +361,14 @@ for (j in seq_along(ngs)) {
   for (k in seq_along(k.norm)) {
     set.seed(1)
     ss.bs.ts[[j]][[k]] <-
-      unlist(lapply(1:reps,
-                    FUN = ss.fn,
-                    data = sampledata,
-                    lpmodel = j.lpmodel[[j]],
-                    m = m,
-                    ng = ngs[[j]],
-                    norm = k.norm[[k]]))
+      unlist(furrr::future_map(1:reps,
+                               .f = ss.fn,
+                               data = sampledata,
+                               lpmodel = j.lpmodel[[j]],
+                               m = m,
+                               ng = ngs[[j]],
+                               norm = k.norm[[k]],
+                               .options = furrr::furrr_options(seed = TRUE)))
   }
 }
 

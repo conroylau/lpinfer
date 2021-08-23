@@ -23,7 +23,7 @@ displayed while the code is running.}
 \value{
 Returns the decision to drop or not to drop the candidate. If the
   decision is to drop the candidate bound, \code{NULL} is returned.
-  Otherwise, the bound is returned back via the \code{future_lapply}
+  Otherwise, the bound is returned back via the \code{future_map}
   function.
 }
 \description{

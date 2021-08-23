@@ -23,6 +23,6 @@ Based on the bootstrap estimates
   \deqn{\frac{n}{B} \sum^B_{i=1} \left(\widehat{\bm{\beta}}_b -
   \widehat{\bm{\beta}}\right)  \left(\widehat{\bm{\beta}}_b -
   \widehat{\bm{\beta}}\right)'.}
- This function supports parallel programming via the \code{future.apply}
+ This function supports parallel programming via the \code{furrr}
  package.
 }

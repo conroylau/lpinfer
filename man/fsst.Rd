@@ -146,7 +146,6 @@ reps <- 100
 # Example 1 - Using full information approach and gurobi solver (1 core)
 set.seed(1)
 plan(multisession, workers = 1)
-set.seed(1)
 fsst.full1 <- fsst(data = sampledata,
                    lpmodel = lpmodel.full,
                    beta.tgt = beta.tgt,

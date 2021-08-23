@@ -60,7 +60,7 @@ Current Features
     - The cone-tightening procedure developed by [Deb, Quah, Kitamura and Stoye (2018, working paper)](https://arxiv.org/abs/1801.02702v2).
     - Profiled subsampling, as proposed by [Romano and Shaikh (2008, _Journal of Statistical Planning and Inference_)](https://doi.org/10.1016/j.jspi.2008.03.015).
     - The direct bootstrap procedure proposed by [Cho and Russell (2019, working paper)](https://arxiv.org/abs/1810.03180).
-- Support for parallel programming using the `future` and `futute.apply` packages.
+- Support for parallel programming using the `future` and `furrr` packages.
 - **(experimental)** Automatic conversion from extensive-form linear programs to standard form.
 
 Planned Features

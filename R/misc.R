@@ -68,6 +68,27 @@ bs.assign <- function(R, R.eval, R.succ, maxR, any.list, lpmodel, data = NULL,
               bs.list = bs.list))
 }
 
+#' Auxiliary function to return the indices for bootstrap
+#' replications
+#' 
+#' @description This function is used to return the starting and ending
+#'   indices for bootstrap replications.
+#'   
+#' @return Returns the following three objects.
+#'   \item{i0}{The starting index to be evaluated.}
+#'   \item{i1}{The last index to be evaluated.}
+#'   
+#' @inheritParams dkqs
+#' @inheritParams bs.assign
+#' 
+bs.index <- function(R, R.eval, R.succ, maxR) {
+  # Evaluate the indices
+  i0 <- min(R.eval + 1, maxR)
+  i1 <- min(R - R.succ + R.eval, maxR)
+  return(list(i0 = i0,
+              i1 = i1))
+}
+
 #' Auxiliary function for the post-bootstrap procedure
 #'
 #' @description This function is used after the bootstrap replications to

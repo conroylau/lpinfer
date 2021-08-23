@@ -60,5 +60,5 @@ Returns the list of estimates from bootstrap:
 \description{
 This function carries out the bootstrap procedure of the
   \code{\link[lpinfer]{dkqs}} procedure This function supports parallel
-  programming via the \code{future.apply} package.
+  programming via the \code{furrr} package.
 }

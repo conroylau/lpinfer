@@ -4,7 +4,7 @@
 \alias{fsst.beta.bs.fn}
 \title{Computes one bootstrap estimates for \code{beta.obs}.}
 \usage{
-fsst.beta.bs.fn(x, data, lpmodel, pbar, progress, eval.count, n.bs)
+fsst.beta.bs.fn(x, data, lpmodel, pbar, progress, eval.count, n.bs, any.list)
 }
 \arguments{
 \item{x}{This is either the list of indices that represent the bootstrap
@@ -21,10 +21,10 @@ object passed from the user.}
 be displayed. If it is set as \code{TRUE}, the progress bars will be
 displayed while the code is running.}
 
-\item{eval.count}{The count for the number of times the \code{future_lapply}
+\item{eval.count}{The count for the number of times the \code{future_map}
 function has been called. If this object is zero, it means that the
-\code{future_lapply} function is being called for the first time in this
-subprocedure. Otherwise, it means that the \code{future_lapply} function
+\code{future_map} function is being called for the first time in this
+subprocedure. Otherwise, it means that the \code{future_map} function
 has been called for more than once. This situation typically refers to the
 situations where there are some errors in the first time of the
 replications.}
@@ -42,5 +42,5 @@ Returns a list of output that are obtained from the subsampling
 This function carries out one bootstrap replication for
   getting \code{beta.obs} in the \code{\link[lpinfer]{fsst}} procedure.
   This function is used in the \code{\link[lpinfer]{fsst.beta.bs}} function
-  via the \code{future_lapply} command.
+  via the \code{future_map} function.
 }

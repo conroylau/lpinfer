@@ -32,7 +32,8 @@ Imports:
     future (>= 1.18.0),
     future.apply (>= 1.6.0),
     progressr (>= 0.6.0),
-    plyr (>= 1.8.6)
+    plyr (>= 1.8.6),
+    furrr (>= 0.2.0)
 Suggests:
     knitr (>= 1.28),
     rmarkdown (>= 2.0),

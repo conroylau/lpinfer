@@ -71,5 +71,5 @@ Returns a list of output that are obtained from the subsampling
 \description{
 This function carries out the bootstrap procedure of the
   \code{\link[lpinfer]{subsample}} procedure This function supports
-  parallel programming via the \code{future.apply} package.
+  parallel programming via the \code{furrr} package.
 }

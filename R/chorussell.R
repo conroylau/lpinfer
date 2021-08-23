@@ -277,7 +277,7 @@ chorussell <- function(data = NULL, lpmodel, beta.tgt = NULL, n = NULL, R = 100,
 #' Simplifies the candidates to be considered in
 #' \code{\link[lpinfer]{chorussell}}
 #'
-#' @import future.apply progressr
+#' @import furrr progressr
 #'
 #' @description This function simplifies the list of candidates to be
 #'   considered in the optimization problem in the
@@ -341,12 +341,13 @@ chorussell.simp <- function(lb.can1, lb.can2, ub.can1, ub.can2, progress) {
       pbar <- NULL
     }
 
-    lb.return <- future.apply::future_lapply(lb.can,
-                                             FUN = chorussell.simp.fn,
-                                             can1 = lb.can1,
-                                             pbar = pbar,
-                                             bd = "lower",
-                                             progress = progress)
+    lb.return <- furrr::future_map(lb.can,
+                                   .f = chorussell.simp.fn,
+                                   can1 = lb.can1,
+                                   pbar = pbar,
+                                   bd = "lower",
+                                   progress = progress)
+    
     df.lb <- data.frame(bd = unlist(sapply(lb.return, "[", "bd"),
                                     use.names = FALSE),
                         sum = unlist(sapply(lb.return, "[", "sum"),
@@ -355,18 +356,12 @@ chorussell.simp <- function(lb.can1, lb.can2, ub.can1, ub.can2, progress) {
 
   # Upper bound
   progressr::with_progress({
-    if (isTRUE(progress)) {
-      pbar <- progressr::progressor(along = seq_along(ub.can))
-    } else {
-      pbar <- NULL
-    }
-
-    ub.return <- future.apply::future_lapply(ub.can,
-                                             FUN = chorussell.simp.fn,
-                                             can1 = ub.can1,
-                                             pbar = pbar,
-                                             bd = "upper",
-                                             progress = progress)
+    ub.return <- furrr::future_map(ub.can,
+                                   .f = chorussell.simp.fn,
+                                   can1 = ub.can1,
+                                   pbar = pbar,
+                                   bd = "upper",
+                                   progress = progress)
     df.ub <- data.frame(bd = unlist(sapply(ub.return, "[", "bd"),
                                     use.names = FALSE),
                         sum = unlist(sapply(ub.return, "[", "sum"),
@@ -393,7 +388,7 @@ chorussell.simp <- function(lb.can1, lb.can2, ub.can1, ub.can2, progress) {
 #'
 #' @return Returns the decision to drop or not to drop the candidate. If the
 #'   decision is to drop the candidate bound, \code{NULL} is returned.
-#'   Otherwise, the bound is returned back via the \code{future_lapply}
+#'   Otherwise, the bound is returned back via the \code{future_map}
 #'   function.
 #'
 #' @export
@@ -417,9 +412,9 @@ chorussell.simp.fn <- function(x, can1, pbar, bd, progress) {
 #'
 #' @description This function carries out the bootstrap procedure of the
 #'   \code{\link[lpinfer]{chorussell}} procedure. This function supports
-#'   parallel programming via the \code{future.apply} package.
+#'   parallel programming via the \code{future_map} function.
 #'
-#' @import future.apply progressr
+#' @import furrr progressr
 #'
 #' @inheritParams chorussell
 #' @inheritParams dkqs.bs
@@ -462,12 +457,10 @@ chorussell.bs <- function(data, lpmodel, beta.tgt, R, maxR, kappa, norm,
   # Step 2: Bootstrap replications
   # ---------------- #
   while ((R.succ < R) & (R.eval != maxR)) {
-    # Evaluate the list of indices to be passed to 'future_lapply'
-    bs.temp <- bs.assign(R, R.eval, R.succ, maxR, any.list, lpmodel, data,
-                         n)
-    i0 <- bs.temp$i0
-    i1 <- bs.temp$i1
-    bs.list <- bs.temp$bs.list
+    # Evaluate the list of indices to be passed to 'future_map'
+    bs.ind <- bs.index(R, R.eval, R.succ, maxR)
+    i0 <- bs.ind$i0
+    i1 <- bs.ind$i1
 
     # Obtain results from the bootstrap replications
     progressr::with_progress({
@@ -476,21 +469,25 @@ chorussell.bs <- function(data, lpmodel, beta.tgt, R, maxR, kappa, norm,
       } else {
         pbar <- NULL
       }
-      chorussell.return <- future.apply::future_lapply(bs.list,
-                                                       FUN = chorussell.bs.fn,
-                                                       future.seed = TRUE,
-                                                       data = data,
-                                                       lpmodel = lpmodel,
-                                                       beta.tgt = beta.tgt,
-                                                       kappa = kappa,
-                                                       norm = norm,
-                                                       n = n,
-                                                       estimate = estimate,
-                                                       solver = solver,
-                                                       pbar = pbar,
-                                                       eval.count = eval.count,
-                                                       n.bs = i1 - i0 + 1,
-                                                       progress = progress)
+
+      chorussell.return <- furrr::future_map(i0:i1,
+                                             .f = chorussell.bs.fn,
+                                             data = data,
+                                             lpmodel = lpmodel,
+                                             beta.tgt = beta.tgt,
+                                             kappa = kappa,
+                                             norm = norm,
+                                             n = n,
+                                             estimate = estimate,
+                                             solver = solver,
+                                             pbar = pbar,
+                                             eval.count = eval.count,
+                                             n.bs = i1 - i0 + 1,
+                                             progress = progress,
+                                             any.list = any.list,
+                                             .options = 
+                                               furrr::furrr_options(seed = TRUE))
+
       eval.count <- eval.count + 1
     })
 
@@ -558,8 +555,8 @@ chorussell.bs <- function(data, lpmodel, beta.tgt, R, maxR, kappa, norm,
 #'
 #' @description This function carries out one bootstrap replication of the
 #'   Cho-Russell procedure. This function is used in the
-#'   \code{\link[lpinfer]{chorussell.bs}} function via the \code{future_lapply}
-#'   command.
+#'   \code{\link[lpinfer]{chorussell.bs}} function via the \code{future_map}
+#'   function.
 #'
 #' @inheritParams chorussell
 #' @inheritParams chorussell.bs
@@ -581,7 +578,7 @@ chorussell.bs <- function(data, lpmodel, beta.tgt, R, maxR, kappa, norm,
 #'
 chorussell.bs.fn <- function(x, data, lpmodel, beta.tgt, kappa, norm, n,
                              estimate, solver, pbar, eval.count, n.bs,
-                             progress) {
+                             any.list, progress) {
   # ---------------- #
   # Step 1: Print the progress bar
   # ---------------- #
@@ -603,10 +600,11 @@ chorussell.bs.fn <- function(x, data, lpmodel, beta.tgt, kappa, norm, n,
   msg <- NULL
 
   # Replace lpmodel by x if x is a list
-  if (is.list(x)) {
-    lpm <- lpmodel.update(lpmodel, x)
-  } else {
-    lpm <- lpmodel
+  lpm <- lpmodel
+  if (!is.null(any.list)) {
+    for (nm in any.list$name) {
+      lpm[[nm]] <- lpmodel[[nm]][[x + 1]]
+    }
   }
 
   # ---------------- #
@@ -759,7 +757,7 @@ chorussell.pt <- function(cr.lp.return, beta.tgt) {
 #' interval in the \code{\link[lpinfer]{chorussell}} procedure by solving the
 #' optimization problem.
 #'
-#' @import future.apply progressr
+#' @import furrr progressr
 #'
 #' @inheritParams chorussell
 #' @inheritParams chorussell.simp
@@ -812,21 +810,22 @@ chorussell.lp <- function(lb.can1, lb.can2, ub.can1, ub.can2, n, R, alpha,
       } else {
         pbar <- NULL
       }
-      cr.lp.return <- future.apply::future_lapply(lb.can,
-                                                  FUN = chorussell.lp.fn.unbd,
-                                                  lb.can1 = lb.can1,
-                                                  lb.can2 = lb.can2,
-                                                  ub.can1 = ub.can1,
-                                                  ub.can2 = ub.can2,
-                                                  ub.can = ub.can,
-                                                  lb = lb,
-                                                  ub = ub,
-                                                  alpha = alpha,
-                                                  pbar = pbar,
-                                                  ci = ci,
-                                                  kappa = kappa,
-                                                  k = k,
-                                                  progress = progress)
+
+      cr.lp.return <- furrr::future_map(lb.can,
+                                        .f = chorussell.lp.fn.unbd,
+                                        lb.can1 = lb.can1,
+                                        lb.can2 = lb.can2,
+                                        ub.can1 = ub.can1,
+                                        ub.can2 = ub.can2,
+                                        ub.can = ub.can,
+                                        lb = lb,
+                                        ub = ub,
+                                        alpha = alpha,
+                                        pbar = pbar,
+                                        ci = ci,
+                                        kappa = kappa,
+                                        k = k,
+                                        progress = progress)
     })
   } else {
     # This corresponds to the case where both of the bounds are bounded based
@@ -837,19 +836,20 @@ chorussell.lp <- function(lb.can1, lb.can2, ub.can1, ub.can2, n, R, alpha,
       } else {
         pbar <- NULL
       }
-      cr.lp.return <- future.apply::future_lapply(lb.can,
-                                                  FUN = chorussell.lp.fn,
-                                                  lb.can1 = lb.can1,
-                                                  lb.can2 = lb.can2,
-                                                  ub.can1 = ub.can1,
-                                                  ub.can2 = ub.can2,
-                                                  ub.can = ub.can,
-                                                  alpha = alpha,
-                                                  pbar = pbar,
-                                                  ci = ci,
-                                                  kappa = kappa,
-                                                  k = k,
-                                                  progress = progress)
+
+      cr.lp.return <- furrr::future_map(lb.can,
+                                        .f = chorussell.lp.fn,
+                                        lb.can1 = lb.can1,
+                                        lb.can2 = lb.can2,
+                                        ub.can1 = ub.can1,
+                                        ub.can2 = ub.can2,
+                                        ub.can = ub.can,
+                                        alpha = alpha,
+                                        pbar = pbar,
+                                        ci = ci,
+                                        kappa = kappa,
+                                        k = k,
+                                        progress = progress)
     })
   }
 

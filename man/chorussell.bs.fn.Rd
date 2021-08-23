@@ -17,6 +17,7 @@ chorussell.bs.fn(
   pbar,
   eval.count,
   n.bs,
+  any.list,
   progress
 )
 }
@@ -52,10 +53,10 @@ The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 
 \item{pbar}{The progress bar object.}
 
-\item{eval.count}{The count for the number of times the \code{future_lapply}
+\item{eval.count}{The count for the number of times the \code{future_map}
 function has been called. If this object is zero, it means that the
-\code{future_lapply} function is being called for the first time in this
-subprocedure. Otherwise, it means that the \code{future_lapply} function
+\code{future_map} function is being called for the first time in this
+subprocedure. Otherwise, it means that the \code{future_map} function
 has been called for more than once. This situation typically refers to the
 situations where there are some errors in the first time of the
 replications.}
@@ -79,6 +80,6 @@ Returns a list of output that are obtained from the Cho-Russell
 \description{
 This function carries out one bootstrap replication of the
   Cho-Russell procedure. This function is used in the
-  \code{\link[lpinfer]{chorussell.bs}} function via the \code{future_lapply}
-  command.
+  \code{\link[lpinfer]{chorussell.bs}} function via the \code{future_map}
+  function.
 }

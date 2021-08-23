@@ -437,9 +437,9 @@ dkqs.qlp <- function(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
 #'
 #' @description This function carries out the bootstrap procedure of the
 #'   \code{\link[lpinfer]{dkqs}} procedure This function supports parallel
-#'   programming via the \code{future.apply} package.
+#'   programming via the \code{furrr} package.
 #'
-#' @import future.apply progressr
+#' @import furrr progressr
 #'
 #' @param s.star.list The list of values of
 #'    \eqn{\hat{\bm{s}}^\star \equiv \bm{A}_{\mathrm{obs}}\hat{\bm{x}}_n^\star}
@@ -490,12 +490,10 @@ dkqs.bs <- function(data, lpmodel, beta.tgt, R, maxR, s.star.list, tau.list,
   eval.count <- 0
   while ((R.succ < R) & (R.eval != maxR)) {
 
-    # Evaluate the list of indices to be passed to 'future_lapply'
-    bs.temp <- bs.assign(R, R.eval, R.succ, maxR, any.list, lpmodel, data,
-                         n, TRUE)
-    i0 <- bs.temp$i0
-    i1 <- bs.temp$i1
-    bs.list <- bs.temp$bs.list
+    # Evaluate the list of indices to be passed to 'future_map'
+    bs.ind <- bs.index(R, R.eval, R.succ, maxR)
+    i0 <- bs.ind$i0
+    i1 <- bs.ind$i1
 
     # Set the default for progress bar
     progressr::handlers("progress")
@@ -507,21 +505,24 @@ dkqs.bs <- function(data, lpmodel, beta.tgt, R, maxR, s.star.list, tau.list,
       } else {
         pbar <- NULL
       }
-      dkqs.return <- future.apply::future_lapply(bs.list,
-                                                 FUN = dkqs.bs.fn,
-                                                 future.seed = TRUE,
-                                                 data = data,
-                                                 lpmodel = lpmodel,
-                                                 beta.obs = beta.obs.hat,
-                                                 beta.tgt = beta.tgt,
-                                                 s.star.list = s.star.list,
-                                                 tau.list = tau.list,
-                                                 n = n,
-                                                 solver = solver,
-                                                 pbar = pbar,
-                                                 progress = progress,
-                                                 eval.count = eval.count,
-                                                 n.bs = i1 - i0 + 1)
+
+      dkqs.return <- furrr::future_map(i0:i1,
+                                       .f = dkqs.bs.fn,
+                                       data = data,
+                                       lpmodel = lpmodel,
+                                       beta.obs = beta.obs.hat,
+                                       beta.tgt = beta.tgt,
+                                       s.star.list = s.star.list,
+                                       tau.list = tau.list,
+                                       n = n,
+                                       solver = solver,
+                                       pbar = pbar,
+                                       progress = progress,
+                                       eval.count = eval.count,
+                                       n.bs = i1 - i0 + 1,
+                                       any.list = any.list,
+                                       .options = 
+                                         furrr::furrr_options(seed = TRUE))
       eval.count <- eval.count + 1
     })
 
@@ -576,7 +577,7 @@ dkqs.bs <- function(data, lpmodel, beta.tgt, R, maxR, s.star.list, tau.list,
 #'
 #' @description This function carries out the one bootstrap replication of the
 #'   DKQS procedure This function is used in the \code{\link[lpinfer]{dkqs.bs}}
-#'   function via the \code{future_lapply} command.
+#'   function via the \code{future_map} function.
 #'
 #' @inheritParams dkqs
 #' @inheritParams dkqs.bs
@@ -585,10 +586,10 @@ dkqs.bs <- function(data, lpmodel, beta.tgt, R, maxR, s.star.list, tau.list,
 #'   replications, or the list of bootstrap components of the \code{lpmodel}
 #'   object passed from the user.
 #' @param pbar The progress bar object.
-#' @param eval.count The count for the number of times the \code{future_lapply}
+#' @param eval.count The count for the number of times the \code{future_map}
 #'   function has been called. If this object is zero, it means that the
-#'   \code{future_lapply} function is being called for the first time in this
-#'   subprocedure. Otherwise, it means that the \code{future_lapply} function
+#'   \code{future_map} function is being called for the first time in this
+#'   subprocedure. Otherwise, it means that the \code{future_map} function
 #'   has been called for more than once. This situation typically refers to the
 #'   situations where there are some errors in the first time of the
 #'   replications.
@@ -605,7 +606,8 @@ dkqs.bs <- function(data, lpmodel, beta.tgt, R, maxR, s.star.list, tau.list,
 #' @export
 #'
 dkqs.bs.fn <- function(x, data, lpmodel, beta.obs.hat, beta.tgt, s.star.list,
-                       tau.list, solver, n, pbar, eval.count, n.bs, progress) {
+                       tau.list, solver, n, pbar, eval.count, n.bs, 
+                       any.list, progress) {
   # ---------------- #
   # Step 1: Print progress bar
   # ---------------- #
@@ -627,10 +629,11 @@ dkqs.bs.fn <- function(x, data, lpmodel, beta.obs.hat, beta.tgt, s.star.list,
   msg <- NULL
 
   # Replace lpmodel by x if x is a list
-  if (is.list(x)) {
-    lpm <- lpmodel.update(lpmodel, x)
-  } else {
-    lpm <- lpmodel
+  lpm <- lpmodel
+  if (!is.null(any.list)) {
+    for (nm in any.list$name) {
+      lpm[[nm]] <- lpmodel[[nm]][[x + 1]]
+    }
   }
 
   # ---------------- #

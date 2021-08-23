@@ -6,7 +6,7 @@ rm(list = ls())
 # ---------------- #
 library(lpinfer)
 library(future)
-library(future.apply)
+library(furrr)
 library(dplyr)
 
 # =========================================================================== #
@@ -149,15 +149,19 @@ draw.bs.data <- function(x, f, data) {
 
 # Draw bootstrap data for the full information and two moments method
 set.seed(1)
-bobs.bs.full.list <- lapply(1:reps,
-                            FUN = draw.bs.data,
-                            f = func_full_info,
-                            data = sampledata)
+bobs.bs.full.list <- furrr::future_map(1:reps,
+                                       .f = draw.bs.data,
+                                       f = func_full_info,
+                                       data = sampledata,
+                                       .options = 
+                                         furrr::furrr_options(seed = TRUE))
 set.seed(1)
-bobs.bs.twom.list <- lapply(1:reps,
-                            FUN = draw.bs.data,
-                            f = func_two_moment,
-                            data = sampledata)
+bobs.bs.twom.list <- furrr::future_map(1:reps,
+                                       .f = draw.bs.data,
+                                       f = func_two_moment,
+                                       data = sampledata,
+                                       .options = 
+                                         furrr::furrr_options(seed = TRUE))
 
 bobs.full.list <- c(list(func_full_info(sampledata)$beta), bobs.bs.full.list)
 bobs.twom.list <- c(list(func_two_moment(sampledata)$beta), bobs.bs.twom.list)
@@ -275,10 +279,13 @@ fsst.bs.fn <- function(x, data, lpmodel) {
 beta.bs <- list()
 for (j in seq_along(j.lpmodel)) {
   set.seed(1)
-  beta.bs[[j]] <- lapply(1:reps,
-                         FUN = fsst.bs.fn,
-                         data = sampledata,
-                         lpmodel = j.lpmodel[[j]])
+  beta.bs[[j]] <- furrr::future_map(1:reps,
+                                    .f = fsst.bs.fn,
+                                    data = sampledata,
+                                    lpmodel = j.lpmodel[[j]],
+                                    .options = 
+                                      furrr::furrr_options(seed = TRUE))
+  
 }
 
 # 3. Solve problem (3) - with the sample estimates and the bootstrap estimates
@@ -862,10 +869,11 @@ for (i in seq_along(i.cores)) {
 # ---------------- #
 # Draw bootstrap data for the full information and two moments method
 set.seed(1)
-bobs.dlp.list <- lapply(1:reps,
-                        FUN = draw.bs.data,
-                        f = betafunc,
-                        data = sampledata)
+bobs.dlp.list <- furrr::future_map(1:reps,
+                                   .f = draw.bs.data,
+                                   f = betafunc,
+                                   data = sampledata,
+                                   .options = furrr::furrr_options(seed = TRUE))
 
 bobs.dlp.list <- c(list(betafunc(sampledata)$beta), bobs.dlp.list)
 bobs.dlp.list[[1]] <- betafunc(sampledata)
@@ -910,10 +918,11 @@ bobs2 <- lpm2$beta.obs(sampledata)$beta
 ## Estimator of asymptotic variance of beta.obs
 set.seed(1)
 bobs.bs2 <- list()
-bobs.bs2 <- lapply(1:reps,
-                   FUN = fsst.bs.fn,
-                   data = sampledata,
-                   lpmodel = lpm2)
+bobs.bs2 <- furrr::future_map(1:reps,
+                              .f = fsst.bs.fn,
+                              data = sampledata,
+                              lpmodel = lpm2,
+                              .options = furrr::furrr_options(seed = TRUE))
 
 # 3. Solve problem (3) - with the sample estimates and the bootstrap estimates
 fsst.3.args2 <- fsst.3.arg(lpm2, bobs2, btgt, sigma.bobs2, "avar")
@@ -1129,7 +1138,6 @@ tests.fsst.dlp <- function(fsst.out, test.name) {
     }
   })
 }
-
 
 # ---------------- #
 # Run the tests for d < p

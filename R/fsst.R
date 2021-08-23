@@ -70,7 +70,6 @@
 fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                  lambda = NA, rho = 1e-4, n = NULL, weight.matrix = "diag",
                  solver = NULL, progress = TRUE) {
-
    # ---------------- #
    # Step 1: Update call, check and update the arguments; initialize df.error
    # ---------------- #
@@ -175,12 +174,6 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          # If the user provided bootstrap estimates of beta, use it to compute
          # sigma
          if (class(lpmodel$beta.obs) == "list") {
-            var.method <- "list"
-            if (is.null(sigma.beta.obs)) {
-               sigma.beta.obs <- sigma.summation(n, lpmodel$beta.obs, progress,
-                                                 eval.count)
-               var.method <- "bootstrapped values of the input list"
-            }
             beta.obs.bs.new <- lpmodel$beta.obs[(i0 + 1):(i1 + 1)]
             if (!is.null(beta.obs.bs.new[[1]])) {
                beta.n.bs.new <- list()
@@ -190,6 +183,12 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                }
                beta.obs.bs <- c(beta.obs.bs, beta.obs.bs.new)
                beta.n.bs <- c(beta.n.bs, beta.n.bs.new)
+            }
+            var.method <- "list"
+            if (is.null(sigma.beta.obs)) {
+               sigma.beta.obs <- sigma.summation(n, lpmodel$beta.obs, progress,
+                                                 eval.count)
+               var.method <- "bootstrapped values of the input list"
             }
          } else {
             var.method <- "function"
@@ -215,7 +214,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
             # from the bootstrap betas
             if (is.null(sigma.beta.obs)) {
                var.method <- paste0("bootstrapped 'beta.obs' ",
-                                    "from the function.")
+                                    "from the function")
                sigma.beta.obs <- sigma.summation(n, beta.obs.list, progress,
                                                  eval.count)
             }
@@ -270,6 +269,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          # Consolidate the bootstrap estimators into a list
          beta.star.l <- list(beta.star = beta.star)
          beta.star.list <- c(beta.star.l, beta.star.bs)
+
          # ---------------- #
          # Step 4: Studentization
          # ---------------- #
@@ -354,6 +354,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                   next
                }
             }
+
          } else {
             # Compute the restricted estimator
             beta.r <- beta.r.compute(n, lpmodel, beta.obs.hat, beta.tgt,
@@ -465,6 +466,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       # Print warning message
       infeasible.betatgt.warning()
    }
+
    # Assign the common objects in the output list
    output <- append(output,
                     list(solver = solver.name,
@@ -518,7 +520,7 @@ full.beta.bs <- function(lpmodel, beta.tgt, beta.obs.bs, R) {
 #' @description This function computes the bootstrap estimates of
 #'   \eqn{\hat{\beta}_{{\rm obs}, n}}.
 #'
-#' @import future.apply progressr
+#' @import furrr progressr
 #'
 #' @inheritParams fsst
 #' @inheritParams dkqs.bs.fn
@@ -560,13 +562,12 @@ fsst.beta.bs <- function(n, data, beta.obs.hat, lpmodel, R, maxR, progress,
    # This function will not be called if 'beta.obs' is a list. Hence, it
    # suffices to consider the case where it is a function.
    while ((R.succ < R) & (R.eval != maxR)) {
-      # Compute the list of indices to be passed to 'future_lapply'
+      # Compute the list of indices to be passed to 'future_map'
       if (identical(iseq, 1:maxR)) {
-         bs.temp <- bs.assign(R, R.eval, R.succ, maxR, any.list, lpmodel, data,
-                              n)
-         i0 <- bs.temp$i0
-         i1 <- bs.temp$i1
-         bs.list <- bs.temp$bs.list
+         # Evaluate the list of indices to be passed to 'future_map'
+         bs.ind <- bs.index(R, R.eval, R.succ, maxR)
+         i0 <- bs.ind$i0
+         i1 <- bs.ind$i1
       } else {
          bs.list <- iseq
          i0 <- bs.list[1]
@@ -584,15 +585,17 @@ fsst.beta.bs <- function(n, data, beta.obs.hat, lpmodel, R, maxR, progress,
             pbar <- NULL
          }
 
-         beta.obs.return <- future.apply::future_lapply(bs.list,
-                                                        FUN = fsst.beta.bs.fn,
-                                                        future.seed = TRUE,
-                                                        data = data,
-                                                        lpmodel = lpmodel,
-                                                        pbar = pbar,
-                                                        progress = progress,
-                                                        eval.count = eval.count,
-                                                        n.bs = i1 - i0 + 1)
+         beta.obs.return <- furrr::future_map(i0:i1,
+                                              .f = fsst.beta.bs.fn,
+                                              data = data,
+                                              lpmodel = lpmodel,
+                                              pbar = pbar,
+                                              progress = progress,
+                                              eval.count = eval.count,
+                                              n.bs = i1 - i0 + 1,
+                                              any.list = any.list,
+                                              .options = 
+                                                 furrr::furrr_options(seed = TRUE))
          eval.count <- eval.count + 1
       })
 
@@ -631,7 +634,7 @@ fsst.beta.bs <- function(n, data, beta.obs.hat, lpmodel, R, maxR, progress,
 #' @description This function carries out one bootstrap replication for
 #'   getting \code{beta.obs} in the \code{\link[lpinfer]{fsst}} procedure.
 #'   This function is used in the \code{\link[lpinfer]{fsst.beta.bs}} function
-#'   via the \code{future_lapply} command.
+#'   via the \code{future_map} function.
 #'
 #' @inheritParams fsst
 #' @inheritParams fsst.beta.bs
@@ -648,7 +651,7 @@ fsst.beta.bs <- function(n, data, beta.obs.hat, lpmodel, R, maxR, progress,
 #' @export
 #'
 fsst.beta.bs.fn <- function(x, data, lpmodel, pbar, progress, eval.count,
-                            n.bs) {
+                            n.bs, any.list) {
    # ---------------- #
    # Step 1: Print progress bar
    # ---------------- #
@@ -664,10 +667,11 @@ fsst.beta.bs.fn <- function(x, data, lpmodel, pbar, progress, eval.count,
    # Step 2: Initialize lpmodel
    # ---------------- #
    # Replace lpmodel by x if x is a list
-   if (is.list(x)) {
-      lpm <- lpmodel.update(lpmodel, x)
-   } else {
-      lpm <- lpmodel
+   lpm <- lpmodel
+   if (!is.null(any.list)) {
+      for (nm in any.list$name) {
+         lpm[[nm]] <- lpmodel[[nm]][[x + 1]]
+      }
    }
 
    # ---------------- #
@@ -740,7 +744,7 @@ fsst.weight.matrix <- function(weight.matrix, beta.obs.hat, beta.sigma) {
 
 #' Computes the asymptotic variance estimator
 #'
-#' @import future.apply progressr
+#' @import furrr progressr
 #'
 #' @description Based on the bootstrap estimates
 #'   \eqn{\{\widehat{\bm{\beta}}_b\}^B_{b=1}}, this function computes the
@@ -748,10 +752,8 @@ fsst.weight.matrix <- function(weight.matrix, beta.obs.hat, beta.sigma) {
 #'   \deqn{\frac{n}{B} \sum^B_{i=1} \left(\widehat{\bm{\beta}}_b -
 #'   \widehat{\bm{\beta}}\right)  \left(\widehat{\bm{\beta}}_b -
 #'   \widehat{\bm{\beta}}\right)'.}
-#'  This function supports parallel programming via the \code{future.apply}
+#'  This function supports parallel programming via the \code{furrr}
 #'  package.
-#'
-#' @import future.apply progressr
 #'
 #' @param n Sample size.
 #' @param beta.bs.list A list of bootstrap estimators
@@ -772,13 +774,12 @@ sigma.summation <- function(n, beta.bs.list, progress, eval.count) {
          pbar <- NULL
       }
 
-      beta.prod.return <-
-         future.apply::future_lapply(beta.bs.list[-1],
-                                     FUN = beta.product,
-                                     beta.obs.hat = beta.obs.hat,
-                                     pbar = pbar,
-                                     progress = progress,
-                                     eval.count = eval.count)
+      beta.prod.return <- furrr::future_map(beta.bs.list[-1],
+                                            .f = beta.product,
+                                            beta.obs.hat = beta.obs.hat,
+                                            pbar = pbar,
+                                            progress = progress,
+                                            eval.count = eval.count)
    })
 
    sigma.mat <- Reduce("+", beta.prod.return) * n / (length(beta.bs.list) - 1)
@@ -1025,7 +1026,7 @@ fsst.cone.lp <- function(n, omega.i, beta.n, beta.star, lpmodel, indicator,
 #' @description This function computes the bootstrap estimates of
 #'   \eqn{\widehat{\bm{\beta}}^\star_n}.
 #'
-#' @import future.apply progressr
+#' @import furrr progressr
 #'
 #' @inheritParams fsst
 #' @inheritParams fsst.beta.bs
@@ -1102,19 +1103,20 @@ fsst.beta.star.bs <- function(data, lpmodel, beta.n, beta.n.bs, beta.tgt,
          } else {
             pbar <- NULL
          }
+
          fsst.star.return <-
-            future.apply::future_lapply(beta.obs.bs,
-                                        FUN = fsst.beta.star.bs.fn,
-                                        data = data,
-                                        lpmodel = lpmodel,
-                                        beta.tgt = beta.tgt,
-                                        weight.mat = weight.mat,
-                                        sigma.beta.obs = sigma.beta.obs,
-                                        solver = solver,
-                                        pbar = pbar,
-                                        progress = progress,
-                                        n.bs = n.bs,
-                                        eval.count = eval.count)
+            furrr::future_map(beta.obs.bs,
+                              .f = fsst.beta.star.bs.fn,
+                              data = data,
+                              lpmodel = lpmodel,
+                              beta.tgt = beta.tgt,
+                              weight.mat = weight.mat,
+                              sigma.beta.obs = sigma.beta.obs,
+                              solver = solver,
+                              pbar = pbar,
+                              progress = progress,
+                              n.bs = n.bs,
+                              eval.count = eval.count)
       })
 
       # Get beta.star and x.star and exclude those with 'NULL'
@@ -1175,7 +1177,7 @@ fsst.beta.star.bs <- function(data, lpmodel, beta.n, beta.n.bs, beta.tgt,
 #' @description This function computes one bootstrap estimate for
 #'   \code{beta.star} and \code{x.star}. This function is used
 #'   in the \code{\link[lpinfer]{fsst.beta.star.bs}} function via the
-#'   \code{future_lapply} command.
+#'   \code{future_map} command.
 #'
 #' @inheritParams fsst
 #' @inheritParams fsst.beta.star.bs
@@ -1375,7 +1377,7 @@ fsst.range <- function(n, beta.obs.hat, x.star, lpmodel, weight.mat) {
 #' @description This function computes the bootstrap estimates of the range
 #'   components.
 #'
-#' @import future.apply progressr
+#' @import furrr progressr
 #'
 #' @inheritParams fsst
 #' @inheritParams fsst.beta.bs
@@ -1413,17 +1415,17 @@ fsst.range.bs <- function(n, lpmodel, beta.obs.hat, beta.obs.bs, x.star,
          pbar <- NULL
       }
 
-      range.return <- future.apply::future_lapply(beta.x.star,
-                                                  FUN = fsst.range.bs.fn,
-                                                  n = n,
-                                                  lpmodel = lpmodel,
-                                                  beta.obs.hat = beta.obs.hat,
-                                                  x.star = x.star,
-                                                  weight.mat = weight.mat,
-                                                  pbar = pbar,
-                                                  progress = progress,
-                                                  n.bs = n.bs,
-                                                  eval.count = eval.count)
+      range.return <- furrr::future_map(beta.x.star,
+                                        .f = fsst.range.bs.fn,
+                                        n = n,
+                                        lpmodel = lpmodel,
+                                        beta.obs.hat = beta.obs.hat,
+                                        x.star = x.star,
+                                        weight.mat = weight.mat,
+                                        pbar = pbar,
+                                        progress = progress,
+                                        n.bs = n.bs,
+                                        eval.count = eval.count)
    })
 
    # Extract the test statistics
@@ -1542,7 +1544,7 @@ fsst.range.bs.fn <- function(beta.x.star, n, lpmodel, beta.obs.hat, x.star,
 #' @description This function computes the bootstrap estimates of the cone
 #'   components.
 #'
-#' @import future.apply progressr
+#' @import furrr progressr
 #'
 #' @inheritParams fsst
 #' @inheritParams fsst.cone.lp
@@ -1579,22 +1581,22 @@ fsst.cone.bs <- function(n, omega.i, beta.n, beta.star, lpmodel, R.succ,
       } else {
          pbar <- NULL
       }
-      cone.return <- future.apply::future_lapply(beta.star.list[-1],
-                                                 FUN = fsst.cone.bs.fn,
-                                                 n = n,
-                                                 omega.i = omega.i,
-                                                 beta.n = beta.n,
-                                                 beta.star = beta.star,
-                                                 lpmodel = lpmodel,
-                                                 lambda = lambda,
-                                                 indicator = indicator,
-                                                 beta.r = beta.r,
-                                                 solver = solver,
-                                                 pbar = pbar,
-                                                 progress = progress,
-                                                 n.bs = n.bs,
-                                                 eval.count = eval.count,
-                                                 data.driven = data.driven)
+      cone.return <- furrr::future_map(beta.star.list[-1],
+                                        .f = fsst.cone.bs.fn,
+                                        n = n,
+                                        omega.i = omega.i,
+                                        beta.n = beta.n,
+                                        beta.star = beta.star,
+                                        lpmodel = lpmodel,
+                                        lambda = lambda,
+                                        indicator = indicator,
+                                        beta.r = beta.r,
+                                        solver = solver,
+                                        pbar = pbar,
+                                        progress = progress,
+                                        n.bs = n.bs,
+                                        eval.count = eval.count,
+                                        data.driven = data.driven)
    })
 
    cone.n.list <- unlist(sapply(cone.return, "[", "Ts"), use.names = FALSE)

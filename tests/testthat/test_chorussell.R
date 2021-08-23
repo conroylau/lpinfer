@@ -5,7 +5,7 @@ context("Tests for chorussell")
 # ---------------- #
 library(lpinfer)
 library(future)
-library(future.apply)
+library(furrr)
 
 # =========================================================================== #
 # Case 1: d >= p
@@ -81,7 +81,7 @@ beta_shp <- c(1)
 beta.tgt <- .365
 kappa <- 0
 reps <- 100
-tol <- 1e-3
+tol <- 1e-4
 
 # Define arguments for the `chorussell` function
 farg <- list(data = sampledata,
@@ -91,7 +91,8 @@ farg <- list(data = sampledata,
              estimate = TRUE,
              tol = tol,
              ci = FALSE,
-             solver = "gurobi")
+             solver = "gurobi",
+             progress = FALSE)
 
 # Define the lpmodels
 lpmodel.full <- lpmodel(A.obs    = A_obs_full,
@@ -151,7 +152,6 @@ for (i in seq_along(i.cores)) {
   }
 }
 
-
 # ---------------- #
 # Output 3: beta.obs is a list that contains the sample and bootstrap estimates
 # and output is p-value
@@ -165,15 +165,19 @@ draw.bs.data <- function(x, f, data) {
 
 # Draw bootstrap data for the full information and two moments method
 set.seed(1)
-bobs.bs.full.list <- lapply(1:reps,
-                            FUN = draw.bs.data,
-                            f = func_full_info,
-                            data = sampledata)
+bobs.bs.full.list <- furrr::future_map(1:reps,
+                                       .f = draw.bs.data,
+                                       f = func_full_info,
+                                       data = sampledata,
+                                       .options =
+                                         furrr::furrr_options(seed = TRUE))
 set.seed(1)
-bobs.bs.twom.list <- lapply(1:reps,
-                            FUN = draw.bs.data,
-                            f = func_two_moment,
-                            data = sampledata)
+bobs.bs.twom.list <- furrr::future_map(1:reps,
+                                       .f = draw.bs.data,
+                                       f = func_two_moment,
+                                       data = sampledata,
+                                       .options =
+                                         furrr::furrr_options(seed = TRUE))
 
 bobs.full.list <- c(list(func_full_info(sampledata)$beta), bobs.bs.full.list)
 bobs.twom.list <- c(list(func_two_moment(sampledata)$beta), bobs.bs.twom.list)
@@ -196,7 +200,7 @@ farg2 <- list(beta.tgt = beta.tgt,
               solver = "gurobi",
               tol = tol,
               ci = FALSE,
-              progress = TRUE)
+              progress = FALSE)
 
 # Compute the chorussell output again
 cr.out.pval2 <- list()
@@ -267,13 +271,14 @@ for (j in seq_along(j.lpmodel)) {
     delta[[j]][[k]] <- temp$ub - temp$lb
     # Bootstrap bounds
     set.seed(1)
-    temp <- lapply(1:reps,
-                   FUN = cr.bs.fn,
-                   lpmodel = j.lpmodel[[j]],
-                   data = sampledata,
-                   kappa = kappa,
-                   norm = k.norm[[k]],
-                   estimate = TRUE)
+    temp <- furrr::future_map(1:reps,
+                             .f = cr.bs.fn,
+                             lpmodel = j.lpmodel[[j]],
+                             data = sampledata,
+                             kappa = kappa,
+                             norm = k.norm[[k]],
+                             estimate = TRUE,
+                             .options = furrr::furrr_options(seed = TRUE))
     ub.bs[[j]][[k]] <- unlist(sapply(temp, "[", "ub"), use.names = FALSE)
     lb.bs[[j]][[k]] <- unlist(sapply(temp, "[", "lb"), use.names = FALSE)
   }
@@ -423,7 +428,6 @@ test.cr.pval <- function(cr.out, test.name, test.type) {
   # 4. Test other common objects
   test.cr.common(cr.out, test.name, test.type)
 }
-
 
 # ---------------- #
 # A list of unit tests for confidence interval
@@ -648,7 +652,7 @@ test_that("Same answers in brute force and refinement approaches", {
                      cr.out.ci[[i]][[j]][[k]]$ci.df[1, 3])
         expect_equal(cr.out.brute.ci[[j]][[k]]$ci.df[1, 3],
                      cr.out.ci2[[i]][[j]][[k]]$ci.df[1, 3])
-
+        
         # Upper-bound of the confidence intervals
         expect_equal(cr.out.brute.ci[[j]][[k]]$ci.df[1, 4],
                      cr.out.ci[[i]][[j]][[k]]$ci.df[1, 4])

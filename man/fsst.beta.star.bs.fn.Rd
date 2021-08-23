@@ -47,10 +47,10 @@ displayed while the code is running.}
 \item{n.bs}{The total number of replications to be conducted in this
 procedure.}
 
-\item{eval.count}{The count for the number of times the \code{future_lapply}
+\item{eval.count}{The count for the number of times the \code{future_map}
 function has been called. If this object is zero, it means that the
-\code{future_lapply} function is being called for the first time in this
-subprocedure. Otherwise, it means that the \code{future_lapply} function
+\code{future_map} function is being called for the first time in this
+subprocedure. Otherwise, it means that the \code{future_map} function
 has been called for more than once. This situation typically refers to the
 situations where there are some errors in the first time of the
 replications.}
@@ -66,5 +66,5 @@ Returns a list of output that are obtained from the subsampling
 This function computes one bootstrap estimate for
   \code{beta.star} and \code{x.star}. This function is used
   in the \code{\link[lpinfer]{fsst.beta.star.bs}} function via the
-  \code{future_lapply} command.
+  \code{future_map} command.
 }

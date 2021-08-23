@@ -68,5 +68,5 @@ Returns a list of output that are obtained from the Cho-Russell
 \description{
 This function carries out the bootstrap procedure of the
   \code{\link[lpinfer]{chorussell}} procedure. This function supports
-  parallel programming via the \code{future.apply} package.
+  parallel programming via the \code{future_map} function.
 }
