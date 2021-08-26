@@ -4,7 +4,7 @@
 \alias{summary.chorussell}
 \title{Summary of results from \code{\link[lpinfer]{chorussell}}}
 \usage{
-\method{summary}{chorussell}(x, ...)
+summary.chorussell(x, ...)
 }
 \arguments{
 \item{x}{The output objects returned from \code{\link[lpinfer]{chorussell}}.}

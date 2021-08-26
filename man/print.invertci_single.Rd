@@ -5,7 +5,7 @@
 \title{Print results from \code{\link[lpinfer]{invertci}} with a single
 significance level}
 \usage{
-\method{print}{invertci_single}(x, ...)
+print.invertci_single(x, ...)
 }
 \arguments{
 \item{x}{The output object returned from \code{\link[lpinfer]{invertci}}.}

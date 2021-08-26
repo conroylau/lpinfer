@@ -4,7 +4,7 @@
 \alias{print.fsst}
 \title{Print results from \code{\link[lpinfer]{fsst}}}
 \usage{
-\method{print}{fsst}(x, ...)
+print.fsst(x, ...)
 }
 \arguments{
 \item{x}{The output objects returned from \code{\link[lpinfer]{fsst}}.}

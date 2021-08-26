@@ -4,7 +4,7 @@
 \alias{print.lpmodel.natural}
 \title{Print the \code{lpmodel.natural} object}
 \usage{
-\method{print}{lpmodel.natural}(x, data = NULL, ...)
+print.lpmodel.natural(x, data = NULL, ...)
 }
 \arguments{
 \item{x}{An \code{lpmodel.natural} object.}

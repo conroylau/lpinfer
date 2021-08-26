@@ -4,7 +4,7 @@
 \alias{print.estbounds}
 \title{Print results from \code{\link[lpinfer]{estbounds}}}
 \usage{
-\method{print}{estbounds}(x, ...)
+print.estbounds(x, ...)
 }
 \arguments{
 \item{x}{The output objects returned from \code{\link[lpinfer]{estbounds}}.}

@@ -5,7 +5,7 @@
 \title{Summary of results from \code{\link[lpinfer]{invertci}} for a single
 significance level}
 \usage{
-\method{summary}{invertci_single}(x, alphas, msg.bound, ...)
+summary.invertci_single(x, alphas, msg.bound, ...)
 }
 \arguments{
 \item{x}{The output object returned from \code{\link[lpinfer]{invertci}}.}

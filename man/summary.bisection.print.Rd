@@ -4,7 +4,7 @@
 \alias{summary.bisection.print}
 \title{Print results in constructing bounds in bisection method}
 \usage{
-\method{summary}{bisection.print}(df_bis, i)
+summary.bisection.print(df_bis, i)
 }
 \arguments{
 \item{df_bis}{A data frame storing the information from the bisection

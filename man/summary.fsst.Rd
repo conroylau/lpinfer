@@ -4,7 +4,7 @@
 \alias{summary.fsst}
 \title{Summary of results from \code{\link[lpinfer]{fsst}}}
 \usage{
-\method{summary}{fsst}(x, ...)
+summary.fsst(x, ...)
 }
 \arguments{
 \item{x}{The output objects returned from \code{\link[lpinfer]{fsst}}.}
