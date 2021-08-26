@@ -116,6 +116,7 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
     # ---------------- #
     tau.return <- dkqs.qlp(lpmodel, beta.tgt, beta.obs.hat, 1, "tau",
                            n, solver)
+
     if (is.null(tau)) {
       tau.feasible <- as.numeric(tau.return$objval)
       tau.infeasible <- NULL
@@ -328,8 +329,8 @@ dkqs.qlp <- function(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
 
   # Obtain required set of indices
   x.ind <- 1:A.tgt.nc
-  ind.up <- which(lpmodel$A.tgt %in% theta.up$objval)
-  ind.down <- which(lpmodel$A.tgt %in% theta.down$objval)
+  ind.up <- Matrix::which(lpmodel$A.tgt == theta.up$objval)
+  ind.down <- Matrix::which(lpmodel$A.tgt == theta.down$objval)
   ind.0 <- x.ind[-c(ind.up, ind.down)]
 
   # Updated lb for certain indices

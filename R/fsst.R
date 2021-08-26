@@ -3,7 +3,7 @@
 #' @description This module conducts inference in linear programs using the
 #'   procedure by Fang, Santos, Shaikh and Torgovitsky (2020).
 #'
-#' @import expm
+#' @import expm Matrix
 #'
 #' @inheritParams dkqs
 #' @param lpmodel The \code{lpmodel} object.
@@ -133,7 +133,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       beta.obs.hat <- beta.obs.return[[1]]
       sigma.beta.obs <- beta.obs.return[[2]]
       beta.shp.hat <- lpmodel.eval(data, lpmodel$beta.shp, 1)
-      beta.n <- c(unlist(beta.obs.hat), beta.shp.hat, beta.tgt)
+      beta.n <- Reduce(rbind, c(unlist(beta.obs.hat), beta.shp.hat, beta.tgt))
 
       # Change maxR to the length of the list 'beta.obs' if it is a list
       if (class(lpmodel$beta.obs) == "list") {
@@ -178,8 +178,10 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
             if (!is.null(beta.obs.bs.new[[1]])) {
                beta.n.bs.new <- list()
                for (i in i0:i1) {
-                  beta.n.bs.new[[i]] <- c(beta.obs.bs.new[[i]], beta.shp.hat,
-                                          beta.tgt)
+                  beta.n.bs.new[[i]] <- Reduce(rbind,
+                                               c(beta.obs.bs.new[[i]],
+                                                 beta.shp.hat,
+                                                 beta.tgt))
                }
                beta.obs.bs <- c(beta.obs.bs, beta.obs.bs.new)
                beta.n.bs <- c(beta.n.bs, beta.n.bs.new)
@@ -223,9 +225,9 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
 
          ### 2(c) Compute the beta.sigma
          n.beta1 <- nrow(sigma.beta.obs)
-         n.beta23 <- length(c(beta.shp.hat, beta.tgt))
+         n.beta23 <- length(beta.shp.hat) + length(beta.tgt)
          zero.12 <- matrix(rep(0, n.beta1 * n.beta23), nrow = n.beta1)
-         zero.21 <- t(zero.12)
+         zero.21 <- Matrix::t(zero.12)
          zero.22 <- matrix(rep(0, n.beta23^2), nrow = n.beta23)
          beta.sigma <- rbind(cbind(sigma.beta.obs, zero.12),
                              cbind(zero.21, zero.22))
@@ -509,7 +511,8 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
 full.beta.bs <- function(lpmodel, beta.tgt, beta.obs.bs, R) {
    beta.bs <- list()
    for (i in 1:R) {
-      beta.bs[[i]] <- c(beta.obs.bs[[i]], lpmodel$beta.shp, beta.tgt)
+      beta.bs[[i]] <- Reduce(rbind,
+                             c(beta.obs.bs[[i]], lpmodel$beta.shp, beta.tgt))
    }
 
    return(beta.bs)
@@ -793,6 +796,8 @@ sigma.summation <- function(n, beta.bs.list, progress, eval.count) {
 #'   used in the \code{\link[lpinfer]{sigma.summation}} function that computes
 #'   the asymptotic variance estimator.
 #'
+#' @import Matrix
+#'
 #' @details Denote \eqn{\bm{\beta}} and \eqn{\hat{\bm{\beta}}_{\rm obs}} as
 #'   the \eqn{n \times 1} vectors \code{beta} and \code{beta.obs.hat}
 #'   respectively. This function returns the \eqn{n \times n} matrix
@@ -826,9 +831,9 @@ beta.product <- function(beta, beta.obs.hat, pbar, progress, eval.count) {
 
    beta.diff <- as.matrix(beta - beta.obs.hat)
    if (nrow(beta.diff) == 1) {
-      beta.prod <- t(beta.diff) %*% beta.diff
+      beta.prod <- Matrix::t(beta.diff) %*% beta.diff
    } else {
-      beta.prod <- beta.diff %*% t(beta.diff)
+      beta.prod <- beta.diff %*% Matrix::t(beta.diff)
    }
 
    return(beta.prod)
@@ -923,6 +928,8 @@ beta.star.qp <- function(data, lpmodel, beta.tgt, weight.mat, beta.obs.hat,
 #'
 #' @description This function computes the solution to the cone problem.
 #'
+#' @import Matrix
+#'
 #' @inheritParams fsst
 #' @inheritParams fsst.cone.bs
 #' @inheritParams fsst.beta.star.bs
@@ -951,7 +958,7 @@ fsst.cone.lp <- function(n, omega.i, beta.n, beta.star, lpmodel, indicator,
    zero.dp <- matrix(rep(0, d * p), nrow = d)
 
    # Update the objective function
-   obj <- c(beta.star, zero.p, zero.p)
+   obj <- Reduce(rbind, c(beta.star, zero.p, zero.p))
 
    # Construct the lower bound
    lb <- c(rep(-Inf, p), rep(0, 2 * p))
@@ -961,7 +968,7 @@ fsst.cone.lp <- function(n, omega.i, beta.n, beta.star, lpmodel, indicator,
 
    A.mat1 <- cbind(omega.i, -diag(p), diag(p))
    A.mat2 <- c(zero.p, ones.p, ones.p)
-   A.mat3 <- cbind(t(A), zero.dp, zero.dp)
+   A.mat3 <- cbind(Matrix::t(A), zero.dp, zero.dp)
    A.mat <- rbind(A.mat1, A.mat2, A.mat3)
 
    # Construct RHS vector
@@ -1250,6 +1257,8 @@ fsst.beta.star.bs.fn <- function(beta.obs.bs, data, lpmodel, beta.tgt,
 #'   \eqn{\widehat{\bm{\beta}}^r_n} in the \code{\link[lpinfer]{fsst}}
 #'   procedure.
 #'
+#' @import Matrix
+#'
 #' @inheritParams fsst
 #' @inheritParams fsst.cone.lp
 #'
@@ -1281,14 +1290,14 @@ beta.r.compute <- function(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
    zero.qq <- matrix(rep(0, q * q), nrow = q)
    zero.pqq <- matrix(rep(0, (p - q) * q), nrow = q)
    iden.beta <- rbind(cbind(zero.qq, zero.pqq),
-                      cbind(t(zero.pqq), diag(p - q)))
+                      cbind(Matrix::t(zero.pqq), diag(p - q)))
 
    # Construct the constraints matrix
    A <- rbind(lpmodel$A.obs, lpmodel$A.shp, lpmodel$A.tgt)
    A.mat1 <- as.matrix(cbind(sqrt(n) * diag(p), zero.pd, -omega.i, A, zero.p1))
    if (indicator == 0) {
       # Multiply A.mat 1 by t(A) if indicator == 0 (i.e. d < p)
-      A.mat1 <- t(A) %*% A.mat1
+      A.mat1 <- Matrix::t(A) %*% A.mat1
    }
    A.mat2 <- as.matrix(cbind(diag(p), -A, zero.pp, zero.pd, zero.p1))
    A.mat3 <- as.matrix(cbind(zero.pp, zero.pd, -diag(p), zero.pd, ones.p1))
@@ -1298,14 +1307,19 @@ beta.r.compute <- function(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
    # Construct the rhs vector and the sense vector
    A.mat <- rbind(A.mat1, A.mat2, A.mat3, A.mat4, A.mat5)
    if (indicator == 0) {
-      rhs.mat <- c(sqrt(n) * t(A) %*% beta.star, zero.1p, zero.1p, zero.1p,
-                   rep(0, q), lpmodel$beta.shp, beta.tgt)
-      sense.mat <- c(rep("=", nrow(A.mat1) + nrow(A.mat2)),
-                     rep(">=", 2 * p), rep("=", p))
+      rhs.mat <- Reduce(rbind,
+                        c(sqrt(n) * Matrix::t(A) %*% beta.star, zero.1p,
+                          zero.1p, zero.1p, rep(0, q), lpmodel$beta.shp,
+                          beta.tgt))
+      sense.mat <- Reduce(rbind,
+                          c(rep("=", nrow(A.mat1) + nrow(A.mat2)),
+                            rep(">=", 2 * p), rep("=", p)))
    } else {
-      rhs.mat <- c(sqrt(n) * beta.n, zero.1p, zero.1p, zero.1p, rep(0, q),
-                   lpmodel$beta.shp, beta.tgt)
-      sense.mat <- c(rep("=", 2 * p), rep(">=", 2 * p), rep("=", p))
+      rhs.mat <- Reduce(rbind,
+                        c(sqrt(n) * beta.n, zero.1p, zero.1p, zero.1p,
+                          rep(0, q), lpmodel$beta.shp, beta.tgt))
+      sense.mat <- Reduce(rbind,
+                          c(rep("=", 2 * p), rep(">=", 2 * p), rep("=", p)))
    }
 
    # Construct the objective function
@@ -1697,7 +1711,7 @@ fsst.cone.bs.fn <- function(beta.star.bs, n, omega.i, beta.n, beta.star,
       return(list(status = "error",
                   msg = e))
    })
-
+   
    if (is.null(result.cone$status)) {
       Ts <- result.cone$objval
       msg <- NULL

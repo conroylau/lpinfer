@@ -356,12 +356,19 @@ chorussell.simp <- function(lb.can1, lb.can2, ub.can1, ub.can2, progress) {
 
   # Upper bound
   progressr::with_progress({
+    if (isTRUE(progress)) {
+      pbar <- progressr::progressor(along = seq_along(ub.can))
+    } else {
+      pbar <- NULL
+    }
+
     ub.return <- furrr::future_map(ub.can,
                                    .f = chorussell.simp.fn,
                                    can1 = ub.can1,
                                    pbar = pbar,
                                    bd = "upper",
                                    progress = progress)
+
     df.ub <- data.frame(bd = unlist(sapply(ub.return, "[", "bd"),
                                     use.names = FALSE),
                         sum = unlist(sapply(ub.return, "[", "sum"),

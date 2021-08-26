@@ -340,7 +340,7 @@ subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver, n,
     A.new <- rbind(A1.shp, A1.tgt, A1.obs)
 
     # RHS vector
-    rhs.new <- c(beta.shp.hat, beta.tgt, Gb)
+    rhs.new <- Reduce(rbind, c(beta.shp.hat, beta.tgt, Gb))
 
     # Lower bounds
     lb.new <- rep(0, length(c.new))
@@ -363,7 +363,7 @@ subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver, n,
     A.new <- rbind(A.shp.hat, A.tgt.hat)
 
     # RHS vector
-    rhs.new <- c(beta.shp.hat, beta.tgt)
+    rhs.new <- Reduce(rbind, c(beta.shp.hat, beta.tgt))
 
     # Lower bounds
     lb.new <- rep(0, ncol(A.shp.hat))

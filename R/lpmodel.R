@@ -27,7 +27,7 @@ lpmodel.eval <- function(data, obj, i) {
     obj.eval <- obj(data)
   } else if (class(obj) == "list") {
     obj.eval <- obj[[i]]
-  } else if (!is.matrix(obj) & !is.data.frame(obj)) {
+  } else if (!is.matrix(obj) & !is.data.frame(obj) & !is(obj, "sparseMatrix")) {
     obj.eval <- matrix(obj, nrow = 1)
   } else if (class(obj) == "data.frame") {
     obj.eval <- as.matrix(obj)
@@ -275,7 +275,8 @@ lpm.print <- function(x, lpm.string, data = NULL, ...) {
             dimension.str <- dim(as.matrix(tmp.obj))
             dimension.tmp <- paste0(dimension.str[1], "x", dimension.str[2])
           }
-        } else if (class.tmp %in% c("data.frame", "matrix", "numeric")) {
+        } else if (class.tmp %in% c("data.frame", "matrix", "numeric") | 
+                   is(obj, "sparseMatrix")) {
           dim.obj <- dim(obj)
           if (is.null(dim.obj)) {
             dimension.tmp <- paste0("1x", length(obj))

@@ -186,3 +186,25 @@ error.id.match <- function(error.list, df.error) {
 
   return(df.error)
 }
+
+#' Coerces a \code{sparseMatrix} as a \code{matrix}
+#' 
+#' @description This function coerces a \code{sparseMatrix} as a 
+#'   \code{matrix}. This function is used specifically in the 
+#'   \code{\link[lpinfer]{gurobi.optim}} function to ensure that the 
+#'   arguments are accepted by the \code{gurobi} function.
+#' 
+#' @param mat The matrix that is used in the \code{model} component.
+#' 
+#' @return Returns a matrix in the \code{matrix} form.
+#' 
+#' @export
+#' 
+smatrixconvert <- function(mat) {
+  if (is(mat, "sparseMatrix") | is(mat, "Matrix")) {
+    return(as.matrix(mat))
+  } else {
+    return(mat)
+  }
+}
+

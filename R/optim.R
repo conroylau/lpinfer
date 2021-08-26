@@ -40,20 +40,20 @@ gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL,
   model <- list()
   # Objective function - Quadratic / list
   model$Q <- objective_return$obj2
-  model$obj <- objective_return$obj1
-  model$objcon <- objective_return$obj0
+  model$obj <- smatrixconvert(objective_return$obj1)
+  model$objcon <- as.numeric(objective_return$obj0)
 
   # Linear constraints
   model$A <- A
-  model$rhs <- rhs
+  model$rhs <- smatrixconvert(rhs)
 
   # Quadratic constraints
   model$quadcon <- qc
 
   # Model sense and lower bound
-  model$sense <- sense
+  model$sense <- smatrixconvert(sense)
   model$modelsense <- modelsense
-  model$lb <- lb
+  model$lb <- smatrixconvert(lb)
 
   # ---------------- #
   # Step 3: Result of the linear or quadratic program, and return result
@@ -388,6 +388,8 @@ limsolve.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
 #'    for linear programs. This function takes matrix \eqn{\bm{A}} and
 #'    \eqn{\bm{\beta}} as input and computes the coefficients of the objective
 #'    function.
+#'    
+#' @import Matrix
 #'
 #' @param A The matrix \eqn{\bm{A}}.
 #' @param beta The column vector \eqn{\bm{\beta}}.
@@ -448,12 +450,11 @@ objective.function <- function(A, b, n, weight = NULL) {
     }
 
     # Quadratic program coefficients
-    A <- as.matrix(A)
-    obj2 <- as.matrix(t(A) %*% weight %*% A * n)
+    obj2 <- as.matrix(Matrix::t(A) %*% weight %*% A * n)
     rownames(obj2) <- 1:nrow(obj2)
     colnames(obj2) <- 1:ncol(obj2)
-    obj1 <- -2 * as.matrix(t(b) %*% weight %*% A * n)
-    obj0 <- t(b) %*% weight %*% b * n
+    obj1 <- -2 * as.matrix(Matrix::t(b) %*% weight %*% A * n)
+    obj0 <- Matrix::t(b) %*% weight %*% b * n
   }
 
   # Return the above objective functions

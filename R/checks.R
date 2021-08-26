@@ -768,7 +768,7 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R) {
     # ---------------- #
     err.ind <- NULL
 
-    # Category 1: Check if it is a single matrix
+    # Category 1: Check if it is a single matrix or a sparseMatrix
     if ("matrix" %in% mat.cat) {
       mat.return <- check.matrix(mat, mat.name, mat.cat, FALSE)
       if (mat.return$err.ind != 1) {
@@ -957,11 +957,11 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R) {
 #' @export
 #'
 check.matrix <- function(mat, mat.name, mat.cat, inside.list) {
-  # General message indicating the object has to be either a matrix or a
-  # data.frame
+  # General message indicating the object has to be either a data.frame, matrix,
+  # numeric, or sparseMatrix
   msg.matdf <- paste0("The objects inside the list object '%s' of ",
-                      "'lpmodel' has to be either a matrix or a ",
-                      "data.frame.")
+                      "'lpmodel' has to be one of the followings: data.frame,",
+                      "matrix, numeric, or sparseMatrix.")
 
   if (class(mat) == "data.frame" | class(mat) == "matrix" |
       class(mat) == "numeric") {
@@ -977,11 +977,15 @@ check.matrix <- function(mat, mat.name, mat.cat, inside.list) {
     return(list(mat.update = mat.update,
                 err.ind = 0,
                 dim = dim(mat.update)))
+  } else if (isTRUE(is(mat, "sparseMatrix"))) {
+    return(list(mat.update = mat,
+                err.ind = 0,
+                dim = dim(mat)))
   } else if (length(mat.cat) == 1) {
     if (inside.list == FALSE) {
       stop(sprintf(paste0("The class of the object '%s' in 'lpmodel' has to ",
-                          "be one of the followings: data.frame, matrix, or ",
-                          "numeric."),
+                          "be one of the followings: data.frame, matrix, ",
+                          "numeric, or sparseMatrix."),
                    mat.name),
            call. = FALSE)
     } else {
@@ -1020,7 +1024,7 @@ check.vector <- function(vec, vec.name, inside.list) {
   msg.vector <- paste0("The object '%s' in 'lpmodel' has to be a %s.")
 
   # Turn it into a matrix if it is not a list
-  if (!is.list(vec)) {
+  if (!is.list(vec) | !is(vec, "sparseMatrix")) {
     vec <- as.matrix(vec)
   }
   if (nrow(vec) != 1 & ncol(vec) != 1) {
