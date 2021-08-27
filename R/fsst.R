@@ -3,7 +3,7 @@
 #' @description This module conducts inference in linear programs using the
 #'   procedure by Fang, Santos, Shaikh and Torgovitsky (2020).
 #'
-#' @import expm Matrix
+#' @import expm Matrix pracma
 #'
 #' @inheritParams dkqs
 #' @param lpmodel The \code{lpmodel} object.
@@ -23,6 +23,24 @@
 #'        elements of the inverse of the variance matrix}
 #'     \item{\code{avar} --- inverse of the variance matrix}
 #'   }
+#' @param sqrtm.method The method used to obtain the matrix square root in 
+#'   the \code{\link[lpinfer]{fsst}} procedure. There are two options available:
+#'   \itemize{
+#'     \item{\code{"pracma"} --- the \code{\link[pracma]{sqrtm}}
+#'     function from the \code{pracma} package will be used. 
+#'     Note that if this method does not converge, the 
+#'     \code{expm::sqrtm} function will be used automatically.}
+#'     \item{\code{"expm"} --- the \code{\link[expm]{sqrtm}}
+#'     function from the \code{expm} package will be used.}
+#'   }
+#' @param sqrtm.kmax The maximum number of iterations used to compute the 
+#'    matrix square root. This is passed to the \code{kmax} argument of 
+#'    the \code{\link[pracma]{sqrtm}} function if 
+#'    \code{sqrtm.method = "pracma"}. Otherwise, this argument is ignored.
+#' @param sqrtm.tol The absolute tolerance used to compute the matrix square
+#'    root. This is passed to the \code{tol} argument of 
+#'    the \code{\link[pracma]{sqrtm}} function if 
+#'    \code{sqrtm.method = "pracma"}. Otherwise, this argument is ignored.
 #'
 #' @return Returns the following information:
 #'   \item{pval}{A table of \eqn{p}-values.}
@@ -69,7 +87,8 @@
 #'
 fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                  lambda = NA, rho = 1e-4, n = NULL, weight.matrix = "diag",
-                 solver = NULL, progress = TRUE) {
+                 solver = NULL, progress = TRUE, sqrtm.method = "pracma",
+                 sqrtm.kmax = 20, sqrtm.tol = .Machine$double.eps^(1/2)) {
    # ---------------- #
    # Step 1: Update call, check and update the arguments; initialize df.error
    # ---------------- #
@@ -78,7 +97,8 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
 
    # Check the arguments
    fsst.return <- fsst.check(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho,
-                             n, weight.matrix, solver, progress)
+                             n, weight.matrix, solver, progress,
+                             sqrtm.method, sqrtm.kmax, sqrtm.tol)
 
    # Update the arguments
    data <- fsst.return$data
@@ -285,7 +305,26 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
 
          # Compute the matrix square root
          rhobar.i <- base::norm(sigma.star, type = "f") * rho
-         omega.i <- expm::sqrtm(sigma.star + rhobar.i * diag(nrow(sigma.star)))
+         sigma.reg <- sigma.star + rhobar.i * diag(nrow(sigma.star))
+         if (sqrtm.method == "pracma") {
+            sqrtm.tmp <- pracma::sqrtm(sigma.reg, sqrtm.kmax, sqrtm.tol)
+            # Use the expm::sqrtm method if pracma::sqrtm does not converge
+            if (sqrtm.tmp$k == -1) {
+               sqrtm.method <- "expm"
+               warning(paste0("The pracma::sqrtm method does not converge. ",
+                              "The expm::sqrtm function is used to obtain ",
+                              "the matrix square root."))
+            }
+         }
+         
+         # Use expm::sqrtm to compute the matrix square root if pracma::sqrtm
+         # failed or sqrtm.method == "expm". Otherwise, take omega.i as 
+         # sqrtm.tmp$B
+         if (sqrtm.method == "expm") {
+            omega.i <- expm::sqrtm(sigma.reg)
+         } else {
+            omega.i <- sqrtm.tmp$B
+         }
 
          # ---------------- #
          # Step 5: Test statistic
@@ -1800,7 +1839,8 @@ fsst.pval <- function(range.n, cone.n, range.n.list, cone.n.list, R,
 #' @export
 #'
 fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
-                       weight.matrix, solver, progress) {
+                       weight.matrix, solver, progress,
+                       sqrtm.method, sqrtm.kmax, sqrtm.tol) {
 
    # ---------------- #
    # Step 1: Check data
@@ -1872,9 +1912,26 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
    test.logical <- test.return$inout
    logical.lb <- test.return$lb
    logical.ub <- test.return$ub
-
+   
    # ---------------- #
-   # Step 7: Return updated items
+   # Step 7: Check the arguments related to the `sqrtm` function
+   # ---------------- #
+   # Check if `sqrtm.method` is either "expm" or "pracma"
+   sqrtm.errmsg <- "'sqrtm.method' has to be either 'expm' or 'pracma'."
+   if (length(sqrtm.method) != 1) {
+      stop(sqrtm.errmsg)
+   } else if (!(sqrtm.method %in% c("expm", "pracma")) |
+              class(sqrtm.method) != "character") {
+      stop(sqrtm.errmsg)
+   }
+   # Check if the sqrtm.kmax and sqrtm.tol arguments are correct
+   if (sqrtm.method == "pracma") {
+      check.positiveinteger(sqrtm.kmax, "sqrtm.kmax")
+      check.positive(sqrtm.tol, "sqrtm.tol")  
+   }
+   
+   # ---------------- #
+   # Step 8: Return updated items
    # ---------------- #
    return(list(solver = solver,
                solver.name = solver.name,

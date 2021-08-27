@@ -15,7 +15,10 @@ fsst(
   n = NULL,
   weight.matrix = "diag",
   solver = NULL,
-  progress = TRUE
+  progress = TRUE,
+  sqrtm.method = "pracma",
+  sqrtm.kmax = 20,
+  sqrtm.tol = .Machine$double.eps^(1/2)
 )
 }
 \arguments{
@@ -61,6 +64,27 @@ The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \item{progress}{The boolean variable for whether the progress bars should
 be displayed. If it is set as \code{TRUE}, the progress bars will be
 displayed while the code is running.}
+
+\item{sqrtm.method}{The method used to obtain the matrix square root in 
+the \code{\link[lpinfer]{fsst}} procedure. There are two options available:
+\itemize{
+  \item{\code{"pracma"} --- the \code{\link[pracma]{sqrtm}}
+  function from the \code{pracma} package will be used. 
+  Note that if this method does not converge, the 
+  \code{expm::sqrtm} function will be used automatically.}
+  \item{\code{"expm"} --- the \code{\link[expm]{sqrtm}}
+  function from the \code{expm} package will be used.}
+}}
+
+\item{sqrtm.kmax}{The maximum number of iterations for computing the 
+matrix square root. This is passed to the \code{kmax} argument of 
+the \code{\link[pracma]{sqrtm}} function if 
+\code{sqrtm.method = "pracma"}. Otherwise, this argument is ignored.}
+
+\item{sqrtm.tol}{The absolute tolerance used in computing the matrix square
+root. This is passed to the \code{tol} argument of 
+the \code{\link[pracma]{sqrtm}} function if 
+\code{sqrtm.method = "pracma"}. Otherwise, this argument is ignored.}
 }
 \value{
 Returns the following information:
