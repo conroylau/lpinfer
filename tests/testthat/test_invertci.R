@@ -118,7 +118,7 @@ bisection.ci.test <- function(init.b, category, alpha) {
     set.seed(1)
     temp <- do.call(subsample, farg)
     pval.temp <- temp$pval[1, 2]
-    pval.location <- (pval.temp >= alpha/2)
+    pval.location <- (pval.temp >= alpha)
 
     # Decide which is the next interval
     if (category == "lb") {

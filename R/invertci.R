@@ -362,8 +362,6 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, pvals,
                                                 "p-value",
                                                 "decision"))),
                        stringsAsFactors = F)
-  # Divide alpha by 2
-  alpha_2sided <- alpha/2
 
   ### Left end-point a
   a <- b0
@@ -374,7 +372,7 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, pvals,
     cat(paste0(" Iteration\t Lower bound \t Upper bound \t Test point \t ",
                "p-value\t Reject?\n"))
   }
-  df_bis <- bisec.print("left end", alpha_2sided, fb0_return, a, "NA",
+  df_bis <- bisec.print("left end", alpha, fb0_return, a, "NA",
                         progress, dp, df_bis)$df_bis
 
   ### Right end-point b
@@ -382,7 +380,7 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, pvals,
   fb1_return <- bisec.eval(f, farg, b, pvals, rngstate, para.match)
   pvals <- fb1_return$pvals
   # Print information
-  df_bis <- bisec.print("right end", alpha_2sided, fb1_return, "NA", b,
+  df_bis <- bisec.print("right end", alpha, fb1_return, "NA", b,
                         progress, dp, df_bis)$df_bis
 
   # If fb1 and fb0 are of the same sign, ask user to choose another interval
@@ -412,10 +410,10 @@ ci.bisection <- function(f, farg, alpha, b0, b1, tol, max.iter, pvals,
 
     # Update interval based on whether the left or the right segment is chosen
     # Print information
-    df_bis <- bisec.print(i , alpha_2sided, fc_return, a, b, progress,
-                          dp, df_bis)$df_bis
+    df_bis <- bisec.print(i , alpha, fc_return, a, b, progress, dp,
+                          df_bis)$df_bis
 
-    if (ci.inout(fc, alpha_2sided, type) == "left") {
+    if (ci.inout(fc, alpha, type) == "left") {
       b <- c
     } else {
       a <- c
@@ -554,8 +552,6 @@ ci.inout <- function(pval, alpha, type) {
 #' @param procedure The variable indicating whether the function is evaluating
 #'    the end-points or first mid-point, or is iterating through the bisection
 #'    procedure.
-#' @param alphahalf Half of significance value that is used to evaluate the
-#'    confidence interval.
 #' @param returnlist The list of information obtained from running
 #'    \code{\link[lpinfer]{bisec.eval}}.
 #' @param a The lower bound of the current interval. This is \code{NULL} if
@@ -573,14 +569,14 @@ ci.inout <- function(pval, alpha, type) {
 #'
 #' @export
 #'
-bisec.print <- function(procedure, alphahalf, returnlist, a, b, progress, dp,
+bisec.print <- function(procedure, alpha, returnlist, a, b, progress, dp,
                         df_bis) {
   # ---------------- #
   # Step 1: Obtain information about the current data frame
   # ---------------- #
   df_bis_row <- nrow(df_bis)
   # Update decision
-  if (returnlist$pval < alphahalf) {
+  if (returnlist$pval < alpha) {
     decision <- TRUE
   } else {
     decision <- FALSE

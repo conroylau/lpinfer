@@ -76,12 +76,12 @@ the \code{\link[lpinfer]{fsst}} procedure. There are two options available:
   function from the \code{expm} package will be used.}
 }}
 
-\item{sqrtm.kmax}{The maximum number of iterations for computing the 
+\item{sqrtm.kmax}{The maximum number of iterations used to compute the 
 matrix square root. This is passed to the \code{kmax} argument of 
 the \code{\link[pracma]{sqrtm}} function if 
 \code{sqrtm.method = "pracma"}. Otherwise, this argument is ignored.}
 
-\item{sqrtm.tol}{The absolute tolerance used in computing the matrix square
+\item{sqrtm.tol}{The absolute tolerance used to compute the matrix square
 root. This is passed to the \code{tol} argument of 
 the \code{\link[pracma]{sqrtm}} function if 
 \code{sqrtm.method = "pracma"}. Otherwise, this argument is ignored.}

@@ -4,15 +4,14 @@
 \alias{bisec.print}
 \title{Print messages in bisection procedure and store results}
 \usage{
-bisec.print(procedure, alphahalf, returnlist, a, b, progress, dp, df_bis)
+bisec.print(procedure, alpha, returnlist, a, b, progress, dp, df_bis)
 }
 \arguments{
 \item{procedure}{The variable indicating whether the function is evaluating
 the end-points or first mid-point, or is iterating through the bisection
 procedure.}
 
-\item{alphahalf}{Half of significance value that is used to evaluate the
-confidence interval.}
+\item{alpha}{The significance level(s). This can be a vector.}
 
 \item{returnlist}{The list of information obtained from running
 \code{\link[lpinfer]{bisec.eval}}.}
