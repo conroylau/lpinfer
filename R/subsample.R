@@ -62,7 +62,7 @@
 #'
 subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                       norm = 2, phi = 2/3, n = NULL, replace = FALSE,
-                      solver = NULL, progress = TRUE) {
+                      solver = NULL, progress = TRUE, previous.output = NA) {
   # ---------------- #
   # Step 1: Obtain call, check and update the dependencies
   # ---------------- #

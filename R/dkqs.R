@@ -21,6 +21,11 @@
 #'    displayed while the code is running.
 #' @param n The sample size. This is only required if \code{data} is omitted
 #'    in the input.
+#' @param previous.output The list of outputs obtained from the previous
+#'    evaluation of the procedure. This is only used in the
+#'    \code{\link[lpinfer]{fsst}} test and when \code{previous.out} contains
+#'    the studentized matrix \code{omega.i}. The rest of the arguments 
+#'    are ignored.
 #'
 #' @return Returns the following list of outputs:
 #'   \item{pval}{A table of \eqn{p}-values for each \eqn{\tau}.}
@@ -64,7 +69,8 @@
 #' @export
 #'
 dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
-                 tau = NULL, n = NULL, solver = NULL, progress = TRUE) {
+                 tau = NULL, n = NULL, solver = NULL, progress = TRUE,
+                 previous.output = NA) {
   # ---------------- #
   # Step 1: Update call, check and update the arguments
   # ---------------- #

@@ -13,7 +13,8 @@ dkqs(
   tau = NULL,
   n = NULL,
   solver = NULL,
-  progress = TRUE
+  progress = TRUE,
+  previous.output = NA
 )
 }
 \arguments{
@@ -43,6 +44,12 @@ The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 \item{progress}{The boolean variable for whether the progress bars should
 be displayed. If it is set as \code{TRUE}, the progress bars will be
 displayed while the code is running.}
+
+\item{previous.output}{The list of outputs obtained from the previous
+evaluation of the procedure. This is only used in the
+\code{\link[lpinfer]{fsst}} test and when \code{previous.out} contains
+the studentized matrix \code{omega.i}. The rest of the arguments 
+are ignored.}
 }
 \value{
 Returns the following list of outputs:

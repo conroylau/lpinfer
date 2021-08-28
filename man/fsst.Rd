@@ -18,7 +18,8 @@ fsst(
   progress = TRUE,
   sqrtm.method = "pracma",
   sqrtm.kmax = 20,
-  sqrtm.tol = .Machine$double.eps^(1/2)
+  sqrtm.tol = .Machine$double.eps^(1/2),
+  previous.output = NA
 )
 }
 \arguments{
@@ -39,7 +40,7 @@ number of bootstrap replications to be conducted if there are errors.}
 be included if \code{NA} is included as part of the vector for
 \code{lambda}. For instance, if \code{lambda} is set as \code{c(0.1, NA)},
 then both 0.1 and the data-driven \code{lambda} will be applied in the
-\code{\link[lpinfer]{fsst}} procedure. The default is to use the
+\code{\link[lpinfer]{fsst}} test. The default is to use the
 data-driven \code{lambda}.}
 
 \item{rho}{Parameter used in the studentization of matrices.}
@@ -85,6 +86,12 @@ the \code{\link[pracma]{sqrtm}} function if
 root. This is passed to the \code{tol} argument of 
 the \code{\link[pracma]{sqrtm}} function if 
 \code{sqrtm.method = "pracma"}. Otherwise, this argument is ignored.}
+
+\item{previous.output}{The list of outputs obtained from the previous
+evaluation of the procedure. This is only used in the
+\code{\link[lpinfer]{fsst}} test and when \code{previous.out} contains
+the studentized matrix \code{omega.i}. The rest of the arguments 
+are ignored.}
 }
 \value{
 Returns the following information:

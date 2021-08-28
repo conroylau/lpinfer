@@ -12,7 +12,7 @@
 #'    be included if \code{NA} is included as part of the vector for
 #'    \code{lambda}. For instance, if \code{lambda} is set as \code{c(0.1, NA)},
 #'    then both 0.1 and the data-driven \code{lambda} will be applied in the
-#'    \code{\link[lpinfer]{fsst}} procedure. The default is to use the
+#'    \code{\link[lpinfer]{fsst}} test. The default is to use the
 #'    data-driven \code{lambda}.
 #' @param rho Parameter used in the studentization of matrices.
 #' @param weight.matrix The option used in the weighting matrix. There are
@@ -88,7 +88,8 @@
 fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                  lambda = NA, rho = 1e-4, n = NULL, weight.matrix = "diag",
                  solver = NULL, progress = TRUE, sqrtm.method = "pracma",
-                 sqrtm.kmax = 20, sqrtm.tol = .Machine$double.eps^(1/2)) {
+                 sqrtm.kmax = 20, sqrtm.tol = .Machine$double.eps^(1/2),
+                 previous.output = NA) {
    # ---------------- #
    # Step 1: Update call, check and update the arguments; initialize df.error
    # ---------------- #
@@ -98,7 +99,8 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
    # Check the arguments
    fsst.return <- fsst.check(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho,
                              n, weight.matrix, solver, progress,
-                             sqrtm.method, sqrtm.kmax, sqrtm.tol)
+                             sqrtm.method, sqrtm.kmax, sqrtm.tol,
+                             previous.output)
 
    # Update the arguments
    data <- fsst.return$data
@@ -107,6 +109,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
    test.logical <- fsst.return$test.logical
    logical.lb <- fsst.return$logical.lb
    logical.ub <- fsst.return$logical.ub
+   omega.i <- fsst.return$omega.i
 
    # Compute the maximum number of iterations
    maxR <- ceiling(R * Rmulti)
@@ -305,25 +308,29 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
 
          # Compute the matrix square root
          rhobar.i <- base::norm(sigma.star, type = "f") * rho
-         sigma.reg <- sigma.star + rhobar.i * diag(nrow(sigma.star))
-         if (sqrtm.method == "pracma") {
-            sqrtm.tmp <- pracma::sqrtm(sigma.reg, sqrtm.kmax, sqrtm.tol)
-            # Use the expm::sqrtm method if pracma::sqrtm does not converge
-            if (sqrtm.tmp$k == -1) {
-               sqrtm.method <- "expm"
-               warning(paste0("The pracma::sqrtm method does not converge. ",
-                              "The expm::sqrtm function is used to obtain ",
-                              "the matrix square root."))
-            }
-         }
          
-         # Use expm::sqrtm to compute the matrix square root if pracma::sqrtm
-         # failed or sqrtm.method == "expm". Otherwise, take omega.i as 
-         # sqrtm.tmp$B
-         if (sqrtm.method == "expm") {
-            omega.i <- expm::sqrtm(sigma.reg)
-         } else {
-            omega.i <- sqrtm.tmp$B
+         # Compute the studentization matrix if 'omega.i' is NA and if d < px``
+         if (!is.matrix(omega.i) | d < p) {
+            sigma.reg <- sigma.star + rhobar.i * diag(nrow(sigma.star))
+            if (sqrtm.method == "pracma") {
+               sqrtm.tmp <- pracma::sqrtm(sigma.reg, sqrtm.kmax, sqrtm.tol)
+               # Use the expm::sqrtm method if pracma::sqrtm does not converge
+               if (sqrtm.tmp$k == -1) {
+                  sqrtm.method <- "expm"
+                  warning(paste0("The pracma::sqrtm method does not converge. ",
+                                 "The expm::sqrtm function is used to obtain ",
+                                 "the matrix square root."))
+               }
+            }
+            
+            # Use expm::sqrtm to compute the matrix square root if pracma::sqrtm
+            # failed or sqrtm.method == "expm". Otherwise, take omega.i as 
+            # sqrtm.tmp$B
+            if (sqrtm.method == "expm") {
+               omega.i <- expm::sqrtm(sigma.reg)
+            } else {
+               omega.i <- sqrtm.tmp$B
+            }  
          }
 
          # ---------------- #
@@ -1840,7 +1847,7 @@ fsst.pval <- function(range.n, cone.n, range.n.list, cone.n.list, R,
 #'
 fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
                        weight.matrix, solver, progress,
-                       sqrtm.method, sqrtm.kmax, sqrtm.tol) {
+                       sqrtm.method, sqrtm.kmax, sqrtm.tol, previous.output) {
 
    # ---------------- #
    # Step 1: Check data
@@ -1866,6 +1873,9 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
                                              "function_obs_var"),
                             beta.shp.cat = "matrix",
                             R = R)
+   # Length of the \beta vector
+   p <- length(lpmodel.beta.eval(data, lpmodel$beta.obs, 1)$beta.obs) +
+      length(lpmodel$beta.shp) + 1
 
    # ---------------- #
    # Step 3: Check solver
@@ -1912,7 +1922,7 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
    test.logical <- test.return$inout
    logical.lb <- test.return$lb
    logical.ub <- test.return$ub
-   
+
    # ---------------- #
    # Step 7: Check the arguments related to the `sqrtm` function
    # ---------------- #
@@ -1929,16 +1939,67 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
       check.positiveinteger(sqrtm.kmax, "sqrtm.kmax")
       check.positive(sqrtm.tol, "sqrtm.tol")  
    }
-   
+
    # ---------------- #
-   # Step 8: Return updated items
+   # Step 8: Check previous.output
+   # ---------------- #
+   prev.out.msg1 <- paste0("'previous.output' has to be either 'NA' or ",
+                           "a list of objects returned from a previous ",
+                           "evaluation of the FSST test that contains the ",
+                           "'omega.i' matrix.")
+   prev.out.msg2 <- "Therefore, the 'omega.i' matrix will be computed. "
+   if (!is.list(previous.output)) {
+      if (is.null(previous.output)) {
+         warning(paste0(prev.out.msg1, " ", prev.out.msg2),
+                 immediate. = TRUE)
+      } else if (!is.na(previous.output)) {
+         warning(paste0(prev.out.msg1, " ", prev.out.msg2),
+                 immediate. = TRUE)
+      }
+      omega.i <- NA
+   } else {
+      if (is.null(previous.output$omega.i)) {
+         # It has to contain 'omega.i' if previous.output is a list.
+         omega.i <- NA
+         warning(paste0(prev.out.msg1, " ", prev.out.msg2),
+                 immediate. = TRUE)
+      } else {
+         # Check if the omega.i object is correct
+         # It can be a square 'data.frame', 'matrix' or a 'sparseMatrix'.
+         omega.i <- previous.output$omega.i
+         if (!(is.matrix(omega.i) | is.data.frame(omega.i) |
+             is(omega.i, "sparseMatrix"))) {
+            omega.i <- NA
+            warning(paste0("The class of the 'omega.i' matrix in the list ",
+                           "'previous.output' has to be one of the ",
+                           "followings: data.frame, matrix, or sparseMatrix. ",
+                           prev.out.msg2),
+                    immediate. = TRUE)
+         } else {
+            # Check if the dimension of the omega.i object is correct,
+            # i.e., it has to be a square matrix; the number of rows and 
+            # columns have to equal the length of \beta(P)
+            omega.i.dim <- dim(omega.i)
+            if (!((omega.i.dim[1] == omega.i.dim[2]) & omega.i.dim[1] == p)) {
+               warning(paste0("The dimension of the 'omega.i' matrix is ",
+                              "incorrect. ", prev.out.msg2),
+                       immediate. = TRUE)
+               omega.i <- NA
+            }
+         }
+      }
+   }
+    
+   # ---------------- #
+   # Step 9: Return updated items
    # ---------------- #
    return(list(solver = solver,
                solver.name = solver.name,
                data = data,
                test.logical = test.logical,
                logical.lb = logical.lb,
-               logical.ub = logical.ub))
+               logical.ub = logical.ub,
+               omega.i = omega.i))
 }
 
 #' Print results from \code{\link[lpinfer]{fsst}}

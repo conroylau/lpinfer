@@ -19,7 +19,8 @@ chorussell(
   alpha = 0.05,
   tol = 1e-04,
   progress = TRUE,
-  remove.const = TRUE
+  remove.const = TRUE,
+  previous.output = NA
 )
 }
 \arguments{
@@ -69,6 +70,12 @@ displayed while the code is running.}
 
 \item{remove.const}{A boolean variable. This determine whether the
 constraints are to be removed.}
+
+\item{previous.output}{The list of outputs obtained from the previous
+evaluation of the procedure. This is only used in the
+\code{\link[lpinfer]{fsst}} test and when \code{previous.out} contains
+the studentized matrix \code{omega.i}. The rest of the arguments 
+are ignored.}
 }
 \value{
 Returns the following list of output:

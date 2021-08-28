@@ -65,7 +65,8 @@
 chorussell <- function(data = NULL, lpmodel, beta.tgt = NULL, n = NULL, R = 100,
                        Rmulti = 1.25, kappa = 0, norm = 2, estimate = TRUE,
                        solver = NULL, ci = NULL, alpha = 0.05, tol = 1e-4,
-                       progress = TRUE, remove.const = TRUE) {
+                       progress = TRUE, remove.const = TRUE,
+                       previous.output = NA) {
   # ---------------- #
   # Step 1: Update call, check and update the arguments; initialize df.error
   # ---------------- #

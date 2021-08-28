@@ -94,7 +94,10 @@ invertci <- function(f, farg = list(), alpha = .05, init.lb = NULL,
     farg$beta.tgt <- ub1
 
     # Run the procedure once and obtain the pval data frame
+    assign(x = ".Random.seed", value = rngstate, envir = .GlobalEnv)
     init.return <- do.call(f, farg)
+    # Attach the output from the previous returns
+    farg$previous.output <- init.return
     pval <- init.return$pval
 
     # Parameter names are located in the first (n - 1) columns of pval
