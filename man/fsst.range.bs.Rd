@@ -11,7 +11,7 @@ fsst.range.bs(
   beta.obs.bs,
   x.star,
   x.star.bs,
-  weight.mat,
+  weight.mat.root,
   R,
   progress,
   df.error,
@@ -34,8 +34,7 @@ information in \code{lpmodel} (and \code{data} if applicable).}
 
 \item{x.star.bs}{The bootstrap estimates of \code{x.star}.}
 
-\item{weight.mat}{The weighting matrix for the \code{\link[lpinfer]{fsst}}
-procedure.}
+\item{weight.mat.root}{The matrix square root of \code{weight.mat}.}
 
 \item{R}{The number of bootstrap replications.}
 

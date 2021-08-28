@@ -3,7 +3,7 @@
 #' @description This module conducts inference in linear programs using the
 #'   procedure by Fang, Santos, Shaikh and Torgovitsky (2020).
 #'
-#' @import expm Matrix pracma
+#' @import Matrix pracma
 #'
 #' @inheritParams dkqs
 #' @param lpmodel The \code{lpmodel} object.
@@ -24,23 +24,20 @@
 #'     \item{\code{avar} --- inverse of the variance matrix}
 #'   }
 #' @param sqrtm.method The method used to obtain the matrix square root in 
-#'   the \code{\link[lpinfer]{fsst}} procedure. There are two options available:
-#'   \itemize{
-#'     \item{\code{"pracma"} --- the \code{\link[pracma]{sqrtm}}
-#'     function from the \code{pracma} package will be used. 
-#'     Note that if this method does not converge, the 
-#'     \code{expm::sqrtm} function will be used automatically.}
-#'     \item{\code{"expm"} --- the \code{\link[expm]{sqrtm}}
-#'     function from the \code{expm} package will be used.}
-#'   }
-#' @param sqrtm.kmax The maximum number of iterations used to compute the 
-#'    matrix square root. This is passed to the \code{kmax} argument of 
-#'    the \code{\link[pracma]{sqrtm}} function if 
-#'    \code{sqrtm.method = "pracma"}. Otherwise, this argument is ignored.
-#' @param sqrtm.tol The absolute tolerance used to compute the matrix square
-#'    root. This is passed to the \code{tol} argument of 
-#'    the \code{\link[pracma]{sqrtm}} function if 
-#'    \code{sqrtm.method = "pracma"}. Otherwise, this argument is ignored.
+#'   the \code{\link[lpinfer]{fsst}} procedure. This has to be a function that 
+#'   takes one argument that accepts a square matrix of size k x k and returns 
+#'   a square matrix of size k x k, where k can be the length of the 
+#'   \eqn{\beta(P)} vector, or the \code{beta.obs} component of the 
+#'   \code{lpinfer} object.
+#' @param sqrtm.tol The absolute tolerance used to check whether the matrix 
+#'   square root is correct. This is done by checking whether the Frobenius 
+#'   norm is smaller than the tolerance level, i.e., when \eqn{A} is the 
+#'   give matrix, \eqn{B} is the matrix square root obtained from the
+#'   given \code{sqrtm.method} function, and \eqn{\epsilon} is the 
+#'   tolerance level, the FSST test checks whether 
+#'   \eqn{||A - BB||_F < \epsilon}. If this does not hold, the FSST test will
+#'   use the \code{\link[expm]{sqrtm}} function from the \code{expm} package
+#'   to obtain the matrix square root.
 #'
 #' @return Returns the following information:
 #'   \item{pval}{A table of \eqn{p}-values.}
@@ -87,9 +84,9 @@
 #'
 fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                  lambda = NA, rho = 1e-4, n = NULL, weight.matrix = "diag",
-                 solver = NULL, progress = TRUE, sqrtm.method = "pracma",
-                 sqrtm.kmax = 20, sqrtm.tol = .Machine$double.eps^(1/2),
-                 previous.output = NA) {
+                 solver = NULL, progress = TRUE,
+                 sqrtm.method = function(m) pracma::sqrtm(m)$B,
+                 sqrtm.tol = .Machine$double.eps^(1/2), previous.output = NA) {
    # ---------------- #
    # Step 1: Update call, check and update the arguments; initialize df.error
    # ---------------- #
@@ -99,8 +96,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
    # Check the arguments
    fsst.return <- fsst.check(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho,
                              n, weight.matrix, solver, progress,
-                             sqrtm.method, sqrtm.kmax, sqrtm.tol,
-                             previous.output)
+                             sqrtm.method, sqrtm.tol, previous.output)
 
    # Update the arguments
    data <- fsst.return$data
@@ -270,13 +266,19 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                                           beta.obs.hat,
                                           sigma.beta.obs)
 
+         # Compute the matrix square root of the weighting matrix
+         weight.mat.root <- checkupdate.matrixroot(weight.mat,
+                                                   "weighting matrix",
+                                                   sqrtm.method,
+                                                   sqrtm.tol)
+
+         # Compute beta.star
          beta.star.return <- fsst.beta.star.bs(data, lpmodel, beta.n,
                                                beta.n.bs, beta.tgt, weight.mat,
                                                beta.obs.hat, beta.obs.bs, R,
                                                sigma.beta.obs, solver,
                                                df.error, p, d, progress,
                                                eval.count)
-
          beta.star <- beta.star.return$beta.star
          beta.star.bs <- beta.star.return$beta.star.bs
          x.star <- beta.star.return$x.star
@@ -309,28 +311,13 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          # Compute the matrix square root
          rhobar.i <- base::norm(sigma.star, type = "f") * rho
          
-         # Compute the studentization matrix if 'omega.i' is NA and if d < px``
+         # Compute the studentization matrix if 'omega.i' is NA and if d < p
          if (!is.matrix(omega.i) | d < p) {
             sigma.reg <- sigma.star + rhobar.i * diag(nrow(sigma.star))
-            if (sqrtm.method == "pracma") {
-               sqrtm.tmp <- pracma::sqrtm(sigma.reg, sqrtm.kmax, sqrtm.tol)
-               # Use the expm::sqrtm method if pracma::sqrtm does not converge
-               if (sqrtm.tmp$k == -1) {
-                  sqrtm.method <- "expm"
-                  warning(paste0("The pracma::sqrtm method does not converge. ",
-                                 "The expm::sqrtm function is used to obtain ",
-                                 "the matrix square root."))
-               }
-            }
-            
-            # Use expm::sqrtm to compute the matrix square root if pracma::sqrtm
-            # failed or sqrtm.method == "expm". Otherwise, take omega.i as 
-            # sqrtm.tmp$B
-            if (sqrtm.method == "expm") {
-               omega.i <- expm::sqrtm(sigma.reg)
-            } else {
-               omega.i <- sqrtm.tmp$B
-            }  
+            omega.i <- checkupdate.matrixroot(sigma.reg,
+                                              "studentization matrix",
+                                              sqrtm.method,
+                                              sqrtm.tol)
          }
 
          # ---------------- #
@@ -342,7 +329,8 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
             cone.n <- fsst.cone.lp(n, omega.i, beta.n, beta.star, lpmodel, 1,
                                    solver)
          } else {
-            range.n <- fsst.range(n, beta.obs.hat, x.star, lpmodel, weight.mat)
+            range.n <- fsst.range(n, beta.obs.hat, x.star, lpmodel,
+                                  weight.mat.root)
             cone.n <- fsst.cone.lp(n, omega.i, beta.n, beta.star, lpmodel, 0,
                                    solver)
          }
@@ -411,8 +399,8 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
             # Compute range.n for bootstrap beta
             range.return <- fsst.range.bs(n, lpmodel, beta.obs.hat,
                                           beta.obs.bs, x.star, x.star.bs,
-                                          weight.mat, R, progress, df.error,
-                                          eval.count)
+                                          weight.mat.root, R, progress,
+                                          df.error, eval.count)
 
             range.n.list <- range.return$range.n.list
 
@@ -779,7 +767,7 @@ fsst.weight.matrix <- function(weight.matrix, beta.obs.hat, beta.sigma) {
    # Step 2: Create the matrix
    # ---------------- #
    if (weight.matrix == "identity") {
-      weight.mat = diag(nrow(as.matrix(beta.obs.hat)))
+      weight.mat <- diag(nrow(as.matrix(beta.obs.hat)))
    } else if (weight.matrix == "diag") {
       weight.mat <- diag(diag(solve(beta.sigma)))
    } else if (weight.matrix == "avar") {
@@ -1409,20 +1397,20 @@ beta.r.compute <- function(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
 #' @inheritParams fsst.beta.bs
 #' @inheritParams sigma.summation
 #' @param x.star The optimal value from \code{beta.star.qp}.
+#' @param weight.mat.root The matrix square root of \code{weight.mat}.
 #'
 #' @return Returns the range test statistic.
 #'  \item{range}{The sample range test statistic.}
 #'
 #' @export
 #'
-fsst.range <- function(n, beta.obs.hat, x.star, lpmodel, weight.mat) {
+fsst.range <- function(n, beta.obs.hat, x.star, lpmodel, weight.mat.root) {
    # ---------------- #
    # Step 1: Compute the matrix inside the norm
    # ---------------- #
    A.obs.hat <- lpmodel.eval(data, lpmodel$A.obs, 1)
    beta.obs.star <- A.obs.hat %*% x.star
-   range.arg <- sqrt(n) * expm::sqrtm(weight.mat) %*% (beta.obs.hat -
-                                                          beta.obs.star)
+   range.arg <- sqrt(n) * weight.mat.root %*% (beta.obs.hat - beta.obs.star)
 
    # ---------------- #
    # Step 2: Compute the range component
@@ -1457,7 +1445,7 @@ fsst.range <- function(n, beta.obs.hat, x.star, lpmodel, weight.mat) {
 #' @export
 #'
 fsst.range.bs <- function(n, lpmodel, beta.obs.hat, beta.obs.bs, x.star,
-                          x.star.bs, weight.mat, R, progress,
+                          x.star.bs, weight.mat.root, R, progress,
                           df.error, eval.count) {
 
    # ---------------- #
@@ -1481,7 +1469,7 @@ fsst.range.bs <- function(n, lpmodel, beta.obs.hat, beta.obs.bs, x.star,
                                         lpmodel = lpmodel,
                                         beta.obs.hat = beta.obs.hat,
                                         x.star = x.star,
-                                        weight.mat = weight.mat,
+                                        weight.mat.root = weight.mat.root,
                                         pbar = pbar,
                                         progress = progress,
                                         n.bs = n.bs,
@@ -1554,7 +1542,8 @@ fsst.range.bs <- function(n, lpmodel, beta.obs.hat, beta.obs.bs, x.star,
 #' @export
 #'
 fsst.range.bs.fn <- function(beta.x.star, n, lpmodel, beta.obs.hat, x.star,
-                             weight.mat, pbar, progress, n.bs, eval.count) {
+                             weight.mat.root, pbar, progress, n.bs,
+                             eval.count) {
    # ---------------- #
    # Step 1: Print progress bar
    # ---------------- #
@@ -1576,7 +1565,7 @@ fsst.range.bs.fn <- function(beta.x.star, n, lpmodel, beta.obs.hat, x.star,
    # Compute one range estimate
    result.range <- tryCatch({
       range.n.return <- fsst.range(n, beta.bs.1, x.star.bs.1, lpmodel,
-                                   weight.mat)
+                                   weight.mat.root)
       list(range = range.n.return)
    }, warning = function(w) {
       return(list(status = "warning",
@@ -1847,7 +1836,7 @@ fsst.pval <- function(range.n, cone.n, range.n.list, cone.n.list, R,
 #'
 fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
                        weight.matrix, solver, progress,
-                       sqrtm.method, sqrtm.kmax, sqrtm.tol, previous.output) {
+                       sqrtm.method, sqrtm.tol, previous.output) {
 
    # ---------------- #
    # Step 1: Check data
@@ -1873,9 +1862,9 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
                                              "function_obs_var"),
                             beta.shp.cat = "matrix",
                             R = R)
-   # Length of the \beta vector
-   p <- length(lpmodel.beta.eval(data, lpmodel$beta.obs, 1)$beta.obs) +
-      length(lpmodel$beta.shp) + 1
+   # Length of the \beta(P) and beta.obs vector
+   nbobs <- length(lpmodel.beta.eval(data, lpmodel$beta.obs, 1)$beta.obs)
+   p <- nbobs + length(lpmodel$beta.shp) + 1
 
    # ---------------- #
    # Step 3: Check solver
@@ -1926,19 +1915,63 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
    # ---------------- #
    # Step 7: Check the arguments related to the `sqrtm` function
    # ---------------- #
-   # Check if `sqrtm.method` is either "expm" or "pracma"
-   sqrtm.errmsg <- "'sqrtm.method' has to be either 'expm' or 'pracma'."
-   if (length(sqrtm.method) != 1) {
+   # Check if `sqrtm.method` is correct
+   sqrtm.errmsg <- paste0("'sqrtm.method' has to be a function that takes ",
+                          "one argument that accepts a square matrix of size ",
+                          "k x k and returns a square matrix of size k x k, ",
+                          "where k is the length of the beta(P) vector or ",
+                          "the length of the 'beta.obs' component.")
+   if (class(sqrtm.method) != "function") {
+      # Check if `sqrtm.method` is a function
       stop(sqrtm.errmsg)
-   } else if (!(sqrtm.method %in% c("expm", "pracma")) |
-              class(sqrtm.method) != "character") {
-      stop(sqrtm.errmsg)
+   } else {
+      # If it is a function, check whether it is correct
+      if (length(formals(sqrtm.method)) != 1) {
+         # Return an error if it has more than one argument
+         stop(sqrtm.errmsg)
+      } else {
+         # Check if it accepts a matrix of size p x p and nbobs x nbobs
+         for (idx in c(p, nbobs)) {
+            tmp.result <- tryCatch({
+               tmp.return <- sqrtm.method(diag(idx))
+               list(mat = tmp.return)
+            }, warning = function(w) {
+               return(list(status = "warning",
+                           msg = w))
+            }, error = function(e) {
+               return(list(status = "error",
+                           msg = e))
+            })
+            
+            if (!is.null(tmp.result$status)) {
+               # If tmp.result$status is not NULL, then there's some problem
+               # with the function
+               stop(sqrtm.errmsg)
+            } else {
+               # Check if it returns a matrix of size p x p
+               tmp.nr <- nrow(tmp.result$mat)
+               tmp.nc <- ncol(tmp.result$mat)
+               if (!(is.numeric(tmp.nr) & is.numeric(tmp.nc))) {
+                  # If the number of rows or columns is not numeric, return error
+                  stop(sqrtm.errmsg)
+               }
+               if (tmp.nr != tmp.nc) {
+                  # Return an error if the matrix obtained is not a square
+                  stop(sqrtm.errmsg)
+               } else {
+                  # Return an error if the matrix is not of size p x p
+                  # or nbobs x nbobs
+                  if (tmp.nr != idx) {
+                     stop(sqrtm.errmsg)
+                  }
+               }
+            }
+         }
+      }
    }
-   # Check if the sqrtm.kmax and sqrtm.tol arguments are correct
-   if (sqrtm.method == "pracma") {
-      check.positiveinteger(sqrtm.kmax, "sqrtm.kmax")
-      check.positive(sqrtm.tol, "sqrtm.tol")  
-   }
+
+   # Check if the tolerance level is positive
+   check.positive(sqrtm.tol, "sqrtm.tol")
 
    # ---------------- #
    # Step 8: Check previous.output
@@ -1950,19 +1983,16 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
    prev.out.msg2 <- "Therefore, the 'omega.i' matrix will be computed. "
    if (!is.list(previous.output)) {
       if (is.null(previous.output)) {
-         warning(paste0(prev.out.msg1, " ", prev.out.msg2),
-                 immediate. = TRUE)
+         warning(paste0(prev.out.msg1, " ", prev.out.msg2), immediate. = TRUE)
       } else if (!is.na(previous.output)) {
-         warning(paste0(prev.out.msg1, " ", prev.out.msg2),
-                 immediate. = TRUE)
+         warning(paste0(prev.out.msg1, " ", prev.out.msg2), immediate. = TRUE)
       }
       omega.i <- NA
    } else {
       if (is.null(previous.output$omega.i)) {
          # It has to contain 'omega.i' if previous.output is a list.
          omega.i <- NA
-         warning(paste0(prev.out.msg1, " ", prev.out.msg2),
-                 immediate. = TRUE)
+         warning(paste0(prev.out.msg1, " ", prev.out.msg2), immediate. = TRUE)
       } else {
          # Check if the omega.i object is correct
          # It can be a square 'data.frame', 'matrix' or a 'sparseMatrix'.
@@ -2245,4 +2275,45 @@ fsst.label.lambda <- function(lambdas, lambda.data) {
    }
    return(list(lambdas = lambdas,
                msg = msg))
+}
+
+#' Checks whether the matrix square root is correct
+#'
+#' @description This function is used to check whether the matrix square 
+#'   root is correct. This is done by checking whether the Frobenius 
+#'   norm is smaller than the tolerance level, i.e., when \eqn{A} is the 
+#'   give matrix, \eqn{B} is the matrix square root obtained from the
+#'   given \code{sqrtm.method} function, and \eqn{\epsilon} is the 
+#'   tolerance level, the FSST test checks whether 
+#'   \eqn{||A - BB||_F < \epsilon}. If this does not hold, the FSST test will
+#'   use the \code{\link[expm]{sqrtm}} function from the \code{expm} package
+#'   to obtain the matrix square root.
+#'
+#' @import expm
+#'
+#' @inheritParams fsst
+#' @param mat The matrix that we wish to obtain the matrix square root.
+#' @param mat.name The name of the matrix for \code{mat}.
+#'
+#' @return Returns the matrix square root.
+#'   \item{mat.sqrt}{The matrix square root.}
+#'
+checkupdate.matrixroot <- function(mat, mat.name, sqrtm.method, sqrtm.tol) {
+   # Obtain the square root by the `sqrtm.method`
+   sqrtm.tmp <- sqrtm.method(mat)
+
+   # Check whether the matrix square root is correct
+   if (base::norm(mat - sqrtm.tmp %*% sqrtm.tmp, type = "f") >= sqrtm.tol) {
+      warning(paste0("In computing the square root of the ", mat.name,  ", ",
+                     "the difference bewteen the matrix square root obtained ",
+                     "from the function passed to 'sqrtm.method' and the ",
+                     "true matrix square root is larger than the tolerance ",
+                     "level. The matrix square root will now be computed ",
+                     "by the expm::sqrtm function."),
+              immediate. = TRUE)
+      mat.sqrt <- expm::sqrtm(mat)
+   } else {
+      mat.sqrt <- sqrtm.tmp
+   }
+   return(mat.sqrt)
 }

@@ -4,7 +4,7 @@
 \alias{fsst.range}
 \title{Computes the range component of the test statistics}
 \usage{
-fsst.range(n, beta.obs.hat, x.star, lpmodel, weight.mat)
+fsst.range(n, beta.obs.hat, x.star, lpmodel, weight.mat.root)
 }
 \arguments{
 \item{n}{The sample size. This is only required if \code{data} is omitted
@@ -18,8 +18,7 @@ information in \code{lpmodel} (and \code{data} if applicable).}
 
 \item{lpmodel}{The \code{lpmodel} object.}
 
-\item{weight.mat}{The weighting matrix for the \code{\link[lpinfer]{fsst}}
-procedure.}
+\item{weight.mat.root}{The matrix square root of \code{weight.mat}.}
 }
 \value{
 Returns the range test statistic.

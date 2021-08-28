@@ -16,8 +16,7 @@ fsst(
   weight.matrix = "diag",
   solver = NULL,
   progress = TRUE,
-  sqrtm.method = "pracma",
-  sqrtm.kmax = 20,
+  sqrtm.method = function(m) pracma::sqrtm(m)$B,
   sqrtm.tol = .Machine$double.eps^(1/2),
   previous.output = NA
 )
@@ -67,25 +66,21 @@ be displayed. If it is set as \code{TRUE}, the progress bars will be
 displayed while the code is running.}
 
 \item{sqrtm.method}{The method used to obtain the matrix square root in 
-the \code{\link[lpinfer]{fsst}} procedure. There are two options available:
-\itemize{
-  \item{\code{"pracma"} --- the \code{\link[pracma]{sqrtm}}
-  function from the \code{pracma} package will be used. 
-  Note that if this method does not converge, the 
-  \code{expm::sqrtm} function will be used automatically.}
-  \item{\code{"expm"} --- the \code{\link[expm]{sqrtm}}
-  function from the \code{expm} package will be used.}
-}}
+the \code{\link[lpinfer]{fsst}} procedure. This has to be a function that 
+takes one argument that accepts a square matrix of size k x k and returns 
+a square matrix of size k x k, where k can be the length of the 
+\eqn{\beta(P)} vector, or the \code{beta.obs} component of the 
+\code{lpinfer} object.}
 
-\item{sqrtm.kmax}{The maximum number of iterations used to compute the 
-matrix square root. This is passed to the \code{kmax} argument of 
-the \code{\link[pracma]{sqrtm}} function if 
-\code{sqrtm.method = "pracma"}. Otherwise, this argument is ignored.}
-
-\item{sqrtm.tol}{The absolute tolerance used to compute the matrix square
-root. This is passed to the \code{tol} argument of 
-the \code{\link[pracma]{sqrtm}} function if 
-\code{sqrtm.method = "pracma"}. Otherwise, this argument is ignored.}
+\item{sqrtm.tol}{The absolute tolerance used to check whether the matrix 
+square root is correct. This is done by checking whether the Frobenius 
+norm is smaller than the tolerance level, i.e., when \eqn{A} is the 
+give matrix, \eqn{B} is the matrix square root obtained from the
+given \code{sqrtm.method} function, and \eqn{\epsilon} is the 
+tolerance level, the FSST test checks whether 
+\eqn{||A - BB||_F < \epsilon}. If this does not hold, the FSST test will
+use the \code{\link[expm]{sqrtm}} function from the \code{expm} package
+to obtain the matrix square root.}
 
 \item{previous.output}{The list of outputs obtained from the previous
 evaluation of the procedure. This is only used in the

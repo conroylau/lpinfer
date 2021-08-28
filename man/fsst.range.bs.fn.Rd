@@ -11,7 +11,7 @@ fsst.range.bs.fn(
   lpmodel,
   beta.obs.hat,
   x.star,
-  weight.mat,
+  weight.mat.root,
   pbar,
   progress,
   n.bs,
@@ -33,8 +33,7 @@ information in \code{lpmodel} (and \code{data} if applicable).}
 
 \item{x.star}{The optimal value from \code{beta.star.qp}.}
 
-\item{weight.mat}{The weighting matrix for the \code{\link[lpinfer]{fsst}}
-procedure.}
+\item{weight.mat.root}{The matrix square root of \code{weight.mat}.}
 
 \item{pbar}{The progress bar object.}
 
