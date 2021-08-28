@@ -380,7 +380,7 @@ estbounds2.L1 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
 
 #' Estimates the bounds with shape constraints (Stage 2 with 2-norm)
 #'
-#' @import Matrix
+#' @importFrom Matrix t
 #'
 #' @description This function evaluates the solution to stage 2 of the
 #'    two-step procedure to obtain the estimated bound with the 2-norm.

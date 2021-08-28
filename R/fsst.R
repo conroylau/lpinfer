@@ -3,7 +3,8 @@
 #' @description This module conducts inference in linear programs using the
 #'   procedure by Fang, Santos, Shaikh and Torgovitsky (2020).
 #'
-#' @import Matrix pracma
+#' @importFrom expm sqrtm
+#' @importFrom Matrix t
 #'
 #' @inheritParams dkqs
 #' @param lpmodel The \code{lpmodel} object.
@@ -830,7 +831,7 @@ sigma.summation <- function(n, beta.bs.list, progress, eval.count) {
 #'   used in the \code{\link[lpinfer]{sigma.summation}} function that computes
 #'   the asymptotic variance estimator.
 #'
-#' @import Matrix
+#' @importFrom Matrix t
 #'
 #' @details Denote \eqn{\bm{\beta}} and \eqn{\hat{\bm{\beta}}_{\rm obs}} as
 #'   the \eqn{n \times 1} vectors \code{beta} and \code{beta.obs.hat}
@@ -962,7 +963,7 @@ beta.star.qp <- function(data, lpmodel, beta.tgt, weight.mat, beta.obs.hat,
 #'
 #' @description This function computes the solution to the cone problem.
 #'
-#' @import Matrix
+#' @importFrom Matrix t
 #'
 #' @inheritParams fsst
 #' @inheritParams fsst.cone.bs
@@ -1291,7 +1292,7 @@ fsst.beta.star.bs.fn <- function(beta.obs.bs, data, lpmodel, beta.tgt,
 #'   \eqn{\widehat{\bm{\beta}}^r_n} in the \code{\link[lpinfer]{fsst}}
 #'   procedure.
 #'
-#' @import Matrix
+#' @importFrom Matrix t
 #'
 #' @inheritParams fsst
 #' @inheritParams fsst.cone.lp

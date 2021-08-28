@@ -447,6 +447,8 @@ dkqs.qlp <- function(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
 #'   programming via the \code{furrr} package.
 #'
 #' @import furrr progressr
+#' 
+#' @importFrom Matrix which
 #'
 #' @param s.star.list The list of values of
 #'    \eqn{\hat{\bm{s}}^\star \equiv \bm{A}_{\mathrm{obs}}\hat{\bm{x}}_n^\star}

@@ -389,7 +389,7 @@ limsolve.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
 #'    \eqn{\bm{\beta}} as input and computes the coefficients of the objective
 #'    function.
 #'    
-#' @import Matrix
+#' @importFrom Matrix t
 #'
 #' @param A The matrix \eqn{\bm{A}}.
 #' @param beta The column vector \eqn{\bm{\beta}}.
