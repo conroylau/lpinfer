@@ -747,10 +747,10 @@ check.lpmodel <- function(data, lpmodel, name.var, A.tgt.cat, A.obs.cat,
 #' @description This function checks if the matrix objects in \code{lpmodel}
 #'    are in the correct format.
 #'
+#' @inheritParams dkqs
 #' @param mat The matrix object in \code{lpmodel}.
 #' @param mat.name The name of the matrix object in \code{lpmodel}.
 #' @param mat.cat The category of the matrix object.
-#' @inheritParams dkqs
 #'
 #' @details See the details section for the function
 #'   \code{\link[lpinfer]{check.lpmodel}} for more details of each category.
@@ -947,6 +947,7 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R) {
 #' @description This function checks if the matrix objects in the
 #'    \code{lpmodel} object are in the correct format.
 #'
+#' @inheritParams check.lpobjects
 #' @param mat The matrix object in \code{lpmodel}.
 #' @param mat.name The name of the matrix object in \code{lpmodel}.
 #' @param inside.list An indicator variables of whether the object that is
@@ -1041,7 +1042,7 @@ check.vector <- function(vec, vec.name, inside.list) {
 #' @description This function checks if the number of cores specified is a
 #'    positive integer. If not, set it as one.
 #'
-#' @param cores Number of cores.
+#' @param x Number of cores.
 #'
 #' @return Returns the updated number of cores.
 #'   \item{x}{The updated number of cores}

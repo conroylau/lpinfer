@@ -25,6 +25,8 @@ subsample.bs(
 \arguments{
 \item{data}{An \code{data frame} or a \code{matrix}.}
 
+\item{i1}{The last index to be evaluated.}
+
 \item{lpmodel}{An \code{lpmodel} object.}
 
 \item{beta.tgt}{The value to be tested.}
@@ -51,6 +53,16 @@ displayed while the code is running.}
 in the input.}
 
 \item{omega.hat}{The estimator of the asymptotic variance.}
+
+\item{df.error}{The consolidated data frame of error messages.}
+
+\item{eval.count}{The count for the number of times the \code{future_map}
+function has been called. If this object is zero, it means that the
+\code{future_map} function is being called for the first time in this
+subprocedure. Otherwise, it means that the \code{future_map} function
+has been called for more than once. This situation typically refers to the
+situations where there are some errors in the first time of the
+replications.}
 
 \item{error.id}{The list of ID that corresponds to problematic bootstrap
 draws.}

@@ -4,7 +4,7 @@
 \alias{summary.mincriterion}
 \title{Summary of results from \code{\link[lpinfer]{mincriterion}}}
 \usage{
-summary.mincriterion(x, ...)
+\method{summary}{mincriterion}(x, ...)
 }
 \arguments{
 \item{x}{The output objects returned from

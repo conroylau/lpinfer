@@ -5,12 +5,15 @@
 \title{Summary of results from \code{\link[lpinfer]{invertci}} for a single
 significance level}
 \usage{
-summary.invertci_single(x, alphas, msg.bound, ...)
+\method{summary}{invertci_single}(x, alphas, msg.bound, ...)
 }
 \arguments{
 \item{x}{The output object returned from \code{\link[lpinfer]{invertci}}.}
 
 \item{alphas}{A list of alphas that the user would like to print.}
+
+\item{msg.bound}{The string that indicates whether the message for the
+upper or the lower bound is printed.}
 
 \item{...}{Additional arguments.}
 }

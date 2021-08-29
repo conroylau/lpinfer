@@ -73,6 +73,12 @@ It can be any nonnegative number or a vector of nonnegative numbers.}
 \item{progress}{The boolean variable for whether the progress bars should
 be displayed. If it is set as \code{TRUE}, the progress bars will be
 displayed while the code is running.}
+
+\item{df.lb}{The list of lower bounds that are obtained from the
+simplified program.}
+
+\item{df.ub}{The list of upper bounds that are obtained from the
+simplified program.}
 }
 \value{
 Returns the following list of objects:

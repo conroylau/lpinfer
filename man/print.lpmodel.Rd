@@ -4,12 +4,15 @@
 \alias{print.lpmodel}
 \title{Print the \code{lpmodel} object}
 \usage{
-print.lpmodel(x, data = NULL, ...)
+\method{print}{lpmodel}(x, data = NULL, ...)
 }
 \arguments{
 \item{x}{An \code{lpmodel} object.}
 
 \item{data}{An \code{data frame} or a \code{matrix}.}
+
+\item{...}{Some additional arguments passed to the \code{lpm.print}
+function.}
 }
 \value{
 Nothing is returned.

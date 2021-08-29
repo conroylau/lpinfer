@@ -11,19 +11,19 @@ checkupdate.matrixroot(mat, mat.name, sqrtm.method, sqrtm.tol)
 
 \item{mat.name}{The name of the matrix for \code{mat}.}
 
-\item{sqrtm.method}{The method used to obtain the matrix square root in 
-the \code{\link[lpinfer]{fsst}} procedure. This has to be a function that 
-takes one argument that accepts a square matrix of size k x k and returns 
-a square matrix of size k x k, where k can be the length of the 
-\eqn{\beta(P)} vector, or the \code{beta.obs} component of the 
+\item{sqrtm.method}{The method used to obtain the matrix square root in
+the \code{\link[lpinfer]{fsst}} procedure. This has to be a function that
+takes one argument that accepts a square matrix of size k x k and returns
+a square matrix of size k x k, where k can be the length of the
+\eqn{\beta(P)} vector, or the \code{beta.obs} component of the
 \code{lpinfer} object.}
 
-\item{sqrtm.tol}{The absolute tolerance used to check whether the matrix 
-square root is correct. This is done by checking whether the Frobenius 
-norm is smaller than the tolerance level, i.e., when \eqn{A} is the 
+\item{sqrtm.tol}{The absolute tolerance used to check whether the matrix
+square root is correct. This is done by checking whether the Frobenius
+norm is smaller than the tolerance level, i.e., when \eqn{A} is the
 give matrix, \eqn{B} is the matrix square root obtained from the
-given \code{sqrtm.method} function, and \eqn{\epsilon} is the 
-tolerance level, the FSST test checks whether 
+given \code{sqrtm.method} function, and \eqn{\epsilon} is the
+tolerance level, the FSST test checks whether
 \eqn{||A - BB||_F < \epsilon}. If this does not hold, the FSST test will
 use the \code{\link[expm]{sqrtm}} function from the \code{expm} package
 to obtain the matrix square root.}
@@ -33,12 +33,12 @@ Returns the matrix square root.
   \item{mat.sqrt}{The matrix square root.}
 }
 \description{
-This function is used to check whether the matrix square 
-  root is correct. This is done by checking whether the Frobenius 
-  norm is smaller than the tolerance level, i.e., when \eqn{A} is the 
+This function is used to check whether the matrix square
+  root is correct. This is done by checking whether the Frobenius
+  norm is smaller than the tolerance level, i.e., when \eqn{A} is the
   give matrix, \eqn{B} is the matrix square root obtained from the
-  given \code{sqrtm.method} function, and \eqn{\epsilon} is the 
-  tolerance level, the FSST test checks whether 
+  given \code{sqrtm.method} function, and \eqn{\epsilon} is the
+  tolerance level, the FSST test checks whether
   \eqn{||A - BB||_F < \epsilon}. If this does not hold, the FSST test will
   use the \code{\link[expm]{sqrtm}} function from the \code{expm} package
   to obtain the matrix square root.

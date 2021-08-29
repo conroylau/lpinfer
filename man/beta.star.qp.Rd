@@ -24,6 +24,12 @@ beta.star.qp(
 \item{weight.mat}{The weighting matrix for the \code{\link[lpinfer]{fsst}}
 procedure.}
 
+\item{beta.obs.hat}{The sample estimator
+\eqn{\widehat{\bm{\beta}}_{\mathrm{obs}, n}} based on the given
+information in \code{lpmodel} (and \code{data} if applicable).}
+
+\item{beta.sigma}{The variance estimator of \eqn{\bm{\beta}_{\rm obs}}.}
+
 \item{solver}{The name of the linear and quadratic programming solver that
 is used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},

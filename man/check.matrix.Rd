@@ -11,6 +11,8 @@ check.matrix(mat, mat.name, mat.cat, inside.list)
 
 \item{mat.name}{The name of the matrix object in \code{lpmodel}.}
 
+\item{mat.cat}{The category of the matrix object.}
+
 \item{inside.list}{An indicator variables of whether the object that is
 being checked is inside a list or not.}
 }

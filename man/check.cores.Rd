@@ -7,7 +7,7 @@
 check.cores(x)
 }
 \arguments{
-\item{cores}{Number of cores.}
+\item{x}{Number of cores.}
 }
 \value{
 Returns the updated number of cores.

@@ -13,7 +13,7 @@ object passed from the user.}
 
 \item{data}{An \code{data frame} or a \code{matrix}.}
 
-\item{lpmodel}{The \code{lpmodel} object.}
+\item{lpmodel}{An \code{lpmodel} object.}
 
 \item{pbar}{The progress bar object.}
 
@@ -31,6 +31,9 @@ replications.}
 
 \item{n.bs}{The total number of replications to be conducted in this
 procedure.}
+
+\item{any.list}{This object contains information on whether any components
+in the \code{lpmodel} object is a \code{list}.}
 }
 \value{
 Returns a list of output that are obtained from the subsampling

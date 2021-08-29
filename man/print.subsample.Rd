@@ -4,7 +4,7 @@
 \alias{print.subsample}
 \title{Print results from the \code{\link[lpinfer]{subsample}} procedure}
 \usage{
-print.subsample(x, ...)
+\method{print}{subsample}(x, ...)
 }
 \arguments{
 \item{x}{An output object returned from \code{\link[lpinfer]{subsample}}.}

@@ -4,7 +4,7 @@
 \alias{summary.invertci}
 \title{Summary of results from \code{\link[lpinfer]{invertci}}}
 \usage{
-summary.invertci(x, alphas = NULL, ...)
+\method{summary}{invertci}(x, alphas = NULL, ...)
 }
 \arguments{
 \item{x}{The output object returned from \code{\link[lpinfer]{invertci}}.}

@@ -4,12 +4,15 @@
 \alias{print.lpmodel.natural}
 \title{Print the \code{lpmodel.natural} object}
 \usage{
-print.lpmodel.natural(x, data = NULL, ...)
+\method{print}{lpmodel.natural}(x, data = NULL, ...)
 }
 \arguments{
 \item{x}{An \code{lpmodel.natural} object.}
 
 \item{data}{An \code{data frame} or a \code{matrix}.}
+
+\item{...}{Some additional arguments passed to the \code{lpm.print}
+function.}
 }
 \value{
 Nothing is returned.

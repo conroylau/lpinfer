@@ -47,6 +47,9 @@ information in \code{lpmodel} (and \code{data} if applicable).}
 
 \item{R}{The number of bootstrap replications.}
 
+\item{sigma.beta.obs}{An estimator of the asymptotic variance for
+\code{beta.obs}.}
+
 \item{solver}{The name of the linear and quadratic programming solver that
 is used to obtain the solution to linear and quadratic programs.
 The solvers supported by this package are \code{cplexAPI}, \code{gurobi},

@@ -23,6 +23,10 @@ in the input.}
 
 \item{lpmodel}{The \code{lpmodel} object.}
 
+\item{beta.obs.hat}{The sample estimator
+\eqn{\widehat{\bm{\beta}}_{\mathrm{obs}, n}} based on the given
+information in \code{lpmodel} (and \code{data} if applicable).}
+
 \item{beta.tgt}{The value to be tested.}
 
 \item{beta.n}{The sample \eqn{\widehat{\bm{\beta}}_n} vector that is defined

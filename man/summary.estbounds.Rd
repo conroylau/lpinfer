@@ -4,7 +4,7 @@
 \alias{summary.estbounds}
 \title{Summary of results from \code{\link[lpinfer]{estbounds}}}
 \usage{
-summary.estbounds(x, ...)
+\method{summary}{estbounds}(x, ...)
 }
 \arguments{
 \item{x}{The output objects returned from \code{\link[lpinfer]{estbounds}}.}

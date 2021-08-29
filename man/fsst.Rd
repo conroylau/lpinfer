@@ -65,19 +65,19 @@ The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 be displayed. If it is set as \code{TRUE}, the progress bars will be
 displayed while the code is running.}
 
-\item{sqrtm.method}{The method used to obtain the matrix square root in 
-the \code{\link[lpinfer]{fsst}} procedure. This has to be a function that 
-takes one argument that accepts a square matrix of size k x k and returns 
-a square matrix of size k x k, where k can be the length of the 
-\eqn{\beta(P)} vector, or the \code{beta.obs} component of the 
+\item{sqrtm.method}{The method used to obtain the matrix square root in
+the \code{\link[lpinfer]{fsst}} procedure. This has to be a function that
+takes one argument that accepts a square matrix of size k x k and returns
+a square matrix of size k x k, where k can be the length of the
+\eqn{\beta(P)} vector, or the \code{beta.obs} component of the
 \code{lpinfer} object.}
 
-\item{sqrtm.tol}{The absolute tolerance used to check whether the matrix 
-square root is correct. This is done by checking whether the Frobenius 
-norm is smaller than the tolerance level, i.e., when \eqn{A} is the 
+\item{sqrtm.tol}{The absolute tolerance used to check whether the matrix
+square root is correct. This is done by checking whether the Frobenius
+norm is smaller than the tolerance level, i.e., when \eqn{A} is the
 give matrix, \eqn{B} is the matrix square root obtained from the
-given \code{sqrtm.method} function, and \eqn{\epsilon} is the 
-tolerance level, the FSST test checks whether 
+given \code{sqrtm.method} function, and \eqn{\epsilon} is the
+tolerance level, the FSST test checks whether
 \eqn{||A - BB||_F < \epsilon}. If this does not hold, the FSST test will
 use the \code{\link[expm]{sqrtm}} function from the \code{expm} package
 to obtain the matrix square root.}
@@ -85,7 +85,7 @@ to obtain the matrix square root.}
 \item{previous.output}{The list of outputs obtained from the previous
 evaluation of the procedure. This is only used in the
 \code{\link[lpinfer]{fsst}} test and when \code{previous.out} contains
-the studentized matrix \code{omega.i}. The rest of the arguments 
+the studentized matrix \code{omega.i}. The rest of the arguments
 are ignored.}
 }
 \value{
@@ -100,7 +100,7 @@ Returns the following information:
   \item{cone.n.list}{The list of bootstrap cone test statistics.}
   \item{range.n.list}{The list of bootstrap range test statistics.}
   \item{solver.name}{Name of the solver used.}
-  \item{rho}{The value of \code{rho} provided by the uer..}
+  \item{rho}{The value of \code{rho} provided by the user.}
   \item{rhobar.i}{The regularization parameter used for the Cone
     studentization matrix.}
   \item{lambda.data}{The value of the data-driven \code{lambda} (if

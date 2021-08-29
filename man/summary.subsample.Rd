@@ -4,7 +4,7 @@
 \alias{summary.subsample}
 \title{Summary of results from the \code{\link[lpinfer]{subsample}} procedure}
 \usage{
-summary.subsample(x, ...)
+\method{summary}{subsample}(x, ...)
 }
 \arguments{
 \item{x}{An output object returned from \code{\link[lpinfer]{subsample}}.}

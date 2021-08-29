@@ -25,18 +25,18 @@
 #'        elements of the inverse of the variance matrix}
 #'     \item{\code{avar} --- inverse of the variance matrix}
 #'   }
-#' @param sqrtm.method The method used to obtain the matrix square root in 
-#'   the \code{\link[lpinfer]{fsst}} procedure. This has to be a function that 
-#'   takes one argument that accepts a square matrix of size k x k and returns 
-#'   a square matrix of size k x k, where k can be the length of the 
-#'   \eqn{\beta(P)} vector, or the \code{beta.obs} component of the 
+#' @param sqrtm.method The method used to obtain the matrix square root in
+#'   the \code{\link[lpinfer]{fsst}} procedure. This has to be a function that
+#'   takes one argument that accepts a square matrix of size k x k and returns
+#'   a square matrix of size k x k, where k can be the length of the
+#'   \eqn{\beta(P)} vector, or the \code{beta.obs} component of the
 #'   \code{lpinfer} object.
-#' @param sqrtm.tol The absolute tolerance used to check whether the matrix 
-#'   square root is correct. This is done by checking whether the Frobenius 
-#'   norm is smaller than the tolerance level, i.e., when \eqn{A} is the 
+#' @param sqrtm.tol The absolute tolerance used to check whether the matrix
+#'   square root is correct. This is done by checking whether the Frobenius
+#'   norm is smaller than the tolerance level, i.e., when \eqn{A} is the
 #'   give matrix, \eqn{B} is the matrix square root obtained from the
-#'   given \code{sqrtm.method} function, and \eqn{\epsilon} is the 
-#'   tolerance level, the FSST test checks whether 
+#'   given \code{sqrtm.method} function, and \eqn{\epsilon} is the
+#'   tolerance level, the FSST test checks whether
 #'   \eqn{||A - BB||_F < \epsilon}. If this does not hold, the FSST test will
 #'   use the \code{\link[expm]{sqrtm}} function from the \code{expm} package
 #'   to obtain the matrix square root.
@@ -52,7 +52,7 @@
 #'   \item{cone.n.list}{The list of bootstrap cone test statistics.}
 #'   \item{range.n.list}{The list of bootstrap range test statistics.}
 #'   \item{solver.name}{Name of the solver used.}
-#'   \item{rho}{The value of \code{rho} provided by the uer..}
+#'   \item{rho}{The value of \code{rho} provided by the user.}
 #'   \item{rhobar.i}{The regularization parameter used for the Cone
 #'     studentization matrix.}
 #'   \item{lambda.data}{The value of the data-driven \code{lambda} (if
@@ -312,7 +312,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
 
          # Compute the matrix square root
          rhobar.i <- Matrix::norm(sigma.star, type = "f") * rho
-         
+
          # Compute the studentization matrix if 'omega.i' is NA and if d < p
          if (!is.matrix(omega.i) | d < p) {
             sigma.reg <- sigma.star + rhobar.i * diag(nrow(sigma.star))
@@ -561,8 +561,9 @@ full.beta.bs <- function(lpmodel, beta.tgt, beta.obs.bs, R) {
 #'
 #' @import furrr progressr
 #'
-#' @inheritParams fsst
+#' @inheritParams dkqs.bs
 #' @inheritParams dkqs.bs.fn
+#' @inheritParams fsst
 #' @param iseq The list of indices or betas to iterate over.
 #' @param beta.obs.hat The sample estimator
 #'   \eqn{\widehat{\bm{\beta}}_{\mathrm{obs}, n}} based on the given
@@ -633,7 +634,7 @@ fsst.beta.bs <- function(n, data, beta.obs.hat, lpmodel, R, maxR, progress,
                                               eval.count = eval.count,
                                               n.bs = i1 - i0 + 1,
                                               any.list = any.list,
-                                              .options = 
+                                              .options =
                                                  furrr::furrr_options(seed = TRUE))
          eval.count <- eval.count + 1
       })
@@ -675,9 +676,9 @@ fsst.beta.bs <- function(n, data, beta.obs.hat, lpmodel, R, maxR, progress,
 #'   This function is used in the \code{\link[lpinfer]{fsst.beta.bs}} function
 #'   via the \code{future_map} function.
 #'
+#' @inheritParams dkqs.bs.fn
 #' @inheritParams fsst
 #' @inheritParams fsst.beta.bs
-#' @inheritParams dkqs.bs.fn
 #' @param x This is either the list of indices that represent the bootstrap
 #'   replications, or the list of bootstrap components of the \code{lpmodel}
 #'   object passed from the user.
@@ -791,9 +792,11 @@ fsst.weight.matrix <- function(weight.matrix, beta.obs.hat, beta.sigma) {
 #'   \deqn{\frac{n}{B} \sum^B_{i=1} \left(\widehat{\bm{\beta}}_b -
 #'   \widehat{\bm{\beta}}\right)  \left(\widehat{\bm{\beta}}_b -
 #'   \widehat{\bm{\beta}}\right)'.}
-#'  This function supports parallel programming via the \code{furrr}
-#'  package.
+#'   This function supports parallel programming via the \code{furrr}
+#'   package.
 #'
+#' @inheritParams dkqs
+#' @inheritParams dkqs.bs.fn
 #' @param n Sample size.
 #' @param beta.bs.list A list of bootstrap estimators
 #'    \eqn{\{\widehat{\bm{\beta}}_b\}^B_{b=1}}.
@@ -882,6 +885,8 @@ beta.product <- function(beta, beta.obs.hat, pbar, progress, eval.count) {
 #'   \code{\link[lpinfer]{fsst}} procedure.
 #'
 #' @inheritParams fsst
+#' @inheritParams fsst.beta.bs
+#' @inheritParams fsst.weight.matrix
 #' @inheritParams sigma.summation
 #' @param weight.mat The weighting matrix for the \code{\link[lpinfer]{fsst}}
 #'   procedure.
@@ -1080,6 +1085,8 @@ fsst.cone.lp <- function(n, omega.i, beta.n, beta.star, lpmodel, indicator,
 #'   as \eqn{\widehat{\bm{\beta}}_n \equiv (\widehat{\bm{\beta}}_{{\rm obs},n},
 #'   \bm{\beta}_{{\rm shp},n}, \bm{\beta}_{{\rm tgt}})'}.
 #' @param beta.n.bs The bootstrap estimates of \code{beta.n}.
+#' @param sigma.beta.obs An estimator of the asymptotic variance for
+#'   \code{beta.obs}.
 #' @param p The length of the beta vector.
 #' @param d The number of columns of the \code{A} matrix.
 #'
@@ -1226,8 +1233,6 @@ fsst.beta.star.bs <- function(data, lpmodel, beta.n, beta.n.bs, beta.tgt,
 #' @inheritParams fsst.beta.star.bs
 #' @inheritParams full.beta.bs
 #' @inheritParams dkqs.bs.fn
-#' @param sigma.beta.obs An estimator of the asymptotic variance for
-#'   \code{beta.obs}.
 #'
 #' @return Returns a list of output that are obtained from the subsampling
 #'   procedure:
@@ -1296,6 +1301,7 @@ fsst.beta.star.bs.fn <- function(beta.obs.bs, data, lpmodel, beta.tgt,
 #' @importFrom Matrix t
 #'
 #' @inheritParams fsst
+#' @inheritParams fsst.beta.bs
 #' @inheritParams fsst.cone.lp
 #'
 #' @return Returns the optimal point and optimal value.
@@ -1750,7 +1756,7 @@ fsst.cone.bs.fn <- function(beta.star.bs, n, omega.i, beta.n, beta.star,
       return(list(status = "error",
                   msg = e))
    })
-   
+
    if (is.null(result.cone$status)) {
       Ts <- result.cone$objval
       msg <- NULL
@@ -1946,7 +1952,7 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
                return(list(status = "error",
                            msg = e))
             })
-            
+
             if (!is.null(tmp.result$status)) {
                # If tmp.result$status is not NULL, then there's some problem
                # with the function
@@ -2011,7 +2017,7 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
                     immediate. = TRUE)
          } else {
             # Check if the dimension of the omega.i object is correct,
-            # i.e., it has to be a square matrix; the number of rows and 
+            # i.e., it has to be a square matrix; the number of rows and
             # columns have to equal the length of \beta(P)
             omega.i.dim <- dim(omega.i)
             if (!((omega.i.dim[1] == omega.i.dim[2]) & omega.i.dim[1] == p)) {
@@ -2023,7 +2029,7 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
          }
       }
    }
-    
+
    # ---------------- #
    # Step 9: Return updated items
    # ---------------- #
@@ -2263,7 +2269,7 @@ fsst.lambda <- function(n, omega.i, beta.n, beta.star, lpmodel, R.succ,
 #' @param lambda.data The data-driven lambda.
 #'
 #' @return Returns the updated vector of \code{lambda} where the data-driven
-#'   \code{lambda} is labelled with a star and the corresponding message
+#'   \code{lambda} is labeled with a star and the corresponding message
 #'   \item{lambdas}{The updated \code{lambda}.}
 #'   \item{msg}{An indicative message.}
 #'
@@ -2283,12 +2289,12 @@ fsst.label.lambda <- function(lambdas, lambda.data) {
 
 #' Checks whether the matrix square root is correct
 #'
-#' @description This function is used to check whether the matrix square 
-#'   root is correct. This is done by checking whether the Frobenius 
-#'   norm is smaller than the tolerance level, i.e., when \eqn{A} is the 
+#' @description This function is used to check whether the matrix square
+#'   root is correct. This is done by checking whether the Frobenius
+#'   norm is smaller than the tolerance level, i.e., when \eqn{A} is the
 #'   give matrix, \eqn{B} is the matrix square root obtained from the
-#'   given \code{sqrtm.method} function, and \eqn{\epsilon} is the 
-#'   tolerance level, the FSST test checks whether 
+#'   given \code{sqrtm.method} function, and \eqn{\epsilon} is the
+#'   tolerance level, the FSST test checks whether
 #'   \eqn{||A - BB||_F < \epsilon}. If this does not hold, the FSST test will
 #'   use the \code{\link[expm]{sqrtm}} function from the \code{expm} package
 #'   to obtain the matrix square root.

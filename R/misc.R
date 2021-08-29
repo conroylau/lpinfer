@@ -70,17 +70,17 @@ bs.assign <- function(R, R.eval, R.succ, maxR, any.list, lpmodel, data = NULL,
 
 #' Auxiliary function to return the indices for bootstrap
 #' replications
-#' 
+#'
 #' @description This function is used to return the starting and ending
 #'   indices for bootstrap replications.
-#'   
+#'
 #' @return Returns the following three objects.
 #'   \item{i0}{The starting index to be evaluated.}
 #'   \item{i1}{The last index to be evaluated.}
-#'   
+#'
 #' @inheritParams dkqs
 #' @inheritParams bs.assign
-#' 
+#'
 bs.index <- function(R, R.eval, R.succ, maxR) {
   # Evaluate the indices
   i0 <- min(R.eval + 1, maxR)
@@ -94,7 +94,6 @@ bs.index <- function(R, R.eval, R.succ, maxR) {
 #' @description This function is used after the bootstrap replications to
 #'   extract the relevant and updated information.
 #'
-#' @inheritParams dkqs
 #' @param test.return The list of information returned from the test function.
 #' @param i0 The starting index to be evaluated.
 #' @param i1 The last index to be evaluated.
@@ -103,7 +102,7 @@ bs.index <- function(R, R.eval, R.succ, maxR) {
 #' @param beta.list The list of the bootstrap replications of the
 #'   \code{beta.obs} component.
 #' @param error.list The list of error messages.
-#' @param param.list The list of parameters (if applicable).
+#' @param list.param The list of parameters (if applicable).
 #' @param error.param The list of parameters that lead to errors (if applicable).
 #' @param ub.list The list of upper bounds (if applicable).
 #' @param lb.list The list of lower bounds (if applicable).
@@ -188,18 +187,18 @@ error.id.match <- function(error.list, df.error) {
 }
 
 #' Coerces a \code{sparseMatrix} as a \code{matrix}
-#' 
-#' @description This function coerces a \code{sparseMatrix} as a 
-#'   \code{matrix}. This function is used specifically in the 
-#'   \code{\link[lpinfer]{gurobi.optim}} function to ensure that the 
+#'
+#' @description This function coerces a \code{sparseMatrix} as a
+#'   \code{matrix}. This function is used specifically in the
+#'   \code{\link[lpinfer]{gurobi.optim}} function to ensure that the
 #'   arguments are accepted by the \code{gurobi} function.
-#' 
+#'
 #' @param mat The matrix that is used in the \code{model} component.
-#' 
+#'
 #' @return Returns a matrix in the \code{matrix} form.
-#' 
+#'
 #' @export
-#' 
+#'
 smatrixconvert <- function(mat) {
   if (is(mat, "sparseMatrix") | is(mat, "Matrix")) {
     return(as.matrix(mat))
@@ -209,18 +208,18 @@ smatrixconvert <- function(mat) {
 }
 
 #' Coerces a \code{dgeMatrix} as a \code{sparseMatrix}
-#' 
-#' @description This function coerces a \code{dgeMatrix} as a 
-#'   \code{sparseMatrix}.This function is used specifically in the 
-#'   \code{\link[lpinfer]{gurobi.optim}} function to ensure that the 
+#'
+#' @description This function coerces a \code{dgeMatrix} as a
+#'   \code{sparseMatrix}.This function is used specifically in the
+#'   \code{\link[lpinfer]{gurobi.optim}} function to ensure that the
 #'   arguments are accepted by the \code{gurobi} function.
-#' 
+#'
 #' @param mat The matrix that is used in the \code{model} component.
-#' 
+#'
 #' @return Returns a matrix in the \code{matrix} form.
-#' 
+#'
 #' @export
-#' 
+#'
 dmatrixconvert <- function(mat) {
   if (is(mat, "dgeMatrix")) {
     return(as(mat, "sparseMatrix"))
@@ -233,7 +232,7 @@ dmatrixconvert <- function(mat) {
 #'
 #' @description This function coerse non-\code{sparseMatrix} objects as
 #'   \code{matrix} and keeps \code{sparseMatrix} unchanged.
-#' 
+#'
 #' @param obj The object under consideration.
 #'
 #' @return Returns a \code{matrix} or a \code{sparseMatrix}.
@@ -247,5 +246,3 @@ asmat <- function(obj) {
     return(as.matrix(obj))
   }
 }
-
-

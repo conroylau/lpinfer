@@ -4,7 +4,7 @@
 \alias{summary.lpmodel.natural}
 \title{Summary of the \code{lpmodel.natural} object}
 \usage{
-summary.lpmodel.natural(x, ...)
+\method{summary}{lpmodel.natural}(x, ...)
 }
 \arguments{
 \item{x}{The \code{lpmodel.natural} object.}

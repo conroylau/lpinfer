@@ -5,7 +5,7 @@
 \title{Print results from \code{\link[lpinfer]{invertci}} with multiple
 significance levels}
 \usage{
-print.invertci_multiple(x, alphas = NULL, ...)
+\method{print}{invertci_multiple}(x, alphas = NULL, ...)
 }
 \arguments{
 \item{x}{The output object returned from \code{\link[lpinfer]{invertci}}.}

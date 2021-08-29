@@ -122,7 +122,7 @@ invertci <- function(f, farg = list(), alpha = .05, init.lb = NULL,
                     "the number of tuning parameters that can be ",
                     "multivalued plus 2."))
       }
-  
+
       ## Check whether the column names match
       if (!setequal(c(para.name, "point", "p-value"), colnames(pvals))) {
         stop(paste0("The column names in 'pvals' need to contain the names ",
@@ -733,6 +733,8 @@ summary.invertci <- function(x, alphas = NULL, ...) {
 #'   \code{\link[lpinfer]{invertci}}.
 #'
 #' @inheritParams summary.invertci
+#' @param msg.bound The string that indicates whether the message for the
+#'   upper or the lower bound is printed.
 #'
 #' @return Nothing is returned.
 #'
@@ -846,6 +848,7 @@ summary.invertci_multiple <- function(x, alphas, msg.bound, ...) {
 #'    the results in each step of the bisection method.
 #'
 #' @inheritParams bisec.print
+#' @param i The row number that we want to print for \code{df_bis}.
 #'
 #' @return Nothing is returned.
 #'

@@ -4,7 +4,7 @@
 \alias{summary.dkqs}
 \title{Summary of results from \code{\link[lpinfer]{dkqs}}}
 \usage{
-summary.dkqs(x, ...)
+\method{summary}{dkqs}(x, ...)
 }
 \arguments{
 \item{x}{An output object returned from \code{\link[lpinfer]{dkqs}}.}

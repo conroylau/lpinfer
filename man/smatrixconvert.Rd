@@ -13,8 +13,8 @@ smatrixconvert(mat)
 Returns a matrix in the \code{matrix} form.
 }
 \description{
-This function coerces a \code{sparseMatrix} as a 
-  \code{matrix}. This function is used specifically in the 
-  \code{\link[lpinfer]{gurobi.optim}} function to ensure that the 
+This function coerces a \code{sparseMatrix} as a
+  \code{matrix}. This function is used specifically in the
+  \code{\link[lpinfer]{gurobi.optim}} function to ensure that the
   arguments are accepted by the \code{gurobi} function.
 }

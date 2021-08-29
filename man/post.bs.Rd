@@ -34,13 +34,13 @@ post.bs(
 
 \item{error.list}{The list of error messages.}
 
+\item{list.param}{The list of parameters (if applicable).}
+
 \item{error.param}{The list of parameters that lead to errors (if applicable).}
 
 \item{ub.list}{The list of upper bounds (if applicable).}
 
 \item{lb.list}{The list of lower bounds (if applicable).}
-
-\item{param.list}{The list of parameters (if applicable).}
 }
 \value{
 Returns the following three objects.

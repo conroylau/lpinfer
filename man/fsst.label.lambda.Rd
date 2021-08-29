@@ -13,7 +13,7 @@ fsst.label.lambda(lambdas, lambda.data)
 }
 \value{
 Returns the updated vector of \code{lambda} where the data-driven
-  \code{lambda} is labelled with a star and the corresponding message
+  \code{lambda} is labeled with a star and the corresponding message
   \item{lambdas}{The updated \code{lambda}.}
   \item{msg}{An indicative message.}
 }

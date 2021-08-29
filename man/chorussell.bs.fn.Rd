@@ -64,6 +64,9 @@ replications.}
 \item{n.bs}{The total number of replications to be conducted in this
 procedure.}
 
+\item{any.list}{This object contains information on whether any components
+in the \code{lpmodel} object is a \code{list}.}
+
 \item{progress}{The boolean variable for whether the progress bars should
 be displayed. If it is set as \code{TRUE}, the progress bars will be
 displayed while the code is running.}

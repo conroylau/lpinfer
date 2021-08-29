@@ -225,10 +225,12 @@ lpmodel.natural <- function(A.obs = NULL, A.shp = NULL, A.tgt = NULL,
 #' @description This function prints the details of the components that are
 #'    contained in the \code{lpmodel} or \code{lpmodel.natural} object.
 #'
+#' @inheritParams dkqs
 #' @param x The \code{lpmodel} object or \code{lpmodel.natural} object.
 #' @param lpm.string The string that contains the name of the variables
 #'    available in the \code{lpmodel} object.
-#' @inheritParams dkqs
+#' @param ... Some additional arguments passed to the \code{lpm.print}
+#'    function.
 #'
 #' @return Nothing is returned.
 #'
@@ -275,7 +277,7 @@ lpm.print <- function(x, lpm.string, data = NULL, ...) {
             dimension.str <- dim(as.matrix(tmp.obj))
             dimension.tmp <- paste0(dimension.str[1], "x", dimension.str[2])
           }
-        } else if (class.tmp %in% c("data.frame", "matrix", "numeric") | 
+        } else if (class.tmp %in% c("data.frame", "matrix", "numeric") |
                    is(obj, "sparseMatrix")) {
           dim.obj <- dim(obj)
           if (is.null(dim.obj)) {
@@ -312,6 +314,7 @@ lpm.print <- function(x, lpm.string, data = NULL, ...) {
 #'
 #' @param x An \code{lpmodel} object.
 #' @inheritParams dkqs
+#' @inheritParams lpm.print
 #'
 #' @return Nothing is returned.
 #'
@@ -347,6 +350,7 @@ summary.lpmodel <- function(x, ...) {
 #'
 #' @param x An \code{lpmodel.natural} object.
 #' @inheritParams dkqs
+#' @inheritParams lpm.print
 #'
 #' @return Nothing is returned.
 #'

@@ -4,7 +4,7 @@
 \alias{print.mincriterion}
 \title{Print results from \code{\link[lpinfer]{mincriterion}}}
 \usage{
-print.mincriterion(x, ...)
+\method{print}{mincriterion}(x, ...)
 }
 \arguments{
 \item{x}{The output objects returned from

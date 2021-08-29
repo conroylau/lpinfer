@@ -4,11 +4,13 @@
 \alias{summary.bisection.print}
 \title{Print results in constructing bounds in bisection method}
 \usage{
-summary.bisection.print(df_bis, i)
+\method{summary}{bisection.print}(df_bis, i)
 }
 \arguments{
 \item{df_bis}{A data frame storing the information from the bisection
 method.}
+
+\item{i}{The row number that we want to print for \code{df_bis}.}
 }
 \value{
 Nothing is returned.

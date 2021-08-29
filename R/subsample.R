@@ -405,10 +405,13 @@ subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver, n,
 #' @import furrr progressr
 #'
 #' @inheritParams dkqs
+#' @inheritParams dkqs.bs
+#' @inheritParams dkqs.bs.fn
+#' @inheritParams error.id.match
 #' @inheritParams estbounds
+#' @inheritParams post.bs
 #' @inheritParams subsample
 #' @inheritParams subsample.prob
-#' @inheritParams dkqs.bs
 #' @param m The size of each subsample.
 #' @param error.id The list of ID that corresponds to problematic bootstrap
 #'   draws.
@@ -487,7 +490,7 @@ subsample.bs <- function(data, i1, lpmodel, beta.tgt, norm, solver,
                                             n.bs = i1 - i0 + 1,
                                             omega.hat = omega.hat,
                                             any.list = any.list,
-                                            .options = 
+                                            .options =
                                               furrr::furrr_options(seed = TRUE))
     })
 
@@ -809,6 +812,7 @@ subsample.check <- function(data, lpmodel, beta.tgt, R, Rmulti, solver, norm,
 #' @description This function computes the bootstrap estimates of
 #'   \eqn{\beta_{\rm obs}}.
 #'
+#' @inheritParams fsst.beta.bs
 #' @inheritParams subsample
 #' @inheritParams subsample.bs
 #'

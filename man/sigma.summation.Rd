@@ -11,6 +11,18 @@
 
 \item{beta.bs.list}{A list of bootstrap estimators
 \eqn{\{\widehat{\bm{\beta}}_b\}^B_{b=1}}.}
+
+\item{progress}{The boolean variable for whether the progress bars should
+be displayed. If it is set as \code{TRUE}, the progress bars will be
+displayed while the code is running.}
+
+\item{eval.count}{The count for the number of times the \code{future_map}
+function has been called. If this object is zero, it means that the
+\code{future_map} function is being called for the first time in this
+subprocedure. Otherwise, it means that the \code{future_map} function
+has been called for more than once. This situation typically refers to the
+situations where there are some errors in the first time of the
+replications.}
 }
 \value{
 Returns the estimator of the asymptotic variance.
@@ -23,6 +35,6 @@ Based on the bootstrap estimates
   \deqn{\frac{n}{B} \sum^B_{i=1} \left(\widehat{\bm{\beta}}_b -
   \widehat{\bm{\beta}}\right)  \left(\widehat{\bm{\beta}}_b -
   \widehat{\bm{\beta}}\right)'.}
- This function supports parallel programming via the \code{furrr}
- package.
+  This function supports parallel programming via the \code{furrr}
+  package.
 }

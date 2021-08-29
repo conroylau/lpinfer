@@ -4,7 +4,7 @@
 \alias{print.chorussell}
 \title{Print results from \code{\link[lpinfer]{chorussell}}}
 \usage{
-print.chorussell(x, ...)
+\method{print}{chorussell}(x, ...)
 }
 \arguments{
 \item{x}{The output objects returned from \code{\link[lpinfer]{chorussell}}.}

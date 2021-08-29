@@ -24,7 +24,7 @@
 #' @param previous.output The list of outputs obtained from the previous
 #'    evaluation of the procedure. This is only used in the
 #'    \code{\link[lpinfer]{fsst}} test and when \code{previous.out} contains
-#'    the studentized matrix \code{omega.i}. The rest of the arguments 
+#'    the studentized matrix \code{omega.i}. The rest of the arguments
 #'    are ignored.
 #'
 #' @return Returns the following list of outputs:
@@ -447,7 +447,7 @@ dkqs.qlp <- function(lpmodel, beta.tgt, beta.obs.hat, tau, problem, n,
 #'   programming via the \code{furrr} package.
 #'
 #' @import furrr progressr
-#' 
+#'
 #' @importFrom Matrix which
 #'
 #' @param s.star.list The list of values of
@@ -530,7 +530,7 @@ dkqs.bs <- function(data, lpmodel, beta.tgt, R, maxR, s.star.list, tau.list,
                                        eval.count = eval.count,
                                        n.bs = i1 - i0 + 1,
                                        any.list = any.list,
-                                       .options = 
+                                       .options =
                                          furrr::furrr_options(seed = TRUE))
       eval.count <- eval.count + 1
     })
@@ -591,6 +591,7 @@ dkqs.bs <- function(data, lpmodel, beta.tgt, R, maxR, s.star.list, tau.list,
 #' @inheritParams dkqs
 #' @inheritParams dkqs.bs
 #' @inheritParams dkqs.qlp
+#' @inheritParams chorussell.bs.fn
 #' @param x This is either the list of indices that represent the bootstrap
 #'   replications, or the list of bootstrap components of the \code{lpmodel}
 #'   object passed from the user.
@@ -604,6 +605,8 @@ dkqs.bs <- function(data, lpmodel, beta.tgt, R, maxR, s.star.list, tau.list,
 #'   replications.
 #' @param n.bs The total number of replications to be conducted in this
 #'   procedure.
+#' @param any.list This object contains information on whether any components
+#'   in the \code{lpmodel} object is a \code{list}.
 #'
 #' @return Returns a list of output that are obtained from the DKQS
 #'   procedure:
@@ -615,7 +618,7 @@ dkqs.bs <- function(data, lpmodel, beta.tgt, R, maxR, s.star.list, tau.list,
 #' @export
 #'
 dkqs.bs.fn <- function(x, data, lpmodel, beta.obs.hat, beta.tgt, s.star.list,
-                       tau.list, solver, n, pbar, eval.count, n.bs, 
+                       tau.list, solver, n, pbar, eval.count, n.bs,
                        any.list, progress) {
   # ---------------- #
   # Step 1: Print progress bar
@@ -721,7 +724,7 @@ dkqs.bs.fn <- function(x, data, lpmodel, beta.obs.hat, beta.tgt, s.star.list,
 #' @description This function computes the \eqn{p}-value of the test based on
 #'    the bootstrap estimates.
 #'
-#' @param T_bs The list of bootstrap estimates of the test statistic.
+#' @param T.bs The list of bootstrap estimates of the test statistic.
 #' @param T.n The sample test statistics.
 #'
 #' @return Returns the \eqn{p}-value:
@@ -943,7 +946,7 @@ summary.dkqs <- function(x, ...) {
     cat(sprintf("Test statistic: %s\n", round(x$T.n, digits = 5)))
     if (nrow(x$pval) == 1) {
       cat(sprintf("tau used: %s\n", round(x$pval[1, 1], digits = 5)))
-    } 
+    }
     cat(sprintf("Maximum feasible tau: %s\n", round(x$tau.max, digits = 5)))
     cat(sprintf("Solver: %s\n", x$solver))
     cat(sprintf("Number of successful bootstrap replications: %s\n",

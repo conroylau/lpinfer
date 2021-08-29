@@ -9,11 +9,11 @@ objective.function(A, b, n, weight = NULL)
 \arguments{
 \item{A}{The matrix \eqn{\bm{A}}.}
 
+\item{b}{The column vector \eqn{\bm{\beta}}.}
+
 \item{n}{The sample size \eqn{n}.}
 
 \item{weight}{The weighting matrix.}
-
-\item{beta}{The column vector \eqn{\bm{\beta}}.}
 }
 \value{
 Returns the following three quantities: \code{obj2} is the

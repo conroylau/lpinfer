@@ -4,7 +4,7 @@
 \alias{print.dkqs}
 \title{Print results from \code{\link[lpinfer]{dkqs}}}
 \usage{
-print.dkqs(x, ...)
+\method{print}{dkqs}(x, ...)
 }
 \arguments{
 \item{x}{An output object returned from \code{\link[lpinfer]{dkqs}}.}

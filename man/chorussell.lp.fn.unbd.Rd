@@ -24,7 +24,7 @@ chorussell.lp.fn.unbd(
 )
 }
 \arguments{
-\item{x}{One candidate of the upper or lower bound.}
+\item{x}{A candidate lower bound.}
 
 \item{lb.can1}{The vector of values that corresponds to
 \eqn{\sqrt{n}\left(\hat{\theta}^b_{\rm lb} - \hat{\theta}_{\rm lb}\right)}.}
@@ -40,7 +40,13 @@ chorussell.lp.fn.unbd(
 \eqn{\sqrt{n}\left(\hat{\theta}^b_{\rm ub} - \hat{\theta}_{\rm ub} +
 \Delta \right)}.}
 
+\item{lb.can}{All candidates of the lower bounds.}
+
 \item{ub.can}{All candidates of the upper bounds.}
+
+\item{lb}{The sample lower bound.}
+
+\item{ub}{The sample upper bound.}
 
 \item{alpha}{The significance level. This can be a vector.}
 

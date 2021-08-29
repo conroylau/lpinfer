@@ -27,9 +27,12 @@ in the input.}
 \eqn{\widehat{\bm{\beta}}_{\mathrm{obs}, n}} based on the given
 information in \code{lpmodel} (and \code{data} if applicable).}
 
-\item{lpmodel}{The \code{lpmodel} object.}
+\item{lpmodel}{An \code{lpmodel} object.}
 
 \item{R}{The number of bootstrap replications.}
+
+\item{maxR}{The maximum number of bootstrap replications to be considered in
+case there are some errors.}
 
 \item{progress}{The boolean variable for whether the progress bars should
 be displayed. If it is set as \code{TRUE}, the progress bars will be

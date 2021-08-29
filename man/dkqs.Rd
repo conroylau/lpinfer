@@ -48,7 +48,7 @@ displayed while the code is running.}
 \item{previous.output}{The list of outputs obtained from the previous
 evaluation of the procedure. This is only used in the
 \code{\link[lpinfer]{fsst}} test and when \code{previous.out} contains
-the studentized matrix \code{omega.i}. The rest of the arguments 
+the studentized matrix \code{omega.i}. The rest of the arguments
 are ignored.}
 }
 \value{

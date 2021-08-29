@@ -4,7 +4,7 @@
 \alias{print.invertci}
 \title{Print results from \code{\link[lpinfer]{invertci}}}
 \usage{
-print.invertci(x, ...)
+\method{print}{invertci}(x, ...)
 }
 \arguments{
 \item{x}{The output object returned from \code{\link[lpinfer]{invertci}}.}

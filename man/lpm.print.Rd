@@ -13,6 +13,9 @@ lpm.print(x, lpm.string, data = NULL, ...)
 available in the \code{lpmodel} object.}
 
 \item{data}{An \code{data frame} or a \code{matrix}.}
+
+\item{...}{Some additional arguments passed to the \code{lpm.print}
+function.}
 }
 \value{
 Nothing is returned.

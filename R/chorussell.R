@@ -186,7 +186,7 @@ chorussell <- function(data = NULL, lpmodel, beta.tgt = NULL, n = NULL, R = 100,
           df.lb <- NULL
           df.ub <- NULL
         }
-        
+
         cr.lp.return[[i]] <- chorussell.eval(beta.tgt, lb.can1[[i]],
                                              lb.can2[[i]], ub.can1[[i]],
                                              ub.can2[[i]], n, R, ci, alpha,
@@ -348,7 +348,7 @@ chorussell.simp <- function(lb.can1, lb.can2, ub.can1, ub.can2, progress) {
                                    pbar = pbar,
                                    bd = "lower",
                                    progress = progress)
-    
+
     df.lb <- data.frame(bd = unlist(sapply(lb.return, "[", "bd"),
                                     use.names = FALSE),
                         sum = unlist(sapply(lb.return, "[", "sum"),
@@ -493,7 +493,7 @@ chorussell.bs <- function(data, lpmodel, beta.tgt, R, maxR, kappa, norm,
                                              n.bs = i1 - i0 + 1,
                                              progress = progress,
                                              any.list = any.list,
-                                             .options = 
+                                             .options =
                                                furrr::furrr_options(seed = TRUE))
 
       eval.count <- eval.count + 1
@@ -674,6 +674,10 @@ chorussell.bs.fn <- function(x, data, lpmodel, beta.tgt, kappa, norm, n,
 #' @param logical.lb The logical lower bound.
 #' @param ub The sample upper bound.
 #' @param lb The sample lower bound.
+#' @param df.lb The list of lower bounds that are obtained from the
+#'   simplified program.
+#' @param df.ub The list of upper bounds that are obtained from the
+#'   simplified program.
 #'
 #' @return Depending on \code{ci}, this function either returns the
 #'   \eqn{p}-value or the \eqn{(1-\alpha)}-confidence interval.
@@ -768,8 +772,8 @@ chorussell.pt <- function(cr.lp.return, beta.tgt) {
 #' @import furrr progressr
 #'
 #' @inheritParams chorussell
-#' @inheritParams chorussell.simp
 #' @inheritParams chorussell.eval
+#' @inheritParams chorussell.simp
 #' @param k Iteration number.
 #'
 #' @return Returns the following list of objects:
@@ -963,9 +967,11 @@ chorussell.lp.fn <- function(x, lb.can1, lb.can2, ub.can1, ub.can2, ub.can,
 #'   store the upper bound.
 #'
 #' @inheritParams chorussell
+#' @inheritParams chorussell.eval
+#' @inheritParams chorussell.lp.fn
 #' @inheritParams chorussell.simp
 #' @inheritParams chorussell.simp.fn
-#' @inheritParams chorussell.lp.fn
+#' @param lb.can All candidates of the lower bounds.
 #'
 #' @return Returns a data frame.
 #'   \item{df}{A data frame that contains the pairs of feasible lower bounds
@@ -1104,7 +1110,7 @@ chorussell.check <- function(data, lpmodel, beta.tgt, R, Rmulti, kappa,
   # Step 5: Check numerics
   # ---------------- #
   if (isFALSE(ci)) {
-    check.numeric(beta.tgt, "beta.tgt") 
+    check.numeric(beta.tgt, "beta.tgt")
   }
   check.positiveinteger(R, "R")
   check.nonnegative(tol, "tol")
@@ -1128,7 +1134,7 @@ chorussell.check <- function(data, lpmodel, beta.tgt, R, Rmulti, kappa,
     test.return <- check.betatgt(data, lpmodel, beta.tgt, solver)
     test.logical <- test.return$inout
     logical.lb <- test.return$lb
-    logical.ub <- test.return$ub 
+    logical.ub <- test.return$ub
   } else {
     test.logical <- 1
     logical.lb <- check.betatgt.lp(data, lpmodel, "min", solver)
@@ -1242,7 +1248,7 @@ summary.chorussell <- function(x, ...) {
         (isFALSE(x$ci) & isTRUE(nrow(x$pval) == 1))) {
       cat(sprintf("kappa: %s\n", x$kappa))
     }
-    
+
     # Print test statistic, solver used, norm used, and the number of
     # successful bootstrap replications
     cat(sprintf("Norm: %s\n", x$norm))

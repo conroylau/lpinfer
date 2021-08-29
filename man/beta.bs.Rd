@@ -9,9 +9,12 @@ beta.bs(data, lpmodel, seed.list, df.error)
 \arguments{
 \item{data}{An \code{data frame} or a \code{matrix}.}
 
-\item{lpmodel}{The \code{lpmodel} object used in the test.}
+\item{lpmodel}{An \code{lpmodel} object.}
 
 \item{seed.list}{The list of RNG states and the corresponding iterations.}
+
+\item{df.error}{A table showing the id of the bootstrap replication(s)
+with error(s) and the corresponding error message(s).}
 }
 \value{
 Returns the following objects:

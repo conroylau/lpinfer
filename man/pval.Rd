@@ -7,9 +7,9 @@
 pval(T.bs, T.n)
 }
 \arguments{
-\item{T.n}{The sample test statistics.}
+\item{T.bs}{The list of bootstrap estimates of the test statistic.}
 
-\item{T_bs}{The list of bootstrap estimates of the test statistic.}
+\item{T.n}{The sample test statistics.}
 }
 \value{
 Returns the \eqn{p}-value:

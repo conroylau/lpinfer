@@ -388,11 +388,11 @@ limsolve.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
 #'    for linear programs. This function takes matrix \eqn{\bm{A}} and
 #'    \eqn{\bm{\beta}} as input and computes the coefficients of the objective
 #'    function.
-#'    
+#'
 #' @importFrom Matrix t
 #'
 #' @param A The matrix \eqn{\bm{A}}.
-#' @param beta The column vector \eqn{\bm{\beta}}.
+#' @param b The column vector \eqn{\bm{\beta}}.
 #' @param n The sample size \eqn{n}.
 #' @inheritParams gurobi.optim
 #'
