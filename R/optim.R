@@ -44,7 +44,7 @@ gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL,
   model$objcon <- as.numeric(objective_return$obj0)
 
   # Linear constraints
-  model$A <- A
+  model$A <- dmatrixconvert(A)
   model$rhs <- smatrixconvert(rhs)
 
   # Quadratic constraints
@@ -450,10 +450,10 @@ objective.function <- function(A, b, n, weight = NULL) {
     }
 
     # Quadratic program coefficients
-    obj2 <- as.matrix(Matrix::t(A) %*% weight %*% A * n)
+    obj2 <- asmat(Matrix::t(A) %*% weight %*% A * n)
     rownames(obj2) <- 1:nrow(obj2)
     colnames(obj2) <- 1:ncol(obj2)
-    obj1 <- -2 * as.matrix(Matrix::t(b) %*% weight %*% A * n)
+    obj1 <- -2 * asmat(Matrix::t(b) %*% weight %*% A * n)
     obj0 <- Matrix::t(b) %*% weight %*% b * n
   }
 

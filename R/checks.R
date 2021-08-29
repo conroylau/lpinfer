@@ -332,9 +332,9 @@ check.func <- function(f, A, data, name.var, name.A, mat.type) {
   if (class(f) != "function") {
     stop(sprintf(msg.class, "input", name.var, "a function"),
          call. = FALSE)
-  } else{
+  } else {
     out <- f(data)
-    out <- as.matrix(out)
+    out <- asmat(out)
     # Check if the output is numeric
     if (is.numeric(out[, 1]) == FALSE) {
       stop(sprintf(msg.class, "output", name.var, "numeric"),
@@ -418,9 +418,9 @@ check.Ab <- function(A, b, Aname, bname) {
                   paste0("The argument '", matrix.names[i],
                   "' must either be a data.frame, data.table, or matrix.")),
              call. = FALSE)
-      } else{
+      } else {
         # Ensure the variable is in matrix form
-        matrix.list[[i]] <- as.matrix(matrix.list[[i]])
+        matrix.list[[i]] <- asmat(matrix.list[[i]])
 
         ## Part 2: Check whether the matrices are numeric
         if (is.numeric(matrix.list[[i]]) == FALSE) {

@@ -372,7 +372,7 @@ for (j in 1:2) {
   ## Compute regularization parameter
   rhobar[[j]] <- base::norm(student.matrix[[j]], type = "f") * rho
   ## Compute regularization matrix
-  omega[[j]] <- expm::sqrtm(student.matrix[[j]] + rhobar[[j]] * diag(p[[j]]))
+  omega[[j]] <- pracma::sqrtm(student.matrix[[j]] + rhobar[[j]] * diag(p[[j]]))
 }
 
 # 5. Test statistic
@@ -421,7 +421,7 @@ fsst.range.soln <- function(beta.obs.star, beta.obs, Xi, p, d) {
   if (d >= p) {
     range.n <- 0
   } else {
-    range.n <- base::norm(sqrt(N) * expm::sqrtm(Xi) %*%
+    range.n <- base::norm(sqrt(N) * pracma::sqrtm(Xi) %*%
                             (beta.obs - beta.obs.star),
                           type = "I")
   }
@@ -972,7 +972,7 @@ student.matrix2 <- n * student.matrix2 / reps
 ## Compute regularization parameter
 rhobar2 <- base::norm(student.matrix2, type = "f") * rho2
 ## Compute regularization matrix
-omega2 <- expm::sqrtm(student.matrix2 + rhobar2 * diag(p2))
+omega2 <- pracma::sqrtm(student.matrix2 + rhobar2 * diag(p2))
 
 # 5. Test statistics
 ## Range

@@ -208,3 +208,44 @@ smatrixconvert <- function(mat) {
   }
 }
 
+#' Coerces a \code{dgeMatrix} as a \code{sparseMatrix}
+#' 
+#' @description This function coerces a \code{dgeMatrix} as a 
+#'   \code{sparseMatrix}.This function is used specifically in the 
+#'   \code{\link[lpinfer]{gurobi.optim}} function to ensure that the 
+#'   arguments are accepted by the \code{gurobi} function.
+#' 
+#' @param mat The matrix that is used in the \code{model} component.
+#' 
+#' @return Returns a matrix in the \code{matrix} form.
+#' 
+#' @export
+#' 
+dmatrixconvert <- function(mat) {
+  if (is(mat, "dgeMatrix")) {
+    return(as(mat, "sparseMatrix"))
+  } else {
+    return(mat)
+  }
+}
+
+#' Coerces non-\code{sparseMatrix} objects as \code{matrix}
+#'
+#' @description This function coerse non-\code{sparseMatrix} objects as
+#'   \code{matrix} and keeps \code{sparseMatrix} unchanged.
+#' 
+#' @param obj The object under consideration.
+#'
+#' @return Returns a \code{matrix} or a \code{sparseMatrix}.
+#'
+#' @export
+#'
+asmat <- function(obj) {
+  if (is(obj, "sparseMatrix")) {
+    return(obj)
+  } else {
+    return(as.matrix(obj))
+  }
+}
+
+

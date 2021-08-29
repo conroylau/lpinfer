@@ -769,7 +769,7 @@ fsst.weight.matrix <- function(weight.matrix, beta.obs.hat, beta.sigma) {
    # Step 2: Create the matrix
    # ---------------- #
    if (weight.matrix == "identity") {
-      weight.mat <- diag(nrow(as.matrix(beta.obs.hat)))
+      weight.mat <- diag(nrow(asmat(beta.obs.hat)))
    } else if (weight.matrix == "diag") {
       weight.mat <- diag(diag(solve(beta.sigma)))
    } else if (weight.matrix == "avar") {
@@ -865,7 +865,7 @@ beta.product <- function(beta, beta.obs.hat, pbar, progress, eval.count) {
       pbar(sprintf("(%s asymptotic variance estimator)", compute))
    }
 
-   beta.diff <- as.matrix(beta - beta.obs.hat)
+   beta.diff <- asmat(beta - beta.obs.hat)
    if (nrow(beta.diff) == 1) {
       beta.prod <- Matrix::t(beta.diff) %*% beta.diff
    } else {
@@ -922,7 +922,7 @@ beta.star.qp <- function(data, lpmodel, beta.tgt, weight.mat, beta.obs.hat,
    # Constraints matrix
    A.mat1 <- A.shp.hat
    A.mat2 <- A.tgt.hat
-   A.mat <- as.matrix(rbind(A.mat1, A.mat2))
+   A.mat <- asmat(rbind(A.mat1, A.mat2))
 
    # RHS matrix
    b <- matrix(c(lpmodel$beta.shp, c(beta.tgt)), ncol = 1)
@@ -952,7 +952,7 @@ beta.star.qp <- function(data, lpmodel, beta.tgt, weight.mat, beta.obs.hat,
    x.star <- ans$x
 
    # Compute beta.star
-   A <- as.matrix(rbind(lpmodel$A.obs, lpmodel$A.shp, lpmodel$A.tgt))
+   A <- asmat(rbind(lpmodel$A.obs, lpmodel$A.shp, lpmodel$A.tgt))
    beta.star <- A %*% x.star
 
    return(list(beta.star = beta.star,
@@ -1028,11 +1028,11 @@ fsst.cone.lp <- function(n, omega.i, beta.n, beta.star, lpmodel, indicator,
       zero.Am <- matrix(rep(0, (p + d + 1) * d), nrow = (p + d + 1))
 
       # Update objective function
-      obj.ext <- c(obj, zero.d)
+      obj.ext <- asmat(Reduce(rbind, c(obj, zero.d)))
 
       # Update constraints matrix
-      A.mat.ext1 <- as.matrix(cbind(A.mat, zero.Am))
-      A.mat.ext2 <- as.matrix(cbind(diag(p), zero.pp, zero.pp, -A))
+      A.mat.ext1 <- asmat(cbind(A.mat, zero.Am))
+      A.mat.ext2 <- asmat(cbind(diag(p), zero.pp, zero.pp, -A))
       A.mat.ext <- rbind(A.mat.ext1, A.mat.ext2)
 
       # Update RHS vector
@@ -1330,15 +1330,15 @@ beta.r.compute <- function(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
 
    # Construct the constraints matrix
    A <- rbind(lpmodel$A.obs, lpmodel$A.shp, lpmodel$A.tgt)
-   A.mat1 <- as.matrix(cbind(sqrt(n) * diag(p), zero.pd, -omega.i, A, zero.p1))
+   A.mat1 <- asmat(cbind(sqrt(n) * diag(p), zero.pd, -omega.i, A, zero.p1))
    if (indicator == 0) {
       # Multiply A.mat 1 by t(A) if indicator == 0 (i.e. d < p)
       A.mat1 <- Matrix::t(A) %*% A.mat1
    }
-   A.mat2 <- as.matrix(cbind(diag(p), -A, zero.pp, zero.pd, zero.p1))
-   A.mat3 <- as.matrix(cbind(zero.pp, zero.pd, -diag(p), zero.pd, ones.p1))
-   A.mat4 <- as.matrix(cbind(zero.pp, zero.pd, diag(p), zero.pd, ones.p1))
-   A.mat5 <- as.matrix(cbind(iden.beta, zero.pd, zero.pp, zero.pd, zero.p1))
+   A.mat2 <- asmat(cbind(diag(p), -A, zero.pp, zero.pd, zero.p1))
+   A.mat3 <- asmat(cbind(zero.pp, zero.pd, -diag(p), zero.pd, ones.p1))
+   A.mat4 <- asmat(cbind(zero.pp, zero.pd, diag(p), zero.pd, ones.p1))
+   A.mat5 <- asmat(cbind(iden.beta, zero.pd, zero.pp, zero.pd, zero.p1))
 
    # Construct the rhs vector and the sense vector
    A.mat <- rbind(A.mat1, A.mat2, A.mat3, A.mat4, A.mat5)
@@ -2305,7 +2305,7 @@ fsst.label.lambda <- function(lambdas, lambda.data) {
 #'
 checkupdate.matrixroot <- function(mat, mat.name, sqrtm.method, sqrtm.tol) {
    # Obtain the square root by the `sqrtm.method`
-   sqrtm.tmp <- sqrtm.method(mat)
+   sqrtm.tmp <- sqrtm.method(as.matrix(mat))
 
    # Check whether the matrix square root is correct
    if (Matrix::norm(mat - sqrtm.tmp %*% sqrtm.tmp, type = "f") >= sqrtm.tol) {
