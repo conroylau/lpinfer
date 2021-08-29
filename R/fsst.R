@@ -5,6 +5,7 @@
 #'
 #' @importFrom expm sqrtm
 #' @importFrom Matrix t
+#' @importFrom Matrix norm
 #'
 #' @inheritParams dkqs
 #' @param lpmodel The \code{lpmodel} object.
@@ -310,7 +311,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          }
 
          # Compute the matrix square root
-         rhobar.i <- base::norm(sigma.star, type = "f") * rho
+         rhobar.i <- Matrix::norm(sigma.star, type = "f") * rho
          
          # Compute the studentization matrix if 'omega.i' is NA and if d < p
          if (!is.matrix(omega.i) | d < p) {
@@ -1393,6 +1394,8 @@ beta.r.compute <- function(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
 #' @description This function computes the range component of the test
 #'   statistics in the \code{\link[lpinfer]{fsst}} procedure.
 #'
+#' @importFrom Matrix norm
+#'
 #' @inheritParams fsst
 #' @inheritParams beta.star.qp
 #' @inheritParams fsst.beta.bs
@@ -1416,7 +1419,7 @@ fsst.range <- function(n, beta.obs.hat, x.star, lpmodel, weight.mat.root) {
    # ---------------- #
    # Step 2: Compute the range component
    # ---------------- #
-   range <- base::norm(range.arg, type = "I")
+   range <- Matrix::norm(range.arg, type = "I")
 
    return(range)
 }
@@ -2291,6 +2294,7 @@ fsst.label.lambda <- function(lambdas, lambda.data) {
 #'   to obtain the matrix square root.
 #'
 #' @import expm
+#' @importFrom Matrix norm
 #'
 #' @inheritParams fsst
 #' @param mat The matrix that we wish to obtain the matrix square root.
@@ -2304,7 +2308,7 @@ checkupdate.matrixroot <- function(mat, mat.name, sqrtm.method, sqrtm.tol) {
    sqrtm.tmp <- sqrtm.method(mat)
 
    # Check whether the matrix square root is correct
-   if (base::norm(mat - sqrtm.tmp %*% sqrtm.tmp, type = "f") >= sqrtm.tol) {
+   if (Matrix::norm(mat - sqrtm.tmp %*% sqrtm.tmp, type = "f") >= sqrtm.tol) {
       warning(paste0("In computing the square root of the ", mat.name,  ", ",
                      "the difference bewteen the matrix square root obtained ",
                      "from the function passed to 'sqrtm.method' and the ",
