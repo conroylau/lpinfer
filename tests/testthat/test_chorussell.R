@@ -1,4 +1,5 @@
 context("Tests for chorussell")
+rm(list = ls())
 
 # ---------------- #
 # Load relevant packages
@@ -652,7 +653,7 @@ test_that("Same answers in brute force and refinement approaches", {
                      cr.out.ci[[i]][[j]][[k]]$ci.df[1, 3])
         expect_equal(cr.out.brute.ci[[j]][[k]]$ci.df[1, 3],
                      cr.out.ci2[[i]][[j]][[k]]$ci.df[1, 3])
-        
+
         # Upper-bound of the confidence intervals
         expect_equal(cr.out.brute.ci[[j]][[k]]$ci.df[1, 4],
                      cr.out.ci[[i]][[j]][[k]]$ci.df[1, 4])

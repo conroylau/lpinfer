@@ -181,6 +181,8 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       } else {
         ## Case 2: Variance matrix is provided by the user
         omega.hat <- omega.hat0
+        # Store the new RNG state
+        seed.list[[length(seed.list) + 1]] <- list(seed = .Random.seed)
       }
 
       # ---------------- #
@@ -197,7 +199,6 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       Tsub.return <- subsample.bs(data, i1, lpmodel, beta.tgt, norm, solver,
                                   replace, progress, m, n, omega.hat, df.error,
                                   eval.count, error.id, seed.list)
-
       T.sub <- Tsub.return$T.sub
       df.error <- Tsub.return$df.error
       error.id <- Tsub.return$error.id
@@ -512,17 +513,31 @@ subsample.bs <- function(data, i1, lpmodel, beta.tgt, norm, solver,
   ns <- length(iter.list)
   if (length(unlist(error.list)) != 0) {
     # New error messages
-    new.ind <- (sum(iter.list[1:(ns - 1)]) + 1):(sum(iter.list))
-    df.error1 <- data.frame(id = NA,
-                            lambda = NA,
-                            message = unlist(error.list[new.ind]))
-    df.error1 <- error.id.match(error.list[new.ind], df.error1)
-
-    # Merge with the previous error messages
-    df.error <- rbind(df.error, df.error1)
-
-    # New errors
-    new.error <- nrow(df.error) - error0
+    if ((ns - 1) == 0) {
+      new.ind <- 1:sum(iter.list)
+    } else {
+      new.ind <- (sum(iter.list[1:(ns - 1)]) + 1):(sum(iter.list))
+    }
+    new.msg <- unlist(error.list[new.ind])
+    
+    # Append new error messages (if any)
+    if (is.null(new.msg)) {
+      # No new error messages, keep df.error as before
+      df.error <- df.error
+      new.error <- 0
+    } else {
+      # There are new error messages
+      df.error1 <- data.frame(id = NA,
+                              lambda = NA,
+                              message = unlist(error.list[new.ind]))
+      df.error1 <- error.id.match(error.list[new.ind], df.error1)
+      
+      # Merge with the previous error messages
+      df.error <- rbind(df.error, df.error1)
+      
+      # New errors
+      new.error <- nrow(df.error) - error0 
+    }
 
     # Consolidate the error ids and get the list of nonproblematic test
     # statistics
@@ -530,6 +545,7 @@ subsample.bs <- function(data, i1, lpmodel, beta.tgt, norm, solver,
     error.id <- unique(c(error.id, error.id1))
     T.sub <- unlist(T.sub[-c(error.id)], use.names = FALSE)
   } else {
+    # No error
     df.error <- NULL
     T.sub <- unlist(T.sub, use.names = FALSE)
     error.id <- error.id

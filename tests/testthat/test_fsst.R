@@ -153,14 +153,14 @@ bobs.bs.full.list <- furrr::future_map(1:reps,
                                        .f = draw.bs.data,
                                        f = func_full_info,
                                        data = sampledata,
-                                       .options = 
+                                       .options =
                                          furrr::furrr_options(seed = TRUE))
 set.seed(1)
 bobs.bs.twom.list <- furrr::future_map(1:reps,
                                        .f = draw.bs.data,
                                        f = func_two_moment,
                                        data = sampledata,
-                                       .options = 
+                                       .options =
                                          furrr::furrr_options(seed = TRUE))
 
 bobs.full.list <- c(list(func_full_info(sampledata)$beta), bobs.bs.full.list)
@@ -283,9 +283,9 @@ for (j in seq_along(j.lpmodel)) {
                                     .f = fsst.bs.fn,
                                     data = sampledata,
                                     lpmodel = j.lpmodel[[j]],
-                                    .options = 
+                                    .options =
                                       furrr::furrr_options(seed = TRUE))
-  
+
 }
 
 # 3. Solve problem (3) - with the sample estimates and the bootstrap estimates
@@ -372,7 +372,8 @@ for (j in 1:2) {
   ## Compute regularization parameter
   rhobar[[j]] <- base::norm(student.matrix[[j]], type = "f") * rho
   ## Compute regularization matrix
-  omega[[j]] <- pracma::sqrtm(student.matrix[[j]] + rhobar[[j]] * diag(p[[j]]))
+  omega[[j]] <- pracma::sqrtm(student.matrix[[j]] +
+                                rhobar[[j]] * diag(p[[j]]))$B
 }
 
 # 5. Test statistic
@@ -421,7 +422,7 @@ fsst.range.soln <- function(beta.obs.star, beta.obs, Xi, p, d) {
   if (d >= p) {
     range.n <- 0
   } else {
-    range.n <- base::norm(sqrt(N) * pracma::sqrtm(Xi) %*%
+    range.n <- base::norm(sqrt(N) * pracma::sqrtm(Xi)$B %*%
                             (beta.obs - beta.obs.star),
                           type = "I")
   }
@@ -972,7 +973,7 @@ student.matrix2 <- n * student.matrix2 / reps
 ## Compute regularization parameter
 rhobar2 <- base::norm(student.matrix2, type = "f") * rho2
 ## Compute regularization matrix
-omega2 <- pracma::sqrtm(student.matrix2 + rhobar2 * diag(p2))
+omega2 <- pracma::sqrtm(student.matrix2 + rhobar2 * diag(p2))$B
 
 # 5. Test statistics
 ## Range

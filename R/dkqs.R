@@ -250,8 +250,10 @@ dkqs <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                         logical.ub = logical.ub))
 
   # Turn returned lists for bounds as vectors if parameter is not multivalued
-  if (length(tau.feasible) == 1) {
-    output$T.bs <- unlist(output$T.bs)
+  if (test.logical == 1) {
+    if (length(tau.feasible) == 1) {
+      output$T.bs <- unlist(output$T.bs)
+    }
   }
 
   # Assign class

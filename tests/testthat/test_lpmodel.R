@@ -1,4 +1,5 @@
 context("Unit test for writing linear program in standard form")
+rm(list = ls())
 
 # ---------------- #
 # Create the constraint matrices and rhs vectors

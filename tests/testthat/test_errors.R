@@ -6,7 +6,7 @@ rm(list = ls())
 # ---------------- #
 library(lpinfer)
 library(future)
-library(future.apply)
+library(furrr)
 
 # ---------------- #
 # Define functions to match the moments
@@ -121,6 +121,7 @@ test.param <- function(param, string) {
     fsst.args1$lambda <- param
     fsst.args2$rho <- param
     estb.args$kappa <- param
+    set.seed(1)
     expect_error(do.call(dkqs, dkqs.args), regexp = msg1.dkqs)
     expect_error(do.call(subsample, subs.args), regexp = msg1.subs)
     expect_error(do.call(fsst, fsst.args1), regexp = msg1.fsst.lam)
@@ -142,6 +143,7 @@ test_that("Tuning parameter as NA", {
   fsst.args1$lambda <- NA
   fsst.args2$rho <- NA
   estb.args$kappa <- NA
+  set.seed(1)
   expect_error(do.call(dkqs, dkqs.args), regexp = msg1.dkqs)
   expect_error(do.call(subsample, subs.args), regexp = msg1.subs)
   expect_error(do.call(fsst, fsst.args1), regexp = NA)
@@ -477,7 +479,7 @@ test.lpmodel.func <- function(lpmodel, string, msg1, msg2) {
     estb.args$lpmodel <- lpmodel
     minc.args$lpmodel <- lpmodel
     expect_error(do.call(dkqs, dkqs.args), regexp = msg1, fixed = TRUE)
-    expect_error(do.call(subsample, subs.args), regexp = msg2, fixed = TRUE)
+    expect_error(do.call(subsample, subs.args), regexp = msg1, fixed = TRUE)
     expect_error(do.call(fsst, fsst.args), regexp = msg1, fixed = TRUE)
     expect_error(do.call(estbounds, estb.args), regexp = msg1, fixed = TRUE)
     expect_error(do.call(mincriterion, minc.args), regexp = msg1, fixed = TRUE)
@@ -513,14 +515,13 @@ set.seed(1)
 out8[[1]] <- do.call(dkqs, dkqs.args)
 set.seed(1)
 out8[[2]] <- do.call(subsample, subs.args)
-set.seed(1)
-out8[[3]] <- do.call(fsst, fsst.args)
+# set.seed(1)
+# out8[[3]] <- do.call(fsst, fsst.args)
 
 # Expected number of errors and error messages in df.error
 error.msg8 <- list()
-error.msg8[[1]] <- list("missing value where TRUE/FALSE needed", 11)
-error.msg8[[2]] <- list("missing value where TRUE/FALSE needed", 4)
-error.msg8[[3]] <- list("model$obj contains NA", 8)
+error.msg8[[1]] <- list("missing value where TRUE/FALSE needed", 5)
+error.msg8[[2]] <- list("missing value where TRUE/FALSE needed", 5)
 
 # There should be no error message printed
 test.lpmodel.func2 <- function(lpmodel, string, msg) {
@@ -532,8 +533,6 @@ test.lpmodel.func2 <- function(lpmodel, string, msg) {
     expect_error(do.call(dkqs, dkqs.args), regexp = msg, fixed = TRUE)
     set.seed(1)
     expect_error(do.call(subsample, subs.args), regexp = msg, fixed = TRUE)
-    set.seed(1)
-    expect_error(do.call(fsst, fsst.args), regexp = msg, fixed = TRUE)
   })
 }
 
@@ -544,7 +543,7 @@ test.lpmodel.func2(lpmodel.full.temp,
 
 # Check 'df.error'
 test_that("Error messages in df.error", {
-  for (i in 1:3) {
+  for (i in 1:2) {
     expect_equal(sum(out8[[i]]$df.error[, ncol(out8[[i]]$df.error)] ==
                        error.msg8[[i]][[1]]),
                  error.msg8[[i]][[2]])
@@ -553,14 +552,14 @@ test_that("Error messages in df.error", {
 
 # Test number of failed bootstraps (i.e. number of rows in 'df.error')
 test_that("Number of rows in df.error", {
-  for (i in 1:3) {
+  for (i in 1:2) {
     expect_equal(nrow(out8[[i]]$df.error), error.msg8[[i]][[2]])
   }
 })
 
 # Test number of successful bootstraps
 test_that("Number of successful bootstraps", {
-  for (i in 1:3) {
+  for (i in 1:2) {
     expect_equal(out8[[i]]$R.succ, 100)
   }
 })
@@ -622,6 +621,7 @@ fsst.args <- args$fsst
 test.fsst.n <- function(n, string, msg) {
   test_that(sprintf("n %s", string), {
     fsst.args$n <- n
+    fsst.args$data <- NULL
     expect_error(do.call(fsst, fsst.args), regexp = msg, fixed = TRUE)
   })
 }

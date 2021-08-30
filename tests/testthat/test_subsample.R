@@ -167,14 +167,14 @@ bobs.bs.full.list <- furrr::future_map(1:reps,
                                        .f = draw.bs.data,
                                        f = func_full_info,
                                        data = sampledata,
-                                       .options = 
+                                       .options =
                                          furrr::furrr_options(seed = TRUE))
 set.seed(1)
 bobs.bs.twom.list <- furrr::future_map(1:reps,
                                        .f = draw.bs.data,
                                        f = func_two_moment,
                                        data = sampledata,
-                                       .options = 
+                                       .options =
                                          furrr::furrr_options(seed = TRUE))
 
 bobs.full.list <- c(list(func_full_info(sampledata)$beta), bobs.bs.full.list)

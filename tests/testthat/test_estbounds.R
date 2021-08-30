@@ -1,5 +1,6 @@
 context("Tests for estbounds and mincriterion")
 rm(list = ls())
+
 # ---------------- #
 # Load packages
 # ---------------- #
