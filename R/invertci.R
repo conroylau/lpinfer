@@ -774,6 +774,7 @@ summary.invertci_single <- function(x, alphas, msg.bound, ...) {
 #' @description This function summarizes the results for
 #'   \code{\link[lpinfer]{invertci}}.
 #'
+#' @inheritParams summary.invertci
 #' @inheritParams summary.invertci_single
 #'
 #' @return Nothing is returned.

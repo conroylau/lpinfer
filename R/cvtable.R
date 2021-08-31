@@ -59,13 +59,14 @@ construct.cv.table <- function(param, param.name, ts.sample.list,
   return(cv.table)
 }
 
-#' Wrapper for the \code{\link[lpinfer]{cv.table}} function for the
+#' Wrapper for the \code{\link[lpinfer]{construct.cv.table}} function for the
 #' \code{\link[lpinfer]{fsst}} procedure
 #'
-#' @description This is a wrapper of the \code{\link[lpinfer]{cv.table}}
-#'   function in order to produce a table that consists of the critical values
-#'   for the test statistics, cone component and the range component for the
-#'   \code{\link[lpinfer]{fsst}} procedure.
+#' @description This is a wrapper of the
+#'   \code{\link[lpinfer]{construct.cv.table}} function in order to produce a
+#'   table that consists of the critical values for the test statistics, cone
+#'   component and the range component for the \code{\link[lpinfer]{fsst}}
+#'   procedure.
 #'
 #' @param cone.n.list A list of sample cone test statistics.
 #' @param range.n.list A list of sample range test statistics.

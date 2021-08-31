@@ -2,7 +2,7 @@
 % Please edit documentation in R/cvtable.R
 \name{fsst.cv.table}
 \alias{fsst.cv.table}
-\title{Wrapper for the \code{\link[lpinfer]{cv.table}} function for the
+\title{Wrapper for the \code{\link[lpinfer]{construct.cv.table}} function for the
 \code{\link[lpinfer]{fsst}} procedure}
 \usage{
 fsst.cv.table(
@@ -41,8 +41,9 @@ Returns a table of critical values.
   \item{cv.table}{A table of critical values.}
 }
 \description{
-This is a wrapper of the \code{\link[lpinfer]{cv.table}}
-  function in order to produce a table that consists of the critical values
-  for the test statistics, cone component and the range component for the
-  \code{\link[lpinfer]{fsst}} procedure.
+This is a wrapper of the
+  \code{\link[lpinfer]{construct.cv.table}} function in order to produce a
+  table that consists of the critical values for the test statistics, cone
+  component and the range component for the \code{\link[lpinfer]{fsst}}
+  procedure.
 }
