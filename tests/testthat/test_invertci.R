@@ -6,7 +6,7 @@ rm(list = ls())
 # ---------------- #
 library(lpinfer)
 library(future)
-library(future.apply)
+library(furrr)
 
 # ---------------- #
 # Define the lpmodel object

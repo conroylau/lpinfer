@@ -6,7 +6,6 @@ rm(list = ls())
 # ---------------- #
 library(lpinfer)
 library(future)
-library(future.apply)
 
 # ---------------- #
 # Define functions to match the moments

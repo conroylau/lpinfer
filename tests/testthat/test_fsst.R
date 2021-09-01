@@ -7,7 +7,6 @@ rm(list = ls())
 library(lpinfer)
 library(future)
 library(furrr)
-library(dplyr)
 
 # =========================================================================== #
 # Case 1: d >= p
