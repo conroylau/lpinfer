@@ -80,7 +80,27 @@
 #'      \item{\code{beta.shp}}
 #'    }
 #'
-#' @example ./inst/example/fsst_example.R
+#' @section Example:
+#' \preformatted{
+#'   source("./example/dgp_missingdata.R") # Change directory if necessary
+#'   J <- 5
+#'   N <- 1000
+#'   data <- missingdata_draw(J = J, n = N, seed = 1, prob.obs = .5)
+#'   lpm <- missingdata_lpm(J = J, info = "full", data = data)
+#'   fsst(data = data,
+#'        lpmodel = lpm,
+#'        beta.tgt = .2,
+#'        R = 100,
+#'        lambda = .2,
+#'        rho = 1e-4,
+#'        weight.matrix = "identity",
+#'        solver = "gurobi")
+#' }
+#'
+#' @section More examples:
+#'   More examples can be found in the \code{fsst_example.R} file
+#'   under the \code{example} subdirectory of the installation directory for
+#'   the \code{lpinfer} package.
 #'
 #' @export
 #'

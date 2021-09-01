@@ -37,50 +37,25 @@ This function evaluates the solution to stage 1 of the
    be used to evaluate both the estimation problem with the 1-norm or
    the 2-norm.
 }
-\examples{
-## ========================================================================= ##
-##
-##  Example for the mincriterion function
-##
-##  This followings illustrate how the function can be used to estimate the
-##  solution to the first-stage problem in the estbounds function using the
-##  missing data problem.
-##
-## ========================================================================= ##
-rm(list = ls())
+\section{Example}{
 
-# ---------------- #
-# Part 1: Load packages
-# ---------------- #
-library(lpinfer)
-library(future)
-
-# ---------------- #
-# Part 2: Data and lpmodel preparation
-# ---------------- #
-source("./inst/example/dgp_missingdata.R")
-J <- 5
-N <- 1000
-data <- missingdata_draw(J = J, n = N, seed = 1, prob.obs = .5)
-lpmodel.full <- missingdata_lpm(J = J, info = "full", data = data)
-lpmodel.twom <- missingdata_lpm(J = J, info = "mean", data = data)
-
-tau <- sqrt(log(N)/N)
-beta.tgt <- .2
-kappa <- 1e-5
-
-# ---------------- #
-# Step 3: Run mincriterion
-# ---------------- #
-# Example 1 - Running mincriterion with 1-norm and full-information approach
-minc1 <- mincriterion(data = data,
-                      lpmodel = lpmodel.full,
-                      norm = 1,
-                      solver = "gurobi")
-
-# Example 2 - Running mincriterion with 2-norm and two-moments approach
-minc2 <- mincriterion(data = data,
-                      lpmodel = lpmodel.twom,
-                      norm = 2,
-                      solver = "gurobi")
+\preformatted{
+  source("./example/dgp_missingdata.R") # Change directory if necessary
+  J <- 5
+  N <- 1000
+  data <- missingdata_draw(J = J, n = N, seed = 1, prob.obs = .5)
+  lpm <- missingdata_lpm(J = J, info = "full", data = data)
+  mincriterion(data = data,
+               lpmodel = lpm,
+               norm = 2,
+               solver = "gurobi")
 }
+}
+
+\section{More examples}{
+
+  More examples can be found in the \code{mincriterion_example.R} file
+  under the \code{example} subdirectory of the installation directory for
+  the \code{lpinfer} package.
+}
+

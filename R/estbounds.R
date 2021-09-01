@@ -52,7 +52,24 @@
 #'     bound.}
 #'   \item{solver}{The name of the solver used.}
 #'
-#' @example ./inst/example/estbounds_example.R
+#' @section Example:
+#' \preformatted{
+#'   source("./example/dgp_missingdata.R") # Change directory if necessary
+#'   J <- 5
+#'   N <- 1000
+#'   data <- missingdata_draw(J = J, n = N, seed = 1, prob.obs = .5)
+#'   lpm <- missingdata_lpm(J = J, info = "full", data = data)
+#'   estbounds(data = data,
+#'             lpmodel = lpm,
+#'             norm = 2,
+#'             solver = "gurobi",
+#'             estimate = TRUE)
+#' }
+#'
+#' @section More examples:
+#'   More examples can be found in the \code{estbounds_example.R} file
+#'   under the \code{example} subdirectory of the installation directory for
+#'   the \code{lpinfer} package.
 #'
 #' @export
 #'
@@ -606,7 +623,23 @@ summary.estbounds <- function(x, ...) {
 #'  \item{solver}{The solver used in the estimation problem}
 #'  \item{call}{The details of the function that has been called.}
 #'
-#' @example ./inst/example/mincriterion_example.R
+#' @section Example:
+#' \preformatted{
+#'   source("./example/dgp_missingdata.R") # Change directory if necessary
+#'   J <- 5
+#'   N <- 1000
+#'   data <- missingdata_draw(J = J, n = N, seed = 1, prob.obs = .5)
+#'   lpm <- missingdata_lpm(J = J, info = "full", data = data)
+#'   mincriterion(data = data,
+#'                lpmodel = lpm,
+#'                norm = 2,
+#'                solver = "gurobi")
+#' }
+#'
+#' @section More examples:
+#'   More examples can be found in the \code{mincriterion_example.R} file
+#'   under the \code{example} subdirectory of the installation directory for
+#'   the \code{lpinfer} package.
 #'
 #' @export
 #'

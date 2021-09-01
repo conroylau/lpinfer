@@ -64,7 +64,25 @@
 #'  }
 #' }
 #'
-#' @example ./inst/example/dkqs_example.R
+#' @section Example:
+#' \preformatted{
+#'   source("./example/dgp_missingdata.R") # Change directory if necessary
+#'   J <- 5
+#'   N <- 1000
+#'   data <- missingdata_draw(J = J, n = N, seed = 1, prob.obs = .5)
+#'   lpm <- missingdata_lpm(J = J, info = "full", data = data)
+#'   dkqs(data = data,
+#'        lpmodel = lpm,
+#'        beta.tgt = .2,
+#'        R = 100,
+#'        tau = sqrt(log(N)/N),
+#'        solver = "gurobi")
+#' }
+#'
+#' @section More examples:
+#'   More examples can be found in the \code{dkqs_example.R} file
+#'   under the \code{example} subdirectory of the installation directory for
+#'   the \code{lpinfer} package.
 #'
 #' @export
 #'

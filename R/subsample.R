@@ -56,7 +56,25 @@
 #'     with error(s) and the corresponding error message(s).}
 #'   \item{R.succ}{The number of successful bootstrap replications.}
 #'
-#' @example ./inst/example/subsample_example.R
+#' @section Example:
+#' \preformatted{
+#'   source("./example/dgp_missingdata.R") # Change directory if necessary
+#'   J <- 5
+#'   N <- 1000
+#'   data <- missingdata_draw(J = J, n = N, seed = 1, prob.obs = .5)
+#'   lpm <- missingdata_lpm(J = J, info = "full", data = data)
+#'   subsample(data = data,
+#'            lpmodel = lpm,
+#'            beta.tgt = .2,
+#'            R = 100,
+#'            phi = 2/3,
+#'            solver = "gurobi")
+#' }
+#'
+#' @section More examples:
+#'   More examples can be found in the \code{subsample_example.R} file
+#'   under the \code{example} subdirectory of the installation directory for
+#'   the \code{lpinfer} package.
 #'
 #' @export
 #'
@@ -519,7 +537,7 @@ subsample.bs <- function(data, i1, lpmodel, beta.tgt, norm, solver,
       new.ind <- (sum(iter.list[1:(ns - 1)]) + 1):(sum(iter.list))
     }
     new.msg <- unlist(error.list[new.ind])
-    
+
     # Append new error messages (if any)
     if (is.null(new.msg)) {
       # No new error messages, keep df.error as before
@@ -531,12 +549,12 @@ subsample.bs <- function(data, i1, lpmodel, beta.tgt, norm, solver,
                               lambda = NA,
                               message = unlist(error.list[new.ind]))
       df.error1 <- error.id.match(error.list[new.ind], df.error1)
-      
+
       # Merge with the previous error messages
       df.error <- rbind(df.error, df.error1)
-      
+
       # New errors
-      new.error <- nrow(df.error) - error0 
+      new.error <- nrow(df.error) - error0
     }
 
     # Consolidate the error ids and get the list of nonproblematic test

@@ -74,103 +74,30 @@ The number of decimal places displayed in the messages (if
    \code{progress} is set as \code{TRUE}) is equal to the number of decimal
    places in the variable \code{tol}.
 }
-\examples{
-## ========================================================================= ##
-##
-##  Example for the invertci function
-##
-##  This followings illustrate how the function can be used to construct
-##  confidence intervals for the target parameter under different procedures.
-##  The missing data problem is used with the subsampling procedure in
-##  constructing the confidence intervals.
-##
-## ========================================================================= ##
-rm(list = ls())
+\section{Example}{
 
-# ---------------- #
-# Part 1: Load required packages
-# ---------------- #
-library(lpinfer)
-library(future)
-
-# ---------------- #
-# Part 2: Data, lpmodel preparation and arguments for estbounds
-# ---------------- #
-source("./inst/example/dgp_missingdata.R")
-J <- 5
-N <- 1000
-data <- missingdata_draw(J = J, n = N, seed = 1, prob.obs = .5)
-lpmodel.full <- missingdata_lpm(J = J, info = "full", data = data)
-
-tau <- sqrt(log(N)/N)
-beta.tgt <- .2
-reps <- 100
-phi <- 2/3
-
-
-# Define the arguments
-farg <- list(data = data,
-             lpmodel = lpmodel.full,
-             R = reps,
-             phi = phi,
-             solver = "gurobi",
-             progress = FALSE)
-
-# Example 1: Construction of one confidence interval
-set.seed(1)
-invertci1 <- invertci(f = subsample,
-                      farg = farg,
-                      alpha = 0.05,
-                      init.lb = c(0, .4),
-                      init.ub = c(.6, 1),
-                      tol = 0.001,
-                      max.iter = 50,
-                      pvals = NULL,
-                      progress = FALSE)
-print(invertci1)
-summary(invertci1)
-
-# Example 2: Construct a list of multiple confidence intervals
-set.seed(1)
-invertci2 <- invertci(f = subsample,
-                      farg = farg,
-                      alpha = c(0.05, 0.1, 0.2),
-                      init.lb = c(0, .4),
-                      init.ub = c(.6, 1),
-                      tol = 0.001,
-                      max.iter = 5,
-                      pvals = NULL,
-                      progress = FALSE)
-print(invertci2)
-summary(invertci2)
-
-# Example 3: Print only the list of selected output
-summary(invertci2, alphas = .05)
-
-# Example 4: Construction of one confidence interval by specifying one initial
-# bracket only
-set.seed(1)
-invertci4 <- invertci(f = subsample,
-                      farg = farg,
-                      alpha = 0.05,
-                      init.lb = c(.1, .9),
-                      tol = 0.001,
-                      max.iter = 50,
-                      pvals = NULL,
-                      progress = FALSE)
-print(invertci4)
-summary(invertci4)
-
-# Example 5: Construction of one confidence interval without specifying the 
-# initial brackets - the logical bounds will be used
-set.seed(1)
-invertci5 <- invertci(f = subsample,
-                      farg = farg,
-                      alpha = 0.05,
-                      tol = 0.001,
-                      max.iter = 50,
-                      pvals = NULL,
-                      progress = FALSE)
-print(invertci5)
-summary(invertci5)
+\preformatted{
+  source("./example/dgp_missingdata.R") # Change directory if necessary
+  J <- 5
+  N <- 1000
+  data <- missingdata_draw(J = J, n = N, seed = 1, prob.obs = .5)
+  lpm <- missingdata_lpm(J = J, info = "full", data = data)
+  farg <- list(data = data,
+               lpmodel = lpm,
+               R = 100,
+               phi = 2/3,
+               solver = "gurobi",
+               progress = FALSE)
+  invertci(f = subsample,
+           farg = farg,
+           alpha = .05)
 }
+}
+
+\section{More examples}{
+
+  More examples can be found in the \code{invertci_example.R} file
+  under the \code{example} subdirectory of the installation directory for
+  the \code{lpinfer} package.
+}
+

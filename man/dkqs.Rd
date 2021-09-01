@@ -93,111 +93,27 @@ This module conducts inference using the cone-tightening
  }
 }
 }
-\examples{
-## ========================================================================= ##
-##
-##  Example for the dkqs function
-##
-##  This followings illustrate how the function can be used to compute
-##  p-values using the missing data problem.
-##
-## ========================================================================= ##
-rm(list = ls())
+\section{Example}{
 
-# ---------------- #
-# Part 1: Load packages
-# ---------------- #
-library(lpinfer)
-library(future)
-
-# ---------------- #
-# Part 2: Data and lpmodel preparation
-# ---------------- #
-source("./inst/example/dgp_missingdata.R")
-J <- 5
-N <- 1000
-data <- missingdata_draw(J = J, n = N, seed = 1, prob.obs = .5)
-lpmodel.full <- missingdata_lpm(J = J, info = "full", data = data)
-lpmodel.twom <- missingdata_lpm(J = J, info = "mean", data = data)
-
-tau <- sqrt(log(N)/N)
-beta.tgt <- .2
-reps <- 100
-
-# ---------------- #
-# Part 3: Run the `dkqs` procedure
-# ---------------- #
-## Full information approach
-# Example 1.1a - Using full information approach and gurobi solver (1 core)
-set.seed(1)
-plan(multisession, workers = 1)
-full_gur <- dkqs(data = data,
-                 lpmodel = lpmodel.full,
-                 beta.tgt = beta.tgt,
-                 R = reps,
-                 tau = tau,
-                 solver = "gurobi",
-                 progress = TRUE)
-
-# Example 1.1b - Using full information approach and gurobi solver (8 cores)
-set.seed(1)
-plan(multisession, workers = 8)
-full_gur <- dkqs(data = data,
-                 lpmodel = lpmodel.full,
-                 beta.tgt = beta.tgt,
-                 R = reps,
-                 tau = tau,
-                 solver = "gurobi",
-                 progress = TRUE)
-
-# Example 1.2 - Using full information approach and Rcplex solver
-set.seed(1)
-full_rcp <- dkqs(data = data,
-                 lpmodel = lpmodel.full,
-                 beta.tgt = beta.tgt,
-                 R = reps,
-                 tau = tau,
-                 solver = "Rcplex",
-                 progress = TRUE)
-
-# Example 1.3 - Using full information approach and limSolve solver
-set.seed(1)
-full_lim <- dkqs(data = data,
-                 lpmodel = lpmodel.full,
-                 beta.tgt = beta.tgt,
-                 R = reps,
-                 tau = tau,
-                 solver = "limSolve",
-                 progress = TRUE)
-
-## Two moments approach
-# Example 2.1 - Using two moments approach and gurobi solver
-set.seed(1)
-twom_gur <- dkqs(data = data,
-                 lpmodel = lpmodel.twom,
-                 beta.tgt = beta.tgt,
-                 R = reps,
-                 tau = tau,
-                 solver = "gurobi",
-                 progress = TRUE)
-
-# Example 2.2 - Using two moments approach and Rcplex solver
-set.seed(1)
-twom_rcp <- dkqs(data = data,
-                 lpmodel = lpmodel.twom,
-                 beta.tgt = beta.tgt,
-                 R = reps,
-                 tau = tau,
-                 solver = "Rcplex",
-                 progress = TRUE)
-
-# Example 2.3 - Using two moments approach and limSolve solver
-set.seed(1)
-twom_lim <- dkqs(data = data,
-                 lpmodel = lpmodel.twom,
-                 beta.tgt = beta.tgt,
-                 R = reps,
-                 tau = tau,
-                 solver = "limSolve",
-                 progress = TRUE)
+\preformatted{
+  source("./example/dgp_missingdata.R") # Change directory if necessary
+  J <- 5
+  N <- 1000
+  data <- missingdata_draw(J = J, n = N, seed = 1, prob.obs = .5)
+  lpm <- missingdata_lpm(J = J, info = "full", data = data)
+  dkqs(data = data,
+       lpmodel = lpm,
+       beta.tgt = .2,
+       R = 100,
+       tau = sqrt(log(N)/N),
+       solver = "gurobi")
 }
+}
+
+\section{More examples}{
+
+  More examples can be found in the \code{dkqs_example.R} file
+  under the \code{example} subdirectory of the installation directory for
+  the \code{lpinfer} package.
+}
+

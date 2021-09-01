@@ -44,7 +44,28 @@
 #'    \code{progress} is set as \code{TRUE}) is equal to the number of decimal
 #'    places in the variable \code{tol}.
 #'
-#' @example ./inst/example/invertci_example.R
+#' @section Example:
+#' \preformatted{
+#'   source("./example/dgp_missingdata.R") # Change directory if necessary
+#'   J <- 5
+#'   N <- 1000
+#'   data <- missingdata_draw(J = J, n = N, seed = 1, prob.obs = .5)
+#'   lpm <- missingdata_lpm(J = J, info = "full", data = data)
+#'   farg <- list(data = data,
+#'                lpmodel = lpm,
+#'                R = 100,
+#'                phi = 2/3,
+#'                solver = "gurobi",
+#'                progress = FALSE)
+#'   invertci(f = subsample,
+#'            farg = farg,
+#'            alpha = .05)
+#' }
+#'
+#' @section More examples:
+#'   More examples can be found in the \code{invertci_example.R} file
+#'   under the \code{example} subdirectory of the installation directory for
+#'   the \code{lpinfer} package.
 #'
 #' @export
 #'
