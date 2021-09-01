@@ -990,6 +990,7 @@ beta.star.qp <- function(data, lpmodel, beta.tgt, weight.mat, beta.obs.hat,
 #' @description This function computes the solution to the cone problem.
 #'
 #' @importFrom Matrix t
+#' @importFrom Matrix Matrix
 #'
 #' @inheritParams fsst
 #' @inheritParams fsst.cone.bs
@@ -1013,27 +1014,28 @@ fsst.cone.lp <- function(n, omega.i, beta.n, beta.star, lpmodel, indicator,
    # ---------------- #
    p <- length(beta.n)
    d <- ncol(lpmodel$A.obs)
-   ones.p <- rep(1, p)
-   zero.p <- rep(0, p)
-   zero.d <- rep(0, d)
-   zero.dp <- matrix(rep(0, d * p), nrow = d)
+   ones.p <- Matrix::Matrix(rep(1, p), nrow = 1, ncol = p, sparse = TRUE)
+   zero.p <- Matrix::Matrix(data = 0, nrow = 1, ncol = p, sparse = TRUE)
+   zero.p1 <- Matrix::Matrix(data = 0, nrow = p, ncol = 1, sparse = TRUE)
+   zero.d <- Matrix::Matrix(data = 0, nrow = 1, ncol = d, sparse = TRUE)
+   zero.d1 <- Matrix::Matrix(data = 0, nrow = d, ncol = 1, sparse = TRUE)
+   zero.dp <- Matrix::Matrix(data = 0, nrow = d, ncol = p, sparse = TRUE)
 
    # Update the objective function
-   obj <- Reduce(rbind, c(beta.star, zero.p, zero.p))
+   obj <- rbind(beta.star, zero.p1, zero.p1)
 
    # Construct the lower bound
    lb <- c(rep(-Inf, p), rep(0, 2 * p))
 
    # Construct the constraints matrix
    A <- rbind(lpmodel$A.obs, lpmodel$A.shp, lpmodel$A.tgt)
-
-   A.mat1 <- cbind(omega.i, -diag(p), diag(p))
-   A.mat2 <- c(zero.p, ones.p, ones.p)
-   A.mat3 <- cbind(Matrix::t(A), zero.dp, zero.dp)
+   A.mat1 <- as(cbind(omega.i, -diag(p), diag(p)), "sparseMatrix")
+   A.mat2 <- cbind(zero.p, ones.p, ones.p)
+   A.mat3 <- as(cbind(Matrix::t(A), zero.dp, zero.dp), "sparseMatrix")
    A.mat <- rbind(A.mat1, A.mat2, A.mat3)
 
    # Construct RHS vector
-   rhs.mat <- c(zero.p, 1, zero.d)
+   rhs.mat <- Reduce(rbind, c(zero.p1, 1, zero.d1))
 
    # Sense
    sense.mat <- c(rep("=", p), rep("<=", d + 1))
@@ -1049,19 +1051,23 @@ fsst.cone.lp <- function(n, omega.i, beta.n, beta.star, lpmodel, indicator,
                         modelsense = "max",
                         lb = lb)
    } else {
-      zero.pp <- matrix(rep(0, p * p), nrow = p)
-      zero.Am <- matrix(rep(0, (p + d + 1) * d), nrow = (p + d + 1))
+      zero.pp <- Matrix::Matrix(rep(0, p * p), ncol = p, nrow = p,
+                                sparse = TRUE)
+      zero.Am <- Matrix::Matrix(rep(0, (p + d + 1) * d),
+                                nrow = p + d + 1,
+                                ncol = d,
+                                sparse = TRUE)
 
       # Update objective function
-      obj.ext <- asmat(Reduce(rbind, c(obj, zero.d)))
+      obj.ext <- rbind(obj, zero.d1)
 
       # Update constraints matrix
       A.mat.ext1 <- asmat(cbind(A.mat, zero.Am))
       A.mat.ext2 <- asmat(cbind(diag(p), zero.pp, zero.pp, -A))
-      A.mat.ext <- rbind(A.mat.ext1, A.mat.ext2)
+      A.mat.ext <- as(rbind(A.mat.ext1, A.mat.ext2), "sparseMatrix")
 
       # Update RHS vector
-      rhs.ext <- c(rhs.mat, zero.p)
+      rhs.ext <- Reduce(rbind, c(rhs.mat, zero.p1))
       sense.ext <- c(sense.mat, rep("=", p))
 
       # Update lower bound
@@ -1319,6 +1325,7 @@ fsst.beta.star.bs.fn <- function(beta.obs.bs, data, lpmodel, beta.tgt,
 #'   procedure.
 #'
 #' @importFrom Matrix t
+#' @importFrom Matrix Matrix
 #'
 #' @inheritParams fsst
 #' @inheritParams fsst.beta.bs
@@ -1343,16 +1350,18 @@ beta.r.compute <- function(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
       q <- nrow(beta.obs.hat)
    }
    d <- ncol(lpmodel$A.obs)
-   ones.1p <- rep(1, p)
-   ones.p1 <- matrix(ones.1p, nrow = p)
-   zero.1p <- rep(0, p)
-   zero.p1 <- matrix(zero.1p, nrow = p)
-   zero.pd <- matrix(rep(0, p * d), nrow = p)
-   zero.pp <- matrix(rep(0, p * p), nrow = p)
-   zero.qq <- matrix(rep(0, q * q), nrow = q)
-   zero.pqq <- matrix(rep(0, (p - q) * q), nrow = q)
+   ones.1p <- Matrix::Matrix(rep(1, p), nrow = 1, ncol = p, sparse = TRUE)
+   ones.p1 <- Matrix::Matrix(rep(1, p), nrow = p, ncol = 1, sparse = TRUE)
+   zero.1p <- Matrix::Matrix(rep(0, p), nrow = 1, ncol = p, sparse = TRUE)
+   zero.p1 <- Matrix::Matrix(rep(0, p), nrow = p, ncol = 1, sparse = TRUE)
+   zero.pd <- Matrix::Matrix(rep(0, p * d), nrow = p, ncol = d, sparse = TRUE)
+   zero.pp <- Matrix::Matrix(rep(0, p * p), nrow = p, ncol = p, sparse = TRUE)
+   zero.qq <- Matrix::Matrix(rep(0, q * q), nrow = q, ncol = q, sparse = TRUE)
+   zero.pqq <- Matrix::Matrix(rep(0, (p - q) * q), nrow = q, ncol = p - q,
+                              sparse = TRUE)
+   diagm.pq <- Matrix::Matrix(diag(p - q), sparse = TRUE)
    iden.beta <- rbind(cbind(zero.qq, zero.pqq),
-                      cbind(Matrix::t(zero.pqq), diag(p - q)))
+                      cbind(Matrix::t(zero.pqq), diagm.pq))
 
    # Construct the constraints matrix
    A <- rbind(lpmodel$A.obs, lpmodel$A.shp, lpmodel$A.tgt)
@@ -1370,15 +1379,15 @@ beta.r.compute <- function(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
    A.mat <- rbind(A.mat1, A.mat2, A.mat3, A.mat4, A.mat5)
    if (indicator == 0) {
       rhs.mat <- Reduce(rbind,
-                        c(sqrt(n) * Matrix::t(A) %*% beta.star, zero.1p,
-                          zero.1p, zero.1p, rep(0, q), lpmodel$beta.shp,
+                        c(sqrt(n) * Matrix::t(A) %*% beta.star, zero.p1,
+                          zero.p1, zero.p1, rep(0, q), lpmodel$beta.shp,
                           beta.tgt))
       sense.mat <- Reduce(rbind,
                           c(rep("=", nrow(A.mat1) + nrow(A.mat2)),
                             rep(">=", 2 * p), rep("=", p)))
    } else {
       rhs.mat <- Reduce(rbind,
-                        c(sqrt(n) * beta.n, zero.1p, zero.1p, zero.1p,
+                        c(sqrt(n) * beta.n, zero.p1, zero.p1, zero.p1,
                           rep(0, q), lpmodel$beta.shp, beta.tgt))
       sense.mat <- Reduce(rbind,
                           c(rep("=", 2 * p), rep(">=", 2 * p), rep("=", p)))

@@ -289,6 +289,8 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
 
 #' Formulates and solves the \code{\link[lpinfer]{subsample}} problem
 #'
+#' @importFrom Matrix Matrix
+#'
 #' @description This function formulates and solves the linear or quadratic
 #'   program in the \code{\link[lpinfer]{subsample}} procedure. If the user
 #'   chooses a 1-norm, this function solves a linear program. If the user
@@ -333,10 +335,10 @@ subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver, n,
   g <- 1/diag.omega
   # Replace the entries by 0 for those that are equal to zero in 1/Omega
   g[diag.omega == 0] <- 0
-  G <- diag(g)
+  G <- as(diag(g), "sparseMatrix")
   # Create the new A and b matrices
-  GA <- G %*% A.obs.hat
-  Gb <- G %*% beta.obs.hat
+  GA <- as(G %*% A.obs.hat, "sparseMatrix")
+  Gb <- as(G %*% beta.obs.hat, "sparseMatrix")
 
   # ---------------- #
   # Step 3: Form the objective function and constraints
@@ -351,11 +353,17 @@ subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver, n,
     c.new <- c(rep(0, ncol(A.obs.hat)), rep(1, k), rep(-1, k))
 
     # Constraints
-    A.zero.shp <- matrix(rep(0, k*nrow(A.shp.hat)), nrow = nrow(A.shp.hat))
-    A.zero.tgt <- matrix(rep(0, k*nrow(A.tgt.hat)), nrow = nrow(A.tgt.hat))
-    A1.shp <- cbind(A.shp.hat, A.zero.shp, A.zero.shp)
-    A1.tgt <- cbind(A.tgt.hat, A.zero.tgt, A.zero.tgt)
-    A1.obs <- cbind(GA, -diag(k), diag(k))
+    A.zero.shp <- Matrix::Matrix(rep(0, k * nrow(A.shp.hat)),
+                                 nrow = nrow(A.shp.hat),
+                                 ncol = k,
+                                 sparse = TRUE)
+    A.zero.tgt <- Matrix::Matrix(rep(0, k * nrow(A.tgt.hat)),
+                                 nrow = nrow(A.tgt.hat),
+                                 ncol = k,
+                                 sparse = TRUE)
+    A1.shp <- as(cbind(A.shp.hat, A.zero.shp, A.zero.shp), "sparseMatrix")
+    A1.tgt <- as(cbind(A.tgt.hat, A.zero.tgt, A.zero.tgt), "sparseMatrix")
+    A1.obs <- as(cbind(GA, -diag(k), diag(k)), "sparseMatrix")
     A.new <- rbind(A1.shp, A1.tgt, A1.obs)
 
     # RHS vector
