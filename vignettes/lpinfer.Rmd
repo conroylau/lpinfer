@@ -5,12 +5,12 @@ author:
   - "Alexander Torgovitsky^[Kenneth C. Griffin Department of Economics, University of Chicago. Research supported by National Science Foundation grant SES-1846832.]"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 output:
-  bookdown::pdf_document2:
-    toc: no
+  bookdown::html_document2:
     number_sections: true
     mathjax: local
     self_contained: false
-  bookdown::html_document2:
+  bookdown::pdf_document2:
+    toc: no
     number_sections: true
     mathjax: local
     self_contained: false
@@ -132,7 +132,7 @@ The `lpinfer` package for `R` contains a collection of tools for estimation and 
 Our motivation comes from the econometrics literature on partial identification or "bounds" approaches.
 A string of recent research has shown that bounds in many interesting models can be constructed by solving two linear programs:
 \begin{equation}
-    \mathrm{min/max}_{x \in \re^{d}_{+}}
+    \minmax_{x \in \re^{d}_{+}}
     \Atarget x
     \quad
     \text{s.t.}
@@ -480,7 +480,7 @@ In this section, we briefly outline the syntax and options for the testing proce
 For details on the theory, please consult the original paper.
 All of the tests are for the null hypothesis discussed in Section \@ref(introduction).
 
-An important comment---applicable to all of the procedures---is that the number of boostrap or subsampling replications is, by default, set to $100$.
+An important comment---applicable to all of the procedures---is that the number of bootstrap or subsampling replications is, by default, set to $100$.
 This should be increased to a conventional size for production runs.
 The optional argument for all procedures is called `R`.
 Examples of changing it are given ahead.
@@ -512,6 +512,13 @@ set.seed(25)
 fsst(data = df, lpmodel = lpm, beta.tgt = .2, weight.matrix = "identity")
 set.seed(25)
 fsst(data = df, lpmodel = lpm, beta.tgt = .2, weight.matrix = "avar")
+```
+
+\noindent The function used to compute the matrix square root can be specified through the `sqrtm.method` option. This function can only have one argument and return a matrix. An example of using `pracma::sqrtm` with `kmax = 100` is as follows.
+```{r matrix_root}
+set.seed(25)
+fsst(data = df, lpmodel = lpm, beta.tgt = .2,
+     sqrtm.method = function(m) pracma::sqrtm(m, kmax = 100)$B)
 ```
 
 \noindent More detailed information on test statistics and critical values can be obtained by calling `summary` on the output of `fsst`.
@@ -640,19 +647,24 @@ All of the procedures discussed in Sections \@ref(statistical-inference-testing)
 
 ```{r parallel, warning=FALSE}
 library("future")
+
+# 3 workers
 plan(multisession, workers = 3)
-
 t_start <- Sys.time()
 set.seed(1)
-fsst(df, lpm, .2, R = 3000)
-print(sprintf("That took %s seconds.", round(Sys.time() - t_start, digits = 3)))
+fsst(df, lpm, .2, R = 5000)
+print(sprintf("That took %s seconds.",
+              round(difftime(Sys.time(), t_start, units = "secs"),
+                    digits = 3)))
 
+# 1 worker
 plan(multisession, workers = 1)
-
 t_start <- Sys.time()
 set.seed(1)
-fsst(df, lpm, .2, R = 3000)
-print(sprintf("That took %s seconds.", round(Sys.time() - t_start, digits = 3)))
+fsst(df, lpm, .2, R = 5000)
+print(sprintf("That took %s seconds.",
+              round(difftime(Sys.time(), t_start, units = "secs"),
+                    digits = 3)))
 ```
 
 # Converting Linear Programs to "Standard Form"
