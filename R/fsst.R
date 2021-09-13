@@ -202,10 +202,10 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
 
             # Update the sequence of indices
             i0 <- min(maxR, i1 + 1)
-            i1 <- min(maxR, i0 + (R - R.succ))
+            i1 <- min(maxR, i0 + (R - R.succ) - 1)
             if (class(lpmodel$beta.obs) == "list") {
                i0 <- i1 + 1
-               i1 <- i0 + (R - R.succ)
+               i1 <- i0 + (R - R.succ) - 1
             }
             iseq <- i0:i1
             eval.count <- eval.count + 1
@@ -539,6 +539,13 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       output$cone.n.list <- unlist(output$cone.n.list)
    }
 
+   # Return NULL df.error if no error
+   if (length(nrow(output$df.error)) == 0) {
+      output$df.error <- NULL
+   } else if (nrow(output$df.error) == 0) {
+      output$df.error <- NULL
+   }
+
    # Assign class
    attr(output, "class") <- "fsst"
 
@@ -616,12 +623,18 @@ fsst.beta.bs <- function(n, data, beta.obs.hat, lpmodel, R, maxR, progress,
    # Check if there is any list objects in 'lpmodel'
    any.list <- lpmodel.anylist(lpmodel)
 
+   # Assign the number of replications required
+   if (identical(iseq, 1:maxR)) {
+      Rcomp <- R
+   } else {
+      Rcomp <- length(iseq)
+   }
    # ---------------- #
    # Step 2: Bootstrap replications
    # ---------------- #
    # This function will not be called if 'beta.obs' is a list. Hence, it
    # suffices to consider the case where it is a function.
-   while ((R.succ < R) & (R.eval != maxR)) {
+   while ((R.succ < Rcomp) & (R.eval != maxR)) {
       # Compute the list of indices to be passed to 'future_map'
       if (identical(iseq, 1:maxR)) {
          # Evaluate the list of indices to be passed to 'future_map'
@@ -672,15 +685,16 @@ fsst.beta.bs <- function(n, data, beta.obs.hat, lpmodel, R, maxR, progress,
    # Step 3: Consolidate the error messages
    # ---------------- #
    if (R.eval != R.succ) {
-      # Create data.frame for error messages
-      df.error <- data.frame(id = NA,
-                             lambda = NA,
-                             message = unlist(error.list))
+      # Update df.error if it is coming from this step
+      if (length(unlist(error.list)) != 0) {
+         # Create data.frame for error messages
+         df.error <- data.frame(id = NA,
+                                lambda = NA,
+                                message = unlist(error.list))
 
-      # Match the id of the error messages
-      df.error <- error.id.match(error.list, df.error)
-   } else {
-      df.error <- NULL
+         # Match the id of the error messages
+         df.error <- error.id.match(error.list, df.error)
+      }
    }
 
    return(list(beta.obs.bs = beta.obs.bs,
@@ -1354,8 +1368,12 @@ beta.r.compute <- function(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
    ones.p1 <- Matrix::Matrix(rep(1, p), nrow = p, ncol = 1, sparse = TRUE)
    zero.1p <- Matrix::Matrix(rep(0, p), nrow = 1, ncol = p, sparse = TRUE)
    zero.p1 <- Matrix::Matrix(rep(0, p), nrow = p, ncol = 1, sparse = TRUE)
+   zero.1d <- Matrix::Matrix(rep(0, d), nrow = 1, ncol = d, sparse = TRUE)
+   zero.1q <- Matrix::Matrix(rep(0, q), nrow = 1, ncol = q, sparse = TRUE)
+   zero.q1 <- Matrix::Matrix(rep(0, q), nrow = q, ncol = 1, sparse = TRUE)
    zero.pd <- Matrix::Matrix(rep(0, p * d), nrow = p, ncol = d, sparse = TRUE)
    zero.pp <- Matrix::Matrix(rep(0, p * p), nrow = p, ncol = p, sparse = TRUE)
+   zero.pq <- Matrix::Matrix(rep(0, p * q), nrow = p, ncol = q, sparse = TRUE)
    zero.qq <- Matrix::Matrix(rep(0, q * q), nrow = q, ncol = q, sparse = TRUE)
    zero.pqq <- Matrix::Matrix(rep(0, (p - q) * q), nrow = q, ncol = p - q,
                               sparse = TRUE)
@@ -1365,39 +1383,73 @@ beta.r.compute <- function(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
 
    # Construct the constraints matrix
    A <- rbind(lpmodel$A.obs, lpmodel$A.shp, lpmodel$A.tgt)
-   A.mat1 <- asmat(cbind(sqrt(n) * diag(p), zero.pd, -omega.i, A, zero.p1))
+   A.list <- list()
+   A.list[[1]] <- asmat(cbind(sqrt(n) * diag(p), zero.pd, zero.pq, -omega.i,
+                              zero.pp, A, zero.pd, zero.p1, zero.p1, zero.p1))
+   A.list[[2]] <- asmat(cbind(sqrt(n) * diag(p), zero.pd, zero.pq, zero.pp,
+                              -omega.i, zero.pd, -A, zero.p1, zero.p1, zero.p1))
    if (indicator == 0) {
-      # Multiply A.mat 1 by t(A) if indicator == 0 (i.e. d < p)
-      A.mat1 <- Matrix::t(A) %*% A.mat1
+      # Multiply A.mat1 and A.mat2 by t(A) if indicator == 0 (i.e. d < p)
+      for (idx in 1:2) {
+         A.list[[idx]] <- Matrix::t(A) %*% A.list[[idx]]
+      }
    }
-   A.mat2 <- asmat(cbind(diag(p), -A, zero.pp, zero.pd, zero.p1))
-   A.mat3 <- asmat(cbind(zero.pp, zero.pd, -diag(p), zero.pd, ones.p1))
-   A.mat4 <- asmat(cbind(zero.pp, zero.pd, diag(p), zero.pd, ones.p1))
-   A.mat5 <- asmat(cbind(iden.beta, zero.pd, zero.pp, zero.pd, zero.p1))
+   A.list[[3]] <- asmat(cbind(diag(p), -A, zero.pq, zero.pp, zero.pp, zero.pd,
+                              zero.pd, zero.p1, zero.p1, zero.p1))
+   A.list[[4]] <- asmat(cbind(diag(p), zero.pd,
+                              rbind(-diag(q), Matrix::t(zero.pqq)),
+                              zero.pp, zero.pp, zero.pd, zero.pd, zero.p1,
+                              zero.p1, zero.p1))
+   A.list[[5]] <- asmat(cbind(zero.pp, zero.pd, zero.pq, diag(p), zero.pp,
+                              zero.pd, zero.pd, ones.p1, zero.p1, zero.p1))
+   A.list[[6]] <- asmat(cbind(zero.pp, zero.pd, zero.pq, - diag(p), zero.pp,
+                              zero.pd, zero.pd, ones.p1, zero.p1, zero.p1))
+   A.list[[7]] <- asmat(cbind(zero.pp, zero.pd, zero.pq, zero.pp, diag(p),
+                              zero.pd, zero.pd, zero.p1, ones.p1, zero.p1))
+   A.list[[8]] <- asmat(cbind(zero.pp, zero.pd, zero.pq, zero.pp, - diag(p),
+                              zero.pd, zero.pd, zero.p1, ones.p1, zero.p1))
+   A.list[[9]] <- asmat(cbind(zero.1p, zero.1d, zero.1q, zero.1p, zero.1p,
+                              zero.1d, zero.1d, -1, 0, 1))
+   A.list[[10]] <- asmat(cbind(zero.1p, zero.1d, zero.1q, zero.1p, zero.1p,
+                               zero.1d, zero.1d, 0, -1, 1))
+   A.mat <- Reduce(rbind, A.list)
 
    # Construct the rhs vector and the sense vector
-   A.mat <- rbind(A.mat1, A.mat2, A.mat3, A.mat4, A.mat5)
+   rhs.2 <- Matrix::Matrix(rep(0, p * 4 + 2), ncol = 1, sparse = TRUE)
+   sense.2 <- rep(">=", 4 * p + 2)
    if (indicator == 0) {
-      rhs.mat <- Reduce(rbind,
-                        c(sqrt(n) * Matrix::t(A) %*% beta.star, zero.p1,
-                          zero.p1, zero.p1, rep(0, q), lpmodel$beta.shp,
-                          beta.tgt))
-      sense.mat <- Reduce(rbind,
-                          c(rep("=", nrow(A.mat1) + nrow(A.mat2)),
-                            rep(">=", 2 * p), rep("=", p)))
+      rhs.1 <- Reduce(rbind,
+                      c(sqrt(n) * Matrix::t(A) %*% beta.star,
+                        sqrt(n) * Matrix::t(A) %*% beta.star,
+                        zero.p1,
+                        zero.q1,
+                        lpmodel$beta.shp,
+                        beta.tgt))
+      sense.1 <- rep("=", 2 * (d + p))
    } else {
-      rhs.mat <- Reduce(rbind,
-                        c(sqrt(n) * beta.n, zero.p1, zero.p1, zero.p1,
-                          rep(0, q), lpmodel$beta.shp, beta.tgt))
-      sense.mat <- Reduce(rbind,
-                          c(rep("=", 2 * p), rep(">=", 2 * p), rep("=", p)))
+      rhs.1 <- Reduce(rbind,
+                      c(sqrt(n) * beta.n,
+                        sqrt(n) * beta.n,
+                        zero.p1,
+                        zero.q1,
+                        lpmodel$beta.shp,
+                        beta.tgt))
+      sense.1 <- rep("=", 4 * p)
    }
 
+   # Combine the RHS and sense vectors
+   rhs.mat <- rbind(rhs.1, rhs.2)
+   sense.mat <- c(sense.1, sense.2)
+
    # Construct the objective function
-   obj <- c(rep(0, 2 * (p + d)), 1)
+   obj <- c(rep(0, 3 * (p + d) + q + 2), 1)
 
    # Lower bound
-   lb <- c(rep(-Inf, p), rep(0, d), rep(-Inf, p), rep(0, d + 1))
+   lb <- c(rep(-Inf, p),
+           rep(0, d),
+           rep(-Inf, 2 * p + q),
+           rep(0, 2 * d + 2),
+           -Inf)
 
    # Set the arguments
    optim.arg <- list(Af = NULL,
@@ -1530,7 +1582,6 @@ fsst.range.bs <- function(n, lpmodel, beta.obs.hat, beta.obs.bs, x.star,
       df.error1 <- data.frame(id = NA,
                               lambda = NA,
                               message = unlist(error.list))
-
 
       # Match the id of the error messages
       df.error1 <- error.id.match(error.list, df.error1)

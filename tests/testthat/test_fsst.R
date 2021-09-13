@@ -469,55 +469,96 @@ for (j in seq_along(j.lpmodel)) {
 ## Arguments
 fsst.89.args <- function(lpmodel, p, d, beta.star, beta, omega, beta.tgt) {
   A <- rbind(lpmodel$A.obs, lpmodel$A.shp, lpmodel$A.tgt)
-  nbobs <- p - length(c(lpmodel$beta.shp, beta.tgt))
-  args <- list(Q = NULL,
-               obj = c(rep(0, 2 * p + 2 * d + nbobs), 1),
-               objcon = 0,
-               A = rbind(cbind(sqrt(N) * diag(p),
-                               matrix(0L, nrow = p, ncol = d + nbobs),
-                               -omega,
-                               A,
-                               matrix(0L, nrow = p, ncol = 1)),
-                         cbind(matrix(0L, nrow = p, ncol = p + d + nbobs),
-                               diag(p),
-                               matrix(0L, nrow = p, ncol = d),
-                               matrix(1L, nrow = p, ncol = 1)),
-                         cbind(matrix(0L, nrow = p, ncol = p + d + nbobs),
-                               -diag(p),
-                               matrix(0L, nrow = p, ncol = d),
-                               matrix(1L, nrow = p, ncol = 1)),
-                         cbind(-diag(p),
-                               A,
-                               matrix(0L, nrow = p, ncol = p + d + nbobs + 1)),
-                         cbind(diag(p),
-                               matrix(0L, nrow = p, ncol = d),
-                               rbind(-diag(nbobs),
-                                     matrix(0L, nrow = (p - nbobs),
-                                            ncol = nbobs)),
-                               matrix(0L, nrow = p, ncol = p + d + 1))),
-               rhs = c(sqrt(N) * beta, rep(0, p * 3 + nbobs),
-                       c(lpmodel$beta.shp, beta.tgt)),
-               sense = c(rep("=", p), rep(">=", p * 2), rep("=", 2 * p)),
-               modelsense = "min",
-               lb = c(rep(-Inf, p), rep(0, d), rep(-Inf, nbobs), rep(-Inf, p),
-                      rep(0, d + 1)))
+  q <- p - length(c(lpmodel$beta.shp, beta.tgt))
+  ones.1p <- matrix(rep(1, p), nrow = 1, ncol = p)
+  ones.p1 <- matrix(rep(1, p), nrow = p, ncol = 1)
+  zero.1p <- matrix(rep(0, p), nrow = 1, ncol = p)
+  zero.p1 <- matrix(rep(0, p), nrow = p, ncol = 1)
+  zero.1d <- matrix(rep(0, d), nrow = 1, ncol = d)
+  zero.1q <- matrix(rep(0, q), nrow = 1, ncol = q)
+  zero.q1 <- matrix(rep(0, q), nrow = q, ncol = 1)
+  zero.pd <- matrix(rep(0, p * d), nrow = p, ncol = d)
+  zero.pp <- matrix(rep(0, p * p), nrow = p, ncol = p)
+  zero.pq <- matrix(rep(0, p * q), nrow = p, ncol = q)
+  zero.qq <- matrix(rep(0, q * q), nrow = q, ncol = q)
+  zero.pqq <- matrix(rep(0, (p - q) * q), nrow = q, ncol = p - q)
+  diagm.pq <- matrix(diag(p - q))
+
+  A <- rbind(lpmodel$A.obs, lpmodel$A.shp, lpmodel$A.tgt)
+  A.list <- list()
+  A.list[[1]] <- asmat(cbind(sqrt(N) * diag(p), zero.pd, zero.pq, -omega,
+                             zero.pp, A, zero.pd, zero.p1, zero.p1, zero.p1))
+  A.list[[2]] <- asmat(cbind(sqrt(N) * diag(p), zero.pd, zero.pq, zero.pp,
+                             -omega, zero.pd, -A, zero.p1, zero.p1, zero.p1))
   if (d < p) {
-    args1 <- list(Q = NULL,
-                  obj = args$obj,
-                  objcon = 0,
-                  A = rbind(t(A) %*% args$A[1:p,],
-                            args$A[(p + 1):nrow(args$A),]),
-                  rhs = c(sqrt(N) * t(A) %*% beta.star,
-                          args$rhs[(p + 1):nrow(args$A)]),
-                  sense = c(rep("=", ncol(A)),
-                            args$sense[(p + 1):nrow(args$A)]),
-                  modelsense = args$modelsense,
-                  lb = args$lb)
-    return(args1)
-  } else {
-    return(args)
+    # Multiply A.mat1 and A.mat2 by t(A) if indicator == 0 (i.e. d < p)
+    for (idx in 1:2) {
+      A.list[[idx]] <- t(A) %*% A.list[[idx]]
+    }
   }
+  A.list[[3]] <- cbind(diag(p), -A, zero.pq, zero.pp, zero.pp, zero.pd,
+                       zero.pd, zero.p1, zero.p1, zero.p1)
+  A.list[[4]] <- cbind(diag(p), zero.pd, rbind(-diag(q), t(zero.pqq)),
+                       zero.pp, zero.pp, zero.pd, zero.pd, zero.p1,
+                       zero.p1, zero.p1)
+  A.list[[5]] <- asmat(cbind(zero.pp, zero.pd, zero.pq, diag(p), zero.pp,
+                             zero.pd, zero.pd, ones.p1, zero.p1, zero.p1))
+  A.list[[6]] <- asmat(cbind(zero.pp, zero.pd, zero.pq, - diag(p), zero.pp,
+                             zero.pd, zero.pd, ones.p1, zero.p1, zero.p1))
+  A.list[[7]] <- asmat(cbind(zero.pp, zero.pd, zero.pq, zero.pp, diag(p),
+                             zero.pd, zero.pd, zero.p1, ones.p1, zero.p1))
+  A.list[[8]] <- asmat(cbind(zero.pp, zero.pd, zero.pq, zero.pp, - diag(p),
+                             zero.pd, zero.pd, zero.p1, ones.p1, zero.p1))
+  A.list[[9]] <- asmat(cbind(zero.1p, zero.1d, zero.1q, zero.1p, zero.1p,
+                             zero.1d, zero.1d, -1, 0, 1))
+  A.list[[10]] <- asmat(cbind(zero.1p, zero.1d, zero.1q, zero.1p, zero.1p,
+                              zero.1d, zero.1d, 0, -1, 1))
+
+  # Construct the rhs vector and the sense vector
+  rhs.2 <- matrix(rep(0, p * 4 + 2), ncol = 1)
+  sense.2 <- rep(">=", 4 * p + 2)
+  if (d < p) {
+    rhs.1 <- Reduce(rbind,
+                    c(sqrt(N) * t(A) %*% beta.star,
+                      sqrt(N) * t(A) %*% beta.star,
+                      zero.p1,
+                      zero.q1,
+                      lpmodel$beta.shp,
+                      beta.tgt))
+    sense.1 <- rep("=", 2 * (d + p))
+  } else {
+    rhs.1 <- Reduce(rbind,
+                    c(sqrt(N) * beta,
+                      sqrt(N) * beta,
+                      zero.p1,
+                      zero.q1,
+                      lpmodel$beta.shp,
+                      beta.tgt))
+    sense.1 <- rep("=", 4 * p)
+  }
+
+  # Combine the RHS and sense vectors
+  rhs.mat <- rbind(rhs.1, rhs.2)
+  sense.mat <- c(sense.1, sense.2)
+
+  # Lower bound
+  lb <- c(rep(-Inf, p),
+          rep(0, d),
+          rep(-Inf, 2 * p + q),
+          rep(0, 2 * d + 2),
+          -Inf)
+
+  args <- list(Q = NULL,
+               obj = c(rep(0, 3 * (p + d) + q + 2), 1),
+               objcon = 0,
+               A = Reduce(rbind, A.list),
+               rhs = rhs.mat,
+               sense = sense.mat,
+               modelsense = "min",
+               lb = lb)
+  return(args)
 }
+
 ## Obtain the estimators
 beta.r <- list()
 for (j in 1:2) {
