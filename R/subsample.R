@@ -331,7 +331,7 @@ subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver, n,
   # Step 2: Define the inverse omega matrix
   # ---------------- #
   # Obtain the inverse of the diagonal entries
-  diag.omega <- diag(omega.hat)
+  diag.omega <- diag(smatrixconvert(omega.hat))
   g <- 1/diag.omega
   # Replace the entries by 0 for those that are equal to zero in 1/Omega
   g[diag.omega == 0] <- 0
@@ -800,12 +800,13 @@ subsample.check <- function(data, lpmodel, beta.tgt, R, Rmulti, solver, norm,
                            A.tgt.cat = c("matrix", "function_mat", "list"),
                            A.obs.cat = c("matrix", "function_mat", "list"),
                            A.shp.cat = c("matrix", "function_mat", "list"),
-                           beta.obs.cat = c("list", "function_obs_var_bs"),
+                           beta.obs.cat = c("function_mat", "list",
+                                            "function_obs_var"),
                            beta.shp.cat = c("matrix", "function_mat", "list"),
                            R = R)
 
   # Check solver
-  solver.return <- check.solver(solver, "solver")
+  solver.return <- check.solver(solver, "solver", norm)
   solver <- solver.return$solver
   solver.name <- solver.return$solver.name
 

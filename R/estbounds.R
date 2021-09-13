@@ -221,7 +221,7 @@ estbounds.original <- function(data, lpmodel, original.sense, solver) {
   # Matrices
   A.obs.hat <- lpmodel.eval(data, lpmodel$A.obs, 1)
   A.original <- rbind(A.obs.hat, A.shp.matrix)
-  if (!is.matrix(A.original)) {
+  if (!is.matrix(A.original) & !is(A.original, "sparseMatrix")) {
     A.original <- matrix(A.original, nrow = 1)
   }
 
@@ -234,7 +234,7 @@ estbounds.original <- function(data, lpmodel, original.sense, solver) {
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   }
   beta.shp.hat <- lpmodel.eval(data, lpmodel$beta.shp, 1)
-  beta.original <- c(beta.obs.hat, beta.shp.hat)
+  beta.original <- Reduce(rbind, c(beta.obs.hat, beta.shp.hat))
 
   # Sense constraints
   sense.original <- c(rep("=", nrow(A.original)))
@@ -356,10 +356,10 @@ estbounds2.L1 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
   # Update the linear constraint
   c <- larg$bf
   A.step2 <- rbind(larg$A, c)
-  if (!is.matrix(A.step2)) {
+  if (!is.matrix(A.step2) & !is(A.step2, "sparseMatrix")) {
     A.step2 <- matrix(A.step2, nrow = 1)
   }
-  b.step2 <- c(larg$rhs, Qhat * (1 + kappa))
+  b.step2 <- Reduce(rbind, c(larg$rhs, Qhat * (1 + kappa)))
   sense.step2 <- c(larg$sense, "<=")
 
   # Append the matrices to the list
@@ -437,10 +437,10 @@ estbounds2.L2 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
   }
   step2_qc <- list()
   if (is.null(A.obs.hat) == FALSE) {
-
     step2_qc$Qc <- Matrix::t(A.obs.hat) %*% A.obs.hat
     step2_qc$q <- as.vector(-2 * Matrix::t(A.obs.hat) %*% beta.obs.hat)
-    step2_qc$rhs <- Qhat * (1 + kappa) - Matrix::t(beta.obs.hat) %*% beta.obs.hat
+    step2_qc$rhs <- smatrixconvert(Qhat * (1 + kappa) -
+                                     Matrix::t(beta.obs.hat) %*% beta.obs.hat)
     step2_qc$sense <- "<="
   } else {
     step2_qc <- NULL
@@ -573,7 +573,8 @@ print.estbounds <- function(x, ...) {
     if (x$lb == Inf & x$ub == -Inf) {
       cat("The identified set is empty.\n")
     } else {
-      cat(sprintf("True bounds: [%s, %s] \n", x$lb, x$ub))
+      cat(sprintf("True bounds: [%s, %s] \n",
+                  round(x$lb, digits = 5), round(x$ub, digits = 5)))
     }
   }
 }
@@ -719,7 +720,7 @@ mincriterion <- function(data = NULL, lpmodel, norm = 2, solver = NULL) {
     A.slack <- cbind(A.obs.hat, -diag(k), diag(k))
     # Combine the constraints
     A.new <- rbind(A.aug, A.slack)
-    beta.new <- c(beta.shp.hat, beta.obs.hat)
+    beta.new <- Reduce(rbind, c(beta.shp.hat, beta.obs.hat))
     # New model sense
     sense.new <- c(sense0, rep("=", k))
     # New objective function

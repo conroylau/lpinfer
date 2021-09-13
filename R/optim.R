@@ -242,13 +242,13 @@ rcplex.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
   # ---------------- #
   # Step 3: Solve model
   # ---------------- #
-  solution <- Rcplex::Rcplex(cvec = t(objective_return$obj1),
+  solution <- Rcplex::Rcplex(cvec = t(smatrixconvert(objective_return$obj1)),
                              Amat = A,
-                             bvec = rhs,
+                             bvec = as.matrix(smatrixconvert(rhs)),
                              Qmat = Qmat,
-                             lb = lb,
+                             lb = smatrixconvert(lb),
                              sense = sense,
-                             ub = ub,
+                             ub = smatrixconvert(ub),
                              objsense = modelsense,
                              vtype = "C",
                              n = 1)
@@ -302,7 +302,7 @@ limsolve.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
 
   # Update constraint matrices
   A <- rbind(A, lb_Amat)
-  rhs <- c(rhs, lb_bvec)
+  rhs <- as.matrix(Reduce(rbind, c(rhs, lb_bvec)))
   sense <- c(sense, rep(">=", length(lb_bvec)))
 
   # ---------------- #
@@ -329,7 +329,7 @@ limsolve.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
 
   # Combine G and h matrices
   Gmat <- rbind(Gmat1, Gmat2)
-  Hvec <- as.matrix(c(c(Hvec1), c(Hvec2)), ncol = 1, byrow = TRUE)
+  Hvec <- Reduce(rbind, c(Hvec1, Hvec2))
 
   # ---------------- #
   # Step 4: Solve the model
@@ -339,9 +339,11 @@ limsolve.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
   if (is.null(objective_return$obj2) == TRUE |
       sum(objective_return$obj2 == 0) == length(objective_return$obj2)) {
     ### Linear program solver
-    solution <- limSolve::linp(E = Emat, F = Fvec, G = Gmat, H = Hvec,
-                               Cost = fcost)
-
+    solution <- limSolve::linp(E = smatrixconvert(Emat),
+                               F = smatrixconvert(Fvec),
+                               G = smatrixconvert(Gmat),
+                               H = smatrixconvert(Hvec),
+                               Cost = smatrixconvert(fcost))
     # Obtain objective function, and add back the constant term, negate the
     # solution if it is a max problem
     if (modelsense == "max") {
@@ -355,8 +357,8 @@ limsolve.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
       # Formulate the two matrices
       Amat <- Af * sqrt(nf)
       Bvec <- bf * sqrt(nf)
-      solution <- limSolve::lsei(A = Amat, B = Bvec, E = Emat, F = Fvec,
-                                 G = Gmat, H = Hvec)
+      solution <- limSolve::lsei(A = Amat, B = Bvec, E = smatrixconvert(Emat),
+                                 F = Fvec, G = smatrixconvert(Gmat), H = Hvec)
 
       # Obtain objective function
       objval <- solution$solutionNorm
@@ -468,6 +470,8 @@ objective.function <- function(A, b, n, weight = NULL) {
 #' @description This function computes the solution to the linear program
 #'    using the \code{lpsolveAPI} package.
 #'
+#' @import lpSolveAPI
+#'
 #' @inheritParams gurobi.optim
 #' @inheritParams dkqs
 #' @inheritParams dkqs.qlp
@@ -497,31 +501,32 @@ lpsolveapi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
   lb_Amat <- diag(length(lb))
   lb_bvec <- lb
   # Update constraint matrices
-  A <- rbind(A, lb_Amat)
-  rhs <- c(rhs, lb_bvec)
+  A <- smatrixconvert(rbind(A, lb_Amat))
+  rhs <- smatrixconvert(Reduce(rbind, c(rhs, lb_bvec)))
   sense <- c(sense, rep(">=", length(lb_bvec)))
 
   # ---------------- #
   # Step 3: LP formulation
   # ---------------- #
   # solve object
-  lprec <- make.lp(nrow = nrow(A), ncol = ncol(A))
+  lprec <- lpSolveAPI::make.lp(nrow = nrow(A), ncol = ncol(A))
   # Model sense
-  lp.control(lprec, sense = modelsense)
+  lpSolveAPI::lp.control(lprec, sense = modelsense)
   # Types of decision variables
-  set.type(lprec, 1:ncol(A), type = c("real"))
-  set.objfn(lprec, objective_return$obj1)
-  #Define the constraints
+  lpSolveAPI::set.type(lprec, 1:ncol(A), type = c("real"))
+  lpSolveAPI::set.objfn(lprec, smatrixconvert(objective_return$obj1))
+  # Define the constraints
   for (i in 1:nrow(A)) {
-    add.constraint(lprec, A[i, ], sense[i], rhs[i])
+    lpSolveAPI::add.constraint(lprec, A[i, ], sense[i], rhs[i])
   }
 
   # ---------------- #
   # Step 4: Solve and obtain solution of LP
   # ---------------- #
-  x <- get.variables(lprec)
-  objval <- get.objective(lprec)
-  status <- solve.lpExtPtr(lprec)
+  solve(lprec)
+  x <- lpSolveAPI::get.variables(lprec)
+  objval <- lpSolveAPI::get.objective(lprec)
+  status <- lpSolveAPI::solve.lpExtPtr(lprec)
   status.msg <- sprintf("Status code: %s", status)
 
   # ---------------- #

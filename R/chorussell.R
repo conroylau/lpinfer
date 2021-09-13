@@ -1110,7 +1110,7 @@ chorussell.check <- function(data, lpmodel, beta.tgt, R, Rmulti, kappa,
   # ---------------- #
   # Step 3: Check solver
   # ---------------- #
-  solver.return <- check.solver(solver, "solver")
+  solver.return <- check.solver(solver, "solver", norm)
   solver <- solver.return$solver
   solver.name <- solver.return$solver.name
 
