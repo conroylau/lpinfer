@@ -4,7 +4,7 @@
 \alias{sigma.summation}
 \title{Computes the asymptotic variance estimator}
 \usage{
-\method{sigma}{summation}(n, beta.bs.list, progress, eval.count)
+sigma.summation(n, beta.bs.list, progress, eval.count)
 }
 \arguments{
 \item{n}{Sample size.}

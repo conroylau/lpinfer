@@ -34,7 +34,8 @@ Imports:
     progressr (>= 0.6.0),
     plyr (>= 1.8.6),
     furrr (>= 0.2.0),
-    Matrix (>= 1.2.18)
+    Matrix (>= 1.2.18),
+    methods (>= 3.6.1)
 Suggests:
     knitr (>= 1.28),
     rmarkdown (>= 2.0),
@@ -44,6 +45,7 @@ Suggests:
     Rcplex (>= 0.3.3),
     limSolve (>= 1.5.6),
     lpSolveAPI (>= 5.5.2.0.17.4),
-    spelling (>= 2.1)
+    spelling (>= 2.1),
+    kableExtra (>= 1.2.1)
 VignetteBuilder: knitr
 Language: en-US

@@ -696,6 +696,7 @@ print.invertci_single <- function(x, ...) {
 #'    function \code{\link[lpinfer]{invertci}}.
 #'
 #' @inheritParams print.invertci
+#' @inheritParams summary.invertci
 #'
 #' @return Nothing is returned
 #'
@@ -870,13 +871,14 @@ summary.invertci_multiple <- function(x, alphas, msg.bound, ...) {
 #'    the results in each step of the bisection method.
 #'
 #' @inheritParams bisec.print
+#' @inheritParams print.invertci
 #' @param i The row number that we want to print for \code{df_bis}.
 #'
 #' @return Nothing is returned.
 #'
 #' @export
 #'
-summary.bisection.print <- function(df_bis, i) {
+summary.bisection.print <- function(df_bis, i, ...) {
   # ---------------- #
   # Step 1: Data cleaning
   # ---------------- #

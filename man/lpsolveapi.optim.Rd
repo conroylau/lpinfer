@@ -4,17 +4,7 @@
 \alias{lpsolveapi.optim}
 \title{LP solver by \code{lpSolveAPI}}
 \usage{
-lpsolveapi.optim(
-  Af,
-  bf,
-  nf,
-  A,
-  rhs,
-  sense,
-  modelsense,
-  lb,
-  weight = diag(length(b))
-)
+lpsolveapi.optim(Af, bf, nf, A, rhs, sense, modelsense, lb, weight = NULL, ...)
 }
 \arguments{
 \item{Af}{The matrix that is involved in the objective function.}
@@ -35,6 +25,9 @@ objective function.}
 \item{lb}{The lower bound vector.}
 
 \item{weight}{The weighting matrix.}
+
+\item{...}{List of options to be passed to the Gurobi solver. This part is
+optional.}
 }
 \value{
 Returns the optimal point, the optimal value and the status of the
@@ -45,7 +38,7 @@ Returns the optimal point, the optimal value and the status of the
 }
 \description{
 This function computes the solution to the linear program
-   using the \code{lpsolveAPI} package.
+   using the \code{lpSolveAPI} package.
 }
 \details{
 The package \code{lpSolveAPI} cannot be used to solve quadratic

@@ -184,6 +184,8 @@ estbounds <- function(data = NULL, lpmodel, kappa = 0, norm = 2,
 
 #' Computes the true bounds subjected to shape constraints
 #'
+#' @importFrom methods is
+#'
 #' @description This function computes the true bounds subjected to the shape
 #'    constraints without approximation.
 #'
@@ -221,7 +223,7 @@ estbounds.original <- function(data, lpmodel, original.sense, solver) {
   # Matrices
   A.obs.hat <- lpmodel.eval(data, lpmodel$A.obs, 1)
   A.original <- rbind(A.obs.hat, A.shp.matrix)
-  if (!is.matrix(A.original) & !is(A.original, "sparseMatrix")) {
+  if (!is.matrix(A.original) & !methods::is(A.original, "sparseMatrix")) {
     A.original <- matrix(A.original, nrow = 1)
   }
 
@@ -309,6 +311,8 @@ estbounds.original <- function(data, lpmodel, original.sense, solver) {
 
 #' Estimates the bounds with shape constraints (stage 2 with 1-norm)
 #'
+#' @importFrom methods is
+#'
 #' @description This function evaluates the solution to stage 2 of the
 #'    two-step procedure to obtain the estimated bound with the 1-norm.
 #'
@@ -356,7 +360,7 @@ estbounds2.L1 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
   # Update the linear constraint
   c <- larg$bf
   A.step2 <- rbind(larg$A, c)
-  if (!is.matrix(A.step2) & !is(A.step2, "sparseMatrix")) {
+  if (!is.matrix(A.step2) & !methods::is(A.step2, "sparseMatrix")) {
     A.step2 <- matrix(A.step2, nrow = 1)
   }
   b.step2 <- Reduce(rbind, c(larg$rhs, Qhat * (1 + kappa)))

@@ -1,5 +1,7 @@
 #' Evaluates an object inside \code{lpmodel}
 #'
+#' @importFrom methods is
+#'
 #' @description This function returns the matrix or vector depending on the
 #'   class of the variable in the \code{lpmodel} object. In the design of
 #'   the \code{lpinfer} module, objects in \code{lpmodel} can have three
@@ -27,7 +29,8 @@ lpmodel.eval <- function(data, obj, i) {
     obj.eval <- obj(data)
   } else if (class(obj) == "list") {
     obj.eval <- obj[[i]]
-  } else if (!is.matrix(obj) & !is.data.frame(obj) & !is(obj, "sparseMatrix")) {
+  } else if (!is.matrix(obj) & !is.data.frame(obj) &
+             !methods::is(obj, "sparseMatrix")) {
     obj.eval <- matrix(obj, nrow = 1)
   } else if (class(obj) == "data.frame") {
     obj.eval <- as.matrix(obj)
@@ -222,6 +225,8 @@ lpmodel.natural <- function(A.obs = NULL, A.shp = NULL, A.tgt = NULL,
 
 #' Print the \code{lpmodel} or \code{lpmodel.natural} object
 #'
+#' @importFrom methods is
+#'
 #' @description This function prints the details of the components that are
 #'    contained in the \code{lpmodel} or \code{lpmodel.natural} object.
 #'
@@ -278,7 +283,7 @@ lpm.print <- function(x, lpm.string, data = NULL, ...) {
             dimension.tmp <- paste0(dimension.str[1], "x", dimension.str[2])
           }
         } else if (class.tmp %in% c("data.frame", "matrix", "numeric") |
-                   is(obj, "sparseMatrix")) {
+                   methods::is(obj, "sparseMatrix")) {
           dim.obj <- dim(obj)
           if (is.null(dim.obj)) {
             dimension.tmp <- paste0("1x", length(obj))

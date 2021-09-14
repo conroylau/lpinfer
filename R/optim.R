@@ -127,8 +127,8 @@ cplexapi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
   # Step 2: Update the notations
   # ---------------- #
   # Model sense
-  modelsense[modelsense == "min"] <- CPX_MIN
-  modelsense[modelsense == "max"] <- CPX_MAX
+  modelsense[modelsense == "min"] <- cplexAPI::CPX_MIN
+  modelsense[modelsense == "max"] <- cplexAPI::CPX_MAX
 
   # Inequality/equality signs
   sense[sense == "<="] <- "L"
@@ -139,7 +139,7 @@ cplexapi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
   # Bounds
   lb[lb == Inf] <- cplexAPI::CPX_INFBOUND
   lb[lb == -Inf] <- -cplexAPI::CPX_INFBOUND
-  ub <- rep(CPX_INFBOUND, length(lb))
+  ub <- rep(cplexAPI::CPX_INFBOUND, length(lb))
 
   # ---------------- #
   # Step 3: cplexAPI environment
@@ -162,7 +162,7 @@ cplexapi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
   # Step 4: Solve the problem
   # ---------------- #
   # A linear program is identified if obj2 == NULL
-  if (is.null(obj2) == TRUE) {
+  if (is.null(objective_return$obj2) == TRUE) {
     # Solving linear program
     cplexAPI::copyLpwNamesCPLEX(env,
                                 prob,
@@ -217,7 +217,7 @@ rcplex.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
   # ---------------- #
   # Step 1: Obtain the coefficients of the objective function
   # ---------------- #
-  objective_return = objective.function(Af, bf, nf, weight)
+  objective_return <- objective.function(Af, bf, nf, weight)
 
   # ---------------- #
   # Step 2: Update vectors and sense
@@ -468,9 +468,7 @@ objective.function <- function(A, b, n, weight = NULL) {
 #' LP solver by \code{lpSolveAPI}
 #'
 #' @description This function computes the solution to the linear program
-#'    using the \code{lpsolveAPI} package.
-#'
-#' @import lpSolveAPI
+#'    using the \code{lpSolveAPI} package.
 #'
 #' @inheritParams gurobi.optim
 #' @inheritParams dkqs
@@ -488,7 +486,7 @@ objective.function <- function(A, b, n, weight = NULL) {
 #' @export
 #'
 lpsolveapi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb,
-                             weight = diag(length(b))) {
+                             weight = NULL, ...) {
   # ---------------- #
   # Step 1: Obtain the coefficients of the objective function
   # ---------------- #

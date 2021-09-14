@@ -188,6 +188,8 @@ error.id.match <- function(error.list, df.error) {
 
 #' Coerces a \code{sparseMatrix} as a \code{matrix}
 #'
+#' @importFrom methods is
+#'
 #' @description This function coerces a \code{sparseMatrix} as a
 #'   \code{matrix}. This function is used specifically in the
 #'   \code{\link[lpinfer]{gurobi.optim}} function to ensure that the
@@ -200,7 +202,7 @@ error.id.match <- function(error.list, df.error) {
 #' @export
 #'
 smatrixconvert <- function(mat) {
-  if (is(mat, "sparseMatrix") | is(mat, "Matrix")) {
+  if (methods::is(mat, "sparseMatrix") | methods::is(mat, "Matrix")) {
     return(as.matrix(mat))
   } else {
     return(mat)
@@ -208,6 +210,9 @@ smatrixconvert <- function(mat) {
 }
 
 #' Coerces a \code{dgeMatrix} as a \code{sparseMatrix}
+#'
+#' @importFrom methods is
+#' @importFrom methods as
 #'
 #' @description This function coerces a \code{dgeMatrix} as a
 #'   \code{sparseMatrix}.This function is used specifically in the
@@ -221,14 +226,16 @@ smatrixconvert <- function(mat) {
 #' @export
 #'
 dmatrixconvert <- function(mat) {
-  if (is(mat, "dgeMatrix")) {
-    return(as(mat, "sparseMatrix"))
+  if (methods::is(mat, "dgeMatrix")) {
+    return(methods::as(mat, "sparseMatrix"))
   } else {
     return(mat)
   }
 }
 
 #' Coerces non-\code{sparseMatrix} objects as \code{matrix}
+#'
+#' @importFrom methods is
 #'
 #' @description This function coerse non-\code{sparseMatrix} objects as
 #'   \code{matrix} and keeps \code{sparseMatrix} unchanged.
@@ -240,7 +247,7 @@ dmatrixconvert <- function(mat) {
 #' @export
 #'
 asmat <- function(obj) {
-  if (is(obj, "sparseMatrix")) {
+  if (methods::is(obj, "sparseMatrix")) {
     return(obj)
   } else {
     return(as.matrix(obj))

@@ -290,6 +290,7 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
 #' Formulates and solves the \code{\link[lpinfer]{subsample}} problem
 #'
 #' @importFrom Matrix Matrix
+#' @importFrom methods as
 #'
 #' @description This function formulates and solves the linear or quadratic
 #'   program in the \code{\link[lpinfer]{subsample}} procedure. If the user
@@ -335,10 +336,10 @@ subsample.prob <- function(data, lpmodel, beta.tgt, norm, solver, n,
   g <- 1/diag.omega
   # Replace the entries by 0 for those that are equal to zero in 1/Omega
   g[diag.omega == 0] <- 0
-  G <- as(diag(g), "sparseMatrix")
+  G <- methods::as(diag(g), "sparseMatrix")
   # Create the new A and b matrices
-  GA <- as(G %*% A.obs.hat, "sparseMatrix")
-  Gb <- as(G %*% beta.obs.hat, "sparseMatrix")
+  GA <- methods::as(G %*% A.obs.hat, "sparseMatrix")
+  Gb <- methods::as(G %*% beta.obs.hat, "sparseMatrix")
 
   # ---------------- #
   # Step 3: Form the objective function and constraints

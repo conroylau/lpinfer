@@ -540,7 +540,7 @@ check.solver <- function(x, name.var, norm = 2 , qc = FALSE) {
       } else if (requireNamespace("cplexAPI", quietly = TRUE) == TRUE) {
         solver <- cplexapi.optim
         x <- "cplexAPI"
-      } else if (requireNamespace("lpsolveAPI", quietly = TRUE) == TRUE) {
+      } else if (requireNamespace("lpSolveAPI", quietly = TRUE) == TRUE) {
         solver <- lpsolveapi.optim
         x <- "lpSolveAPI"
       }
@@ -944,6 +944,8 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R) {
 
 #' Check function: matrix
 #'
+#' @importFrom methods is
+#'
 #' @description This function checks if the matrix objects in the
 #'    \code{lpmodel} object are in the correct format.
 #'
@@ -978,7 +980,7 @@ check.matrix <- function(mat, mat.name, mat.cat, inside.list) {
     return(list(mat.update = mat.update,
                 err.ind = 0,
                 dim = dim(mat.update)))
-  } else if (isTRUE(is(mat, "sparseMatrix"))) {
+  } else if (isTRUE(methods::is(mat, "sparseMatrix"))) {
     return(list(mat.update = mat,
                 err.ind = 0,
                 dim = dim(mat)))
@@ -1009,6 +1011,8 @@ check.matrix <- function(mat, mat.name, mat.cat, inside.list) {
 
 #' Check function: vector
 #'
+#' @importFrom methods is
+#'
 #' @description This function checks if the matrix objects in \code{lpmodel}
 #'    are in the correct format. If not, an error message is displayed.
 #'
@@ -1025,7 +1029,7 @@ check.vector <- function(vec, vec.name, inside.list) {
   msg.vector <- paste0("The object '%s' in 'lpmodel' has to be a %s.")
 
   # Turn it into a matrix if it is not a list
-  if (!is.list(vec) | !is(vec, "sparseMatrix")) {
+  if (!is.list(vec) | !methods::is(vec, "sparseMatrix")) {
     vec <- as.matrix(vec)
   }
   if (nrow(vec) != 1 & ncol(vec) != 1) {

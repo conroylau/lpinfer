@@ -10,6 +10,8 @@ significance levels}
 \arguments{
 \item{x}{The output object returned from \code{\link[lpinfer]{invertci}}.}
 
+\item{alphas}{A list of alphas that the user would like to print.}
+
 \item{...}{Additional arguments.}
 }
 \value{

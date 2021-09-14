@@ -587,6 +587,7 @@ full.beta.bs <- function(lpmodel, beta.tgt, beta.obs.bs, R) {
 #'   \eqn{\hat{\beta}_{{\rm obs}, n}}.
 #'
 #' @import furrr progressr
+#' @importFrom utils tail
 #'
 #' @inheritParams dkqs.bs
 #' @inheritParams dkqs.bs.fn
@@ -644,7 +645,7 @@ fsst.beta.bs <- function(n, data, beta.obs.hat, lpmodel, R, maxR, progress,
       } else {
          bs.list <- iseq
          i0 <- bs.list[1]
-         i1 <- tail(bs.list, n = 1)
+         i1 <- utils::tail(bs.list, n = 1)
       }
 
       # Set the default for progress bar
@@ -838,7 +839,9 @@ fsst.weight.matrix <- function(weight.matrix, beta.obs.hat, beta.sigma) {
 #' @return Returns the estimator of the asymptotic variance.
 #'     \item{sigma.mat}{The estimator of the asymptotic variance.}
 #'
-#' @export
+#' @usage sigma.summation(n, beta.bs.list, progress, eval.count)
+#'
+#' @export sigma.summation
 #'
 sigma.summation <- function(n, beta.bs.list, progress, eval.count) {
    beta.obs.hat <- beta.bs.list[[1]]
@@ -1001,6 +1004,8 @@ beta.star.qp <- function(data, lpmodel, beta.tgt, weight.mat, beta.obs.hat,
 
 #' Computes the solution to the cone problem
 #'
+#' @importFrom methods as
+#'
 #' @description This function computes the solution to the cone problem.
 #'
 #' @importFrom Matrix t
@@ -1043,9 +1048,9 @@ fsst.cone.lp <- function(n, omega.i, beta.n, beta.star, lpmodel, indicator,
 
    # Construct the constraints matrix
    A <- rbind(lpmodel$A.obs, lpmodel$A.shp, lpmodel$A.tgt)
-   A.mat1 <- as(cbind(omega.i, -diag(p), diag(p)), "sparseMatrix")
+   A.mat1 <- methods::as(cbind(omega.i, -diag(p), diag(p)), "sparseMatrix")
    A.mat2 <- cbind(zero.p, ones.p, ones.p)
-   A.mat3 <- as(cbind(Matrix::t(A), zero.dp, zero.dp), "sparseMatrix")
+   A.mat3 <- methods::as(cbind(Matrix::t(A), zero.dp, zero.dp), "sparseMatrix")
    A.mat <- rbind(A.mat1, A.mat2, A.mat3)
 
    # Construct RHS vector
@@ -1078,7 +1083,7 @@ fsst.cone.lp <- function(n, omega.i, beta.n, beta.star, lpmodel, indicator,
       # Update constraints matrix
       A.mat.ext1 <- asmat(cbind(A.mat, zero.Am))
       A.mat.ext2 <- asmat(cbind(diag(p), zero.pp, zero.pp, -A))
-      A.mat.ext <- as(rbind(A.mat.ext1, A.mat.ext2), "sparseMatrix")
+      A.mat.ext <- methods::as(rbind(A.mat.ext1, A.mat.ext2), "sparseMatrix")
 
       # Update RHS vector
       rhs.ext <- Reduce(rbind, c(rhs.mat, zero.p1))
@@ -1499,7 +1504,7 @@ fsst.range <- function(n, beta.obs.hat, x.star, lpmodel, weight.mat.root) {
    # ---------------- #
    # Step 1: Compute the matrix inside the norm
    # ---------------- #
-   A.obs.hat <- lpmodel.eval(data, lpmodel$A.obs, 1)
+   A.obs.hat <- lpmodel$A.obs
    beta.obs.star <- A.obs.hat %*% x.star
    range.arg <- sqrt(n) * weight.mat.root %*% (beta.obs.hat - beta.obs.star)
 
@@ -1904,6 +1909,8 @@ fsst.pval <- function(range.n, cone.n, range.n.list, cone.n.list, R,
 
 #' Checks and updates the input in \code{fsst}
 #'
+#' @importFrom methods is
+#'
 #' @description This function checks and updates the input from the user in the
 #'    \code{\link[lpinfer]{fsst}} function. If there is any invalid input,
 #'    the function will be terminated and error messages will be printed.
@@ -2088,7 +2095,7 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
          # It can be a square 'data.frame', 'matrix' or a 'sparseMatrix'.
          omega.i <- previous.output$omega.i
          if (!(is.matrix(omega.i) | is.data.frame(omega.i) |
-             is(omega.i, "sparseMatrix"))) {
+             methods::is(omega.i, "sparseMatrix"))) {
             omega.i <- NA
             warning(paste0("The class of the 'omega.i' matrix in the list ",
                            "'previous.output' has to be one of the ",
