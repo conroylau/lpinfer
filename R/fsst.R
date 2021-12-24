@@ -1894,7 +1894,7 @@ fsst.pval <- function(range.n, cone.n, range.n.list, cone.n.list, R,
    # Step 2: Decision
    # ---------------- #
    # Compute p-value
-   pval <- mean(T.bs > T.n)
+   pval <- mean(T.bs >= T.n)
 
    # Decision
    if (pval > alpha) {

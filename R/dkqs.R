@@ -754,7 +754,7 @@ dkqs.bs.fn <- function(x, data, lpmodel, beta.obs.hat, beta.tgt, s.star.list,
 #'
 pval <- function(T.bs, T.n) {
   # Compute p-value
-  p <- mean(T.bs > T.n)
+  p <- mean(T.bs >= T.n)
 
   return(list(p = p))
 }
