@@ -329,7 +329,7 @@ check.func <- function(f, A, data, name.var, name.A, mat.type) {
   # Step 2: Start the check
   # ---------------- #
   # Check the class of the function
-  if (class(f) != "function") {
+  if (!inherits(f, "function")) {
     stop(sprintf(msg.class, "input", name.var, "a function"),
          call. = FALSE)
   } else {
@@ -412,8 +412,9 @@ check.Ab <- function(A, b, Aname, bname) {
     matrix.list <- list(A, b)
     for (i in 1:2) {
       ## Part 1: Check the format of the matrices
-      if (class(matrix.list[[i]]) %in%
-          c("data.frame", "matrix", "numeric") == FALSE) {
+      if (!(inherits(matrix.list[[i]], "data.frame") |
+            inherits(matrix.list[[i]], "matrix") |
+            inherits(matrix.list[[i]], "numeric"))) {
         stop(gsub("\\s+", " ",
                   paste0("The argument '", matrix.names[i],
                   "' must either be a data.frame, data.table, or matrix.")),
@@ -653,7 +654,7 @@ check.lpmodel <- function(data, lpmodel, name.var, A.tgt.cat, A.obs.cat,
     stop("The 'lpmodel' object is required.")
   }
 
-  if (class(lpmodel) != "lpmodel") {
+  if (!inherits(lpmodel, "lpmodel")) {
     # Call the general error message function
     check.errormsg(name.var, "an object in the 'lpmodel' class")
   }
@@ -671,9 +672,9 @@ check.lpmodel <- function(data, lpmodel, name.var, A.tgt.cat, A.obs.cat,
     if (is.null(data)) {
       notlist <- 0
       for (i in seq_along(lpmodel)) {
-        if (class(lpmodel[[i]]) == "function") {
+        if (inherits(lpmodel[[i]], "function")) {
           stop(error.msg.det)
-        } else if (class(lpmodel[[i]]) != "list") {
+        } else if (!inherits(lpmodel[[i]], "list")) {
           notlist <- notlist + 1
         }
       }
@@ -688,7 +689,7 @@ check.lpmodel <- function(data, lpmodel, name.var, A.tgt.cat, A.obs.cat,
   } else {
     for (i in seq_along(lpmodel)) {
       if (is.null(data)) {
-        if (class(lpmodel[[i]]) == "function") {
+        if (inherits(lpmodel[[i]], "function")) {
           stop(error.msg.det)
         }
       }
@@ -781,7 +782,7 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R) {
 
     # Category 2: Check if it is a function
     if ("function_mat" %in% mat.cat) {
-      if (class(mat) == "function") {
+      if (inherits(mat, "function")) {
         sample.return <- lpmodel.beta.eval(data, mat, 1)
 
         # Check whether the function can accept 'data' in the 'data.frame'
@@ -802,7 +803,7 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R) {
 
     # Category 3: Check if it is a list
     if ("list" %in% mat.cat) {
-      if (class(mat) == "list") {
+      if (inherits(mat, "list")) {
         # Check if the length of the list is R+1
         if (length(mat) != (R + 1)) {
           stop(sprintf(paste0("The object '%s' in 'lpmodel' needs to have ",
@@ -846,13 +847,13 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R) {
     if ("function_obs_var_bs" %in% mat.cat |
         "function_obs_var" %in% mat.cat |
         "list_vector" %in% mat.cat) {
-      if (class(mat) == "function" | "list_vector" %in% mat.cat) {
+      if (inherits(mat, "function") | "list_vector" %in% mat.cat) {
         # Check whether the function can accept 'data' in the 'data.frame'
         # format
-        if (class(mat) == "function") {
+        if (inherits(mat, "function")) {
           check.datafunction(data, mat, mat.name)
           func.output <- mat(data)
-        } else if (class(mat) == "list") {
+        } else if (inherits(mat, "list")) {
           func.output <- mat
         }
 
@@ -870,7 +871,7 @@ check.lpobjects <- function(data, mat, mat.name, mat.cat, R) {
           }
         } else {
           for (i in 1:2) {
-            if (class(func.output[[i]]) == "numeric") {
+            if (inherits(func.output[[i]], "numeric")) {
               func.output[[i]] <- matrix(func.output[[i]])
             }
           }
@@ -966,8 +967,9 @@ check.matrix <- function(mat, mat.name, mat.cat, inside.list) {
                       "'lpmodel' has to be one of the followings: data.frame,",
                       "matrix, numeric, or sparseMatrix.")
 
-  if (class(mat) == "data.frame" | class(mat) == "matrix" |
-      class(mat) == "numeric") {
+  if (inherits(mat, "data.frame") |
+      inherits(mat, "matrix") |
+      inherits(mat, "numeric")) {
     if (is.null(dim(mat))) {
       if (mat.name %in% c("A.obs", "A.shp", "A.tgt")) {
         mat.update <- matrix(mat, nrow = 1)
@@ -999,7 +1001,7 @@ check.matrix <- function(mat, mat.name, mat.cat, inside.list) {
       mat.update <- NULL
       return(list(mat.update = mat.update,
                   err.ind = 1))
-    } else if (class(mat) == "list") {
+    } else if (inherits(mat, "list")) {
       mat.update <- NULL
       return(list(mat.update = mat.update,
                   err.ind = 1))

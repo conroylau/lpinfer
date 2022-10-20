@@ -949,12 +949,12 @@ invertci.check <- function(f, farg, alpha, init.lb, init.ub, tol, max.iter,
   # Step 1: Conduct the checks
   # ---------------- #
   # Part 1. Check f
-  if (class(f) != "function") {
+  if (!inherits(f, "function")) {
     stop("The class of function ('f') has to be function.", call. = FALSE)
   }
 
   # Part 2. Check farg
-  if (class(farg) != "list") {
+  if (!inherits(farg, "list")) {
     stop("The argument of the function ('farg') has to be a list.",
          call. = FALSE)
   }

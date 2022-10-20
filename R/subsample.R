@@ -151,7 +151,7 @@ subsample <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
         # Update the sequence of indices
         i0 <- min(maxR, i1 + 1)
         i1 <- min(maxR, i0 + (R - R.succ) - 1)
-        if (class(lpmodel$beta.obs) == "list") {
+        if (inherits(lpmodel$beta.obs, "list")) {
           i0 <- i1 + 1
           i1 <- i0 + (R - R.succ)
         }

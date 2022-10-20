@@ -227,12 +227,12 @@ estbounds.original <- function(data, lpmodel, original.sense, solver) {
     A.original <- matrix(A.original, nrow = 1)
   }
 
-  # Check if beta_obs is a function, then compute the
-  if (class(lpmodel$beta.obs) == "function") {
+  # Check if beta_obs is a function, then evaluate
+  if (inherits(lpmodel$beta.obs, "function")) {
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
-  } else if (class(lpmodel$beta.obs) == "numeric" |
-             class(lpmodel$beta.obs) == "matrix" |
-             class(lpmodel$beta.obs) == "list") {
+  } else if (inherits(lpmodel$beta.obs, "numeric") |
+             inherits(lpmodel$beta.obs, "matrix") |
+             inherits(lpmodel$beta.obs, "list")) {
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   }
   beta.shp.hat <- lpmodel.eval(data, lpmodel$beta.shp, 1)
@@ -333,12 +333,12 @@ estbounds2.L1 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
   # ---------------- #
   # Step 1: Initialization
   # ---------------- #
-  # Check if beta_obs is a function, then compute the
-  if (class(lpmodel$beta.obs) == "function") {
+  # Check if beta_obs is a function, then evaluate
+  if (inherits(lpmodel$beta.obs, "function")) {
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
-  } else if (class(lpmodel$beta.obs) == "numeric" |
-             class(lpmodel$beta.obs) == "matrix" |
-             class(lpmodel$beta.obs) == "list") {
+  } else if (inherits(lpmodel$beta.obs, "numeric") |
+             inherits(lpmodel$beta.obs, "matrix") |
+             inherits(lpmodel$beta.obs, "list")) {
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   }
   k <- length(beta.obs.hat)
@@ -432,11 +432,11 @@ estbounds2.L2 <- function(data, firststepsoln, lpmodel, modelsense, kappa,
   A.obs.hat <- lpmodel.eval(data, lpmodel$A.obs, 1)
   A.tgt.hat <- lpmodel.eval(data, lpmodel$A.tgt, 1)
 
-  if (class(lpmodel$beta.obs) == "function") {
+  if (inherits(lpmodel$beta.obs, "function")) {
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
-  } else if (class(lpmodel$beta.obs) == "numeric" |
-             class(lpmodel$beta.obs) == "matrix" |
-             class(lpmodel$beta.obs) == "list") {
+  } else if (inherits(lpmodel$beta.obs, "numeric") |
+             inherits(lpmodel$beta.obs, "matrix") |
+             inherits(lpmodel$beta.obs, "list")) {
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   }
   step2_qc <- list()
@@ -688,12 +688,12 @@ mincriterion <- function(data = NULL, lpmodel, norm = 2, solver = NULL) {
     A.shp.nr <- A.shp.dim[1]
   }
 
-  # Check if beta_obs is a function, then compute the
-  if (class(lpmodel$beta.obs) == "function") {
+  # Check if beta_obs is a function, then evaluate
+  if (inherits(lpmodel$beta.obs, "function")) {
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
-  } else if (class(lpmodel$beta.obs) == "numeric" |
-             class(lpmodel$beta.obs) == "matrix" |
-             class(lpmodel$beta.obs) == "list") {
+  } else if (inherits(lpmodel$beta.obs, "numeric") |
+             inherits(lpmodel$beta.obs, "matrix") |
+             inherits(lpmodel$beta.obs, "list")) {
     beta.obs.hat <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)[[1]]
   }
 

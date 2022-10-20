@@ -25,14 +25,14 @@
 #' @export
 #'
 lpmodel.eval <- function(data, obj, i) {
-  if (class(obj) == "function") {
+  if (inherits(obj, "function")) {
     obj.eval <- obj(data)
-  } else if (class(obj) == "list") {
+  } else if (inherits(obj, "list")) {
     obj.eval <- obj[[i]]
   } else if (!is.matrix(obj) & !is.data.frame(obj) &
              !methods::is(obj, "sparseMatrix")) {
     obj.eval <- matrix(obj, nrow = 1)
-  } else if (class(obj) == "data.frame") {
+  } else if (inherits(obj, "data.frame")) {
     obj.eval <- as.matrix(obj)
   } else {
     obj.eval <- obj
@@ -71,9 +71,9 @@ lpmodel.eval <- function(data, obj, i) {
 #' @export
 #'
 lpmodel.beta.eval <- function(data, obj, i) {
-  if (class(obj) == "function") {
+  if (inherits(obj, "function")) {
     beta.return <- obj(data)
-    if (class(beta.return) == "list") {
+    if (inherits(beta.return, "list")) {
       if (length(beta.return) == 2) {
         if (is.null(nrow(beta.return[[1]]))) {
           beta.obs.hat <- beta.return[[1]]
@@ -97,8 +97,8 @@ lpmodel.beta.eval <- function(data, obj, i) {
       beta.obs.hat <- beta.return
       omega.hat <- NULL
     }
-  } else if (class(obj) == "list") {
-    if (class(obj[[i]]) == "list") {
+  } else if (inherits(obj, "list")) {
+    if (inherits(obj[[i]], "list")) {
       if (length(obj[[i]]) != 2) {
         stop(paste0("When the first object of the list 'beta.obs' is a ",
                     "list, it needs to have two objects"))
@@ -134,14 +134,14 @@ lpmodel.beta.eval <- function(data, obj, i) {
         omega.hat <- NULL
       }
     }
-  } else if (class(obj) == "numeric" | class(obj) == "matrix") {
+  } else if (inherits(obj, "numeric") | inherits(obj, "matrix")) {
     beta.obs.hat <- obj
     omega.hat <- NULL
   }
 
-  if (class(beta.obs.hat) == "data.frame") {
+  if (inherits(beta.obs.hat, "data.frame")) {
     beta.obs.hat <- as.matrix(beta.obs.hat)
-  } else if (class(beta.obs.hat) == "numeric") {
+  } else if (inherits(beta.obs.hat, "numeric")) {
     beta.obs.hat <- matrix(beta.obs.hat, ncol = 1)
   }
 
@@ -254,19 +254,23 @@ lpm.print <- function(x, lpm.string, data = NULL, ...) {
   if (length(lpmodel.ind) == 0) {
     cat("'lpmodel' object does not contain the required objects.")
   } else {
-    cat("Object     Class \tDimension \tLength \n")
+    cat("Object     Class \t\tDimension \tLength \n")
     for (i in 1:length(lpm.string)) {
       if (i %in% lpmodel.ind) {
         obj <- x[[lpm.string[i]]]
+
         # Check class of object
         class.tmp <- class(obj)
-        # Check length of object
-        if (class.tmp == "list") {
+        # Concatenate the class names if length(class.tmp) > 1
+        # E.g., if class = c("matrix", "array"), then it is "matrix, array"
+        class.tmp <- paste(class.tmp, collapse = ", ")
+
+        if (inherits(obj, "list")) {
           class.tmp <- "list  "
           length.tmp <- length(obj)
           dimension.str <- dim(as.matrix(obj[[1]]))
           dimension.tmp <- paste0(dimension.str[1], "x", dimension.str[2])
-        } else if (class.tmp == "function") {
+        } else if (inherits(obj, "function")) {
           # If data is not passed, print "N/A" for dimensions. Otherwise,
           # compute the output for the output object
           if (is.null(data)) {
@@ -274,7 +278,7 @@ lpm.print <- function(x, lpm.string, data = NULL, ...) {
             dimension.tmp <- "N/A"
           } else {
             tmp.obj <- obj(data)
-            if (class(tmp.obj) == "list") {
+            if (inherits(tmp.obj, "list")) {
               length.tmp <- length(tmp.obj)
             } else {
               length.tmp <- 1
@@ -282,7 +286,9 @@ lpm.print <- function(x, lpm.string, data = NULL, ...) {
             dimension.str <- dim(as.matrix(tmp.obj))
             dimension.tmp <- paste0(dimension.str[1], "x", dimension.str[2])
           }
-        } else if (class.tmp %in% c("data.frame", "matrix", "numeric") |
+        } else if (inherits(obj, "data.frame") |
+                   inherits(obj, "matrix") |
+                   inherits(obj, "numeric") |
                    methods::is(obj, "sparseMatrix")) {
           dim.obj <- dim(obj)
           if (is.null(dim.obj)) {
@@ -295,16 +301,22 @@ lpm.print <- function(x, lpm.string, data = NULL, ...) {
           length.tmp <- length(obj)
           dimension.tmp <- "  "
         }
+        if (nchar(class.tmp) > 12) {
+          st <- "%s\t%s\t\t%s\n"
+        } else {
+          st <- "%s\t \t%s\t\t%s\n"
+        }
         cat(sprintf(paste0("%s",
                            paste(rep(" ", 11 - nchar(lpm.string[i])),
                                  collapse = ""),
-                           "%s\t%s\t\t%s\n"),
+                           st),
+                           #"%s\t \t%s\t\t%s\n"),
                     lpm.string[i], class.tmp, dimension.tmp, length.tmp))
       } else {
         cat(sprintf(paste0("%s",
                            paste(rep(" ", 11 - nchar(lpm.string[i])),
                                  collapse = ""),
-                           "-empty-\t-empty-\t\t-empty-\n"),
+                           "-empty-\t\t-empty-\t\t-empty-\n"),
                     lpm.string[i]))
       }
     }
@@ -414,7 +426,7 @@ lpmodel.anylist <- function(lpmodel) {
   # Check the objects in 'lpmodel' one-by-one
   names <- c("A.obs", "A.shp", "A.tgt", "beta.obs", "beta.shp")
   for (i in names) {
-    if (class(lpmodel[[i]]) == "list") {
+    if (inherits(lpmodel[[i]], "list")) {
       any.list <- TRUE
       if (is.null(len)) {
         len <- length(lpmodel[[i]])
@@ -460,7 +472,7 @@ lpmodel.anylist <- function(lpmodel) {
 #' @export
 #'
 lpmodel.extractlist <- function(obj, len) {
-  if (class(obj) == "list") {
+  if (inherits(obj, "list")) {
     result <- obj[-1]
   } else {
     result <- rep(list(NULL), len - 1)

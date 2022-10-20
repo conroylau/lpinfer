@@ -177,7 +177,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       beta.n <- Reduce(rbind, c(unlist(beta.obs.hat), beta.shp.hat, beta.tgt))
 
       # Change maxR to the length of the list 'beta.obs' if it is a list
-      if (class(lpmodel$beta.obs) == "list") {
+      if (inherits(lpmodel$beta.obs, "list")) {
          maxR <- length(lpmodel$beta.obs) - 1
       }
 
@@ -203,7 +203,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
             # Update the sequence of indices
             i0 <- min(maxR, i1 + 1)
             i1 <- min(maxR, i0 + (R - R.succ) - 1)
-            if (class(lpmodel$beta.obs) == "list") {
+            if (inherits(lpmodel$beta.obs, "list")) {
                i0 <- i1 + 1
                i1 <- i0 + (R - R.succ) - 1
             }
@@ -214,7 +214,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          ### 2(b) Estimate sigma.beta.obs and store the bootstrap estimates
          # If the user provided bootstrap estimates of beta, use it to compute
          # sigma
-         if (class(lpmodel$beta.obs) == "list") {
+         if (inherits(lpmodel$beta.obs, "list")) {
             beta.obs.bs.new <- lpmodel$beta.obs[(i0 + 1):(i1 + 1)]
             if (!is.null(beta.obs.bs.new[[1]])) {
                beta.n.bs.new <- list()
@@ -2018,7 +2018,7 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
                           "k x k and returns a square matrix of size k x k, ",
                           "where k is the length of the beta(P) vector or ",
                           "the length of the 'beta.obs' component.")
-   if (class(sqrtm.method) != "function") {
+   if (!inherits(sqrtm.method, "function")) {
       # Check if `sqrtm.method` is a function
       stop(sqrtm.errmsg)
    } else {
