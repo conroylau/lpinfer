@@ -183,17 +183,18 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
 
       # This while loop is used to re-draw the data if there are some
       # problematic draws in the bootstrap iterations
-      while (((R.succ < R) & (i1 < maxR)) | new.error.bs != 0) {
+      while (((R.succ < R) & (i1 < maxR)) | (new.error.bs != 0)) {
          # Set the index set for the bootstrap replications
          if (R.succ == -1) {
             # -1 corresponds to the initial bootstrap replications
             i0 <- 1
             i1 <- R
+            i1eqmax <- FALSE
             iseq <- 1:maxR
             eval.count <- 0
          } else {
             # Remove the problematic entries
-            error.id.new <- error.id[!(error.id %in% error.id0)]
+            error.id.new <- error.id
             beta.obs.bs[error.id.new] <- NULL
             beta.n.bs[error.id.new] <- NULL
 
@@ -201,8 +202,15 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
             error.id0 <- error.id
 
             # Update the sequence of indices
-            i0 <- min(maxR, i1 + 1)
-            i1 <- min(maxR, i0 + (R - R.succ) - 1)
+            i1eqmax <- (i1 == maxR)
+            if (isFALSE(i1eqmax)) {
+              i0 <- min(maxR, i1 + 1)
+              i1 <- min(maxR, i0 + (R - R.succ) - 1)
+            } else {
+              i0 <- i1
+              i1 <- i1
+            }
+            
             if (inherits(lpmodel$beta.obs, "list")) {
                i0 <- i1 + 1
                i1 <- i0 + (R - R.succ) - 1
@@ -236,21 +244,24 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          } else {
             var.method <- "function"
 
-            beta.obs.return <- fsst.beta.bs(n, data, beta.obs.hat, lpmodel,
-                                            R, maxR, progress, df.error,
-                                            iseq, eval.count)
-
-            df.error <- beta.obs.return$df.error
-            error.id <- beta.obs.return$error.id
-            R.succ <- beta.obs.return$R.succ
-            new.error.bs <- beta.obs.return$R.eval - R.succ
-            if (new.error.bs != 0) {
-               next
+            # Don't need to draw new obs if maxR is reached in last iteration
+            if (isFALSE(i1eqmax)) {
+              beta.obs.return <- fsst.beta.bs(n, data, beta.obs.hat, lpmodel,
+                                              R, maxR, progress, df.error,
+                                              iseq, eval.count)
+              
+              df.error <- beta.obs.return$df.error
+              error.id <- beta.obs.return$error.id
+              R.succ <- beta.obs.return$R.succ
+              new.error.bs <- beta.obs.return$R.eval - R.succ
+              if (new.error.bs != 0) {
+                next
+              }
+              
+              # Merge it with the beta.obs.bs that has been computed earlier
+              beta.obs.bs.new <- beta.obs.return$beta.obs.bs
+              beta.obs.bs <- c(beta.obs.bs, beta.obs.bs.new)
             }
-
-            # Merge it with the beta.obs.bs that has been computed earlier
-            beta.obs.bs.new <- beta.obs.return$beta.obs.bs
-            beta.obs.bs <- c(beta.obs.bs, beta.obs.bs.new)
             beta.obs.list <- c(list(beta.obs.hat), beta.obs.bs)
 
             # If sigma.beta is not provided by the function, compute it
@@ -261,7 +272,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                sigma.beta.obs <- sigma.summation(n, beta.obs.list, progress,
                                                  eval.count)
             }
-            beta.n.bs <- full.beta.bs(lpmodel, beta.tgt, beta.obs.bs, R)
+            beta.n.bs <- full.beta.bs(lpmodel, beta.tgt, beta.obs.bs)
          }
 
          ### 2(c) Compute the beta.sigma
@@ -286,7 +297,8 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          # Compute the weighting matrix
          weight.mat <- fsst.weight.matrix(weight.matrix,
                                           beta.obs.hat,
-                                          sigma.beta.obs)
+                                          sigma.beta.obs,
+                                          var.method)
 
          # Compute the matrix square root of the weighting matrix
          weight.mat.root <- checkupdate.matrixroot(weight.mat,
@@ -407,7 +419,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                df.error <- cone.return$df.error
                error.id <- cone.return$error.id
                new.error.bs <- cone.return$new.error
-               R.succ <- length(cone.n.list[[i]])
+               R.succ <- length(cone.return$cone.n.list)
                if (new.error.bs != 0) {
                   next
                }
@@ -418,6 +430,8 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
             beta.r <- beta.r.compute(n, lpmodel, beta.obs.hat, beta.tgt,
                                      beta.n, beta.star, omega.i, 0, solver)$x
 
+            # print(beta.r)
+            
             # Compute range.n for bootstrap beta
             range.return <- fsst.range.bs(n, lpmodel, beta.obs.hat,
                                           beta.obs.bs, x.star, x.star.bs,
@@ -445,7 +459,8 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                                            progress, df.error, eval.count,
                                            FALSE)
                cone.n.list[[i]] <- cone.return$cone.n.list
-               R.succ <- length(cone.n.list[[i]])
+               R.succ <- length(cone.return$cone.n.list)
+
                # Update the list of errors and break the for-loop if there is
                # any errors
                df.error <- cone.return$df.error
@@ -571,9 +586,9 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
 #'
 #' @export
 #'
-full.beta.bs <- function(lpmodel, beta.tgt, beta.obs.bs, R) {
+full.beta.bs <- function(lpmodel, beta.tgt, beta.obs.bs) {
    beta.bs <- list()
-   for (i in 1:R) {
+   for (i in 1:length(beta.obs.bs)) {
       beta.bs[[i]] <- Reduce(rbind,
                              c(beta.obs.bs[[i]], lpmodel$beta.shp, beta.tgt))
    }
@@ -795,7 +810,8 @@ fsst.beta.bs.fn <- function(x, data, lpmodel, pbar, progress, eval.count,
 #'
 #' @export
 #'
-fsst.weight.matrix <- function(weight.matrix, beta.obs.hat, beta.sigma) {
+fsst.weight.matrix <- function(weight.matrix, beta.obs.hat, beta.sigma,
+                               var.method) {
    # ---------------- #
    # Step 1: Convert the string to lower case.
    # ---------------- #
@@ -804,12 +820,30 @@ fsst.weight.matrix <- function(weight.matrix, beta.obs.hat, beta.sigma) {
    # ---------------- #
    # Step 2: Create the matrix
    # ---------------- #
+   weight.error.msg <- sprintf(paste0("The asymptotic variance computed using ",
+                                      "the %s is singular. Please use a ",
+                                      "different estimator or the ",
+                                      "identity matrix.\n"),
+                               var.method)
+   
    if (weight.matrix == "identity") {
       weight.mat <- diag(nrow(asmat(beta.obs.hat)))
    } else if (weight.matrix == "diag") {
-      weight.mat <- diag(diag(solve(beta.sigma)))
+     weight.mat <- tryCatch({
+       diag(diag(solve(beta.sigma)))
+     }, error = function(e) {
+       stop(weight.error.msg)
+       return(NA)
+     })
+     
    } else if (weight.matrix == "avar") {
-      weight.mat <- solve(beta.sigma)
+     weight.mat <- tryCatch({
+       solve(beta.sigma)
+      }, error = function(e) {
+        stop(weight.error.msg)
+        return(NA)
+      })
+      
    } else {
       stop("'weight.matrix' has to be one of 'avar', 'diag' and 'identity'.")
    }
@@ -1464,7 +1498,8 @@ beta.r.compute <- function(n, lpmodel, beta.obs.hat, beta.tgt, beta.n,
                      rhs = rhs.mat,
                      sense = sense.mat,
                      modelsense = "min",
-                     lb = lb)
+                     lb = lb,
+                     beta.r.program = TRUE)
 
    # ---------------- #
    # Step 2: Solve the linear program
@@ -1833,7 +1868,8 @@ fsst.cone.bs.fn <- function(beta.star.bs, n, omega.i, beta.n, beta.star,
       beta.new <- beta.star.bs - beta.star + lambda * beta.r
       cone.return <- fsst.cone.lp(n, omega.i, beta.n, beta.new, lpmodel,
                                   indicator, solver)
-      list(objval = cone.return$objval)
+      list(objval = cone.return$objval,
+           msg = cone.return$status)
    }, warning = function(w) {
       return(list(status = "warning",
                   msg = w))
@@ -1851,7 +1887,7 @@ fsst.cone.bs.fn <- function(beta.star.bs, n, omega.i, beta.n, beta.star,
    }
 
    if (length(Ts) == 0) {
-      msg <- cone.return$status
+      msg <- result.cone$msg
    }
 
    return(list(Ts = Ts,
@@ -2158,7 +2194,7 @@ print.fsst <- function(x, ...) {
          cat("p-values:\n")
          # Label the data-driven lambda with a "*" if it is used
          dfl <- fsst.label.lambda(round(df.pval$`lambda`, digits = 5),
-                                  round(x$lambda.data, digits = 5))
+                                  x$lambda.data)
          df.pval$`lambda` <- dfl$lambdas
          print(df.pval, row.names = FALSE)
 

@@ -28,7 +28,7 @@
 #' @export
 #'
 gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL,
-                         weight = NULL, ...) {
+                         weight = NULL, beta.r.program = FALSE, ...) {
   # ---------------- #
   # Step 1: Obtain the coefficients of the objective function
   # ---------------- #
@@ -72,7 +72,8 @@ gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL,
   # ---------------- #
   # Step 4: Try through different options if the status is 'ITERATION_LIMIT'
   # ---------------- #
-  if (result$status == "ITERATION_LIMIT") {
+  if ((result$status == "ITERATION_LIMIT") |
+      ((result$status != "OPTIMAL") & (isTRUE(beta.r.program)))) {
     gurobi.method <- c(0, 1, 2)
     gurobi.numericfocus <- c(999, 1, 2, 3)
     gurobi.scaleflag <- c(999, -1, 0, 1, 2, 3)
@@ -92,6 +93,12 @@ gurobi.optim <- function(Af, bf, nf, A, rhs, sense, modelsense, lb, qc = NULL,
             break()
           }
         }
+        if (result$status == "OPTIMAL") {
+          break()
+        }
+      }
+      if (result$status == "OPTIMAL") {
+        break()
       }
     }
   }
