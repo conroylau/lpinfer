@@ -8,38 +8,40 @@
 #' @importFrom Matrix norm
 #'
 #' @inheritParams dkqs
+#' @param data
 #' @param lpmodel The \code{lpmodel} object.
 #' @param lambda Parameter used to obtain the restricted estimator
-#'    \eqn{\widehat{\bm{\beta}}^r_n}. A data-driven parameter \code{lambda} can
-#'    be included if \code{NA} is included as part of the vector for
-#'    \code{lambda}. For instance, if \code{lambda} is set as \code{c(0.1, NA)},
-#'    then both 0.1 and the data-driven \code{lambda} will be applied in the
-#'    \code{\link[lpinfer]{fsst}} test. The default is to use the
-#'    data-driven \code{lambda}.
+#'   \eqn{\widehat{\bm{\beta}}^r_n}. A data-driven parameter \code{lambda} can
+#'   be included if \code{NA} is included as part of the vector for
+#'   \code{lambda}. For instance, if \code{lambda} is set as \code{c(0.1, NA)},
+#'   then both 0.1 and the data-driven \code{lambda} will be applied in the
+#'   \code{\link[lpinfer]{fsst}} test. The default is to use the data-driven
+#'   \code{lambda}.
 #' @param rho Parameter used in the studentization of matrices.
-#' @param weight.matrix The option used in the weighting matrix. There are
-#'   three options available:
-#'   \itemize{
-#'     \item{\code{identity} --- identity matrix}
-#'     \item{\code{diag} --- the diagonal matrix that takes the diagonal
-#'        elements of the inverse of the variance matrix}
-#'     \item{\code{avar} --- inverse of the variance matrix}
-#'   }
-#' @param sqrtm.method The method used to obtain the matrix square root in
-#'   the \code{\link[lpinfer]{fsst}} procedure. This has to be a function that
-#'   takes one argument that accepts a square matrix of size k x k and returns
-#'   a square matrix of size k x k, where k can be the length of the
+#' @param weight.matrix The option used in the weighting matrix. There are three
+#'   options available: \itemize{ \item{\code{identity} --- identity matrix}
+#'   \item{\code{diag} --- the diagonal matrix that takes the diagonal elements
+#'   of the inverse of the variance matrix} \item{\code{avar} --- inverse of the
+#'   variance matrix} }
+#' @param beta.sigma.tol Tolerance level used to determine if the weight matrix
+#'   is singular
+#' @param beta.sigma.eps If weight.mat != "identity" and beta.sigma is
+#'   determined to be singular, beta.sigma is replaced with beta.sigma +
+#'   beta.sigma.eps * diag(nrow(beta.sigma))
+#' @param sqrtm.method The method used to obtain the matrix square root in the
+#'   \code{\link[lpinfer]{fsst}} procedure. This has to be a function that takes
+#'   one argument that accepts a square matrix of size k x k and returns a
+#'   square matrix of size k x k, where k can be the length of the
 #'   \eqn{\beta(P)} vector, or the \code{beta.obs} component of the
 #'   \code{lpinfer} object.
 #' @param sqrtm.tol The absolute tolerance used to check whether the matrix
-#'   square root is correct. This is done by checking whether the Frobenius
-#'   norm is smaller than the tolerance level, i.e., when \eqn{A} is the
-#'   give matrix, \eqn{B} is the matrix square root obtained from the
-#'   given \code{sqrtm.method} function, and \eqn{\epsilon} is the
-#'   tolerance level, the FSST test checks whether
-#'   \eqn{||A - BB||_F < \epsilon}. If this does not hold, the FSST test will
-#'   use the \code{\link[expm]{sqrtm}} function from the \code{expm} package
-#'   to obtain the matrix square root.
+#'   square root is correct. This is done by checking whether the Frobenius norm
+#'   is smaller than the tolerance level, i.e., when \eqn{A} is the give matrix,
+#'   \eqn{B} is the matrix square root obtained from the given
+#'   \code{sqrtm.method} function, and \eqn{\epsilon} is the tolerance level,
+#'   the FSST test checks whether \eqn{||A - BB||_F < \epsilon}. If this does
+#'   not hold, the FSST test will use the \code{\link[expm]{sqrtm}} function
+#'   from the \code{expm} package to obtain the matrix square root.
 #'
 #' @return Returns the following information:
 #'   \item{pval}{A table of \eqn{p}-values.}
@@ -106,6 +108,7 @@
 #'
 fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                  lambda = NA, rho = 1e-4, n = NULL, weight.matrix = "diag",
+                 beta.sigma.tol = 1e-08, beta.sigma.eps = 1e-06,
                  solver = NULL, progress = TRUE,
                  sqrtm.method = function(m) pracma::sqrtm(m)$B,
                  sqrtm.tol = .Machine$double.eps^(1/2), previous.output = NA) {
@@ -298,7 +301,8 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          weight.mat <- fsst.weight.matrix(weight.matrix,
                                           beta.obs.hat,
                                           sigma.beta.obs,
-                                          var.method)
+                                          beta.sigma.tol,
+                                          beta.sigma.eps)
 
          # Compute the matrix square root of the weighting matrix
          weight.mat.root <- checkupdate.matrixroot(weight.mat,
@@ -811,7 +815,7 @@ fsst.beta.bs.fn <- function(x, data, lpmodel, pbar, progress, eval.count,
 #' @export
 #'
 fsst.weight.matrix <- function(weight.matrix, beta.obs.hat, beta.sigma,
-                               var.method) {
+                               beta.sigma.tol, beta.sigma.eps) {
    # ---------------- #
    # Step 1: Convert the string to lower case.
    # ---------------- #
@@ -819,34 +823,26 @@ fsst.weight.matrix <- function(weight.matrix, beta.obs.hat, beta.sigma,
 
    # ---------------- #
    # Step 2: Create the matrix
-   # ---------------- #
-   weight.error.msg <- sprintf(paste0("The asymptotic variance computed using ",
-                                      "the %s is singular. Please use a ",
-                                      "different estimator or the ",
-                                      "identity matrix.\n"),
-                               var.method)
-   
-   if (weight.matrix == "identity") {
-      weight.mat <- diag(nrow(asmat(beta.obs.hat)))
-   } else if (weight.matrix == "diag") {
-     weight.mat <- tryCatch({
-       diag(diag(solve(beta.sigma)))
-     }, error = function(e) {
-       stop(weight.error.msg)
-       return(NA)
-     })
-     
-   } else if (weight.matrix == "avar") {
-     weight.mat <- tryCatch({
-       solve(beta.sigma)
-      }, error = function(e) {
-        stop(weight.error.msg)
-        return(NA)
-      })
-      
-   } else {
-      stop("'weight.matrix' has to be one of 'avar', 'diag' and 'identity'.")
-   }
+  # ---------------- #
+  if (weight.matrix == "identity") {
+    weight.mat <- diag(nrow(asmat(beta.obs.hat)))
+  } else if (weight.matrix == "diag") {
+    if (min(eigen(beta.sigma)$values) < beta.sigma.tol) {
+      warning("beta.sigma is singular. A small identity matrix has been added to beta.sigma to calculate your selected weight.matrix.")
+      beta.sigma <- beta.sigma + beta.sigma.eps * diag(nrow(beta.sigma))
+    }
+    weight.mat <- diag(diag(solve(beta.sigma)))     
+  } else if (weight.matrix == "diag2") {
+    weight.mat <- 1/diag(diag(beta.sigma))
+  } else if (weight.matrix == "avar") {
+    if (min(eigen(beta.sigma)$values) < beta.sigma.tol) {
+      warning("beta.sigma is singular. A small identity matrix has been added to beta.sigma to calculate your selected weight.matrix.")
+      beta.sigma <- beta.sigma + beta.sigma.eps * diag(nrow(beta.sigma))
+    }
+    weight.mat <- solve(beta.sigma)
+  } else {
+    stop("'weight.matrix' has to be one of 'avar', 'diag', 'diag2', and 'identity'.")
+  }
 
    return(weight.mat)
 }
