@@ -22,7 +22,7 @@ Description: This package provides a set of methods for estimation and
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.1
+RoxygenNote: 7.3.2
 Imports:
     e1071 (>= 1.7.3),
     expm (>= 0.999.4),

@@ -18,7 +18,8 @@ fsst.lambda(
   df.error,
   p,
   d,
-  eval.count
+  eval.count,
+  rank.condn
 )
 }
 \arguments{
@@ -66,6 +67,8 @@ subprocedure. Otherwise, it means that the \code{future_map} function
 has been called for more than once. This situation typically refers to the
 situations where there are some errors in the first time of the
 replications.}
+
+\item{rank.condn}{Whether the rank condition holds.}
 }
 \value{
 Returns the data-driven \code{lambda} and the error messages.

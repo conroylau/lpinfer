@@ -4,23 +4,33 @@
 \alias{fsst.weight.matrix}
 \title{Computes the weighting matrix in the \code{\link[lpinfer]{fsst}} procedure}
 \usage{
-fsst.weight.matrix(weight.matrix, beta.obs.hat, beta.sigma)
+fsst.weight.matrix(
+  weight.matrix,
+  beta.obs.hat,
+  beta.sigma,
+  beta.sigma.tol,
+  beta.sigma.eps
+)
 }
 \arguments{
-\item{weight.matrix}{The option used in the weighting matrix. There are
-three options available:
-\itemize{
-  \item{\code{identity} --- identity matrix}
-  \item{\code{diag} --- the diagonal matrix that takes the diagonal
-     elements of the inverse of the variance matrix}
-  \item{\code{avar} --- inverse of the variance matrix}
-}}
+\item{weight.matrix}{The option used in the weighting matrix. There are three
+options available: \itemize{ \item{\code{identity} --- identity matrix}
+\item{\code{diag} --- the diagonal matrix that takes the diagonal elements
+of the inverse of the variance matrix} \item{\code{avar} --- inverse of the
+variance matrix} }}
 
 \item{beta.obs.hat}{The sample estimator
 \eqn{\widehat{\bm{\beta}}_{\mathrm{obs}, n}} based on the given
 information in \code{lpmodel} (and \code{data} if applicable).}
 
 \item{beta.sigma}{The variance estimator of \eqn{\bm{\beta}_{\rm obs}}.}
+
+\item{beta.sigma.tol}{Tolerance level used to determine if the weight matrix
+is singular}
+
+\item{beta.sigma.eps}{If weight.mat != "identity" and beta.sigma is
+determined to be singular, beta.sigma is replaced with beta.sigma +
+beta.sigma.eps * diag(nrow(beta.sigma))}
 }
 \value{
 The weighting matrix is returned.

@@ -20,11 +20,12 @@ fsst.beta.star.bs(
   p,
   d,
   progress,
-  eval.count
+  eval.count,
+  rank.condn
 )
 }
 \arguments{
-\item{data}{An \code{data frame} or a \code{matrix}.}
+\item{data}{A \code{data frame} or a \code{matrix}.}
 
 \item{lpmodel}{The \code{lpmodel} object.}
 
@@ -73,6 +74,8 @@ subprocedure. Otherwise, it means that the \code{future_map} function
 has been called for more than once. This situation typically refers to the
 situations where there are some errors in the first time of the
 replications.}
+
+\item{rank.condn}{Whether the rank condition holds.}
 }
 \value{
 Return the following list of objects:

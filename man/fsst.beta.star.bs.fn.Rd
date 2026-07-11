@@ -21,7 +21,7 @@ fsst.beta.star.bs.fn(
 \arguments{
 \item{beta.obs.bs}{The bootstrap estimates of \code{beta.obs}.}
 
-\item{data}{An \code{data frame} or a \code{matrix}.}
+\item{data}{A \code{data frame} or a \code{matrix}.}
 
 \item{lpmodel}{The \code{lpmodel} object.}
 

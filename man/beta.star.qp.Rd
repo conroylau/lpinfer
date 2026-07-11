@@ -15,7 +15,7 @@ beta.star.qp(
 )
 }
 \arguments{
-\item{data}{An \code{data frame} or a \code{matrix}.}
+\item{data}{A \code{data frame} or a \code{matrix}.}
 
 \item{lpmodel}{The \code{lpmodel} object.}
 

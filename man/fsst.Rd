@@ -14,6 +14,10 @@ fsst(
   rho = 1e-04,
   n = NULL,
   weight.matrix = "diag",
+  beta.sigma.tol = 1e-08,
+  beta.sigma.eps = 1e-06,
+  prespecify.rank = NULL,
+  p.rank.tol = NULL,
   solver = NULL,
   progress = TRUE,
   sqrtm.method = function(m) pracma::sqrtm(m)$B,
@@ -22,7 +26,7 @@ fsst(
 )
 }
 \arguments{
-\item{data}{An \code{data frame} or a \code{matrix}.}
+\item{data}{A \code{data frame} or a \code{matrix}.}
 
 \item{lpmodel}{The \code{lpmodel} object.}
 
@@ -39,22 +43,37 @@ number of bootstrap replications to be conducted if there are errors.}
 be included if \code{NA} is included as part of the vector for
 \code{lambda}. For instance, if \code{lambda} is set as \code{c(0.1, NA)},
 then both 0.1 and the data-driven \code{lambda} will be applied in the
-\code{\link[lpinfer]{fsst}} test. The default is to use the
-data-driven \code{lambda}.}
+\code{\link[lpinfer]{fsst}} test. The default is to use the data-driven
+\code{lambda}.}
 
 \item{rho}{Parameter used in the studentization of matrices.}
 
 \item{n}{The sample size. This is only required if \code{data} is omitted
 in the input.}
 
-\item{weight.matrix}{The option used in the weighting matrix. There are
-three options available:
-\itemize{
-  \item{\code{identity} --- identity matrix}
-  \item{\code{diag} --- the diagonal matrix that takes the diagonal
-     elements of the inverse of the variance matrix}
-  \item{\code{avar} --- inverse of the variance matrix}
-}}
+\item{weight.matrix}{The option used in the weighting matrix. There are three
+options available: \itemize{ \item{\code{identity} --- identity matrix}
+\item{\code{diag} --- the diagonal matrix that takes the diagonal elements
+of the inverse of the variance matrix} \item{\code{avar} --- inverse of the
+variance matrix} }}
+
+\item{beta.sigma.tol}{Tolerance level used to determine if the weight matrix
+is singular}
+
+\item{beta.sigma.eps}{If weight.mat != "identity" and beta.sigma is
+determined to be singular, beta.sigma is replaced with beta.sigma +
+beta.sigma.eps * diag(nrow(beta.sigma))}
+
+\item{prespecify.rank}{An option on whether the rank of the stacked matrix
+\code{A.obs} and \code{A.shp} is checked when evaluating the
+condition \code{d >= p}. The default is \code{NULL}, so the rank is
+computed. Otherwise, one can specify it as \code{TRUE} for full rank and
+\code{FALSE} otherwise.}
+
+\item{p.rank.tol}{Tolerance level used to compute the rank of the stacked
+matrix \code{rbind(A.obs, A.shp)} via \code{Matrix::rankMatrix}. Only used
+when \code{prespecify.rank} is \code{NULL}. The default is \code{NULL},
+which defers to the default tolerance of \code{Matrix::rankMatrix}.}
 
 \item{solver}{The name of the linear and quadratic programming solver that
 is used to obtain the solution to linear and quadratic programs.
@@ -65,22 +84,21 @@ The solvers supported by this package are \code{cplexAPI}, \code{gurobi},
 be displayed. If it is set as \code{TRUE}, the progress bars will be
 displayed while the code is running.}
 
-\item{sqrtm.method}{The method used to obtain the matrix square root in
-the \code{\link[lpinfer]{fsst}} procedure. This has to be a function that
-takes one argument that accepts a square matrix of size k x k and returns
-a square matrix of size k x k, where k can be the length of the
+\item{sqrtm.method}{The method used to obtain the matrix square root in the
+\code{\link[lpinfer]{fsst}} procedure. This has to be a function that takes
+one argument that accepts a square matrix of size k x k and returns a
+square matrix of size k x k, where k can be the length of the
 \eqn{\beta(P)} vector, or the \code{beta.obs} component of the
 \code{lpinfer} object.}
 
 \item{sqrtm.tol}{The absolute tolerance used to check whether the matrix
-square root is correct. This is done by checking whether the Frobenius
-norm is smaller than the tolerance level, i.e., when \eqn{A} is the
-give matrix, \eqn{B} is the matrix square root obtained from the
-given \code{sqrtm.method} function, and \eqn{\epsilon} is the
-tolerance level, the FSST test checks whether
-\eqn{||A - BB||_F < \epsilon}. If this does not hold, the FSST test will
-use the \code{\link[expm]{sqrtm}} function from the \code{expm} package
-to obtain the matrix square root.}
+square root is correct. This is done by checking whether the Frobenius norm
+is smaller than the tolerance level, i.e., when \eqn{A} is the give matrix,
+\eqn{B} is the matrix square root obtained from the given
+\code{sqrtm.method} function, and \eqn{\epsilon} is the tolerance level,
+the FSST test checks whether \eqn{||A - BB||_F < \epsilon}. If this does
+not hold, the FSST test will use the \code{\link[expm]{sqrtm}} function
+from the \code{expm} package to obtain the matrix square root.}
 
 \item{previous.output}{The list of outputs obtained from the previous
 evaluation of the procedure. This is only used in the

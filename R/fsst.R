@@ -8,7 +8,7 @@
 #' @importFrom Matrix norm
 #'
 #' @inheritParams dkqs
-#' @param data
+#' @param data A \code{data frame} or a \code{matrix}.
 #' @param lpmodel The \code{lpmodel} object.
 #' @param lambda Parameter used to obtain the restricted estimator
 #'   \eqn{\widehat{\bm{\beta}}^r_n}. A data-driven parameter \code{lambda} can
@@ -25,6 +25,15 @@
 #'   variance matrix} }
 #' @param beta.sigma.tol Tolerance level used to determine if the weight matrix
 #'   is singular
+#' @param prespecify.rank An option on whether the rank of the stacked matrix
+#'   \code{A.obs} and \code{A.shp} is checked when evaluating the
+#'   condition \code{d >= p}. The default is \code{NULL}, so the rank is
+#'   computed. Otherwise, one can specify it as \code{TRUE} for full rank and
+#'   \code{FALSE} otherwise.
+#' @param p.rank.tol Tolerance level used to compute the rank of the stacked
+#'   matrix \code{rbind(A.obs, A.shp)} via \code{Matrix::rankMatrix}. Only used
+#'   when \code{prespecify.rank} is \code{NULL}. The default is \code{NULL},
+#'   which defers to the default tolerance of \code{Matrix::rankMatrix}.
 #' @param beta.sigma.eps If weight.mat != "identity" and beta.sigma is
 #'   determined to be singular, beta.sigma is replaced with beta.sigma +
 #'   beta.sigma.eps * diag(nrow(beta.sigma))
@@ -109,6 +118,7 @@
 fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                  lambda = NA, rho = 1e-4, n = NULL, weight.matrix = "diag",
                  beta.sigma.tol = 1e-08, beta.sigma.eps = 1e-06,
+                 prespecify.rank = NULL, p.rank.tol = NULL,
                  solver = NULL, progress = TRUE,
                  sqrtm.method = function(m) pracma::sqrtm(m)$B,
                  sqrtm.tol = .Machine$double.eps^(1/2), previous.output = NA) {
@@ -121,6 +131,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
    # Check the arguments
    fsst.return <- fsst.check(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho,
                              n, weight.matrix, solver, progress,
+                             prespecify.rank, p.rank.tol,
                              sqrtm.method, sqrtm.tol, previous.output)
 
    # Update the arguments
@@ -213,7 +224,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
               i0 <- i1
               i1 <- i1
             }
-            
+
             if (inherits(lpmodel$beta.obs, "list")) {
                i0 <- i1 + 1
                i1 <- i0 + (R - R.succ) - 1
@@ -252,7 +263,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
               beta.obs.return <- fsst.beta.bs(n, data, beta.obs.hat, lpmodel,
                                               R, maxR, progress, df.error,
                                               iseq, eval.count)
-              
+
               df.error <- beta.obs.return$df.error
               error.id <- beta.obs.return$error.id
               R.succ <- beta.obs.return$R.succ
@@ -260,7 +271,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
               if (new.error.bs != 0) {
                 next
               }
-              
+
               # Merge it with the beta.obs.bs that has been computed earlier
               beta.obs.bs.new <- beta.obs.return$beta.obs.bs
               beta.obs.bs <- c(beta.obs.bs, beta.obs.bs.new)
@@ -297,6 +308,14 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
             d <- ncol(lpmodel$A.tgt)
          }
 
+         if (is.null(prespecify.rank)) {
+            p.rank <- Matrix::rankMatrix(rbind(lpmodel$A.obs, lpmodel$A.shp),
+                                         tol = p.rank.tol)
+            rank.condn <- (p.rank == (p - 1))
+         } else {
+            rank.condn <- prespecify.rank
+         }
+
          # Compute the weighting matrix
          weight.mat <- fsst.weight.matrix(weight.matrix,
                                           beta.obs.hat,
@@ -316,7 +335,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                                                beta.obs.hat, beta.obs.bs, R,
                                                sigma.beta.obs, solver,
                                                df.error, p, d, progress,
-                                               eval.count)
+                                               eval.count, rank.condn)
          beta.star <- beta.star.return$beta.star
          beta.star.bs <- beta.star.return$beta.star.bs
          x.star <- beta.star.return$x.star
@@ -339,7 +358,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          # Step 4: Studentization
          # ---------------- #
          # Obtain the star version of the sigma matrix
-         if (d >= p) {
+         if (isTRUE(rank.condn) && (d >= p)) {
             sigma.star <- beta.sigma
          } else {
             sigma.star <- sigma.summation(n, beta.star.list, progress,
@@ -350,7 +369,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          rhobar.i <- Matrix::norm(sigma.star, type = "f") * rho
 
          # Compute the studentization matrix if 'omega.i' is NA and if d < p
-         if (!is.matrix(omega.i) | d < p) {
+         if (!is.matrix(omega.i) | !(isTRUE(rank.condn) && (d >= p))) {
             sigma.reg <- sigma.star + rhobar.i * diag(nrow(sigma.star))
             omega.i <- checkupdate.matrixroot(sigma.reg,
                                               "studentization matrix",
@@ -362,7 +381,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          # Step 5: Test statistic
          # ---------------- #
          # Compute range.n
-         if (d >= p) {
+         if (isTRUE(rank.condn) && (d >= p)) {
             range.n <- 0
             cone.n <- fsst.cone.lp(n, omega.i, beta.n, beta.star, lpmodel, 1,
                                    solver)
@@ -379,7 +398,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          if (NA %in% lambda) {
             lambda.data <- fsst.lambda(n, omega.i, beta.n, beta.star, lpmodel,
                                        R.succ, beta.star.list, solver, progress,
-                                       df.error, p, d, eval.count)
+                                       df.error, p, d, eval.count, rank.condn)
             lambda.dd <- lambda.data$lambda
             new.error.bs <- lambda.data$new.error
             df.error <- lambda.data$df.error
@@ -401,7 +420,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          # ---------------- #
          # Step 7: Compute bootstrap components of cone.n and range.n
          # ---------------- #
-         if (d >= p) {
+         if (isTRUE(rank.condn) && (d >= p)) {
             # Compute the restricted estimator
             beta.r <- beta.r.compute(n, lpmodel, beta.obs.hat, beta.tgt,
                                      beta.n, beta.star, omega.i, 1, solver)$x
@@ -434,8 +453,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
             beta.r <- beta.r.compute(n, lpmodel, beta.obs.hat, beta.tgt,
                                      beta.n, beta.star, omega.i, 0, solver)$x
 
-            # print(beta.r)
-            
+
             # Compute range.n for bootstrap beta
             range.return <- fsst.range.bs(n, lpmodel, beta.obs.hat,
                                           beta.obs.bs, x.star, x.star.bs,
@@ -831,7 +849,7 @@ fsst.weight.matrix <- function(weight.matrix, beta.obs.hat, beta.sigma,
       warning("beta.sigma is singular. A small identity matrix has been added to beta.sigma to calculate your selected weight.matrix.")
       beta.sigma <- beta.sigma + beta.sigma.eps * diag(nrow(beta.sigma))
     }
-    weight.mat <- diag(diag(solve(beta.sigma)))     
+    weight.mat <- diag(diag(solve(beta.sigma)))
   } else if (weight.matrix == "diag2") {
     weight.mat <- 1/diag(diag(beta.sigma))
   } else if (weight.matrix == "avar") {
@@ -1164,6 +1182,7 @@ fsst.cone.lp <- function(n, omega.i, beta.n, beta.star, lpmodel, indicator,
 #'   \code{beta.obs}.
 #' @param p The length of the beta vector.
 #' @param d The number of columns of the \code{A} matrix.
+#' @param rank.condn Whether the rank condition holds.
 #'
 #' @return Return the following list of objects:
 #'   \item{beta.star}{This corresponds to \eqn{\widehat{\bm{\beta}}^\star}.}
@@ -1184,7 +1203,7 @@ fsst.cone.lp <- function(n, omega.i, beta.n, beta.star, lpmodel, indicator,
 fsst.beta.star.bs <- function(data, lpmodel, beta.n, beta.n.bs, beta.tgt,
                               weight.mat, beta.obs.hat, beta.obs.bs, R,
                               sigma.beta.obs, solver, df.error, p, d,
-                              progress, eval.count) {
+                              progress, eval.count, rank.condn) {
    # ---------------- #
    # Step 1: Initialization
    # ---------------- #
@@ -1195,9 +1214,9 @@ fsst.beta.star.bs <- function(data, lpmodel, beta.n, beta.n.bs, beta.tgt,
    error.id <- NULL
 
    # ---------------- #
-   # Step 2: Compute 'beta.star', 'x.star' and their bootstrap estimates
+   # Step 2: Compute 'beta.star', 'x.star' and the bootstrap estimates
    # ---------------- #
-   if (d >= p) {
+   if (isTRUE(rank.condn) && (d >= p)) {
       # Case 1: d >= p - All star components are the same as the non-star
       # components and the x.star objects are not used in the latter parts
       beta.star <- beta.n
@@ -1965,6 +1984,7 @@ fsst.pval <- function(range.n, cone.n, range.n.list, cone.n.list, R,
 #'
 fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
                        weight.matrix, solver, progress,
+                       prespecify.rank, p.rank.tol,
                        sqrtm.method, sqrtm.tol, previous.output) {
 
    # ---------------- #
@@ -2150,7 +2170,29 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
    }
 
    # ---------------- #
-   # Step 9: Return updated items
+   # Step 9: Check inputs related to rank computation
+   # ---------------- #
+   if (!is.null(p.rank.tol)) {
+      check.numeric(p.rank.tol, "p.rank.tol")
+      if (is.na(p.rank.tol) || p.rank.tol < 0) {
+         stop(paste0("'p.rank.tol' has to be NULL or a nonnegative number as ",
+                     "a tolerance level for rank computation."),
+               call. = FALSE)
+      }
+   }
+
+   if (!is.null(prespecify.rank)) {
+      valid.rank <- is.logical(prespecify.rank) &&
+         (length(prespecify.rank) == 1L) &&
+         !is.na(prespecify.rank)
+      if (!valid.rank) {
+         check.errormsg("prespecify.rank",
+                        "NULL or a single logical (TRUE or FALSE)")
+      }
+   }
+
+   # ---------------- #
+   # Step 10: Return updated items
    # ---------------- #
    return(list(solver = solver,
                solver.name = solver.name,
@@ -2330,12 +2372,12 @@ summary.fsst <- function(x, ...) {
 #'
 fsst.lambda <- function(n, omega.i, beta.n, beta.star, lpmodel, R.succ,
                         beta.star.list, solver, progress, df.error, p, d,
-                        eval.count) {
+                        eval.count, rank.condn) {
    # ---------------- #
    # Step 1: Compute the bootstrap cone estimates with lambda = 0, beta.r = 0
    # ---------------- #
    beta.r <- rep(0, length(beta.n))
-   if (d >= p) {
+   if (isTRUE(rank.condn) && (d >= p)) {
       indicator <- 1
    } else {
       indicator <- 0

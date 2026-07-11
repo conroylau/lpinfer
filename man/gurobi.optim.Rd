@@ -15,6 +15,7 @@ gurobi.optim(
   lb,
   qc = NULL,
   weight = NULL,
+  beta.r.program = FALSE,
   ...
 )
 }

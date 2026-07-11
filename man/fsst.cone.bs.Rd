@@ -47,8 +47,8 @@ as \eqn{\widehat{\bm{\beta}}_n \equiv (\widehat{\bm{\beta}}_{{\rm obs},n},
 be included if \code{NA} is included as part of the vector for
 \code{lambda}. For instance, if \code{lambda} is set as \code{c(0.1, NA)},
 then both 0.1 and the data-driven \code{lambda} will be applied in the
-\code{\link[lpinfer]{fsst}} test. The default is to use the
-data-driven \code{lambda}.}
+\code{\link[lpinfer]{fsst}} test. The default is to use the data-driven
+\code{lambda}.}
 
 \item{indicator}{A binary variable that equals to 1 for \eqn{d \geq p} and
 equals to 0 for \eqn{d < p}.}

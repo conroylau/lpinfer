@@ -4,7 +4,7 @@
 \alias{full.beta.bs}
 \title{Construct the full beta vector in the \code{\link[lpinfer]{fsst}} procedure}
 \usage{
-full.beta.bs(lpmodel, beta.tgt, beta.obs.bs, R)
+full.beta.bs(lpmodel, beta.tgt, beta.obs.bs)
 }
 \arguments{
 \item{lpmodel}{The \code{lpmodel} object.}
@@ -12,8 +12,6 @@ full.beta.bs(lpmodel, beta.tgt, beta.obs.bs, R)
 \item{beta.tgt}{The value to be tested.}
 
 \item{beta.obs.bs}{The bootstrap estimates of \code{beta.obs}.}
-
-\item{R}{The number of bootstrap replications.}
 }
 \value{
 List of full beta vectors
