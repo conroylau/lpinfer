@@ -20,7 +20,8 @@ fsst.check(
   p.rank.tol,
   sqrtm.method,
   sqrtm.tol,
-  previous.output
+  previous.output,
+  omega.i
 )
 }
 \arguments{
@@ -96,6 +97,8 @@ evaluation of the procedure. This is only used in the
 \code{\link[lpinfer]{fsst}} test and when \code{previous.out} contains
 the studentized matrix \code{omega.i}. The rest of the arguments
 are ignored.}
+
+\item{omega.i}{An optional user-provided Omega matrix.}
 }
 \value{
 Returns the updated parameters back to the function \code{fsst}.

@@ -22,7 +22,8 @@ fsst(
   progress = TRUE,
   sqrtm.method = function(m) pracma::sqrtm(m)$B,
   sqrtm.tol = .Machine$double.eps^(1/2),
-  previous.output = NA
+  previous.output = NA,
+  omega.i = NULL
 )
 }
 \arguments{
@@ -105,6 +106,8 @@ evaluation of the procedure. This is only used in the
 \code{\link[lpinfer]{fsst}} test and when \code{previous.out} contains
 the studentized matrix \code{omega.i}. The rest of the arguments
 are ignored.}
+
+\item{omega.i}{An optional user-provided Omega matrix.}
 }
 \value{
 Returns the following information:

@@ -51,6 +51,7 @@
 #'   the FSST test checks whether \eqn{||A - BB||_F < \epsilon}. If this does
 #'   not hold, the FSST test will use the \code{\link[expm]{sqrtm}} function
 #'   from the \code{expm} package to obtain the matrix square root.
+#' @param omega.i An optional user-provided Omega matrix.
 #'
 #' @return Returns the following information:
 #'   \item{pval}{A table of \eqn{p}-values.}
@@ -121,7 +122,8 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                  prespecify.rank = NULL, p.rank.tol = NULL,
                  solver = NULL, progress = TRUE,
                  sqrtm.method = function(m) pracma::sqrtm(m)$B,
-                 sqrtm.tol = .Machine$double.eps^(1/2), previous.output = NA) {
+                 sqrtm.tol = .Machine$double.eps^(1/2), previous.output = NA,
+                 omega.i = NULL) {
    # ---------------- #
    # Step 1: Update call, check and update the arguments; initialize df.error
    # ---------------- #
@@ -132,7 +134,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
    fsst.return <- fsst.check(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho,
                              n, weight.matrix, solver, progress,
                              prespecify.rank, p.rank.tol,
-                             sqrtm.method, sqrtm.tol, previous.output)
+                             sqrtm.method, sqrtm.tol, previous.output, omega.i)
 
    # Update the arguments
    data <- fsst.return$data
@@ -142,6 +144,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
    logical.lb <- fsst.return$logical.lb
    logical.ub <- fsst.return$logical.ub
    omega.i <- fsst.return$omega.i
+   omega.i.user <- is.matrix(omega.i)
 
    # Compute the maximum number of iterations
    maxR <- ceiling(R * Rmulti)
@@ -368,8 +371,8 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          # Compute the matrix square root
          rhobar.i <- Matrix::norm(sigma.star, type = "f") * rho
 
-         # Compute the studentization matrix if 'omega.i' is NA and if d < p
-         if (!is.matrix(omega.i) | !(isTRUE(rank.condn) && (d >= p))) {
+         # Compute the studentization matrix if 'omega.i' is not provided
+         if (isFALSE(omega.i.user)) {
             sigma.reg <- sigma.star + rhobar.i * diag(nrow(sigma.star))
             omega.i <- checkupdate.matrixroot(sigma.reg,
                                               "studentization matrix",
@@ -1395,9 +1398,9 @@ fsst.beta.star.bs.fn <- function(beta.obs.bs, data, lpmodel, beta.tgt,
 #' @importFrom Matrix t
 #' @importFrom Matrix Matrix
 #'
+#' @inheritParams fsst.cone.lp
 #' @inheritParams fsst
 #' @inheritParams fsst.beta.bs
-#' @inheritParams fsst.cone.lp
 #'
 #' @return Returns the optimal point and optimal value.
 #'  \item{objval}{The optimal value.}
@@ -1740,8 +1743,8 @@ fsst.range.bs.fn <- function(beta.x.star, n, lpmodel, beta.obs.hat, x.star,
 #'
 #' @import furrr progressr
 #'
-#' @inheritParams fsst
 #' @inheritParams fsst.cone.lp
+#' @inheritParams fsst
 #' @inheritParams fsst.beta.star.bs
 #' @param beta.star The starred version of the \code{beta.n} vector, i.e.
 #'   \eqn{\widehat{\bm{\beta}}^\star_n}.
@@ -1841,10 +1844,10 @@ fsst.cone.bs <- function(n, omega.i, beta.n, beta.star, lpmodel, R.succ,
 #' @description This function computes one bootstrap estimate of the cone
 #'   component of the test statistics.
 #'
+#' @inheritParams fsst.cone.bs
 #' @inheritParams fsst
 #' @inheritParams dkqs.bs
 #' @inheritParams fsst.beta.bs
-#' @inheritParams fsst.cone.bs
 #' @inheritParams fsst.weight.matrix
 #' @inheritParams dkqs.bs.fn
 #' @param beta.star.bs One bootstrap estimate of the \code{beta.star} object.
@@ -1985,7 +1988,7 @@ fsst.pval <- function(range.n, cone.n, range.n.list, cone.n.list, R,
 fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
                        weight.matrix, solver, progress,
                        prespecify.rank, p.rank.tol,
-                       sqrtm.method, sqrtm.tol, previous.output) {
+                       sqrtm.method, sqrtm.tol, previous.output, omega.i) {
 
    # ---------------- #
    # Step 1: Check data
@@ -2123,48 +2126,34 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
    check.positive(sqrtm.tol, "sqrtm.tol")
 
    # ---------------- #
-   # Step 8: Check previous.output
+   # Step 8: Check 'omega.i' or 'previous.output'
+   #
+   # 'previous.output' will be ignored if the user supplied 'omega.i'
    # ---------------- #
-   prev.out.msg1 <- paste0("'previous.output' has to be either 'NA' or ",
-                           "a list of objects returned from a previous ",
-                           "evaluation of the FSST test that contains the ",
-                           "'omega.i' matrix.")
-   prev.out.msg2 <- "Therefore, the 'omega.i' matrix will be computed. "
-   if (!is.list(previous.output)) {
-      if (is.null(previous.output)) {
-         warning(paste0(prev.out.msg1, " ", prev.out.msg2), immediate. = TRUE)
-      } else if (!is.na(previous.output)) {
-         warning(paste0(prev.out.msg1, " ", prev.out.msg2), immediate. = TRUE)
-      }
-      omega.i <- NA
+   if (!is.null(omega.i)) {
+      omega.i <- fsst.check.omega.i(omega.i, p, "the 'omega.i' argument",
+                                    strict = TRUE)
    } else {
-      if (is.null(previous.output$omega.i)) {
-         # It has to contain 'omega.i' if previous.output is a list.
+      prev.out.msg1 <- paste0("'previous.output' has to be either 'NA' or ",
+                              "a list of objects returned from a previous ",
+                              "evaluation of the FSST test that contains the ",
+                              "'omega.i' matrix. Therefore, the 'omega.i' ",
+                              "matrix will be computed. ")
+      if (!is.list(previous.output)) {
+         if (is.null(previous.output)) {
+            warning(prev.out.msg1, immediate. = TRUE)
+         } else if (!is.na(previous.output)) {
+            warning(prev.out.msg1, immediate. = TRUE)
+         }
          omega.i <- NA
-         warning(paste0(prev.out.msg1, " ", prev.out.msg2), immediate. = TRUE)
       } else {
-         # Check if the omega.i object is correct
-         # It can be a square 'data.frame', 'matrix' or a 'sparseMatrix'.
-         omega.i <- previous.output$omega.i
-         if (!(is.matrix(omega.i) | is.data.frame(omega.i) |
-             methods::is(omega.i, "sparseMatrix"))) {
+         if (is.null(previous.output$omega.i)) {
+            # It has to contain 'omega.i' if previous.output is a list.
             omega.i <- NA
-            warning(paste0("The class of the 'omega.i' matrix in the list ",
-                           "'previous.output' has to be one of the ",
-                           "followings: data.frame, matrix, or sparseMatrix. ",
-                           prev.out.msg2),
-                    immediate. = TRUE)
+            warning(prev.out.msg1, immediate. = TRUE)
          } else {
-            # Check if the dimension of the omega.i object is correct,
-            # i.e., it has to be a square matrix; the number of rows and
-            # columns have to equal the length of \beta(P)
-            omega.i.dim <- dim(omega.i)
-            if (!((omega.i.dim[1] == omega.i.dim[2]) & omega.i.dim[1] == p)) {
-               warning(paste0("The dimension of the 'omega.i' matrix is ",
-                              "incorrect. ", prev.out.msg2),
-                       immediate. = TRUE)
-               omega.i <- NA
-            }
+            omega.i <- fsst.check.omega.i(previous.output$omega.i, p,
+                                          "'previous.output'")
          }
       }
    }
@@ -2488,4 +2477,57 @@ checkupdate.matrixroot <- function(mat, mat.name, sqrtm.method, sqrtm.tol) {
       mat.sqrt <- sqrtm.tmp
    }
    return(mat.sqrt)
+}
+
+#' Validate a user-supplied studentization matrix
+#'
+#' @param omega.i The candidate studentization matrix.
+#' @param p The required dimension.
+#' @param source A string naming where \code{omega.i} came from.
+#' @param strict If \code{TRUE}, an invalid \code{omega.i} raises an error; if
+#'   \code{FALSE} (default), it issues a warning and returns \code{NA} so that
+#'   the FSST procedure computes \code{omega.i} itself.
+#'
+#' @return A validated \eqn{p \times p} \code{matrix}; or \code{NA} when
+#'   \code{strict = FALSE} and the object is invalid.
+#'
+fsst.check.omega.i <- function(omega.i, p, source, strict = FALSE) {
+   compute.msg <- "Therefore, the 'omega.i' matrix will be computed. "
+
+   # Report an invalid 'omega.i': (error when strict, otherwise a warning)
+   # Warning when it is recycled from a previous draw
+   omega.fail <- function(reason) {
+      omega.general.msg <- paste0("The 'omega.i' matrix supplied via ",
+                                  source, " ", reason, ". ")
+      if (isTRUE(strict)) {
+         stop(omega.general.msg, call. = FALSE)
+      } else {
+         warning(paste0(omega.general.msg, compute.msg), immediate. = TRUE)
+      }
+   }
+
+   # Class check: matrix, data.frame or sparseMatrix
+   if (!(is.matrix(omega.i) | is.data.frame(omega.i) |
+         methods::is(omega.i, "sparseMatrix"))) {
+      omega.fail(paste0("has to be one of the following classes: data.frame, ",
+                        "matrix, or sparseMatrix"))
+      return(NA)
+   }
+
+   # Dimension check: square with number of rows/cols equal to p
+   omega.i.dim <- dim(omega.i)
+   if (!((omega.i.dim[1] == omega.i.dim[2]) & omega.i.dim[1] == p)) {
+      omega.fail(paste0("must be a square matrix of dimension ", p, " x ", p,
+                        ", but it is ", omega.i.dim[1], " x ", omega.i.dim[2]))
+      return(NA)
+   }
+
+   omega.i <- as.matrix(omega.i)
+
+   if (!is.numeric(omega.i)) {
+      omega.fail("has to be numeric")
+      return(NA)
+   }
+
+   return(omega.i)
 }
