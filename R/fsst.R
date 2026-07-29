@@ -87,8 +87,12 @@
 #'    \itemize{
 #'      \item{\code{A.tgt}}
 #'      \item{\code{A.obs}}
-#'      \item{\code{A.shp}}
 #'      \item{\code{beta.obs}}
+#'    }
+#'    The following components are optional, but they have to be either both
+#'    provided or both omitted:
+#'    \itemize{
+#'      \item{\code{A.shp}}
 #'      \item{\code{beta.shp}}
 #'    }
 #'
@@ -190,7 +194,12 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
       beta.obs.return <- lpmodel.beta.eval(data, lpmodel$beta.obs, 1)
       beta.obs.hat <- beta.obs.return[[1]]
       sigma.beta.obs <- beta.obs.return[[2]]
-      beta.shp.hat <- lpmodel.eval(data, lpmodel$beta.shp, 1)
+      # Set 'beta.shp' as NULL when it is omitted
+      if (is.null(lpmodel$beta.shp)) {
+         beta.shp.hat <- NULL
+      } else {
+         beta.shp.hat <- lpmodel.eval(data, lpmodel$beta.shp, 1)
+      }
       beta.n <- Reduce(rbind, c(unlist(beta.obs.hat), beta.shp.hat, beta.tgt))
 
       # Change maxR to the length of the list 'beta.obs' if it is a list
@@ -1006,7 +1015,12 @@ beta.star.qp <- function(data, lpmodel, beta.tgt, weight.mat, beta.obs.hat,
    # ---------------- #
    # Define the A matrices
    A.obs.hat <- lpmodel.eval(data, lpmodel$A.obs, 1)
-   A.shp.hat <- lpmodel.eval(data, lpmodel$A.shp, 1)
+   # Set 'A.shp' as NULL when it is omitted
+   if (is.null(lpmodel$A.shp)) {
+      A.shp.hat <- NULL
+   } else {
+      A.shp.hat <- lpmodel.eval(data, lpmodel$A.shp, 1)
+   }
    A.tgt.hat <- lpmodel.eval(data, lpmodel$A.tgt, 1)
 
    # Define the parameters
@@ -2003,16 +2017,25 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
    # ---------------- #
    # Step 2: Check lpmodel
    # ---------------- #
+   # 'A.shp' and 'beta.shp' are optional, but have to be supplied together
+   shp.null <- is.null(lpmodel$A.shp) & is.null(lpmodel$beta.shp)
+   if (isFALSE(shp.null) &
+       (is.null(lpmodel$A.shp) | is.null(lpmodel$beta.shp))) {
+      stop(paste0("The components 'A.shp' and 'beta.shp' in 'lpmodel' have to ",
+                  "be either both provided or both omitted."), call. = FALSE)
+   }
+   shp.cat <- ifelse(shp.null, "not_used", "matrix")
+
    lpmodel <- check.lpmodel(data = data,
                             lpmodel = lpmodel,
                             name.var = "lpmodel",
                             A.tgt.cat = "matrix",
                             A.obs.cat = "matrix",
-                            A.shp.cat = "matrix",
+                            A.shp.cat = shp.cat,
                             beta.obs.cat = c("function_mat",
                                              "list",
                                              "function_obs_var"),
-                            beta.shp.cat = "matrix",
+                            beta.shp.cat = shp.cat,
                             R = R)
    # Length of the \beta(P) and beta.obs vector
    nbobs <- length(lpmodel.beta.eval(data, lpmodel$beta.obs, 1)$beta.obs)

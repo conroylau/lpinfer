@@ -255,7 +255,7 @@ fsst.args <- args$fsst
 
 # Define function to test the 'Rmulti' parameter
 test.rm <- function(Rmulti, string, msg) {
-  test_that(sprintf("Rmulti %s", string, msg), {
+  test_that(sprintf("Rmulti %s", string), {
     dkqs.args$Rmulti <- Rmulti
     subs.args$Rmulti <- Rmulti
     fsst.args$Rmulti <- Rmulti
@@ -360,7 +360,7 @@ minc.args <- args$mincriterion
 
 # Define function to test the 'lpmodel'
 test.lpmodel <- function(lpmodel, string, msg, dkqs.msg, fsst.msg = msg) {
-  test_that(sprintf("lpmodel: %s", string, msg), {
+  test_that(sprintf("lpmodel: %s", string), {
     dkqs.args$lpmodel <- lpmodel
     subs.args$lpmodel <- lpmodel
     fsst.args$lpmodel <- lpmodel

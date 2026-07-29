@@ -11,8 +11,7 @@ fsst.check.omega.i(omega.i, p, source, strict = FALSE)
 
 \item{p}{The required dimension.}
 
-\item{source}{A string naming where \code{omega.i} came from (used in the
-message).}
+\item{source}{A string naming where \code{omega.i} came from.}
 
 \item{strict}{If \code{TRUE}, an invalid \code{omega.i} raises an error; if
 \code{FALSE} (default), it issues a warning and returns \code{NA} so that

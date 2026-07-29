@@ -149,8 +149,12 @@ The following components are required in the \code{lpmodel} for the
    \itemize{
      \item{\code{A.tgt}}
      \item{\code{A.obs}}
-     \item{\code{A.shp}}
      \item{\code{beta.obs}}
+   }
+   The following components are optional, but they have to be either both
+   provided or both omitted:
+   \itemize{
+     \item{\code{A.shp}}
      \item{\code{beta.shp}}
    }
 }

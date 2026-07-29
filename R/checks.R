@@ -1137,9 +1137,15 @@ check.betatgt.lp <- function(data, lpmodel, modelsense, solver) {
   # ---------------- #
   # Step 1: Obtain the deterministic components of the objects in lpmodel
   # ---------------- #
-  A.shp.hat <- lpmodel.eval(data, lpmodel$A.shp, 1)
   A.tgt.hat <- lpmodel.eval(data, lpmodel$A.tgt, 1)
-  beta.shp.hat <- lpmodel.eval(data, lpmodel$beta.shp, 1)
+
+  if (is.null(lpmodel$A.shp)) {
+    A.shp.hat <- matrix(numeric(0), nrow = 0, ncol = ncol(A.tgt.hat))
+    beta.shp.hat <- numeric(0)
+  } else {
+    A.shp.hat <- lpmodel.eval(data, lpmodel$A.shp, 1)
+    beta.shp.hat <- lpmodel.eval(data, lpmodel$beta.shp, 1)
+  }
 
   # ---------------- #
   # Step 2: Solve the linear program
@@ -1150,14 +1156,14 @@ check.betatgt.lp <- function(data, lpmodel, modelsense, solver) {
                     nf = 1,
                     A = A.shp.hat,
                     rhs = beta.shp.hat,
-                    sense = "=",
+                    sense = rep("=", nrow(A.shp.hat)),
                     modelsense = modelsense,
                     lb = rep(0, ncol(A.shp.hat)))
 
   # Solve the linear program
   ans <- do.call(solver, optim.arg)
 
-  if (ans$status == "INF_OR_UNBD") {
+  if (ans$status %in% c("INF_OR_UNBD", "UNBOUNDED")) {
     ans$objval <- ifelse(modelsense == "max", Inf, -Inf)
   }
   # ---------------- #
