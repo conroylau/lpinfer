@@ -204,7 +204,8 @@ for (i in seq_along(i.cores)) {
 # Create Gurobi solver
 # ---------------- #
 gurobi.qlp <- function(Q = NULL, obj, objcon, A, rhs, quadcon = NULL, sense,
-                       modelsense, lb) {
+                       modelsense, lb,
+                       params = list(OutputFlag = 0, FeasibilityTol = 1e-9)) {
   # Set up the model
   model <- list()
 
@@ -226,7 +227,6 @@ gurobi.qlp <- function(Q = NULL, obj, objcon, A, rhs, quadcon = NULL, sense,
   model$lb <- lb
 
   # Obtain the results to the optimization problem
-  params <- list(OutputFlag = 0, FeasibilityTol = 1e-9)
   result <- gurobi::gurobi(model, params)
 
   return(result)
@@ -966,11 +966,12 @@ bobs.bs2 <- furrr::future_map(1:reps,
                               .options = furrr::furrr_options(seed = TRUE))
 
 # 3. Solve problem (3) - with the sample estimates and the bootstrap estimates
+# Match the solver settings that lpinfer uses
+qp.params <- list(OutputFlag = 0, PSDTol = Inf, Method = 0)
 fsst.3.args2 <- fsst.3.arg(lpm2, bobs2, btgt, sigma.bobs2, "avar")
 Xi2 <- fsst.3.args2$Xi
-fsst.3.return2 <- do.call(gurobi.qlp, fsst.3.args2$args)
-Xi2 <- fsst.3.args2$Xi
-fsst.3.return2 <- do.call(gurobi.qlp, fsst.3.args2$args)
+fsst.3.return2 <- do.call(gurobi.qlp,
+                          c(fsst.3.args2$args, list(params = qp.params)))
 x.star2 <- fsst.3.return2$x
 if (d2 >= p2) {
   bobs.star2 <- bobs2
@@ -985,7 +986,8 @@ beta.star.bs2 <- list()
 for (i in 1:reps) {
   fsst.3.bs.args2 <- fsst.3.arg(lpm2, bobs.bs2[[i]], btgt,
                                 sigma.bobs2, "avar")
-  fsst.3.bs.return2 <- do.call(gurobi.qlp, fsst.3.bs.args2$args)
+  fsst.3.bs.qlp.args <- c(fsst.3.bs.args2$args, list(params = qp.params))
+  fsst.3.bs.return2 <- do.call(gurobi.qlp, fsst.3.bs.qlp.args)
   x.star2.list[[i]] <- fsst.3.bs.return2$x
   if (d2 >= p2) {
     beta.obs.star.bs2[[i]] <- bobs.bs2[[i]]

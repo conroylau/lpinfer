@@ -359,7 +359,7 @@ estb.args <- args$estbounds
 minc.args <- args$mincriterion
 
 # Define function to test the 'lpmodel'
-test.lpmodel <- function(lpmodel, string, msg, dkqs.msg) {
+test.lpmodel <- function(lpmodel, string, msg, dkqs.msg, fsst.msg = msg) {
   test_that(sprintf("lpmodel: %s", string, msg), {
     dkqs.args$lpmodel <- lpmodel
     subs.args$lpmodel <- lpmodel
@@ -368,7 +368,7 @@ test.lpmodel <- function(lpmodel, string, msg, dkqs.msg) {
     minc.args$lpmodel <- lpmodel
     expect_error(do.call(dkqs, dkqs.args), regexp = dkqs.msg, fixed = TRUE)
     expect_error(do.call(subsample, subs.args), regexp = msg, fixed = TRUE)
-    expect_error(do.call(fsst, fsst.args), regexp = msg, fixed = TRUE)
+    expect_error(do.call(fsst, fsst.args), regexp = fsst.msg, fixed = TRUE)
     expect_error(do.call(estbounds, estb.args), regexp = msg, fixed = TRUE)
     expect_error(do.call(mincriterion, minc.args), regexp = msg, fixed = TRUE)
   })
@@ -404,6 +404,8 @@ test.lpmodel(lpmodel.full.temp,
 
 # Missing components
 msg7b <- "The component '%s' is required in the 'lpmodel' object."
+msg7c <- paste0("The components 'A.shp' and 'beta.shp' in 'lpmodel' have to ",
+                "be either both provided or both omitted.")
 ## A.obs
 lpmodel.full.temp <- lpmodel.full
 lpmodel.full.temp$A.obs <- NULL
@@ -412,14 +414,15 @@ test.lpmodel(lpmodel.full.temp,
              "Missing A.obs",
              sprintf(msg7b, "A.obs"),
              sprintf(msg7b, "A.obs"))
-## A.shp (Not required in 'dkqs')
+## A.shp (Not required in 'dkqs'; has to be provided with 'beta.shp' in 'fsst')
 lpmodel.full.temp <- lpmodel.full
 lpmodel.full.temp$A.shp <- NULL
 ## Run tests
 test.lpmodel(lpmodel.full.temp,
              "Missing A.shp",
              sprintf(msg7b, "A.shp"),
-             NA)
+             NA,
+             msg7c)
 ## A.tgt
 lpmodel.full.temp <- lpmodel.full
 lpmodel.full.temp$A.tgt <- NULL
@@ -436,13 +439,24 @@ test.lpmodel(lpmodel.full.temp,
              "Missing beta.obs",
              sprintf(msg7b, "beta.obs"),
              sprintf(msg7b, "beta.obs"))
-## beta.shp (Not required in 'dkqs')
+## beta.shp (Not required in 'dkqs'; has to be provided with 'A.shp' in 'fsst')
 lpmodel.full.temp <- lpmodel.full
 lpmodel.full.temp$beta.shp <- NULL
 ## Run tests
 test.lpmodel(lpmodel.full.temp,
              "Missing beta.shp",
              sprintf(msg7b, "beta.shp"),
+             NA,
+             msg7c)
+## Both A.shp and beta.shp (Not required in 'dkqs'; optional in 'fsst')
+lpmodel.full.temp <- lpmodel.full
+lpmodel.full.temp$A.shp <- NULL
+lpmodel.full.temp$beta.shp <- NULL
+## Run tests
+test.lpmodel(lpmodel.full.temp,
+             "Missing A.shp and beta.shp",
+             sprintf(msg7b, "A.shp"),
+             NA,
              NA)
 
 # ---------------- #
@@ -602,7 +616,8 @@ test.lpmodel.wrong(list(1, 2, 3), "Incorrect", msg9b)
 # 10. Other test-specific parameters
 # ---------------- #
 # 10(a): 'weight.matrix' in 'fsst'
-msg10a <- "'weight.matrix' has to be one of 'avar', 'diag' and 'identity'."
+msg10a <- paste0("'weight.matrix' has to be one of 'avar', 'diag', 'diag2', ",
+                 "and 'identity'.")
 ## Assign arguments
 args <- get.args()
 fsst.args <- args$fsst
