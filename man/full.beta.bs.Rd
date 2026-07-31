@@ -9,7 +9,8 @@ full.beta.bs(lpmodel, beta.tgt, beta.obs.bs)
 \arguments{
 \item{lpmodel}{The \code{lpmodel} object.}
 
-\item{beta.tgt}{The value to be tested.}
+\item{beta.tgt}{The value to be tested (if it is \code{NULL}, the component
+\code{A.tgt} in \code{lpmodel} has to be omitted as well).}
 
 \item{beta.obs.bs}{The bootstrap estimates of \code{beta.obs}.}
 }

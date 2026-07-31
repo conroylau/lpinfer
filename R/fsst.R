@@ -10,6 +10,8 @@
 #' @inheritParams dkqs
 #' @param data A \code{data frame} or a \code{matrix}.
 #' @param lpmodel The \code{lpmodel} object.
+#' @param beta.tgt The value to be tested (if it is \code{NULL}, the component
+#'   \code{A.tgt} in \code{lpmodel} has to be omitted as well).
 #' @param lambda Parameter used to obtain the restricted estimator
 #'   \eqn{\widehat{\bm{\beta}}^r_n}. A data-driven parameter \code{lambda} can
 #'   be included if \code{NA} is included as part of the vector for
@@ -76,8 +78,12 @@
 #'     where \code{beta.tgt} is inside the logical bound. If
 #'     \code{test.logical} is 0, it refers to the case where
 #'     \code{beta.tgt} is outside the logical bound.}
-#'   \item{logical.lb}{Logical lower bound.}
-#'   \item{logical.ub}{Logical upper bound.}
+#'   \item{beta.tgt}{The value that has been tested. This is \code{NULL} if
+#'     \code{A.tgt} and \code{beta.tgt} are omitted.}
+#'   \item{logical.lb}{Logical lower bound. This is \code{NA} if \code{A.tgt}
+#'     and \code{beta.tgt} are omitted.}
+#'   \item{logical.ub}{Logical upper bound. This is \code{NA} if \code{A.tgt}
+#'     and \code{beta.tgt} are omitted.}
 #'   \item{df.error}{A table showing the id of the bootstrap replication(s)
 #'     with error(s) and the corresponding error message(s).}
 #'   \item{R.succ}{The number of successful bootstrap replications.}
@@ -85,15 +91,14 @@
 #' @details The following components are required in the \code{lpmodel} for the
 #'    \code{\link[lpinfer]{fsst}} procedure:
 #'    \itemize{
-#'      \item{\code{A.tgt}}
 #'      \item{\code{A.obs}}
 #'      \item{\code{beta.obs}}
 #'    }
-#'    The following components are optional, but they have to be either both
+#'    The following pairs are optional. Each pair has to be either both
 #'    provided or both omitted:
 #'    \itemize{
-#'      \item{\code{A.shp}}
-#'      \item{\code{beta.shp}}
+#'      \item{\code{A.shp} and \code{beta.shp}}
+#'      \item{\code{A.tgt} and the \code{beta.tgt} argument}
 #'    }
 #'
 #' @section Example:
@@ -120,7 +125,7 @@
 #'
 #' @export
 #'
-fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
+fsst <- function(data = NULL, lpmodel, beta.tgt = NULL, R = 100, Rmulti = 1.25,
                  lambda = NA, rho = 1e-4, n = NULL, weight.matrix = "diag",
                  beta.sigma.tol = 1e-08, beta.sigma.eps = 1e-06,
                  prespecify.rank = NULL, p.rank.tol = NULL,
@@ -314,16 +319,16 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
          # Step 3: Estimate beta.star, x.star and their bootstrap counterparts
          # ---------------- #
          p <- length(beta.n)
-         if (!is.matrix(lpmodel$A.tgt)) {
-            d <- length(lpmodel$A.tgt)
+         if (!is.matrix(lpmodel$A.obs)) {
+            d <- length(lpmodel$A.obs)
          } else {
-            d <- ncol(lpmodel$A.tgt)
+            d <- ncol(lpmodel$A.obs)
          }
 
          if (is.null(prespecify.rank)) {
             p.rank <- Matrix::rankMatrix(rbind(lpmodel$A.obs, lpmodel$A.shp),
                                          tol = p.rank.tol)
-            rank.condn <- (p.rank == (p - 1))
+            rank.condn <- (p.rank == (p - length(beta.tgt)))
          } else {
             rank.condn <- prespecify.rank
          }
@@ -579,6 +584,7 @@ fsst <- function(data = NULL, lpmodel, beta.tgt, R = 100, Rmulti = 1.25,
                     list(solver = solver.name,
                          call = call,
                          rho = rho,
+                         beta.tgt = beta.tgt,
                          test.logical = test.logical,
                          logical.lb = logical.lb,
                          logical.ub = logical.ub))
@@ -1021,18 +1027,26 @@ beta.star.qp <- function(data, lpmodel, beta.tgt, weight.mat, beta.obs.hat,
    } else {
       A.shp.hat <- lpmodel.eval(data, lpmodel$A.shp, 1)
    }
-   A.tgt.hat <- lpmodel.eval(data, lpmodel$A.tgt, 1)
+   # Set 'A.tgt' as NULL when it is omitted
+   if (is.null(lpmodel$A.tgt)) {
+      A.tgt.hat <- NULL
+   } else {
+      A.tgt.hat <- lpmodel.eval(data, lpmodel$A.tgt, 1)
+   }
 
    # Define the parameters
-   d <- ncol(A.tgt.hat)
+   d <- ncol(A.obs.hat)
 
-   # Constraints matrix
+   # Constraints matrix and RHS matrix.
    A.mat1 <- A.shp.hat
    A.mat2 <- A.tgt.hat
-   A.mat <- asmat(rbind(A.mat1, A.mat2))
-
-   # RHS matrix
-   b <- matrix(c(lpmodel$beta.shp, c(beta.tgt)), ncol = 1)
+   if (is.null(A.mat1) & is.null(A.mat2)) {
+      A.mat <- matrix(numeric(0), nrow = 0, ncol = d)
+      b <- numeric(0)
+   } else {
+      A.mat <- asmat(rbind(A.mat1, A.mat2))
+      b <- matrix(c(lpmodel$beta.shp, c(beta.tgt)), ncol = 1)
+   }
 
    # Objective function
    A.obj <- A.obs.hat
@@ -1043,7 +1057,7 @@ beta.star.qp <- function(data, lpmodel, beta.tgt, weight.mat, beta.obs.hat,
                      nf = 1,
                      A = A.mat,
                      rhs = b,
-                     sense = "=",
+                     sense = rep("=", nrow(A.mat)),
                      modelsense = "min",
                      lb = rep(-Inf, d),
                      weight = weight.mat,
@@ -2026,10 +2040,14 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
    }
    shp.cat <- ifelse(shp.null, "not_used", "matrix")
 
+   # 'A.tgt' is optional, but have to be supplied together with 'beta.shp'
+   tgt.null <- is.null(lpmodel$A.tgt) & is.null(beta.tgt)
+   tgt.cat <- ifelse(is.null(lpmodel$A.tgt), "not_used", "matrix")
+
    lpmodel <- check.lpmodel(data = data,
                             lpmodel = lpmodel,
                             name.var = "lpmodel",
-                            A.tgt.cat = "matrix",
+                            A.tgt.cat = tgt.cat,
                             A.obs.cat = "matrix",
                             A.shp.cat = shp.cat,
                             beta.obs.cat = c("function_mat",
@@ -2037,9 +2055,18 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
                                              "function_obs_var"),
                             beta.shp.cat = shp.cat,
                             R = R)
+
+   # 'A.tgt' and 'beta.tgt' are optional, but have to be supplied together
+   if (isFALSE(tgt.null) &
+       (is.null(lpmodel$A.tgt) | is.null(beta.tgt))) {
+      stop(paste0("The component 'A.tgt' in 'lpmodel' and the argument ",
+                  "'beta.tgt' have to be either both provided or both ",
+                  "omitted."), call. = FALSE)
+   }
+
    # Length of the \beta(P) and beta.obs vector
    nbobs <- length(lpmodel.beta.eval(data, lpmodel$beta.obs, 1)$beta.obs)
-   p <- nbobs + length(lpmodel$beta.shp) + 1
+   p <- nbobs + length(lpmodel$beta.shp) + length(beta.tgt)
 
    # ---------------- #
    # Step 3: Check solver
@@ -2051,7 +2078,9 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
    # ---------------- #
    # Step 4: Check numerics
    # ---------------- #
-   check.numeric(beta.tgt, "beta.tgt")
+   if (isFALSE(tgt.null)) {
+      check.numeric(beta.tgt, "beta.tgt")
+   }
    check.positiveinteger(R, "R")
    check.positive(rho, "rho")
 
@@ -2082,10 +2111,17 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
    # ---------------- #
    # Step 6: Check whether beta.tgt is within the logical bounds
    # ---------------- #
-   test.return <- check.betatgt(data, lpmodel, beta.tgt, solver)
-   test.logical <- test.return$inout
-   logical.lb <- test.return$lb
-   logical.ub <- test.return$ub
+   # The logical bounds are undefined when 'A.tgt' and 'beta.tgt' are omitted
+   if (isTRUE(tgt.null)) {
+      test.logical <- 1
+      logical.lb <- NA
+      logical.ub <- NA
+   } else {
+      test.return <- check.betatgt(data, lpmodel, beta.tgt, solver)
+      test.logical <- test.return$inout
+      logical.lb <- test.return$lb
+      logical.ub <- test.return$ub
+   }
 
    # ---------------- #
    # Step 7: Check the arguments related to the `sqrtm` function
@@ -2215,6 +2251,24 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
                omega.i = omega.i))
 }
 
+#' Message for \code{\link[lpinfer]{fsst}} when \code{A.tgt} and \code{beta.tgt}
+#'    are omitted.
+#'
+#' @description This function states that \code{A.tgt} and \code{beta.tgt} are
+#'   omitted from \code{\link[lpinfer]{fsst}}. Nothing is printed otherwise.
+#'
+#' @inheritParams fsst
+#'
+#' @return Nothing is returned.
+#'
+#' @export
+#'
+fsst.spec.test.msg <- function(beta.tgt) {
+   if (is.null(beta.tgt)) {
+      cat("Note: 'A.tgt' and 'beta.tgt' are omitted.\n")
+   }
+}
+
 #' Print results from \code{\link[lpinfer]{fsst}}
 #'
 #' @description This function prints the \eqn{p}-values from
@@ -2228,6 +2282,7 @@ fsst.check <- function(data, lpmodel, beta.tgt, R, Rmulti, lambda, rho, n,
 #' @export
 #'
 print.fsst <- function(x, ...) {
+   fsst.spec.test.msg(x$beta.tgt)
 
    if (x$test.logical == 1) {
       # Case 1: 'beta.tgt' is within the logical bound
@@ -2278,8 +2333,10 @@ summary.fsst <- function(x, ...) {
       df.pval <- x$pval
       n.pval <- nrow(df.pval)
       if (n.pval == 1) {
+         # 'print.fsst' states the omitted components itself
          print.fsst(x)
       } else {
+         fsst.spec.test.msg(x$beta.tgt)
          cat("p-values:\n")
          df.pval.2 <- data.frame(matrix(vector(), nrow = 1, ncol = n.pval + 1))
          # Label the data-driven lambda with a "*" if it is used

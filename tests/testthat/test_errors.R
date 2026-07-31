@@ -302,6 +302,8 @@ msg6a <- "The class of the variable 'beta.tgt' has to be numeric."
 msg6b <- 'argument "beta.tgt" is missing, with no default'
 msg6c <- paste0("Computation is skipped because the parameter 'beta.tgt' ",
                 "is outside the logical bound.")
+msg6d <- paste0("The component 'A.tgt' in 'lpmodel' and the argument ",
+                "'beta.tgt' have to be either both provided or both omitted.")
 
 # Get arguments
 args <- get.args()
@@ -310,21 +312,23 @@ subs.args <- args$subsample
 fsst.args <- args$fsst
 
 # Define function to test 'beta.tgt'
-test.btgt.e <- function(beta.tgt, string, msg) {
+test.btgt.e <- function(beta.tgt, string, msg, fsst.msg = msg) {
   test_that(paste0("'beta.tgt': %s", string), {
     dkqs.args$beta.tgt <- beta.tgt
     subs.args$beta.tgt <- beta.tgt
     fsst.args$beta.tgt <- beta.tgt
     expect_error(do.call(dkqs, dkqs.args), regexp = msg, fixed = TRUE)
     expect_error(do.call(subsample, subs.args), regexp = msg, fixed = TRUE)
-    expect_error(do.call(fsst, fsst.args), regexp = msg, fixed = TRUE)
+    expect_error(do.call(fsst, fsst.args), regexp = fsst.msg, fixed = TRUE)
   })
 }
 
 # Run tests
 test.btgt.e("1", "non-numeric", msg6a)
 test.btgt.e("a", "non-numeric", msg6a)
-test.btgt.e(NULL, "missing", msg6b)
+## 'beta.tgt' is optional in 'fsst', so omitting it while 'A.tgt' is still
+## provided gives the pairing error instead
+test.btgt.e(NULL, "missing", msg6b, msg6d)
 
 # Define function to test the bounds of 'beta.tgt'
 test.btgt.w <- function(beta.tgt, msg) {
@@ -423,14 +427,15 @@ test.lpmodel(lpmodel.full.temp,
              sprintf(msg7b, "A.shp"),
              NA,
              msg7c)
-## A.tgt
+## A.tgt (has to be provided with 'beta.tgt' in 'fsst')
 lpmodel.full.temp <- lpmodel.full
 lpmodel.full.temp$A.tgt <- NULL
 ## Run tests
 test.lpmodel(lpmodel.full.temp,
              "Missing A.tgt",
              sprintf(msg7b, "A.tgt"),
-             sprintf(msg7b, "A.tgt"))
+             sprintf(msg7b, "A.tgt"),
+             msg6d)
 ## beta.obs
 lpmodel.full.temp <- lpmodel.full
 lpmodel.full.temp$beta.obs <- NULL

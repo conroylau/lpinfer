@@ -27,7 +27,8 @@ in the input.}
 \eqn{\widehat{\bm{\beta}}_{\mathrm{obs}, n}} based on the given
 information in \code{lpmodel} (and \code{data} if applicable).}
 
-\item{beta.tgt}{The value to be tested.}
+\item{beta.tgt}{The value to be tested (if it is \code{NULL}, the component
+\code{A.tgt} in \code{lpmodel} has to be omitted as well).}
 
 \item{beta.n}{The sample \eqn{\widehat{\bm{\beta}}_n} vector that is defined
 as \eqn{\widehat{\bm{\beta}}_n \equiv (\widehat{\bm{\beta}}_{{\rm obs},n},

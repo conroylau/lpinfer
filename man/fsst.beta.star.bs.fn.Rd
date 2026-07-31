@@ -25,7 +25,8 @@ fsst.beta.star.bs.fn(
 
 \item{lpmodel}{The \code{lpmodel} object.}
 
-\item{beta.tgt}{The value to be tested.}
+\item{beta.tgt}{The value to be tested (if it is \code{NULL}, the component
+\code{A.tgt} in \code{lpmodel} has to be omitted as well).}
 
 \item{weight.mat}{The weighting matrix for the \code{\link[lpinfer]{fsst}}
 procedure.}

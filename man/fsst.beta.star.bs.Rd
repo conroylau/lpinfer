@@ -35,7 +35,8 @@ as \eqn{\widehat{\bm{\beta}}_n \equiv (\widehat{\bm{\beta}}_{{\rm obs},n},
 
 \item{beta.n.bs}{The bootstrap estimates of \code{beta.n}.}
 
-\item{beta.tgt}{The value to be tested.}
+\item{beta.tgt}{The value to be tested (if it is \code{NULL}, the component
+\code{A.tgt} in \code{lpmodel} has to be omitted as well).}
 
 \item{weight.mat}{The weighting matrix for the \code{\link[lpinfer]{fsst}}
 procedure.}

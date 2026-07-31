@@ -7,7 +7,7 @@
 fsst(
   data = NULL,
   lpmodel,
-  beta.tgt,
+  beta.tgt = NULL,
   R = 100,
   Rmulti = 1.25,
   lambda = NA,
@@ -31,7 +31,8 @@ fsst(
 
 \item{lpmodel}{The \code{lpmodel} object.}
 
-\item{beta.tgt}{The value to be tested.}
+\item{beta.tgt}{The value to be tested (if it is \code{NULL}, the component
+\code{A.tgt} in \code{lpmodel} has to be omitted as well).}
 
 \item{R}{The number of bootstrap replications.}
 
@@ -133,8 +134,12 @@ Returns the following information:
     where \code{beta.tgt} is inside the logical bound. If
     \code{test.logical} is 0, it refers to the case where
     \code{beta.tgt} is outside the logical bound.}
-  \item{logical.lb}{Logical lower bound.}
-  \item{logical.ub}{Logical upper bound.}
+  \item{beta.tgt}{The value that has been tested. This is \code{NULL} if
+    \code{A.tgt} and \code{beta.tgt} are omitted.}
+  \item{logical.lb}{Logical lower bound. This is \code{NA} if \code{A.tgt}
+    and \code{beta.tgt} are omitted.}
+  \item{logical.ub}{Logical upper bound. This is \code{NA} if \code{A.tgt}
+    and \code{beta.tgt} are omitted.}
   \item{df.error}{A table showing the id of the bootstrap replication(s)
     with error(s) and the corresponding error message(s).}
   \item{R.succ}{The number of successful bootstrap replications.}
@@ -147,15 +152,14 @@ This module conducts inference in linear programs using the
 The following components are required in the \code{lpmodel} for the
    \code{\link[lpinfer]{fsst}} procedure:
    \itemize{
-     \item{\code{A.tgt}}
      \item{\code{A.obs}}
      \item{\code{beta.obs}}
    }
-   The following components are optional, but they have to be either both
+   The following pairs are optional. Each pair has to be either both
    provided or both omitted:
    \itemize{
-     \item{\code{A.shp}}
-     \item{\code{beta.shp}}
+     \item{\code{A.shp} and \code{beta.shp}}
+     \item{\code{A.tgt} and the \code{beta.tgt} argument}
    }
 }
 \section{Example}{
